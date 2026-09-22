@@ -12,7 +12,7 @@ If a request conflicts with the spec, stop and say so. If a decision changes, up
 
 ## Current phase
 
-Phase 0: Foundations. Update this line when a phase completes.
+Phase 1: Schema, parsers, ingestion. Update this line when a phase completes.
 
 ## How to work
 
@@ -61,7 +61,7 @@ Unit tests sit next to the code as `*.test.ts`. Integration tests are `*.int.tes
 
 ## Commands
 
-Fill in and keep accurate as scripts are added in Phase 0. Until a command exists, do not assume it does.
+Keep accurate as scripts are added. Until a command exists, do not assume it does.
 
 ```
 npm run dev            start the site locally

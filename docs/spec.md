@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.4, 2026-09-21. Status: draft for review.
+Version 0.5, 2026-09-21. Status: Phase 0 complete; Phase 1 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -504,7 +504,9 @@ Manual checks recorded 2026-09-21:
 - Local Supabase runs with Studio, analytics, and edge runtime disabled (PR #7) and storage disabled (PR #8). `npm run db:reset` completes against it.
 - Vercel project connected through the GitHub import. Production deploys on push to `main`; preview deploys observed on every push to PR #8.
 - Fixtures reviewed before commit (PR #6): the only scrub is the path-prefix rewrite recorded in `fixtures/README.md`.
-- Source-project housekeeping: not yet done.
+- Source-project housekeeping done: Ostomate2 PR #23 (Fastlane bundle id, composeApp test count; `Secrets.swift` was already gitignored in `14feb88`) and a routeserve PR (`|| true` removed from `test:ci`, 80% lines and branches `coverageThreshold` in all three Jest configs, verified in that repo's CI: backend 81.76%, mobile 87.46%, shared 100% branches).
+
+Phase 0 complete 2026-09-21.
 
 ### Phase 1: Schema, parsers, ingestion
 

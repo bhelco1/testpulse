@@ -2,8 +2,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { POST } from '../../app/api/v1/reports/route';
 import { hashApiKey } from '../projects/keys';
 import {
   type IngestInput,
@@ -441,51 +442,163 @@ describe('ingestReport responses (spec section 6.3)', () => {
     const ingest = fake.rpcCalls.find((call) => call.fn === 'ingest_report');
     expect(ingest?.args.payload).toMatchObject({ report: { total: 0 }, tests: [] });
   });
+});
 
-  it('throws when the database function fails, so the route answers 500 rather than lying', async () => {
+// Spec section 6.3 has no 500 row: it is the answer to anything the other rows do not cover,
+// and the one thing it must never do is answer with an empty body, which is undiagnosable from
+// the reporting repository's CI log.
+describe('ingestReport unexpected failures (500)', () => {
+  const FAKE_SECRET = 'sb_secret_never_issued_placeholder';
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  const spyOnConsoleError = () => vi.spyOn(console, 'error').mockImplementation(() => {});
+  const loggedLine = (spy: ReturnType<typeof spyOnConsoleError>): string =>
+    String(spy.mock.calls[0]?.[0]);
+
+  it('answers 500 for a configuration error without naming a setting or a key to the caller', async () => {
+    const logged = spyOnConsoleError();
+    const missingSetting = (): never => {
+      throw new Error(`Missing SUPABASE_SECRET_KEY (was ${FAKE_SECRET}).`);
+    };
+
+    const response = await ingestReportWithSecretClient(input(), missingSetting);
+
+    expect(response).toEqual({ status: 500, body: { error: 'internal error' } });
+    expect(Object.keys(response.body)).toEqual(['error']);
+    const body = JSON.stringify(response.body);
+    expect(body).not.toContain(FAKE_SECRET);
+    expect(body).not.toContain('SUPABASE_SECRET_KEY');
+    expect(logged).toHaveBeenCalledOnce();
+    expect(loggedLine(logged)).toContain('ingest: configuration:');
+    expect(loggedLine(logged)).toContain('SUPABASE_SECRET_KEY');
+  });
+
+  it('hands a working client straight to the ingest, logging nothing', async () => {
+    const logged = spyOnConsoleError();
+    const fake = fakeClient({ project: PROJECT });
+
+    const response = await ingestReportWithSecretClient(input(), () => fake.client);
+
+    expect(response.status).toBe(201);
+    expect(logged).not.toHaveBeenCalled();
+  });
+
+  it('answers the same 500 when a query rejects mid-write, logged as a runtime failure', async () => {
+    const logged = spyOnConsoleError();
     const fake = fakeClient({ project: PROJECT });
     fake.client.rpc = (async (fn: string) =>
       fn === 'rate_limit_hit'
         ? { data: 1, error: null }
-        : { data: null, error: { code: 'P0001', message: 'ingest_report: boom' } }) as never;
+        : Promise.reject(new Error('fetch failed: ECONNRESET'))) as never;
 
-    await expect(ingestReport(fake.client, input())).rejects.toThrow(/ingest_report: boom/);
+    const response = await ingestReport(fake.client, input());
+
+    expect(response).toEqual({ status: 500, body: { error: 'internal error' } });
+    expect(Object.keys(response.body)).toEqual(['error']);
+    expect(logged).toHaveBeenCalledOnce();
+    expect(loggedLine(logged)).toContain('ingest:');
+    expect(loggedLine(logged).startsWith('ingest: configuration:')).toBe(false);
+    expect(loggedLine(logged)).toContain('ECONNRESET');
   });
 
-  it('throws when the rate limit function fails', async () => {
+  it.each<[string, (fake: Fake) => void]>([
+    [
+      'the write function raises',
+      (fake) => {
+        fake.client.rpc = (async (fn: string) =>
+          fn === 'rate_limit_hit'
+            ? { data: 1, error: null }
+            : { data: null, error: { code: 'P0001', message: 'ingest_report: boom' } }) as never;
+      },
+    ],
+    [
+      'the rate limit function raises',
+      (fake) => {
+        fake.client.rpc = (async () => ({
+          data: null,
+          error: { code: '42501', message: 'permission denied' },
+        })) as never;
+      },
+    ],
+    [
+      'the project lookup raises',
+      (fake) => {
+        fake.client.from = (() => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: null, error: { code: '08000', message: 'down' } }),
+            }),
+          }),
+        })) as never;
+      },
+    ],
+  ])('answers 500 and keeps the database error out of the body when %s', async (_label, breaks) => {
+    const logged = spyOnConsoleError();
     const fake = fakeClient({ project: PROJECT });
-    fake.client.rpc = (async () => ({
-      data: null,
-      error: { code: '42501', message: 'permission denied' },
-    })) as never;
+    breaks(fake);
 
-    await expect(ingestReport(fake.client, input())).rejects.toThrow(/rate_limit_hit/);
-  });
+    const response = await ingestReport(fake.client, input());
 
-  it('throws when the project lookup fails', async () => {
-    const fake = fakeClient({ project: PROJECT });
-    fake.client.from = (() => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () => ({ data: null, error: { code: '08000', message: 'down' } }),
-        }),
-      }),
-    })) as never;
-
-    await expect(ingestReport(fake.client, input())).rejects.toThrow(/look up project/);
+    expect(response).toEqual({ status: 500, body: { error: 'internal error' } });
+    expect(logged).toHaveBeenCalledOnce();
+    expect(loggedLine(logged)).toContain('ingest:');
   });
 });
 
-describe('ingestReportWithSecretClient', () => {
-  it('builds the client from the server environment and fails loudly when it is missing', () => {
-    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '');
+describe('POST /api/v1/reports', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  const postAnything = () =>
+    POST(new Request('http://localhost/api/v1/reports', { method: 'POST' }));
+
+  it('answers 500 with a JSON body, not an empty one, when the secret key is not configured', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://127.0.0.1:54321');
     vi.stubEnv('SUPABASE_SECRET_KEY', '');
-    try {
-      expect(() => ingestReportWithSecretClient(input())).toThrow(
-        /NEXT_PUBLIC_SUPABASE_URL.*SUPABASE_SECRET_KEY/,
-      );
-    } finally {
-      vi.unstubAllEnvs();
-    }
+
+    const response = await postAnything();
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    await expect(response.json()).resolves.toEqual({ error: 'internal error' });
+  });
+
+  it('answers the same 500 when the configured Supabase URL is malformed', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '"127.0.0.1:54321"');
+    vi.stubEnv('SUPABASE_SECRET_KEY', 'sb_secret_unit_test_placeholder');
+
+    const response = await postAnything();
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: 'internal error' });
+    const line = String(logged.mock.calls[0]?.[0]);
+    expect(line).toContain('ingest: configuration:');
+    expect(line).toContain('NEXT_PUBLIC_SUPABASE_URL');
+    expect(line).not.toContain('sb_secret_unit_test_placeholder');
+  });
+
+  it('answers 500 rather than throwing when reading the request itself fails', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const unreadable = {
+      headers: {
+        get: () => {
+          throw new Error('headers unavailable');
+        },
+      },
+    } as unknown as Request;
+
+    const response = await POST(unreadable);
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: 'internal error' });
+    expect(logged).toHaveBeenCalledOnce();
   });
 });

@@ -26,6 +26,12 @@ export const RATE_LIMIT_PER_MINUTE = 60;
 
 const UNAUTHORIZED_MESSAGE = 'missing or unknown API key';
 const EMPTY_REPORT_MESSAGE = 'the report parsed but contained zero test cases';
+// An unexpected failure says nothing else to the caller. The exception message, the stack and
+// the names of the settings involved would tell an unauthenticated poster how the deployment is
+// wired, and a caller can do nothing with any of it; the operator reads it in the log instead.
+const INTERNAL_ERROR_MESSAGE = 'internal error';
+const LOG_PREFIX = 'ingest:';
+const CONFIG_LOG_PREFIX = 'ingest: configuration:';
 
 /** What the route hands over: headers as received, the body still unread, and the clock. */
 export interface IngestInput {
@@ -71,12 +77,29 @@ export interface IngestErrorBody {
 
 export type IngestResponse =
   | { readonly status: 200 | 201 | 422; readonly body: IngestSuccessBody }
-  | { readonly status: 400 | 401 | 413 | 415 | 429; readonly body: IngestErrorBody };
+  | { readonly status: 400 | 401 | 413 | 415 | 429 | 500; readonly body: IngestErrorBody };
 
 const unauthorized = (): IngestResponse => ({
   status: 401,
   body: { error: UNAUTHORIZED_MESSAGE },
 });
+
+/**
+ * The one place a 500 is built. The detail goes to the platform's runtime log on a single
+ * greppable line, never to the caller; the request headers and body stay out of it, since the
+ * Authorization value is in them.
+ */
+function internalError(prefix: string, cause: unknown): IngestResponse {
+  const detail =
+    cause instanceof Error ? (cause.stack ?? `${cause.name}: ${cause.message}`) : String(cause);
+  console.error(`${prefix} ${detail}`);
+  return { status: 500, body: { error: INTERNAL_ERROR_MESSAGE } };
+}
+
+/** For the route's own last-resort catch, around everything outside {@link ingestReport}. */
+export function internalErrorResponse(cause: unknown): IngestResponse {
+  return internalError(LOG_PREFIX, cause);
+}
 
 const BEARER = /^Bearer\s+(\S+)$/;
 
@@ -199,10 +222,7 @@ function refused(error: PartsError | PartParseError): IngestResponse {
  * headers and two indexed lookups, the size and encoding checks need only headers, and the body
  * is read last.
  */
-export async function ingestReport(
-  client: SupabaseClient,
-  input: IngestInput,
-): Promise<IngestResponse> {
+async function runIngest(client: SupabaseClient, input: IngestInput): Promise<IngestResponse> {
   const key = bearerKey(input.authorization);
   if (key === null) return unauthorized();
   const hash = hashApiKey(key);
@@ -290,9 +310,37 @@ export async function ingestReport(
 }
 
 /**
+ * Every status but 500 is a decision this function made deliberately; the 500 is everything
+ * else, so that a caller always gets a body it can print. Before this wrapper existed, a throw
+ * here reached the route unhandled and CI logged `HTTP 500:` with nothing after it.
+ */
+export async function ingestReport(
+  client: SupabaseClient,
+  input: IngestInput,
+): Promise<IngestResponse> {
+  try {
+    return await runIngest(client, input);
+  } catch (error) {
+    return internalError(LOG_PREFIX, error);
+  }
+}
+
+/**
  * The route's entry point. Lint forbids app/ from importing the secret client directly, so the
  * client is built here, per request; the constructor is cheap and holds no connection.
+ *
+ * A throw from the factory is a misconfigured deployment rather than a failing request, so it
+ * gets its own log prefix; the caller cannot tell the two apart, and should not be able to.
  */
-export function ingestReportWithSecretClient(input: IngestInput): Promise<IngestResponse> {
-  return ingestReport(createSecretClient(), input);
+export async function ingestReportWithSecretClient(
+  input: IngestInput,
+  createClient: () => SupabaseClient = createSecretClient,
+): Promise<IngestResponse> {
+  let client: SupabaseClient;
+  try {
+    client = createClient();
+  } catch (error) {
+    return internalError(CONFIG_LOG_PREFIX, error);
+  }
+  return ingestReport(client, input);
 }

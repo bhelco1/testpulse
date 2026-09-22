@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.11, 2026-09-22. Status: Phases 0 and 1 complete; Phase 2 in progress.
+Version 0.12, 2026-09-22. Status: Phases 0 and 1 complete; Phase 2 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -304,10 +304,12 @@ The project is identified by the API key. One request equals one report (section
 | 415 | `Content-Encoding` other than identity. Compressed bodies are not accepted yet (see 6.5) |
 | 422 | Parsed successfully but contained zero test cases. The report is stored, an `empty_run` alert is opened, and the run status is derived per 5.2 (`empty` only when every report in the run is empty). Body is the 201 body plus `error`, so a CI log line explains itself |
 | 429 | Rate limit: 60 requests per minute per key |
+| 500 | Unexpected failure: the deployment is misconfigured, or a dependency failed. The body is always `{error: "internal error"}` and never more, because the exception text and setting names would describe the deployment to an unauthenticated caller. The detail goes to the runtime log, prefixed `ingest:`, or `ingest: configuration:` when the Supabase settings are missing or malformed |
 
 ### 6.4 Behavior
 
 - Checks run in this order: API key (401), rate limit (429; a refused request still counts), size (413), encoding (415), multipart shape and parsing (400), then the write. Nothing touches the body until the key and the rate limit have passed.
+- No response is ever body-less. Every status, 500 included, is JSON, so a reporting project's CI log can always print a reason.
 - Whole request is transactional: parse everything, then write everything, or write nothing. The write is one Postgres function, `ingest_report(payload)`, which re-validates the payload and raises before any row changes.
 - Upserts `runs`, then replaces the matching `reports` row and its children (delete plus insert, so a re-post gets a new `report_id`), then recomputes run rollups and status. Run metadata (`commit_sha`, `branch`, `event`) follows the latest report for that CI run; `run_url` is kept when a later report omits it. `reports.failed` and `runs.failed` count failed and error results together; `results.status` keeps the distinction.
 - Upserts `tests` by `test_key` (SHA-256 of `module`, `suite`, and `name` joined by U+0000, which the parsers guarantee cannot appear in any of them); keeps `first_seen_at`, moves `last_seen_at` forward only, and refreshes `layer` from the project's current rules on every report (a resync job re-resolves tests that stop reporting).
@@ -654,6 +656,7 @@ Phase 1 complete 2026-09-22.
 | 2026-09-22 | Layer globs match the repo-relative suite, so project rules carry the workspace prefix | Section 7 makes suites repo-relative for stability across runners; Appendix B's globs were workspace-relative and never matched. Keeping globs anchored and standard was preferred over per-workspace `path_prefix` values |
 | 2026-09-22 | API keys are `tp_` + base64url of 32 random bytes; the database stores the SHA-256 hex of the presented string | The prefix makes a leaked key recognisable in logs and secret scanners; hashing the presented string keeps lookup a single indexed equality on a digest |
 | 2026-09-22 | `projects/<slug>.yaml` requires `description`; the secret-key client lives in `lib/supabase/server.ts` and ESLint forbids importing it from `app/` or `components/` | The column has no database default, so an omitted description would be an empty project page; a lint rule is the only enforceable boundary against shipping the secret client to the browser |
+| 2026-09-22 | A 500 body says only `internal error`; the cause is recoverable from the operator's runtime log, and `NEXT_PUBLIC_SUPABASE_URL` is validated as an absolute http or https URL at startup | A misconfigured deployment answered every request with a body-less 500, so a reporting repository logged `HTTP 500:` and nothing else. The caller learns nothing about the deployment, the operator gets one greppable line, and the commonest mistake, a pasted URL with quotes or no scheme, now names the variable instead of surfacing a minified library stack |
 | 2026-09-22 | Compressed request bodies are refused with 415 until a real file needs them | The largest captured file is 0.19 MB against a 4 MB limit; accepting gzip without an inflated-size cap would let a small body expand past every limit |
 | 2026-09-22 | `test_key` hashes `module`, `suite`, `name` joined by U+0000 | A separator that cannot appear in the parts makes `ab`+`c` and `a`+`bc` distinct without rejecting any legal test name; newlines are legal in JUnit and Jest names, NUL is not storable and is already refused |
 | 2026-09-22 | Ingestion refuses in the order key, rate limit, size, encoding, body | An unknown caller learns nothing and costs nothing beyond a hash lookup; the body is never read before the cheap checks pass |

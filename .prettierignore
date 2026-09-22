@@ -5,3 +5,5 @@ package-lock.json
 design/
 docs/
 fixtures/
+# Prettier reads only the root .gitignore, not supabase/.gitignore where .temp is ignored
+supabase/.temp/

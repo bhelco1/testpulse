@@ -1,0 +1,53 @@
+<testsuites id="" name="" tests="3" failures="1" skipped="1" errors="0" time="7.7092659999999995">
+<testsuite name="home.spec.ts" timestamp="2026-09-22T04:37:33.640Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.238" errors="0">
+<testcase name="home page renders the testpulse heading" classname="home.spec.ts" time="0.238">
+</testcase>
+</testsuite>
+<testsuite name="zz-deliberate-failure.spec.ts" timestamp="2026-09-22T04:37:33.640Z" hostname="chromium" tests="2" failures="1" skipped="1" time="0.004" errors="0">
+<testcase name="deliberately fails to capture a failing JUnit fixture" classname="zz-deliberate-failure.spec.ts" time="0.004">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../../home/runner/work/testpulse/testpulse/test-results/e2e/zz-deliberate-failure-deli-38edc-ure-a-failing-JUnit-fixture-chromium/error-context.md]]
+
+[[ATTACHMENT|../../../../../../home/runner/work/testpulse/testpulse/test-results/e2e/zz-deliberate-failure-deli-38edc-ure-a-failing-JUnit-fixture-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(received).toBe(expected) // Object.is equality" type="expect.toBe">
+<![CDATA[  [chromium] › zz-deliberate-failure.spec.ts:3:1 › deliberately fails to capture a failing JUnit fixture 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: 1
+
+      2 |
+      3 | test('deliberately fails to capture a failing JUnit fixture', async () => {
+    > 4 |   expect(1).toBe(2);
+        |             ^
+      5 | });
+      6 |
+      7 | test.skip('deliberately skipped to capture a skipped JUnit fixture', async () => {
+        at /home/runner/work/testpulse/testpulse/tests/e2e/zz-deliberate-failure.spec.ts:4:13
+
+    Error Context: ../../test-results/e2e/zz-deliberate-failure-deli-38edc-ure-a-failing-JUnit-fixture-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../test-results/e2e/zz-deliberate-failure-deli-38edc-ure-a-failing-JUnit-fixture-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../test-results/e2e/zz-deliberate-failure-deli-38edc-ure-a-failing-JUnit-fixture-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="deliberately skipped to capture a skipped JUnit fixture" classname="zz-deliberate-failure.spec.ts">
+<properties>
+<property name="skip" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

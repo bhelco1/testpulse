@@ -8,7 +8,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['lib/**', 'components/**'],
-      exclude: ['**/*.test.ts', '**/*.int.test.ts'],
+      // index.ts only re-exports; there is nothing in it for a test to execute.
+      exclude: ['**/*.test.ts', '**/*.int.test.ts', 'lib/parsers/index.ts'],
       reporter: ['text', 'json-summary'],
       thresholds: {
         lines: 90,

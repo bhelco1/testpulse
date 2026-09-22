@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.7, 2026-09-22. Status: Phase 0 complete; Phase 1 in progress.
+Version 0.8, 2026-09-22. Status: Phase 0 complete; Phase 1 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -337,11 +337,11 @@ type NormalizedReport = {
 | Format | Source | Mapping notes |
 |---|---|---|
 | JUnit XML | Gradle (Ostomate2), Playwright (testpulse), Maestro `--format junit` (future) | `testcase@classname` → suite, `@name` → name, `@time` s → ms. Child `failure`/`error`/`skipped` sets status. Handles both a single `testsuite` root and a `testsuites` wrapper. Multiple files per request are merged |
-| Jest JSON | routeserve | `testResults[].name` minus `path_prefix` → suite. `assertionResults[].fullName` → name. `passed`→passed, `failed`→failed, `pending`/`todo`/`skipped`→skipped. `failureMessages[]` joined → detail, first line → message. Run pass/fail comes from these results, never from the process exit code, because routeserve's `test:ci` script masks it |
+| Jest JSON | routeserve | `testResults[].name` minus `path_prefix` → suite. `assertionResults[].fullName` → name. `passed`/`focused`→passed, `failed`→failed, `pending`/`todo`/`skipped`/`disabled`→skipped. A file whose `status` is `failed` with no failed assertion (it did not load) becomes one synthetic `error` result named `<suite load failure>` carrying the file's message, so a broken test file can never ingest as green. `failureMessages[]` joined → detail, first line → message. Run pass/fail comes from these results, never from the process exit code, because routeserve's `test:ci` script masks it |
 | JaCoCo XML | Ostomate2 | Report-level `counter` elements, `type=LINE` and `type=BRANCH`, `covered` and `missed` |
 | istanbul summary | routeserve | `total.lines.covered/total`, `total.branches.covered/total` |
 
-Parser requirements: reject XML with DTDs or external entities (XXE), tolerate unknown attributes, fail with a specific message on malformed input.
+Parser requirements: reject XML with DTDs or external entities (XXE), tolerate unknown attributes, fail with a specific message on malformed input. Entity processing is off; only the five predefined entities and numeric character references are decoded, in one non-recursive pass. JaCoCo is the one exception to the DOCTYPE rule: every JaCoCo report opens with its own public DOCTYPE, so exactly that declaration is stripped before the check and any other DOCTYPE, internal subset, or SYSTEM identifier is still rejected. `suite` and `name` over 1,000 characters are rejected, not truncated, and so are empty ones; `message` and `detail` are truncated per 5.6. Text containing U+0000, lone surrogates, or numeric references outside the XML character range is rejected, since Postgres cannot store it. The DOCTYPE check covers the prolog; after the root element a markup-level DOCTYPE is malformed XML and is rejected by the validator, while one inside CDATA or a comment is data and is kept. CDATA content is never entity-decoded. JUnit `time` must be a plain decimal; `timestamp` values without an offset are read as UTC so parsing does not depend on the server's timezone.
 
 ## 8. Layer mapping
 
@@ -633,6 +633,10 @@ Phase 0 complete 2026-09-21.
 | 2026-09-21 | Realtime subscribes to `reports` only; `runs` is never in the publication | Realtime evaluates the subscriber's table grants, and anon has none on `runs` by design; granting them would leak `run_url` and full private SHAs |
 | 2026-09-21 | `anon` and `authenticated` lose all table grants by default; each table is opened by an explicit grant plus policy | RLS does not cover TRUNCATE, and Supabase's default grants would otherwise hand every new table to any signed-up user |
 | 2026-09-21 | Deleting a tracked link sets `visits.tracked_link_id` to null instead of cascading | Visits are retained for 365 days as history; a deleted link should not erase them |
+| 2026-09-22 | JaCoCo's own `<!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd">` is stripped before the DOCTYPE rejection; nothing else is | Every real JaCoCo file carries it, so the blanket rule would refuse all coverage uploads; the exception is exact-match and keeps internal subsets and SYSTEM ids rejected |
+| 2026-09-22 | `suite` and `name` capped at 1,000 characters and rejected above it; failure `message` and `detail` truncated at 2,000 and 10,000 | Identifiers that long are not real test names and would bloat the `tests` table forever; failure text is display-only, so truncation loses nothing that matters |
+| 2026-09-22 | XML entities: processing off, only the five predefined entities and numeric character references decoded in a single pass | Kotlin names such as `&lt;init&gt;` must read correctly without opening the door to entity expansion attacks |
+| 2026-09-22 | `zod` declared as a direct dependency | It was only present transitively; production code now imports it and it is part of the approved stack |
 | 2026-09-21 | Failing-test fixtures are captured from the real tools: testpulse's own Playwright JUnit with one deliberately failing spec, and routeserve Jest JSON with one test broken in an uncommitted local change | No captured CI file contains a failure, and hand-written samples are forbidden; tool output from a forced failure is still real output, and the capture command is recorded |
 | 2026-09-22 | Layer globs match the repo-relative suite, so project rules carry the workspace prefix | Section 7 makes suites repo-relative for stability across runners; Appendix B's globs were workspace-relative and never matched. Keeping globs anchored and standard was preferred over per-workspace `path_prefix` values |
 | 2026-09-22 | Layer acceptance counts are asserted against what the captured fixtures contain | The backend fixture omits the PostGIS suite, so "integration 3" is unprovable from it; the glob is proven by a unit test and the count by CI once the project reports |

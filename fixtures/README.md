@@ -1,6 +1,6 @@
 # Fixtures
 
-Real result files captured from the reporting projects. Parser tests run against these files and nothing in this directory is hand-written. Files here are never edited after capture, except for the single documented scrub below; if a fixture needs to change, capture a new one and record its provenance here.
+Real result files captured from the reporting projects. Parser tests run against these files and nothing in this directory is hand-written. Files here are never edited after capture, except for the documented path scrubs below; if a fixture needs to change, capture a new one and record its provenance here.
 
 ## Ostomate2
 
@@ -58,7 +58,42 @@ cd apps/mobile && CI=1 npx jest --ci --coverage --coverageDirectory=<scratch>/mo
 
 The six routeserve files contain absolute source paths. One plain string substitution was applied: the absolute path of the local checkout (under the developer's home directory) was replaced with the GitHub Actions workspace path `/home/runner/work/routeserve/routeserve/` (223 replacements across the six files). Nothing else changed; every file was re-parsed as JSON afterwards and the counts above are the same as in the raw output. Every `failureMessages` array and every `testResults[].message` in the files is empty. Raw, unscrubbed captures are never committed.
 
+### Failing run
+
+Captured 2026-09-21 from a detached git worktree of a later commit of `main` (the repo had moved on since the passing captures), so the main checkout stayed untouched. One existing expectation in the `packages/shared` asset schema tests was inverted (a `toBe(true)` on a case the schema accepts became `toBe(false)`) so that exactly one test fails. The JSON was written, the edit was reverted with `git checkout -- .`, the worktree was removed and pruned, and `git status --short` on the main checkout was empty afterwards.
+
+```
+cd packages/shared && CI=1 npx jest --ci --json --outputFile=<scratch>/shared-one-failure.json
+```
+
+| Path | Source | Counts |
+|---|---|---|
+| `routeserve/jest/shared-one-failure.json` | `packages/shared`, Jest `--json` output | 14 suites (13 passed, 1 failed), 119 tests, 118 passed, 1 failed, 0 pending, `success: false` |
+
+Scrub 1: the same single substitution, the worktree's absolute path (under the session scratch directory) replaced with `/home/runner/work/routeserve/routeserve/` (28 replacements). The file was re-parsed as JSON afterwards and the counts above are the same as in the raw output; a grep for `bobbyhelco`, `/Users/`, `/private/tmp` and `@gmail` finds nothing.
+
+Scrub 2 (2026-09-22): the first scrub left private source in the file. The failed suite's `testResults[].message` held Jest's console report for the failure, which ends in a code frame: six lines of `asset.test.ts` with ANSI colour codes, including the `describe`/`it` titles, the schema call and a literal test value. `message` was set to `""` on all 14 `testResults` entries and `failureDetails` to `[]` on all 119 `assertionResults` entries (only the failed one was non-empty; it held the matcher's `matcherResult`, not source, and was cleared so nothing outside `failureMessages` describes the failure). The file was rewritten as `JSON.stringify` output plus the trailing newline, exactly as Jest wrote it, so nothing else changed; the counts above are unchanged. The failed test's `failureMessages[0]` is what the parser reads: the matcher line, the `Expected`/`Received` pair, and 16 stack lines under the scrubbed path or Node internals, with no code frame. A grep for `\u001b` finds nothing.
+
+## testpulse
+
+JUnit XML from this repo's own Playwright suite, captured 2026-09-21 on a developer machine (Chromium project, so `hostname="chromium"`). A temporary spec `tests/e2e/zz-deliberate-failure.spec.ts` held one test that fails on `expect(1).toBe(2)` and one `test.skip`; it was deleted after the capture and is not committed. The config's `webServer` built and started the site before the run.
+
+```
+PLAYWRIGHT_JUNIT_OUTPUT_FILE=<scratch>/playwright.xml npx playwright test --reporter=junit
+```
+
+| Path | Source | Counts |
+|---|---|---|
+| `testpulse/junit/playwright-one-failure.xml` | `tests/e2e`, Playwright `junit` reporter (`testsuites` wrapper, one `testsuite` per spec file) | 2 suites, 3 tests, 1 passed, 1 failed, 1 skipped, 0 errors |
+
+The failing testcase carries `failure@message`, the full Playwright error in CDATA, and a `system-out` CDATA block listing the trace attachments; the skipped testcase has no `time` attribute and a `properties` child.
+
+### Scrub
+
+The failure stack and the attachment paths contain the absolute path of the local checkout. One plain string substitution was applied: that path prefix was replaced with `/home/runner/work/testpulse/testpulse/` (3 replacements: 1 in the failure stack, 2 in `system-out` attachment paths, where the relative `../../../../../../` that Playwright emits in front of the absolute path was left as is). Nothing else changed; a grep for `bobbyhelco`, `/Users/`, `/private/tmp` and `@gmail` finds nothing.
+
 ## Known gaps
 
-- No file here contains a failing test. The nearest failed Ostomate2 CI run (35643254905) failed in `xcodebuild` and Maestro, not in JUnit; routeserve has never produced Jest JSON in CI. A failing-run fixture is still needed before the Phase 1 parser tests for failure and error branches.
+- No fixture contains a JUnit `<error>` element or a Jest `pending`/`todo`/`skipped` result. The parser tests for those branches rewrite one of the captured files in the test itself and say so in a comment; no hand-written result sample exists.
+- Ostomate2 has never produced a failing JUnit file in CI: the nearest failed run (35643254905) failed in `xcodebuild` and Maestro, not in JUnit. The failing JUnit fixture above comes from Playwright instead.
 - Ostomate2 `shared` iOS-simulator results were not captured: the local copy was stale (July, 79 tests) and did not match HEAD.

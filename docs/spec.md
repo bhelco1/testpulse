@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.10, 2026-09-22. Status: Phase 0 complete; Phase 1 in progress.
+Version 0.11, 2026-09-22. Status: Phases 0 and 1 complete; Phase 2 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -528,6 +528,17 @@ Phase 0 complete 2026-09-21.
 - An anon database client cannot read `result_failures` for a private project, `api_key_hash`, `tracked_links`, or `visits`.
 - `project:add`, `projects:sync`, and `project:rotate-key` work against a local database.
 
+Evidence recorded 2026-09-22, each criterion proven by an automated test in CI:
+
+- Schema and RLS: PR #11, `supabase/migrations/20260922034936_initial_schema.sql`, `lib/visibility/rls.int.test.ts` (32 tests with secret, anon, and signed-in clients).
+- Parsers and rejection: PR #13, `lib/parsers/*.test.ts` (97 tests against the fixtures; totals 82 + 60 and 498 + 428 + 119; DOCTYPE, malformed, oversized, and unstorable inputs rejected with named errors).
+- Layer rules: PR #12, `lib/ingest/layer-rules.test.ts` (acceptance counts against the fixtures).
+- Ingestion: PR #15, `supabase/migrations/20260922104026_ingest_report.sql`, `lib/ingest/ingest.int.test.ts` (45 integration tests: every 6.3 status, two reports on one run with totals 142, replace, `empty` with alert, rollback).
+- Visibility for anon: `lib/visibility/rls.int.test.ts` and the private-project cases in `lib/ingest/ingest.int.test.ts`.
+- Project scripts: PR #14, `lib/projects/repo.int.test.ts` (the three scripts run as subprocesses against local Postgres).
+
+Phase 1 complete 2026-09-22.
+
 ### Phase 2: Ostomate2 reporting live
 
 - `projects/ostomate2.yaml` written; layer rules resolve to the inventory's layer counts.
@@ -635,11 +646,11 @@ Phase 0 complete 2026-09-21.
 | 2026-09-21 | Realtime subscribes to `reports` only; `runs` is never in the publication | Realtime evaluates the subscriber's table grants, and anon has none on `runs` by design; granting them would leak `run_url` and full private SHAs |
 | 2026-09-21 | `anon` and `authenticated` lose all table grants by default; each table is opened by an explicit grant plus policy | RLS does not cover TRUNCATE, and Supabase's default grants would otherwise hand every new table to any signed-up user |
 | 2026-09-21 | Deleting a tracked link sets `visits.tracked_link_id` to null instead of cascading | Visits are retained for 365 days as history; a deleted link should not erase them |
+| 2026-09-21 | Failing-test fixtures are captured from the real tools: testpulse's own Playwright JUnit with one deliberately failing spec, and routeserve Jest JSON with one test broken in an uncommitted local change | No captured CI file contains a failure, and hand-written samples are forbidden; tool output from a forced failure is still real output, and the capture command is recorded |
 | 2026-09-22 | JaCoCo's own `<!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd">` is stripped before the DOCTYPE rejection; nothing else is | Every real JaCoCo file carries it, so the blanket rule would refuse all coverage uploads; the exception is exact-match and keeps internal subsets and SYSTEM ids rejected |
 | 2026-09-22 | `suite` and `name` capped at 1,000 characters and rejected above it; failure `message` and `detail` truncated at 2,000 and 10,000 | Identifiers that long are not real test names and would bloat the `tests` table forever; failure text is display-only, so truncation loses nothing that matters |
 | 2026-09-22 | XML entities: processing off, only the five predefined entities and numeric character references decoded in a single pass | Kotlin names such as `&lt;init&gt;` must read correctly without opening the door to entity expansion attacks |
 | 2026-09-22 | `zod` declared as a direct dependency | It was only present transitively; production code now imports it and it is part of the approved stack |
-| 2026-09-21 | Failing-test fixtures are captured from the real tools: testpulse's own Playwright JUnit with one deliberately failing spec, and routeserve Jest JSON with one test broken in an uncommitted local change | No captured CI file contains a failure, and hand-written samples are forbidden; tool output from a forced failure is still real output, and the capture command is recorded |
 | 2026-09-22 | Layer globs match the repo-relative suite, so project rules carry the workspace prefix | Section 7 makes suites repo-relative for stability across runners; Appendix B's globs were workspace-relative and never matched. Keeping globs anchored and standard was preferred over per-workspace `path_prefix` values |
 | 2026-09-22 | API keys are `tp_` + base64url of 32 random bytes; the database stores the SHA-256 hex of the presented string | The prefix makes a leaked key recognisable in logs and secret scanners; hashing the presented string keeps lookup a single indexed equality on a digest |
 | 2026-09-22 | `projects/<slug>.yaml` requires `description`; the secret-key client lives in `lib/supabase/server.ts` and ESLint forbids importing it from `app/` or `components/` | The column has no database default, so an omitted description would be an empty project page; a lint rule is the only enforceable boundary against shipping the secret client to the browser |

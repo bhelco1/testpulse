@@ -12,7 +12,7 @@ If a request conflicts with the spec, stop and say so. If a decision changes, up
 
 ## Current phase
 
-Phase 1: Schema, parsers, ingestion. Update this line when a phase completes.
+Phase 2: Ostomate2 reporting live. Update this line when a phase completes.
 
 ## How to work
 

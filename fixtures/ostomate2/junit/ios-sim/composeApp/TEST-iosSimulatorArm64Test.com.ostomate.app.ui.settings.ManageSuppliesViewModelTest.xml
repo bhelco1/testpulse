@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-21T18:57:03.909Z" hostname="Bobbys-MacBook-Pro.local" time="0.016">
+  <properties/>
+  <testcase name="archivedSuppliesAreHiddenFromTheList[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.002"/>
+  <testcase name="editCountOpensDirectlyWhenLockIsOff[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.001"/>
+  <testcase name="lockOnPromptsOnceThenSessionStaysUnlocked[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.002"/>
+  <testcase name="failedBiometricBlocksTheEdit[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.002"/>
+  <testcase name="notEnrolledUnlocksGracefully[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.001"/>
+  <testcase name="setOnHandClampsNegativeToZero[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.002"/>
+  <testcase name="adjustOnHandAppliesDeltaAndClampsAtZero[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.001"/>
+  <testcase name="saveSupplyDetailsSanitizesInput[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.001"/>
+  <testcase name="archiveSupplyClosesTheEditSheet[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.002"/>
+  <testcase name="addCustomSupplyAppendsAfterTheHighestSortOrder[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

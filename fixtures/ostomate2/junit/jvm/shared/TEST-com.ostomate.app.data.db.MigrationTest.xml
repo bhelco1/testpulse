@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.data.db.MigrationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:17:52.475Z" hostname="runnervmlun5p" time="0.02">
+  <properties/>
+  <testcase name="migrate2To3_addsColorIndexColumnWithNullDefault" classname="com.ostomate.app.data.db.MigrationTest" time="0.02"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

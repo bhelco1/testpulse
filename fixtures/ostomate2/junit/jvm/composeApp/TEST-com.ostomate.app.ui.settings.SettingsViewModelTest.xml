@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.settings.SettingsViewModelTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:51.593Z" hostname="runnervmlun5p" time="0.078">
+  <properties/>
+  <testcase name="restoreRoundTripReportsSuccess" classname="com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.054"/>
+  <testcase name="togglesFlowThroughToTheSettingsState" classname="com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.005"/>
+  <testcase name="malformedRestoreReportsFailure" classname="com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.004"/>
+  <testcase name="exportProducesTimestampedJsonBackup" classname="com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.003"/>
+  <testcase name="exportDiagnosticLogProducesTimestampedLogFile" classname="com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.008"/>
+  <testcase name="crashReportingToggleAlsoDrivesTheReporter" classname="com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

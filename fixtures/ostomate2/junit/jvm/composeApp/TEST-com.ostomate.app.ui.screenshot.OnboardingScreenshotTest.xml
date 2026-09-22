@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.screenshot.OnboardingScreenshotTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:49.502Z" hostname="runnervmlun5p" time="1.289">
+  <properties/>
+  <testcase name="onboardingQrExplainerStep" classname="com.ostomate.app.ui.screenshot.OnboardingScreenshotTest" time="0.388"/>
+  <testcase name="onboardingCountsStep" classname="com.ostomate.app.ui.screenshot.OnboardingScreenshotTest" time="0.628"/>
+  <testcase name="onboardingApplianceTypeStep" classname="com.ostomate.app.ui.screenshot.OnboardingScreenshotTest" time="0.272"/>
+  <system-out><![CDATA[Roborazzi: onboarding_qr_explainer.png The differ result :ComparisonResult(pixelDifferences=286, pixelCount=1464804, width=822, height=1782) changed:false
+Roborazzi: onboarding_counts.png The differ result :ComparisonResult(pixelDifferences=397, pixelCount=1464804, width=822, height=1782) changed:false
+Roborazzi: onboarding_appliance_type.png The differ result :ComparisonResult(pixelDifferences=924, pixelCount=1464804, width=822, height=1782) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

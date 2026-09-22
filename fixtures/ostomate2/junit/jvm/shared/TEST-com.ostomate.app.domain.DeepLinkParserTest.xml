@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.domain.DeepLinkParserTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:17:53.510Z" hostname="runnervmlun5p" time="0.016">
+  <properties/>
+  <testcase name="rejectsUnknownSupply" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.001"/>
+  <testcase name="parsesFlangeLink" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="rejectsMissingQuery" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="rejectsEmptyCustomId" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="toleratesTrailingSlashOnHost" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="rejectsEmptyString" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="toleratesSurroundingWhitespace" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="parsesBagLink" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="picksItemAmongOtherParams" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="rejectsWrongHost" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.001"/>
+  <testcase name="parsesCustomSupplyIdLink" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.002"/>
+  <testcase name="isCaseInsensitive" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="rejectsMissingItemParam" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <testcase name="rejectsWrongScheme" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.001"/>
+  <testcase name="rejectsNonNumericCustomId" classname="com.ostomate.app.domain.DeepLinkParserTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

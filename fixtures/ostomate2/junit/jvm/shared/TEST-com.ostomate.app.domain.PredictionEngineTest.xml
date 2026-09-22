@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.domain.PredictionEngineTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:17:53.551Z" hostname="runnervmlun5p" time="0.205">
+  <properties/>
+  <testcase name="daysRemaining is 0 when onHand is 0 for any avgDays" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.035"/>
+  <testcase name="averageDaysBetween returns 3 days for two events 3 days apart" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.005"/>
+  <testcase name="averageDaysBetween is order-independent" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.066"/>
+  <testcase name="averageDaysBetween averages multiple intervals correctly" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.0"/>
+  <testcase name="daysRemaining is never negative" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.038"/>
+  <testcase name="averageDaysBetween respects sampleSize" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.002"/>
+  <testcase name="averageDaysBetween coerces zero-gap bursts to minimum" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.001"/>
+  <testcase name="averageDaysBetween result is always positive when not null" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.051"/>
+  <testcase name="averageDaysBetween returns null with one event" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.0"/>
+  <testcase name="averageDaysBetween returns null with no events" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.0"/>
+  <testcase name="daysRemaining multiplies onHand by average" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.001"/>
+  <testcase name="daysRemaining returns null when no usage history" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.0"/>
+  <testcase name="daysRemaining returns 0 when onHand is 0" classname="com.ostomate.app.domain.PredictionEngineTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

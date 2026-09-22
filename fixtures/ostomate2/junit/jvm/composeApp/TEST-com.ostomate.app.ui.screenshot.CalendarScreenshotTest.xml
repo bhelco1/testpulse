@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.screenshot.CalendarScreenshotTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:34.729Z" hostname="runnervmlun5p" time="13.72">
+  <properties/>
+  <testcase name="calendarMonthWithEvents" classname="com.ostomate.app.ui.screenshot.CalendarScreenshotTest" time="13.233"/>
+  <testcase name="calendarEmptyMonth" classname="com.ostomate.app.ui.screenshot.CalendarScreenshotTest" time="0.486"/>
+  <system-out><![CDATA[Roborazzi: calendar_month.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=1464804, width=822, height=1782) changed:false
+Roborazzi: calendar_empty_month.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=1464804, width=822, height=1782) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

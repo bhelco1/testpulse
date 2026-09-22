@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.home.HomeViewModelTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:34.294Z" hostname="runnervmlun5p" time="0.108">
+  <properties/>
+  <testcase name="undoRemovesTheEventAndRestoresStock" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.025"/>
+  <testcase name="clearUndoDismissesWithoutDeleting" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.01"/>
+  <testcase name="dismissPendingConfirmationClearsWithoutWriting" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.011"/>
+  <testcase name="reorderRemindersAreRescheduledFromHistory" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.012"/>
+  <testcase name="confirmPendingLogCommitsTheHeldChangeAndClearsConfirmation" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.012"/>
+  <testcase name="suppliesAppearWithPredictionsFromHistory" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.007"/>
+  <testcase name="logChangeDecrementsStockAndOffersUndo" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.009"/>
+  <testcase name="supplyWithoutHistoryHasNoPrediction" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.007"/>
+  <testcase name="rapidRepeatLogWithinWindowRaisesConfirmationWithoutWriting" classname="com.ostomate.app.ui.home.HomeViewModelTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="iosSimulatorArm64Test.com.ostomate.app.ui.settings.SettingsViewModelTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-21T18:57:03.925Z" hostname="Bobbys-MacBook-Pro.local" time="0.006">
+  <properties/>
+  <testcase name="togglesFlowThroughToTheSettingsState[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.0"/>
+  <testcase name="crashReportingToggleAlsoDrivesTheReporter[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.001"/>
+  <testcase name="exportProducesTimestampedJsonBackup[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.001"/>
+  <testcase name="restoreRoundTripReportsSuccess[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.002"/>
+  <testcase name="exportDiagnosticLogProducesTimestampedLogFile[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.001"/>
+  <testcase name="malformedRestoreReportsFailure[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.settings.SettingsViewModelTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

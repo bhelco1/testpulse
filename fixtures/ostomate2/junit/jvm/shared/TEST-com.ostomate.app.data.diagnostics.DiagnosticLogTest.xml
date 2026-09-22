@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.data.diagnostics.DiagnosticLogTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:17:52.502Z" hostname="runnervmlun5p" time="0.208">
+  <properties/>
+  <testcase name="serializesEveryScanAuditFieldFaithfully" classname="com.ostomate.app.data.diagnostics.DiagnosticLogTest" time="0.182"/>
+  <testcase name="exportReflectsClear" classname="com.ostomate.app.data.diagnostics.DiagnosticLogTest" time="0.006"/>
+  <testcase name="preservesNullEventIdAndNullSavedInstanceState" classname="com.ostomate.app.data.diagnostics.DiagnosticLogTest" time="0.005"/>
+  <testcase name="recordsScanAuditAsOneJsonLinePerEntry" classname="com.ostomate.app.data.diagnostics.DiagnosticLogTest" time="0.003"/>
+  <testcase name="appendsToAPreExistingFileWithoutLosingHistory" classname="com.ostomate.app.data.diagnostics.DiagnosticLogTest" time="0.005"/>
+  <testcase name="rollingCapDropsOldestEntriesOverTheCap" classname="com.ostomate.app.data.diagnostics.DiagnosticLogTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

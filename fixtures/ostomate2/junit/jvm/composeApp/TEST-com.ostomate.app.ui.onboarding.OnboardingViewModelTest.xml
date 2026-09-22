@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.onboarding.OnboardingViewModelTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:34.407Z" hostname="runnervmlun5p" time="0.046">
+  <properties/>
+  <testcase name="initialStateIsTwoPieceWithBagAndFlange" classname="com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.018"/>
+  <testcase name="finishWritesCountsAndSettings" classname="com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.016"/>
+  <testcase name="onePieceSelectsBagOnlyAndShortensFlow" classname="com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.001"/>
+  <testcase name="twoPieceWalksAllFourStepsForwardAndBack" classname="com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.002"/>
+  <testcase name="countInputStripsLeadingZerosAndNonDigits" classname="com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.0"/>
+  <testcase name="skipMarksOnboardingDoneWithoutTouchingSupplies" classname="com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.003"/>
+  <testcase name="toggleKindAddsAndRemoves" classname="com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

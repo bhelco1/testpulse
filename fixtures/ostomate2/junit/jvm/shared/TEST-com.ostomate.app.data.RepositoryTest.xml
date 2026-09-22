@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.data.RepositoryTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:17:36.326Z" hostname="runnervmlun5p" time="15.273">
+  <properties/>
+  <testcase name="undoLogRestoresThePriorCount" classname="com.ostomate.app.data.RepositoryTest" time="13.31"/>
+  <testcase name="oversizedBackupIsRejectedLeavingDataUntouched" classname="com.ostomate.app.data.RepositoryTest" time="0.723"/>
+  <testcase name="wrongSchemaVersionIsRejectedLeavingDataUntouched" classname="com.ostomate.app.data.RepositoryTest" time="0.166"/>
+  <testcase name="loggingAtZeroOnHandNeverGoesNegative" classname="com.ostomate.app.data.RepositoryTest" time="0.063"/>
+  <testcase name="deepLinkScansAreDebounced" classname="com.ostomate.app.data.RepositoryTest" time="0.124"/>
+  <testcase name="onHandAdjustmentsPersist" classname="com.ostomate.app.data.RepositoryTest" time="0.083"/>
+  <testcase name="undoingALogAtZeroDoesNotInventInventory" classname="com.ostomate.app.data.RepositoryTest" time="0.085"/>
+  <testcase name="addCustomSupplyAppendsAfterHighestSortOrder" classname="com.ostomate.app.data.RepositoryTest" time="0.089"/>
+  <testcase name="archivedSupplyIsSkippedByKindLookup" classname="com.ostomate.app.data.RepositoryTest" time="0.075"/>
+  <testcase name="customSupplyDeepLinkLogsById" classname="com.ostomate.app.data.RepositoryTest" time="0.081"/>
+  <testcase name="malformedBackupIsRejectedLeavingDataUntouched" classname="com.ostomate.app.data.RepositoryTest" time="0.059"/>
+  <testcase name="fullBackupRoundTripClonesEverything" classname="com.ostomate.app.data.RepositoryTest" time="0.265"/>
+  <testcase name="updateStampsEditedAt" classname="com.ostomate.app.data.RepositoryTest" time="0.082"/>
+  <testcase name="deleteRestocksAndReinsertConsumesInventory" classname="com.ostomate.app.data.RepositoryTest" time="0.062"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

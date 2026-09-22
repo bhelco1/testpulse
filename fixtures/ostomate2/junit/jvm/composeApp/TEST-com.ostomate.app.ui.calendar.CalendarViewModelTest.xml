@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.calendar.CalendarViewModelTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:33.637Z" hostname="runnervmlun5p" time="0.569">
+  <properties/>
+  <testcase name="currentMonthGridIsWholeWeeksWithTodayMarked" classname="com.ostomate.app.ui.calendar.CalendarViewModelTest" time="0.476"/>
+  <testcase name="addEventForDateLogsAtNoon" classname="com.ostomate.app.ui.calendar.CalendarViewModelTest" time="0.025"/>
+  <testcase name="selectingADayShowsItsEventsAndDismissClears" classname="com.ostomate.app.ui.calendar.CalendarViewModelTest" time="0.018"/>
+  <testcase name="monthNavigationMovesTheLabelBothWays" classname="com.ostomate.app.ui.calendar.CalendarViewModelTest" time="0.014"/>
+  <testcase name="deleteOffersUndoAndUndoReinsertsTheEvent" classname="com.ostomate.app.ui.calendar.CalendarViewModelTest" time="0.019"/>
+  <testcase name="pillsAggregateTheDaysEventsPerSupply" classname="com.ostomate.app.ui.calendar.CalendarViewModelTest" time="0.011"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-21T18:57:03.888Z" hostname="Bobbys-MacBook-Pro.local" time="0.02">
+  <properties/>
+  <testcase name="suppliesAppearWithPredictionsFromHistory[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="supplyWithoutHistoryHasNoPrediction[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="logChangeDecrementsStockAndOffersUndo[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.003"/>
+  <testcase name="undoRemovesTheEventAndRestoresStock[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="clearUndoDismissesWithoutDeleting[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="reorderRemindersAreRescheduledFromHistory[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="rapidRepeatLogWithinWindowRaisesConfirmationWithoutWriting[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.002"/>
+  <testcase name="confirmPendingLogCommitsTheHeldChangeAndClearsConfirmation[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.003"/>
+  <testcase name="dismissPendingConfirmationClearsWithoutWriting[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

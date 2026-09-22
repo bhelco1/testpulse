@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="iosSimulatorArm64Test.com.ostomate.app.ui.onboarding.OnboardingViewModelTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-21T18:57:03.908Z" hostname="Bobbys-MacBook-Pro.local" time="0.001">
+  <properties/>
+  <testcase name="initialStateIsTwoPieceWithBagAndFlange[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.0"/>
+  <testcase name="onePieceSelectsBagOnlyAndShortensFlow[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.0"/>
+  <testcase name="twoPieceWalksAllFourStepsForwardAndBack[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.0"/>
+  <testcase name="toggleKindAddsAndRemoves[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.0"/>
+  <testcase name="countInputStripsLeadingZerosAndNonDigits[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.0"/>
+  <testcase name="finishWritesCountsAndSettings[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.0"/>
+  <testcase name="skipMarksOnboardingDoneWithoutTouchingSupplies[iosSimulatorArm64]" classname="iosSimulatorArm64Test.com.ostomate.app.ui.onboarding.OnboardingViewModelTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

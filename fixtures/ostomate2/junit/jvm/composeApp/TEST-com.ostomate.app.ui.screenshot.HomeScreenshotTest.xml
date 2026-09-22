@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.screenshot.HomeScreenshotTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:48.455Z" hostname="runnervmlun5p" time="1.04">
+  <properties/>
+  <testcase name="homeLowStockWarning" classname="com.ostomate.app.ui.screenshot.HomeScreenshotTest" time="0.537"/>
+  <testcase name="homeWithSupplies" classname="com.ostomate.app.ui.screenshot.HomeScreenshotTest" time="0.288"/>
+  <testcase name="homeEmpty" classname="com.ostomate.app.ui.screenshot.HomeScreenshotTest" time="0.214"/>
+  <system-out><![CDATA[Roborazzi: home_low_stock.png The differ result :ComparisonResult(pixelDifferences=12, pixelCount=1464804, width=822, height=1782) changed:false
+Roborazzi: home_with_supplies.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=1464804, width=822, height=1782) changed:false
+Roborazzi: home_empty.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=1464804, width=822, height=1782) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

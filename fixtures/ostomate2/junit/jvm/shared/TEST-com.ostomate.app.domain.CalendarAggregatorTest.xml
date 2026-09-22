@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.domain.CalendarAggregatorTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:17:52.945Z" hostname="runnervmlun5p" time="0.559">
+  <properties/>
+  <testcase name="empty list returns empty map" classname="com.ostomate.app.domain.CalendarAggregatorTest" time="0.004"/>
+  <testcase name="event on Jan 15 appears in day 15 bucket" classname="com.ostomate.app.domain.CalendarAggregatorTest" time="0.013"/>
+  <testcase name="leap year Feb 29 is counted correctly" classname="com.ostomate.app.domain.CalendarAggregatorTest" time="0.0"/>
+  <testcase name="events in different months are excluded" classname="com.ostomate.app.domain.CalendarAggregatorTest" time="0.0"/>
+  <testcase name="total count equals events falling in that year-month" classname="com.ostomate.app.domain.CalendarAggregatorTest" time="0.439"/>
+  <testcase name="multiple supply types accumulate independently per day" classname="com.ostomate.app.domain.CalendarAggregatorTest" time="0.002"/>
+  <testcase name="all day-of-month keys are within valid range for the month" classname="com.ostomate.app.domain.CalendarAggregatorTest" time="0.099"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

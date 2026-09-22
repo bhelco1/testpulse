@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.screenshot.QrLabelsScreenshotTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:50.804Z" hostname="runnervmlun5p" time="0.727">
+  <properties/>
+  <testcase name="qrLabelsGrid" classname="com.ostomate.app.ui.screenshot.QrLabelsScreenshotTest" time="0.544"/>
+  <testcase name="qrLabelsEmpty" classname="com.ostomate.app.ui.screenshot.QrLabelsScreenshotTest" time="0.183"/>
+  <system-out><![CDATA[Roborazzi: qr_labels_grid.png The differ result :ComparisonResult(pixelDifferences=178, pixelCount=1464804, width=822, height=1782) changed:false
+Roborazzi: qr_labels_empty.png The differ result :ComparisonResult(pixelDifferences=0, pixelCount=1464804, width=822, height=1782) changed:false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

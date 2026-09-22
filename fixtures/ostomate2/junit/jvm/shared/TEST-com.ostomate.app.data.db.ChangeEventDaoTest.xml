@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.data.db.ChangeEventDaoTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:17:51.618Z" hostname="runnervmlun5p" time="0.854">
+  <properties/>
+  <testcase name="repositoryWritesScanAuditForEveryOutcome" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.084"/>
+  <testcase name="repositoryDeepLinkAllowsSecondScanAfterWindow" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.067"/>
+  <testcase name="repositoryIgnoresInvalidDeepLink" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.091"/>
+  <testcase name="repositoryDeepLinkNeedsConfirmationWithinWindow" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.096"/>
+  <testcase name="deepLinkLogTagsEventWithQrSource" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.054"/>
+  <testcase name="deleteRemovesRow" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.067"/>
+  <testcase name="insertAndReadBackJoinedWithSupply" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.068"/>
+  <testcase name="repositoryLogsChangeWithCurrentTime" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.056"/>
+  <testcase name="freshDatabaseSeedsV1DefaultSupplies" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.035"/>
+  <testcase name="archivedSuppliesAreExcludedFromActiveList" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.046"/>
+  <testcase name="repositoryHandlesValidDeepLink" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.051"/>
+  <testcase name="repositoryDeepLinkIsAtomicUnderConcurrency" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.052"/>
+  <testcase name="repositoryWasLoggedWithinWindowBoundary" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.046"/>
+  <testcase name="manualLogTagsEventWithManualSource" classname="com.ostomate.app.data.db.ChangeEventDaoTest" time="0.033"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-21T19:21:51.534Z" hostname="runnervmlun5p" time="0.055">
+  <properties/>
+  <testcase name="notEnrolledUnlocksGracefully" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.01"/>
+  <testcase name="failedBiometricBlocksTheEdit" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.006"/>
+  <testcase name="editCountOpensDirectlyWhenLockIsOff" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.005"/>
+  <testcase name="saveSupplyDetailsSanitizesInput" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.005"/>
+  <testcase name="archiveSupplyClosesTheEditSheet" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.004"/>
+  <testcase name="archivedSuppliesAreHiddenFromTheList" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.004"/>
+  <testcase name="lockOnPromptsOnceThenSessionStaysUnlocked" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.005"/>
+  <testcase name="setOnHandClampsNegativeToZero" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.005"/>
+  <testcase name="adjustOnHandAppliesDeltaAndClampsAtZero" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.005"/>
+  <testcase name="addCustomSupplyAppendsAfterTheHighestSortOrder" classname="com.ostomate.app.ui.settings.ManageSuppliesViewModelTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.12, 2026-09-22. Status: Phases 0 and 1 complete; Phase 2 in progress.
+Version 0.13, 2026-09-22. Status: Phases 0 and 1 complete; Phase 2 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -107,6 +107,7 @@ All tables have `id uuid primary key default gen_random_uuid()` and `created_at 
 | dev_stack | jsonb | Array of `{category, items[]}` |
 | test_stack | jsonb | Array of `{category, items[]}` |
 | layer_rules | jsonb | Ordered rules, see section 8 |
+| name_normalization | jsonb | Literal affixes stripped from `suite` and `name` at ingestion, see section 7. Default `{}` |
 | declared_suites | jsonb | Suites that exist outside reported results, see 5.8 |
 | coverage_floors | jsonb | `{module: line_pct}` as enforced in that project's CI |
 | expected_cadence_days | int | Staleness threshold, default 8 |
@@ -346,6 +347,20 @@ type NormalizedReport = {
 | istanbul summary | routeserve | `total.lines.covered/total`, `total.branches.covered/total` |
 
 Parser requirements: reject XML with DTDs or external entities (XXE), tolerate unknown attributes, fail with a specific message on malformed input. Entity processing is off; only the five predefined entities and numeric character references are decoded, in one non-recursive pass. JaCoCo is the one exception to the DOCTYPE rule: every JaCoCo report opens with its own public DOCTYPE, so exactly that declaration is stripped before the check and any other DOCTYPE, internal subset, or SYSTEM identifier is still rejected. `suite` and `name` over 1,000 characters are rejected, not truncated, and so are empty ones; per-test durations above 2,147,483,647 ms and report durations above one year are rejected because the columns and timestamps cannot hold them; `message` and `detail` are truncated per 5.6. Text containing U+0000, lone surrogates, or numeric references outside the XML character range is rejected, since Postgres cannot store it. The DOCTYPE check covers the prolog; after the root element a markup-level DOCTYPE is malformed XML and is rejected by the validator, while one inside CDATA or a comment is data and is kept. CDATA content is never entity-decoded. JUnit `time` must be a plain decimal; `timestamp` values without an offset are read as UTC so parsing does not depend on the server's timezone.
+
+### 7.1 Name normalization
+
+A toolchain may stamp the platform it ran on into the names it reports, which would make one logical test two. Kotlin Multiplatform does: the test the Ostomate2 JVM run reports as suite `com.ostomate.app.ui.home.HomeViewModelTest`, name `rendersToday` arrives from the iOS simulator as suite `iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest`, name `rendersToday[iosSimulatorArm64]`. Since `test_key` hashes module, suite and name (5.4), that split the `tests` table in two, and the prefixed suite matched none of the project's layer globs, so every iOS test resolved to the default layer.
+
+A project therefore declares in `projects/<slug>.yaml`, and in the `name_normalization` column, the literal affixes its toolchain adds:
+
+```yaml
+name_normalization:
+  suite_prefixes: ['iosSimulatorArm64Test.']
+  name_suffixes: ['[iosSimulatorArm64]']
+```
+
+Ingestion strips the first matching prefix from `suite` and the first matching suffix from `name` before it computes the test key and before it resolves the layer, so identity and layer are platform independent and the stored suite and name are the same whichever runner posted them. Matching is literal, never a regular expression; order within a list is significant and at most one affix is removed from each field; an absent or empty list changes nothing. Each list holds at most 10 entries of at most 200 characters. A strip that would leave an empty suite or name is refused with 400 naming the field, because an empty identifier is not storable. The parsers are unaffected: they stay generic and pure, and the same file posted by a project without normalization is read exactly as before.
 
 ## 8. Layer mapping
 
@@ -661,6 +676,7 @@ Phase 1 complete 2026-09-22.
 | 2026-09-22 | `test_key` hashes `module`, `suite`, `name` joined by U+0000 | A separator that cannot appear in the parts makes `ab`+`c` and `a`+`bc` distinct without rejecting any legal test name; newlines are legal in JUnit and Jest names, NUL is not storable and is already refused |
 | 2026-09-22 | Ingestion refuses in the order key, rate limit, size, encoding, body | An unknown caller learns nothing and costs nothing beyond a hash lookup; the body is never read before the cheap checks pass |
 | 2026-09-22 | The route handler calls `ingestReportWithSecretClient`, never the secret client directly | `app/` cannot import the secret client by lint rule, so the boundary lives one level down in `lib/ingest` |
+| 2026-09-22 | Platform affixes in test names are stripped by per-project `name_normalization` at ingestion, not by the parsers | Ostomate2's first reporting run stored 274 tests where there are 142, and resolved every iOS test to `unit`, because Kotlin Multiplatform's simulator target prefixes the suite and suffixes the name. The affixes belong to one project's toolchain, so encoding them in the JUnit parser would make a generic parser project-specific and would still miss the next toolchain; as configuration they are reviewable in the project file, apply before both the test key and the layer, and leave the parsers pure |
 | 2026-09-22 | Layer acceptance counts are asserted against what the captured fixtures contain | The backend fixture omits the PostGIS suite, so "integration 3" is unprovable from it; the glob is proven by a unit test and the count by CI once the project reports |
 
 ---

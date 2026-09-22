@@ -32,6 +32,7 @@ const readSuiteDir = (relativeDir: string): string[] =>
 
 const sharedJunit = readSuiteDir('ostomate2/junit/jvm/shared');
 const composeAppJunit = readSuiteDir('ostomate2/junit/jvm/composeApp');
+const composeAppIosJunit = readSuiteDir('ostomate2/junit/ios-sim/composeApp');
 const playwrightJunit = readFixture('testpulse/junit/playwright-one-failure.xml');
 const sharedJest = readFixture('routeserve/jest/shared.json');
 const sharedJestOneFailure = readFixture('routeserve/jest/shared-one-failure.json');
@@ -795,7 +796,7 @@ describe('POST /api/v1/reports (spec section 6)', () => {
           branch: 'main',
           event: 'push',
         },
-        { id: publicId, layer_rules: [{ default: 'e2e' }] },
+        { id: publicId, layer_rules: [{ default: 'e2e' }], name_normalization: {} },
         { format: 'junit', report: parseJunit([playwrightJunit]) },
         [],
         new Date('2026-09-22T12:00:00.000Z'),
@@ -862,7 +863,7 @@ describe('POST /api/v1/reports (spec section 6)', () => {
           branch: 'main',
           event: 'push',
         },
-        { id: publicId, layer_rules: [{ default: 'unit' }] },
+        { id: publicId, layer_rules: [{ default: 'unit' }], name_normalization: {} },
         { format: 'junit', report: parseJunit(sharedJunit) },
         [],
         new Date('2026-09-22T12:00:00.000Z'),
@@ -1020,5 +1021,163 @@ describe('POST /api/v1/reports (spec section 6)', () => {
       };
       expect(remaining).toEqual({ runs: [], tests: [], alerts: [], buckets: [] });
     });
+  });
+});
+
+// Spec 5.4, 7 and 11: Kotlin Multiplatform stamps its iOS simulator target into both the suite
+// and the test name, so the same composeApp test arrives twice per CI run. Without the
+// project's name_normalization it becomes two `tests` rows and the iOS copy misses every layer
+// glob; with it, one identity and one layer, whichever platform reported it.
+describe('Kotlin Multiplatform name normalization', () => {
+  const admin = createSecretClient(process.env);
+
+  const suffix = randomUUID().slice(0, 8);
+  const normalizingSlug = `norm-on-${suffix}`;
+  const plainSlug = `norm-off-${suffix}`;
+  const slugPattern = `norm-o%-${suffix}`;
+  const ciRunId = `${suffix}-kmp`;
+  // Keys live only in these variables and never appear in an assertion message.
+  let normalizingKey: string;
+  let plainKey: string;
+  let normalizingId: string;
+  let plainId: string;
+  let normalizingRunId: string;
+  let plainRunId: string;
+
+  const meta = (job: string, platform: string): string =>
+    JSON.stringify({
+      ci_run_id: ciRunId,
+      job,
+      module: 'composeApp',
+      platform,
+      commit_sha: '2ec580f377e52f0a1ae584661ff09b07821ea1e2',
+      branch: 'main',
+      event: 'push',
+    });
+
+  const postBothPlatforms = async (key: string): Promise<string> => {
+    const jvm = await post(
+      key,
+      multipart(['meta', meta('android', 'jvm')], ...files('junit', composeAppJunit)),
+    );
+    const ios = await post(
+      key,
+      multipart(['meta', meta('ios', 'ios-sim')], ...files('junit', composeAppIosJunit)),
+    );
+
+    expect([jvm.status, ios.status]).toEqual([201, 201]);
+    expect(jvm.body).toMatchObject({ totals: { total: 60, passed: 60, failed: 0, skipped: 0 } });
+    expect(ios.body).toMatchObject({ totals: { total: 50, passed: 50, failed: 0, skipped: 0 } });
+    // One CI run, two jobs: the second post joins the first run rather than opening its own.
+    expect(ios.body.run_id).toBe(jvm.body.run_id);
+    return jvm.body.run_id as string;
+  };
+
+  const testIdsOfReport = async (reportId: string): Promise<Set<string>> => {
+    const results = await rows(admin, 'results', 'test_id', ['report_id', reportId]);
+    return new Set(results.map((result) => String(result.test_id)));
+  };
+
+  const reportsByPlatform = async (runId: string): Promise<Map<string, string>> => {
+    const reports = await rows(admin, 'reports', 'id, platform, total', ['run_id', runId]);
+    expect(reports).toHaveLength(2);
+    return new Map(reports.map((report) => [String(report.platform), String(report.id)]));
+  };
+
+  beforeAll(async () => {
+    const ostomate2 = parseProjectFile(
+      readFileSync(`${repoRoot}projects/ostomate2.yaml`, 'utf8'),
+      'projects/ostomate2.yaml',
+    );
+    normalizingKey = await addProject(admin, { ...ostomate2, slug: normalizingSlug });
+    plainKey = await addProject(admin, { ...ostomate2, slug: plainSlug, name_normalization: {} });
+    const projects = unwrap(
+      await admin.from('projects').select('id, slug').like('slug', slugPattern),
+      'select projects',
+    );
+    const bySlug = new Map(projects.map((row) => [row.slug as string, row.id as string]));
+    normalizingId = bySlug.get(normalizingSlug) as string;
+    plainId = bySlug.get(plainSlug) as string;
+
+    normalizingRunId = await postBothPlatforms(normalizingKey);
+    plainRunId = await postBothPlatforms(plainKey);
+  });
+
+  afterAll(async () => {
+    unwrap(await admin.from('projects').delete().like('slug', slugPattern), 'cleanup projects');
+    unwrap(
+      await admin
+        .from('rate_limit_buckets')
+        .delete()
+        .in('api_key_hash', [hashApiKey(normalizingKey), hashApiKey(plainKey)]),
+      'cleanup rate_limit_buckets',
+    );
+  });
+
+  it('records 110 executions across the two reports of one run', async () => {
+    const run = unwrap(
+      await admin
+        .from('runs')
+        .select('id, status, total, passed, failed, skipped')
+        .eq('id', normalizingRunId)
+        .single(),
+      'select run',
+    );
+    const byPlatform = await reportsByPlatform(normalizingRunId);
+
+    expect(run).toMatchObject({
+      status: 'passed',
+      total: 110,
+      passed: 110,
+      failed: 0,
+      skipped: 0,
+    });
+    expect([...byPlatform.keys()].sort()).toEqual(['ios-sim', 'jvm']);
+  });
+
+  it('keeps 60 distinct tests rows, none carrying the platform in its identity', async () => {
+    const tests = await rows(admin, 'tests', 'id, suite, name', ['project_id', normalizingId]);
+
+    expect(tests).toHaveLength(60);
+    for (const test of tests) {
+      expect(String(test.suite)).not.toContain('iosSimulatorArm64');
+      expect(String(test.name)).not.toContain('iosSimulatorArm64');
+    }
+  });
+
+  it('resolves the layers from the normalized suites: unit 50, visual 10', async () => {
+    const tests = await rows(admin, 'tests', 'layer', ['project_id', normalizingId]);
+
+    expect(countBy(tests.map((test) => String(test.layer)))).toEqual({ unit: 50, visual: 10 });
+  });
+
+  it('links every iOS result to the tests row its JVM counterpart created', async () => {
+    const byPlatform = await reportsByPlatform(normalizingRunId);
+    const jvmTestIds = await testIdsOfReport(byPlatform.get('jvm') as string);
+    const iosTestIds = await testIdsOfReport(byPlatform.get('ios-sim') as string);
+
+    expect(jvmTestIds.size).toBe(60);
+    expect(iosTestIds.size).toBe(50);
+    for (const testId of iosTestIds) {
+      expect(jvmTestIds).toContain(testId);
+    }
+  });
+
+  it('leaves a project without normalization exactly as it was: 110 rows, unit 100', async () => {
+    const run = unwrap(
+      await admin.from('runs').select('total').eq('id', plainRunId).single(),
+      'select run',
+    );
+    const tests = await rows(admin, 'tests', 'id, layer', ['project_id', plainId]);
+    const byPlatform = await reportsByPlatform(plainRunId);
+    const jvmTestIds = await testIdsOfReport(byPlatform.get('jvm') as string);
+    const iosTestIds = await testIdsOfReport(byPlatform.get('ios-sim') as string);
+
+    expect(run).toMatchObject({ total: 110 });
+    expect(tests).toHaveLength(110);
+    expect(countBy(tests.map((test) => String(test.layer)))).toEqual({ unit: 100, visual: 10 });
+    for (const testId of iosTestIds) {
+      expect(jvmTestIds).not.toContain(testId);
+    }
   });
 });

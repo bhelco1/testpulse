@@ -20,6 +20,7 @@ export interface ProjectRow {
   readonly dev_stack: ProjectFile['dev_stack'];
   readonly test_stack: ProjectFile['test_stack'];
   readonly layer_rules: ProjectFile['layer_rules'];
+  readonly name_normalization: ProjectFile['name_normalization'];
   readonly declared_suites: ProjectFile['declared_suites'];
   readonly coverage_floors: ProjectFile['coverage_floors'];
   readonly expected_cadence_days: number;
@@ -50,6 +51,7 @@ export function toProjectRow(file: ProjectFile): ProjectRow {
     dev_stack: file.dev_stack,
     test_stack: file.test_stack,
     layer_rules: file.layer_rules,
+    name_normalization: file.name_normalization,
     declared_suites: file.declared_suites,
     coverage_floors: file.coverage_floors,
     expected_cadence_days: file.expected_cadence_days,

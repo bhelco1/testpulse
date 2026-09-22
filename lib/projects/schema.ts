@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 // Scripts run this module under Node's type stripping, which needs real extensions on imports.
 import { LayerRulesSchema, LayerSchema } from '../ingest/layer-rules.ts';
+import { NameNormalizationSchema } from '../ingest/name-normalization.ts';
 
 // A slug is a URL segment (spec section 5.1) and a file name under projects/, so it is kept to
 // the characters that need no escaping in either place.
@@ -50,6 +51,7 @@ export const ProjectFileSchema = z.strictObject({
   dev_stack: z.array(StackEntrySchema).default([]),
   test_stack: z.array(StackEntrySchema).default([]),
   layer_rules: LayerRulesSchema,
+  name_normalization: NameNormalizationSchema.default({}),
   declared_suites: z.array(DeclaredSuiteSchema).default([]),
   coverage_floors: z.record(z.string().min(1), z.number().min(0).max(100)).default({}),
   expected_cadence_days: z.int().positive().default(8),
@@ -60,6 +62,7 @@ export const ProjectFileSchema = z.strictObject({
 export type ProjectFile = z.output<typeof ProjectFileSchema>;
 export type ProjectFileInput = z.input<typeof ProjectFileSchema>;
 export type StackEntry = z.infer<typeof StackEntrySchema>;
+export type { NameNormalization } from '../ingest/name-normalization.ts';
 export type DeclaredSuite = z.infer<typeof DeclaredSuiteSchema>;
 export type DeclaredSuiteStatus = z.infer<typeof DeclaredSuiteStatusSchema>;
 export type Visibility = z.infer<typeof VisibilitySchema>;

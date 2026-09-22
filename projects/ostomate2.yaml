@@ -38,6 +38,13 @@ coverage_floors:
   shared: 91
   composeApp: 93
 
+# The iOS simulator target stamps itself into both names Gradle reports, so the same test
+# arrives as `iosSimulatorArm64Test.<class>` / `<method>[iosSimulatorArm64]` there and bare from
+# the JVM. Stripping both makes one logical test one row with one layer (spec section 7).
+name_normalization:
+  suite_prefixes: ['iosSimulatorArm64Test.']
+  name_suffixes: ['[iosSimulatorArm64]']
+
 layer_rules:
   - match: { module: shared, suite: 'com.ostomate.app.data.db.*' }
     layer: integration

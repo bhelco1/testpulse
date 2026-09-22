@@ -24,6 +24,9 @@ const file = parseProjectFile(
     '  - match: { module: api, suite: "api/routes/**" }',
     '    layer: api',
     '  - default: unit',
+    'name_normalization:',
+    "  suite_prefixes: ['iosSimulatorArm64Test.']",
+    "  name_suffixes: ['[iosSimulatorArm64]']",
     'declared_suites:',
     '  - name: Maestro',
     '    layer: e2e',
@@ -54,6 +57,10 @@ describe('toProjectRow', () => {
         { match: { module: 'api', suite: 'api/routes/**' }, layer: 'api' },
         { default: 'unit' },
       ],
+      name_normalization: {
+        suite_prefixes: ['iosSimulatorArm64Test.'],
+        name_suffixes: ['[iosSimulatorArm64]'],
+      },
       declared_suites: [
         { name: 'Maestro', layer: 'e2e', count: 3, status: 'runs_in_ci_not_reported' },
       ],

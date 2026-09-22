@@ -142,6 +142,7 @@ describe('projects/<slug>.yaml (spec sections 5.1, 5.8, 8, 10, Appendix B)', () 
       dev_stack: [],
       test_stack: [],
       layer_rules: [{ default: 'unit' }],
+      name_normalization: {},
       declared_suites: [],
       coverage_floors: {},
       expected_cadence_days: 8,
@@ -183,6 +184,51 @@ describe('projects/<slug>.yaml (spec sections 5.1, 5.8, 8, 10, Appendix B)', () 
       'projects/routeserve.yaml',
       'Invalid option',
       'layer_rules.1.layer',
+    );
+  });
+
+  it('reads the name_normalization block Ostomate2 needs for its iOS simulator run', () => {
+    const file = parseProjectFile(ostomate2Yaml, 'projects/ostomate2.yaml');
+
+    expect(file.name_normalization).toEqual({
+      suite_prefixes: ['iosSimulatorArm64Test.'],
+      name_suffixes: ['[iosSimulatorArm64]'],
+    });
+  });
+
+  it('rejects name_normalization that is not a capped list of non-empty strings', () => {
+    const withBlock = (body: string): string => `${routeserveYaml}\nname_normalization:\n${body}`;
+    const eleven = Array.from({ length: 11 }, (_, index) => `'p${index}.'`).join(', ');
+
+    expectRejected(
+      withBlock("  suite_prefixes: 'iosSimulatorArm64Test.'\n"),
+      'projects/routeserve.yaml',
+      'expected array',
+      'name_normalization.suite_prefixes',
+    );
+    expectRejected(
+      withBlock("  suite_prefixes: ['']\n"),
+      'projects/routeserve.yaml',
+      '>=1',
+      'name_normalization.suite_prefixes.0',
+    );
+    expectRejected(
+      withBlock(`  name_suffixes: [${eleven}]\n`),
+      'projects/routeserve.yaml',
+      '<=10',
+      'name_normalization.name_suffixes',
+    );
+    expectRejected(
+      withBlock(`  name_suffixes: ['${'x'.repeat(201)}']\n`),
+      'projects/routeserve.yaml',
+      '<=200',
+      'name_normalization.name_suffixes.0',
+    );
+    expectRejected(
+      withBlock('  suite_suffixes: [x]\n'),
+      'projects/routeserve.yaml',
+      'Unrecognized key',
+      'name_normalization.suite_suffixes',
     );
   });
 

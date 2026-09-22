@@ -133,11 +133,17 @@ async function findProjectByKeyHash(
 ): Promise<IngestProject | null> {
   const { data, error } = await client
     .from('projects')
-    .select('id, layer_rules')
+    .select('id, layer_rules, name_normalization')
     .eq('api_key_hash', hash)
     .maybeSingle();
   if (error) throw failed('look up project by key', error);
-  return data === null ? null : { id: data.id as string, layer_rules: data.layer_rules };
+  return data === null
+    ? null
+    : {
+        id: data.id as string,
+        layer_rules: data.layer_rules,
+        name_normalization: data.name_normalization,
+      };
 }
 
 async function rateLimitHit(client: SupabaseClient, hash: string, minute: Date): Promise<number> {

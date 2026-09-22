@@ -24,7 +24,11 @@ const sharedJunit = readdirSync(`${repoRoot}fixtures/ostomate2/junit/jvm/shared`
 
 // A key of the issued shape (spec 6.4) that was never issued; the fake client owns the lookup.
 const KEY = `tp_${'unit_test_key_that_is_never_stored_'.padEnd(43, '0')}`;
-const PROJECT = { id: '11111111-2222-4333-8444-555555555555', layer_rules: [{ default: 'unit' }] };
+const PROJECT = {
+  id: '11111111-2222-4333-8444-555555555555',
+  layer_rules: [{ default: 'unit' }],
+  name_normalization: {},
+};
 const RECEIVED_AT = new Date('2026-09-22T10:15:42.123Z');
 
 const meta = {

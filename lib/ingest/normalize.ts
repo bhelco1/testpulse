@@ -9,6 +9,7 @@ import {
 } from '../parsers';
 import { compileLayerRules, type Layer } from './layer-rules';
 import type { ReportEvent, ReportMeta } from './meta';
+import { compileNameNormalization } from './name-normalization';
 
 export type RunStatus = 'passed' | 'failed' | 'empty';
 export type ReportFormat = 'junit' | 'jest-json';
@@ -25,6 +26,7 @@ export interface Totals {
 export interface IngestProject {
   readonly id: string;
   readonly layer_rules: unknown;
+  readonly name_normalization: unknown;
 }
 
 export interface ParsedResults {
@@ -156,6 +158,7 @@ export function normalizeReport(
   receivedAt: Date,
 ): IngestPayload {
   const resolveLayer = compileLayerRules(project.layer_rules);
+  const normalizeIdentity = compileNameNormalization(project.name_normalization);
   const { report } = results;
   const startedAtMs =
     report.startedAt === undefined ? receivedAt.getTime() : Date.parse(report.startedAt);
@@ -181,21 +184,26 @@ export function normalizeReport(
       started_at: storableInstant('started_at', startedAtMs),
       finished_at: storableInstant('finished_at', startedAtMs + report.durationMs),
     },
-    tests: report.tests.map((test) => ({
-      test_key: testKey(meta.module, test.suite, test.name),
-      module: meta.module,
-      suite: test.suite,
-      name: test.name,
-      layer: resolveLayer({
-        job: meta.job,
+    // The project's normalization runs before the key and the layer, so both are computed from
+    // the identity the test has on every platform rather than the one this runner spelled.
+    tests: report.tests.map((test) => {
+      const { suite, name } = normalizeIdentity(test.suite, test.name);
+      return {
+        test_key: testKey(meta.module, suite, name),
         module: meta.module,
-        platform: meta.platform,
-        suite: test.suite,
-      }),
-      status: test.status,
-      duration_ms: test.durationMs,
-      failure: test.failure ?? null,
-    })),
+        suite,
+        name,
+        layer: resolveLayer({
+          job: meta.job,
+          module: meta.module,
+          platform: meta.platform,
+          suite,
+        }),
+        status: test.status,
+        duration_ms: test.durationMs,
+        failure: test.failure ?? null,
+      };
+    }),
     coverage: coverage.map((entry) => ({
       module: meta.module,
       format: entry.format,

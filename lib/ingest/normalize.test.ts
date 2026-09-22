@@ -14,9 +14,12 @@ import {
 } from '../parsers';
 import { parseProjectFile } from '../projects/schema';
 import { MAX_REPORT_DURATION_MS, MAX_TEST_DURATION_MS } from '../parsers/limits';
+import { compileLayerRules } from './layer-rules';
 import { type ReportMeta } from './meta';
+import { compileNameNormalization } from './name-normalization';
 import {
   deriveStatus,
+  type IngestProject,
   normalizeReport,
   summarize,
   sumTotals,
@@ -122,7 +125,7 @@ describe('normalizeReport with the Ostomate2 shared JVM fixture', () => {
   const report = parseJunit(readSuiteDir('ostomate2/junit/jvm/shared'));
   const payload = normalizeReport(
     meta(),
-    { id: PROJECT_ID, layer_rules: ostomate2.layer_rules },
+    { id: PROJECT_ID, layer_rules: ostomate2.layer_rules, name_normalization: {} },
     { format: 'junit', report },
     [],
     RECEIVED_AT,
@@ -197,7 +200,7 @@ describe('normalizeReport with the failing Playwright fixture', () => {
   const report = parseJunit([readFixture('testpulse/junit/playwright-one-failure.xml')]);
   const payload = normalizeReport(
     meta({ job: 'e2e', module: 'testpulse', platform: 'chromium' }),
-    { id: PROJECT_ID, layer_rules: [{ default: 'e2e' }] },
+    { id: PROJECT_ID, layer_rules: [{ default: 'e2e' }], name_normalization: {} },
     { format: 'junit', report },
     [],
     RECEIVED_AT,
@@ -220,7 +223,7 @@ describe('normalizeReport with the routeserve shared Jest fixture', () => {
   const istanbulCoverage = parseIstanbulSummary(readFixture('routeserve/istanbul/shared.json'));
   const payload = normalizeReport(
     meta({ job: 'test', module: 'packages/shared', platform: 'node' }),
-    { id: PROJECT_ID, layer_rules: routeserve.layer_rules },
+    { id: PROJECT_ID, layer_rules: routeserve.layer_rules, name_normalization: {} },
     { format: 'jest-json', report },
     [
       { format: 'jacoco', coverage: jacocoCoverage },
@@ -275,7 +278,7 @@ describe('normalizeReport timing', () => {
   it('uses the receipt time as started_at when the report has no start time', () => {
     const payload = normalizeReport(
       meta(),
-      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }] },
+      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }], name_normalization: {} },
       { format: 'junit', report: twoTests },
       [],
       RECEIVED_AT,
@@ -289,7 +292,7 @@ describe('normalizeReport timing', () => {
   it('writes null branch coverage when the parser reports none', () => {
     const payload = normalizeReport(
       meta(),
-      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }] },
+      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }], name_normalization: {} },
       { format: 'junit', report: twoTests },
       [{ format: 'istanbul', coverage: { linesCovered: 1, linesTotal: 2 } }],
       RECEIVED_AT,
@@ -311,7 +314,7 @@ describe('normalizeReport timing', () => {
     void run_url;
     const payload = normalizeReport(
       withoutUrl,
-      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }] },
+      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }], name_normalization: {} },
       { format: 'junit', report: twoTests },
       [],
       RECEIVED_AT,
@@ -327,7 +330,7 @@ describe('normalizeReport timing', () => {
     };
     const payload = normalizeReport(
       meta(),
-      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }] },
+      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }], name_normalization: {} },
       { format: 'junit', report: atCaps },
       [],
       RECEIVED_AT,
@@ -349,12 +352,171 @@ describe('normalizeReport timing', () => {
     const run = () =>
       normalizeReport(
         meta(),
-        { id: PROJECT_ID, layer_rules: [{ default: 'unit' }] },
+        { id: PROJECT_ID, layer_rules: [{ default: 'unit' }], name_normalization: {} },
         { format: 'junit', report },
         [],
         RECEIVED_AT,
       );
     expect(run).toThrow(ParseError);
     expect(run).toThrow(/timestamp/);
+  });
+});
+
+describe('name normalization (spec section 7)', () => {
+  // Kotlin Multiplatform reports the same composeApp tests twice: once from the JVM and once
+  // from the iOS simulator, which stamps its target into both the suite and the name.
+  const jvm = parseJunit(readSuiteDir('ostomate2/junit/jvm/composeApp'));
+  const iosSim = parseJunit(readSuiteDir('ostomate2/junit/ios-sim/composeApp'));
+  const normalize = compileNameNormalization(ostomate2.name_normalization);
+
+  const project = (): IngestProject => ({
+    id: PROJECT_ID,
+    layer_rules: ostomate2.layer_rules,
+    name_normalization: ostomate2.name_normalization,
+  });
+  const identity = (test: { suite: string; name: string }): string =>
+    `${test.suite}\u0000${test.name}`;
+  const payloadFor = (report: NormalizedReport, platform: string) =>
+    normalizeReport(
+      meta({ job: platform, module: 'composeApp', platform }),
+      project(),
+      { format: 'junit', report },
+      [],
+      RECEIVED_AT,
+    );
+  const fieldOf = (run: () => unknown): string | undefined => {
+    try {
+      run();
+    } catch (error) {
+      return error instanceof ParseError ? error.field : undefined;
+    }
+    return undefined;
+  };
+
+  it('rewrites every iOS simulator suite and name to the spelling the JVM run reports', () => {
+    const jvmIdentities = new Set(jvm.tests.map(identity));
+    const normalized = iosSim.tests.map((test) => normalize(test.suite, test.name));
+
+    expect(normalized).toHaveLength(50);
+    expect(new Set(normalized.map(identity)).size).toBe(50);
+    for (const test of normalized) {
+      expect(jvmIdentities).toContain(identity(test));
+    }
+  });
+
+  it('leaves the JVM spelling of those same tests untouched', () => {
+    for (const test of jvm.tests) {
+      expect(normalize(test.suite, test.name)).toEqual({ suite: test.suite, name: test.name });
+    }
+  });
+
+  it('gives one test_key to both platforms, so 110 executions are 60 distinct tests', () => {
+    const jvmKeys = payloadFor(jvm, 'jvm').tests.map((test) => test.test_key);
+    const iosKeys = payloadFor(iosSim, 'ios-sim').tests.map((test) => test.test_key);
+    const jvmSet = new Set(jvmKeys);
+
+    expect(jvmKeys).toHaveLength(60);
+    expect(iosKeys).toHaveLength(50);
+    expect(new Set([...jvmKeys, ...iosKeys]).size).toBe(60);
+    for (const key of iosKeys) {
+      expect(jvmSet).toContain(key);
+    }
+  });
+
+  it('stores the normalized identity, so no row carries the platform in its name', () => {
+    for (const test of payloadFor(iosSim, 'ios-sim').tests) {
+      expect(test.suite).not.toContain('iosSimulatorArm64');
+      expect(test.name).not.toContain('iosSimulatorArm64');
+    }
+  });
+
+  it('resolves the layer from the normalized suite, not the prefixed one', () => {
+    const resolveLayer = compileLayerRules(ostomate2.layer_rules);
+    const dao = 'iosSimulatorArm64Test.com.ostomate.app.data.db.ChangeEventDaoTest';
+    const screenshot = 'iosSimulatorArm64Test.com.ostomate.app.ui.screenshot.HomeScreenshotTest';
+    const layerOf = (module: string, suite: string): string =>
+      resolveLayer({ job: 'ios', module, platform: 'ios-sim', suite });
+
+    expect(layerOf('shared', normalize(dao, 'x[iosSimulatorArm64]').suite)).toBe('integration');
+    expect(layerOf('composeApp', normalize(screenshot, 'x[iosSimulatorArm64]').suite)).toBe(
+      'visual',
+    );
+    // The prefixed spelling is what misclassified every iOS test as `unit` in production.
+    expect(layerOf('shared', dao)).toBe('unit');
+    expect(layerOf('composeApp', screenshot)).toBe('unit');
+  });
+
+  it('gives the iOS composeApp report the layers its JVM counterpart gets', () => {
+    expect(countBy(payloadFor(jvm, 'jvm').tests.map((test) => test.layer))).toEqual({
+      unit: 50,
+      visual: 10,
+    });
+    expect(countBy(payloadFor(iosSim, 'ios-sim').tests.map((test) => test.layer))).toEqual({
+      unit: 50,
+    });
+  });
+
+  it('strips the first affix that matches, in the order the project listed them', () => {
+    const asListed = compileNameNormalization({
+      suite_prefixes: ['ios.', 'ios.sim.'],
+      name_suffixes: ['[b]', '[a][b]'],
+    });
+    expect(asListed('ios.sim.Suite', 'test[a][b]')).toEqual({
+      suite: 'sim.Suite',
+      name: 'test[a]',
+    });
+
+    const reordered = compileNameNormalization({
+      suite_prefixes: ['ios.sim.', 'ios.'],
+      name_suffixes: ['[a][b]', '[b]'],
+    });
+    expect(reordered('ios.sim.Suite', 'test[a][b]')).toEqual({ suite: 'Suite', name: 'test' });
+  });
+
+  it('changes nothing for a project that declares no normalization', () => {
+    for (const config of [{}, { suite_prefixes: [], name_suffixes: [] }]) {
+      const untouched = compileNameNormalization(config);
+      expect(untouched('iosSimulatorArm64Test.A', 'b[iosSimulatorArm64]')).toEqual({
+        suite: 'iosSimulatorArm64Test.A',
+        name: 'b[iosSimulatorArm64]',
+      });
+    }
+  });
+
+  it('refuses a strip that would leave an empty suite or name, naming the field', () => {
+    const strip = compileNameNormalization({
+      suite_prefixes: ['com.ostomate.app.OnlyTest'],
+      name_suffixes: ['rendersToday'],
+    });
+
+    const emptySuite = (): unknown => strip('com.ostomate.app.OnlyTest', 'rendersToday');
+    expect(emptySuite).toThrow(ParseError);
+    expect(emptySuite).toThrow(/name_normalization\.suite_prefixes/);
+    expect(fieldOf(emptySuite)).toBe('suite');
+
+    const emptyName = (): unknown => strip('com.ostomate.app.OtherTest', 'rendersToday');
+    expect(emptyName).toThrow(ParseError);
+    expect(emptyName).toThrow(/name_normalization\.name_suffixes/);
+    expect(fieldOf(emptyName)).toBe('name');
+  });
+
+  it('raises that refusal through normalizeReport, where ingestion turns it into a 400', () => {
+    const report: NormalizedReport = {
+      tests: [
+        {
+          suite: 'iosSimulatorArm64Test.com.ostomate.app.ui.home.HomeViewModelTest',
+          name: '[iosSimulatorArm64]',
+          status: 'passed',
+          durationMs: 1,
+        },
+      ],
+      durationMs: 1,
+    };
+    const run = (): unknown =>
+      normalizeReport(meta(), project(), { format: 'junit', report }, [], RECEIVED_AT);
+
+    expect(run).toThrow(ParseError);
+    expect(run).toThrow(/name_normalization\.name_suffixes/);
+    expect(fieldOf(run)).toBe('name');
   });
 });

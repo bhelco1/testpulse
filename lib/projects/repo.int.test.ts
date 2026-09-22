@@ -95,7 +95,7 @@ describe('project repository (spec section 10)', () => {
         await admin
           .from('projects')
           .select(
-            'id, created_at, slug, name, tagline, description, visibility, repo_url, default_branch, dev_stack, test_stack, layer_rules, declared_suites, coverage_floors, expected_cadence_days, sort_order, retention_days',
+            'id, created_at, slug, name, tagline, description, visibility, repo_url, default_branch, dev_stack, test_stack, layer_rules, name_normalization, declared_suites, coverage_floors, expected_cadence_days, sort_order, retention_days',
           )
           .eq('slug', slug)
           .single(),

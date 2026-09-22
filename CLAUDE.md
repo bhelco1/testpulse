@@ -27,7 +27,7 @@ Phase 0: Foundations. Update this line when a phase completes.
 - **Never weaken a test to make it pass.** If a test looks wrong, say why and ask.
 - **Real fixtures.** Parser tests use the captured files in `fixtures/`. Do not hand-write substitute samples. Fixtures from private repos must be scrubbed before commit; ask if unsure.
 - **Visibility is enforced in the database.** Anything hidden for private projects is protected by RLS and proven by a test using an anon client. UI-only hiding is a bug.
-- **Secrets.** Never commit secrets, never print them in logs or test output, never read `.env*` contents into a response. The service-role key is server-only.
+- **Secrets.** Never commit secrets, never print them in logs or test output, never read `.env*` contents into a response. The Supabase secret key is server-only; the browser gets only the publishable key.
 - **Untrusted input.** Everything in an ingested report is untrusted: cap lengths, escape on output, keep DTDs and external entities disabled in XML parsing.
 - **Dependencies.** Ask before adding any dependency. State what it is for, its size, and its maintenance status. Recurring cost must stay at $0.
 - **Design.** Implement pages and components to match the `design/` bundle. Do not invent colors, spacing, type sizes, or component styles. If the design does not cover a case, stop and flag it so it can be designed first.

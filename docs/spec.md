@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.3, 2026-09-21. Status: draft for review.
+Version 0.4, 2026-09-21. Status: draft for review.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -364,7 +364,7 @@ Acceptance check for each project's rules: resolved counts per layer match the i
 | Repo link, commit links, CI run links | shown | hidden |
 | Commit SHA | full, linked | first 7 chars, unlinked |
 
-Enforcement is in Postgres row-level security, so the anon key used by the browser for realtime cannot read hidden data even if the UI has a bug:
+Enforcement is in Postgres row-level security, so the publishable key used by the browser for realtime, which runs as the `anon` database role, cannot read hidden data even if the UI has a bug:
 
 - `result_failures`: anon `select` allowed only where the owning project is `public`.
 - `projects`: anon reads go through a view that omits `api_key_hash` and nulls `repo_url` for private projects.
@@ -468,7 +468,7 @@ The look of the site is a first-class requirement (G9). A hiring manager forms a
 
 - API keys: 32 random bytes, shown once, stored as SHA-256 hash, per project, rotatable.
 - Ingestion: size limit, rate limit, strict Zod validation, XML parser with DTD and entity expansion disabled, all text fields length-capped, all output HTML-escaped (failure messages are untrusted input).
-- Supabase service-role key is used only in server code and never shipped to the browser. The browser uses the anon key, constrained by RLS (section 9).
+- The Supabase secret key (`sb_secret_…`, the successor to the service-role key) is used only in server code and never shipped to the browser. The browser uses the publishable key (`sb_publishable_…`, the successor to the anon key), which runs as the `anon` database role and is constrained by RLS (section 9).
 - Admin: magic link, single allowlisted email, checked server-side on every admin route and action.
 - Secrets live in Vercel and GitHub environment settings. `.env*` files are gitignored from the first commit, and a CI check fails the build if a file matching common secret patterns is tracked.
 
@@ -497,6 +497,14 @@ Each phase is one or more PRs. A phase is done when every criterion has a passin
 - Housekeeping in source projects, tracked here because it affects what the public sees (manual, separate repos):
   - Ostomate2: gitignore `iosApp/iosApp/Secrets.swift`; fix `com.ostimate.app` in `fastlane/Appfile`; correct stale test counts in CLAUDE.md.
   - routeserve: remove `|| true` from `test:ci`; add the documented 80% `coverageThreshold` to the three Jest configs.
+
+Manual checks recorded 2026-09-21:
+
+- Hosted Supabase project `testpulse` created in region us-west-2, Postgres 17.6, matching `major_version = 17` in `supabase/config.toml`. Linked with `supabase link`; link state is gitignored.
+- Local Supabase runs with Studio, analytics, and edge runtime disabled (PR #7) and storage disabled (PR #8). `npm run db:reset` completes against it.
+- Vercel project connected through the GitHub import. Production deploys on push to `main`; preview deploys observed on every push to PR #8.
+- Fixtures reviewed before commit (PR #6): the only scrub is the path-prefix rewrite recorded in `fixtures/README.md`.
+- Source-project housekeeping: not yet done.
 
 ### Phase 1: Schema, parsers, ingestion
 
@@ -595,6 +603,17 @@ Each phase is one or more PRs. A phase is done when every criterion has a passin
 | 2026-09-21 | Weekly scheduled CI in each project | Makes staleness detection meaningful when no commits are landing |
 | 2026-09-21 | Rolling 180-day retention for per-test results; summaries permanent | Keeps free-tier storage bounded for 5 to 10 projects; no displayed stat needs row-level data older than 90 days |
 | 2026-09-21 | Daily heartbeat write | Free-tier Supabase pauses after about a week of inactivity; weekly CI posts are not enough |
+| 2026-09-21 | TypeScript 5.9, Node 24, Next.js 16 | Next.js 16 is the current major. TypeScript 7.0 shipped in July 2026 with a new compiler; staying on 5.9 keeps foundations free of a compiler migration, to be revisited after Phase 1. Node 24 is read from `.nvmrc` by CI and developers and from `engines` by Vercel |
+| 2026-09-21 | No styling library until the design bundle exists | The design decides the visual system; choosing a library first would be guessing |
+| 2026-09-21 | Supabase CLI from Homebrew locally, with OrbStack as the Docker runtime. When the integration job is added in Phase 1, CI will install the same CLI version through `supabase/setup-cli` and the version will be recorded in the workflow | Identical CLI behaviour in both places; OrbStack is lighter than Docker Desktop and free for personal use |
+| 2026-09-21 | Supabase publishable and secret keys (`sb_publishable_…`, `sb_secret_…`) instead of the legacy anon and service-role JWTs | Supabase's current key model; the legacy keys are being retired. Env var names: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` |
+| 2026-09-21 | Unit coverage scope is `lib/` and `components/`; `app/` is covered by Playwright | Route and page files are integration surface; counting them in unit coverage would reward shallow tests |
+| 2026-09-21 | Local Supabase runs without Studio, analytics, edge runtime, or storage | The spec uses none of them; a smaller stack starts faster locally and in CI |
+| 2026-09-21 | Migrations will be hand-written SQL in `supabase/migrations/`; the CLI's schema diff engine setting is left at its default and unused | Every schema and RLS change is reviewable as written |
+| 2026-09-21 | Hosted Supabase project in us-west-2 | Close to the owner |
+| 2026-09-21 | Vercel connected through the GitHub import, no Vercel CLI | Preview deploys per PR and production on `main` without another global tool to keep current |
+| 2026-09-21 | Squash merges only; every PR is reviewed adversarially before merge | `main` reads as one conventional commit per task, which is the history hiring managers will see |
+| 2026-09-21 | Private-repo fixtures: rewrite the local checkout path to the GitHub Actions workspace path, change nothing else | Removes the only sensitive content found; keeps the files byte-faithful to the tool output otherwise |
 
 ---
 

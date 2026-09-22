@@ -20,3 +20,8 @@ stats, phases, and acceptance criteria.
 - `npm run typecheck` runs `tsc --noEmit`
 - `npm run test` runs Vitest unit tests with coverage (90% lines floor)
 - `npm run check:secrets` fails if any tracked path looks like a secret
+
+## Continuous integration
+
+CI runs on every pull request and on every push to `main`. It checks formatting, lints,
+typechecks, checks for tracked secrets, runs the unit tests with coverage, and builds the site.

@@ -182,6 +182,19 @@ describe('findSuspiciousPaths', () => {
     );
   });
 
+  describe('rule: Supabase JWT signing keys', () => {
+    it.each(['signing_keys.json', 'supabase/signing_keys.json'])('flags %s', (path) => {
+      expect(paths(findSuspiciousPaths([path]))).toEqual([path]);
+    });
+
+    it.each(['signing_keys.json.example', 'signing_keys.md', 'keys.json'])(
+      'does not flag %s',
+      (path) => {
+        expect(findSuspiciousPaths([path])).toEqual([]);
+      },
+    );
+  });
+
   describe('rule: registry or network credentials', () => {
     it.each(['.npmrc', '.netrc', 'packages/app/.npmrc'])('flags %s', (path) => {
       expect(paths(findSuspiciousPaths([path]))).toEqual([path]);

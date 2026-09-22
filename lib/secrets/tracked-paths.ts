@@ -41,6 +41,7 @@ const rules: readonly Rule[] = [
       basename === 'credentials.json' ||
       (basename.startsWith('service-account') && basename.endsWith('.json')),
   },
+  { reason: 'Supabase JWT signing keys', test: named('signing_keys.json') },
   { reason: 'registry or network credentials', test: named('.npmrc', '.netrc') },
   { reason: 'Terraform variables', test: withExtension('.tfvars') },
 ];

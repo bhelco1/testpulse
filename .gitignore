@@ -20,9 +20,8 @@ playwright-report/
 blob-report/
 playwright/.cache/
 
-# Local Supabase
-supabase/.temp/
-supabase/.branches/
+# Local Supabase: the CLI's own ignores live in supabase/.gitignore
+supabase/signing_keys.json
 
 # Editors and OS
 .DS_Store

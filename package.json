@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
     "check:secrets": "node scripts/check-tracked-secrets.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:reset": "supabase db reset"
   },
   "dependencies": {
     "next": "16.3.5",

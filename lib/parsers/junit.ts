@@ -1,4 +1,4 @@
-import { assertName, firstNonEmptyLine, toFailure } from './limits';
+import { assertDuration, assertName, firstNonEmptyLine, toFailure } from './limits';
 import { ParseError, type NormalizedReport, type NormalizedTest, type TestStatus } from './types';
 import {
   assertNoDoctype,
@@ -30,14 +30,7 @@ function secondsToMs(value: string, location: string): number {
       },
     );
   }
-  const ms = Math.round(Number(value) * 1000);
-  if (!Number.isSafeInteger(ms)) {
-    throw new ParseError(`time attribute "${value}" is too large to store as milliseconds`, {
-      field: 'time',
-      location,
-    });
-  }
-  return ms;
+  return Math.round(Number(value) * 1000);
 }
 
 /** The element's `time` in milliseconds, or undefined when the attribute is absent or empty. */
@@ -62,7 +55,13 @@ function requiredAttribute(node: XmlNode, name: string, location: string): strin
 function toTest(testcase: XmlNode, location: string): NormalizedTest {
   const suite = assertName('suite', requiredAttribute(testcase, 'classname', location), location);
   const name = assertName('name', requiredAttribute(testcase, 'name', location), location);
-  const durationMs = timeOf(testcase, `${location}, testcase "${name}"`) ?? 0;
+  const testLocation = `${location}, testcase "${name}"`;
+  const durationMs = assertDuration(
+    'test',
+    'time',
+    timeOf(testcase, testLocation) ?? 0,
+    testLocation,
+  );
 
   for (const outcome of OUTCOME_CHILDREN) {
     const [element] = children(testcase, outcome.tag);
@@ -130,6 +129,7 @@ export function parseJunit(files: readonly string[]): NormalizedReport {
 
       durationMs +=
         timeOf(suite, location) ?? suiteTests.reduce((total, test) => total + test.durationMs, 0);
+      assertDuration('report', 'time', durationMs, location);
 
       const timestamp = attribute(suite, 'timestamp');
       const started = timestamp === undefined ? Number.NaN : parseTimestamp(timestamp);

@@ -4,6 +4,8 @@ import { createHash, randomBytes } from 'node:crypto';
 // leaked key recognisable in logs and secret scanners without saying anything about its bytes.
 export const API_KEY_PREFIX = 'tp_';
 const API_KEY_BYTES = 32;
+// 32 bytes in base64url without padding is 43 characters; nothing else was ever issued.
+export const API_KEY_PATTERN = /^tp_[A-Za-z0-9_-]{43}$/;
 
 export interface GeneratedApiKey {
   /** The key as presented to the operator exactly once. */

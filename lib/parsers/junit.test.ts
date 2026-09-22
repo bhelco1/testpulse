@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { parseJunit } from './junit';
+import { MAX_REPORT_DURATION_MS, MAX_TEST_DURATION_MS } from './limits';
 import { ParseError } from './types';
 
 const fixturesDir = fileURLToPath(new URL('../../fixtures/', import.meta.url));
@@ -504,20 +505,6 @@ describe('parseJunit edge cases derived from the real fixtures', () => {
     }
   });
 
-  it('rejects a time whose millisecond value is not a safe integer', () => {
-    const tooLarge = gradle.replace('time="13.31"', 'time="9007199254740993"');
-    const caught = catchError(() => parseJunit([tooLarge]));
-    expect(caught).toBeInstanceOf(ParseError);
-    expect((caught as ParseError).field).toBe('time');
-    expect((caught as ParseError).message).toMatch(/too large/);
-
-    const large = gradle.replace('time="13.31"', 'time="9007199254740"');
-    const undoLog = parseJunit([large]).tests.find(
-      (test) => test.name === 'undoLogRestoresThePriorCount',
-    );
-    expect(undoLog?.durationMs).toBe(9007199254740000);
-  });
-
   it('rejects a name or suite longer than 1,000 characters, naming the field', () => {
     // Built by rewriting one testcase of the real Gradle fixture with an oversized attribute.
     const longName = gradle.replace(
@@ -574,5 +561,62 @@ describe('parseJunit edge cases derived from the real fixtures', () => {
     const failed = parseJunit([straddling]).tests[1];
     expect(failed?.failure?.message).toBe('m'.repeat(1999));
     expect(failed?.failure?.detail).toBe('d'.repeat(9999));
+  });
+});
+
+describe('parseJunit duration caps (results.duration_ms is int4; report timestamps are bounded)', () => {
+  const gradle = readFixture(
+    'ostomate2/junit/jvm/shared/TEST-com.ostomate.app.data.RepositoryTest.xml',
+  );
+  const testcaseTime = 'classname="com.ostomate.app.data.RepositoryTest" time="13.31"';
+  const suiteTime = 'hostname="runnervmlun5p" time="15.273"';
+
+  it('accepts a testcase time of exactly 2,147,483.647 s and rejects one millisecond more', () => {
+    const atCap = gradle.replace(testcaseTime, testcaseTime.replace('13.31', '2147483.647'));
+    expect(parseJunit([atCap]).tests[0]?.durationMs).toBe(MAX_TEST_DURATION_MS);
+
+    const over = gradle.replace(testcaseTime, testcaseTime.replace('13.31', '2147483.648'));
+    const caught = catchError(() => parseJunit([over]));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).field).toBe('time');
+    expect((caught as ParseError).message).toMatch(/2,147,483,647/);
+    expect((caught as ParseError).location).toContain('testcase "undoLogRestoresThePriorCount"');
+  });
+
+  it('rejects a testcase time of 2200000 s, which would overflow the results column', () => {
+    const over = gradle.replace(testcaseTime, testcaseTime.replace('13.31', '2200000'));
+    const caught = catchError(() => parseJunit([over]));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).field).toBe('time');
+  });
+
+  it('accepts a testsuite time of exactly one year and rejects one millisecond more', () => {
+    const atCap = gradle.replace(suiteTime, suiteTime.replace('15.273', '31536000'));
+    expect(parseJunit([atCap]).durationMs).toBe(MAX_REPORT_DURATION_MS);
+
+    const over = gradle.replace(suiteTime, suiteTime.replace('15.273', '31536000.001'));
+    const caught = catchError(() => parseJunit([over]));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).field).toBe('time');
+    expect((caught as ParseError).message).toMatch(/31,536,000,000/);
+    expect((caught as ParseError).location).toContain(
+      'testsuite "com.ostomate.app.data.RepositoryTest"',
+    );
+  });
+
+  it('caps the report duration on the sum across files, not per file', () => {
+    const half = gradle.replace(suiteTime, suiteTime.replace('15.273', '15768000'));
+    expect(parseJunit([half, half]).durationMs).toBe(MAX_REPORT_DURATION_MS);
+    const caught = catchError(() => parseJunit([half, half, gradle]));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).field).toBe('time');
+    expect((caught as ParseError).location).toContain('file 3');
+  });
+
+  it('rejects a time too large for a number without an unhandled overflow', () => {
+    const huge = gradle.replace(testcaseTime, testcaseTime.replace('13.31', `1${'0'.repeat(400)}`));
+    const caught = catchError(() => parseJunit([huge]));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).field).toBe('time');
   });
 });

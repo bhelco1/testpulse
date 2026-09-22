@@ -2,7 +2,13 @@ import { createHash } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { API_KEY_PREFIX, describeIssuedKey, generateApiKey, hashApiKey } from './keys.ts';
+import {
+  API_KEY_PATTERN,
+  API_KEY_PREFIX,
+  describeIssuedKey,
+  generateApiKey,
+  hashApiKey,
+} from './keys.ts';
 
 const BYTES_A = Uint8Array.from({ length: 32 }, (_, index) => index);
 const BYTES_B = Uint8Array.from({ length: 32 }, (_, index) => 255 - index);
@@ -49,6 +55,27 @@ describe('generateApiKey (spec section 15)', () => {
   it('refuses anything but 32 bytes', () => {
     expect(() => generateApiKey(new Uint8Array(16))).toThrow(/32 bytes/);
     expect(() => generateApiKey(new Uint8Array(33))).toThrow(/32 bytes/);
+  });
+});
+
+describe('API_KEY_PATTERN', () => {
+  it('matches every issued key and nothing shorter, longer, or outside base64url', () => {
+    expect(API_KEY_PATTERN.test(generateApiKey(BYTES_A).key)).toBe(true);
+    expect(API_KEY_PATTERN.test(generateApiKey().key)).toBe(true);
+    const body = 'A'.repeat(ENCODED_LENGTH);
+    expect(API_KEY_PATTERN.test(`tp_${body}`)).toBe(true);
+    for (const wrong of [
+      body,
+      `tp_${body.slice(1)}`,
+      `tp_${body}A`,
+      `tp_${body.slice(1)}+`,
+      `tp_${body.slice(1)}=`,
+      `TP_${body}`,
+      ` tp_${body}`,
+      `tp_${body}\n`,
+    ]) {
+      expect(API_KEY_PATTERN.test(wrong), JSON.stringify(wrong)).toBe(false);
+    }
   });
 });
 

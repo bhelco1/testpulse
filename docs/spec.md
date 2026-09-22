@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.9, 2026-09-22. Status: Phase 0 complete; Phase 1 in progress.
+Version 0.10, 2026-09-22. Status: Phase 0 complete; Phase 1 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -298,23 +298,25 @@ The project is identified by the API key. One request equals one report (section
 |---|---|
 | 201 | Report created. Body: `{run_id, report_id, totals, run_status}` |
 | 200 | Same key re-posted; report replaced |
-| 400 | `meta` failed validation, or a file could not be parsed. Body names the part and the error |
+| 400 | `meta` failed validation, a file could not be parsed, or the multipart shape is wrong (both `junit` and `jest`, two `jest` files, an unknown part). Body: `{error, part, field?}` naming the part and, when known, the field |
 | 401 | Missing or unknown API key |
-| 413 | Body too large |
-| 422 | Parsed successfully but contained zero test cases. Report is stored with run status `empty` and an `empty_run` alert is opened |
+| 413 | Body too large (`Content-Length` over 4 MB, or more than 4 MB read from parts) |
+| 415 | `Content-Encoding` other than identity. Compressed bodies are not accepted yet (see 6.5) |
+| 422 | Parsed successfully but contained zero test cases. The report is stored, an `empty_run` alert is opened, and the run status is derived per 5.2 (`empty` only when every report in the run is empty). Body is the 201 body plus `error`, so a CI log line explains itself |
 | 429 | Rate limit: 60 requests per minute per key |
 
 ### 6.4 Behavior
 
-- Whole request is transactional: parse everything, then write everything, or write nothing.
-- Upserts `runs`, then replaces the matching `reports` row and its children, then recomputes run rollups and status.
-- Upserts `tests` by `test_key`; resolves `layer` on first sight and whenever `layer_rules` change (a resync job re-resolves existing tests).
-- Runs alert checks for the project after each write (section 12).
-- API keys are compared by SHA-256 hash in constant time.
+- Checks run in this order: API key (401), rate limit (429; a refused request still counts), size (413), encoding (415), multipart shape and parsing (400), then the write. Nothing touches the body until the key and the rate limit have passed.
+- Whole request is transactional: parse everything, then write everything, or write nothing. The write is one Postgres function, `ingest_report(payload)`, which re-validates the payload and raises before any row changes.
+- Upserts `runs`, then replaces the matching `reports` row and its children (delete plus insert, so a re-post gets a new `report_id`), then recomputes run rollups and status. Run metadata (`commit_sha`, `branch`, `event`) follows the latest report for that CI run; `run_url` is kept when a later report omits it. `reports.failed` and `runs.failed` count failed and error results together; `results.status` keeps the distinction.
+- Upserts `tests` by `test_key` (SHA-256 of `module`, `suite`, and `name` joined by U+0000, which the parsers guarantee cannot appear in any of them); keeps `first_seen_at`, moves `last_seen_at` forward only, and refreshes `layer` from the project's current rules on every report (a resync job re-resolves tests that stop reporting).
+- Runs alert checks for the project after each write (section 12). In Phase 1 only `empty_run` is implemented: opened when a report has zero tests, re-pointed rather than duplicated on a re-post, resolved by the next non-empty report for the same `(job, module, platform)`. `stale`, `count_drop`, and `coverage_below_floor` arrive in Phase 6.
+- A presented key must have the issued shape (`tp_` plus 43 base64url characters) before anything else happens; other strings get the same 401 without a database lookup. API keys are then resolved by looking up the SHA-256 hash of the presented key as an indexed equality on the unique `api_key_hash` column. The caller controls only the key, never the stored digest, so no timing-safe comparison in application code is needed.
 
 ### 6.5 Size
 
-Target limit 4 MB per request. Verified 2026-09-21: Vercel Functions reject request bodies over 4.5 MB with 413 on every plan, so 4 MB leaves headroom. This is why reports are per module: routeserve's three Jest JSON files are posted as three requests. If a single file exceeds the limit, the reporter script gzips it and sends `Content-Encoding: gzip`.
+Target limit 4 MB per request. Verified 2026-09-21: Vercel Functions reject request bodies over 4.5 MB with 413 on every plan, so 4 MB leaves headroom. This is why reports are per module: routeserve's three Jest JSON files are posted as three requests. If a single file ever exceeds the limit, the reporter script will gzip it and send `Content-Encoding: gzip`; the endpoint answers 415 to any encoding until that support exists, because an inflated-size cap has to accompany it. The largest captured file today is routeserve's backend Jest JSON at 0.19 MB.
 
 ## 7. Parsers
 
@@ -341,7 +343,7 @@ type NormalizedReport = {
 | JaCoCo XML | Ostomate2 | Report-level `counter` elements, `type=LINE` and `type=BRANCH`, `covered` and `missed` |
 | istanbul summary | routeserve | `total.lines.covered/total`, `total.branches.covered/total` |
 
-Parser requirements: reject XML with DTDs or external entities (XXE), tolerate unknown attributes, fail with a specific message on malformed input. Entity processing is off; only the five predefined entities and numeric character references are decoded, in one non-recursive pass. JaCoCo is the one exception to the DOCTYPE rule: every JaCoCo report opens with its own public DOCTYPE, so exactly that declaration is stripped before the check and any other DOCTYPE, internal subset, or SYSTEM identifier is still rejected. `suite` and `name` over 1,000 characters are rejected, not truncated, and so are empty ones; `message` and `detail` are truncated per 5.6. Text containing U+0000, lone surrogates, or numeric references outside the XML character range is rejected, since Postgres cannot store it. The DOCTYPE check covers the prolog; after the root element a markup-level DOCTYPE is malformed XML and is rejected by the validator, while one inside CDATA or a comment is data and is kept. CDATA content is never entity-decoded. JUnit `time` must be a plain decimal; `timestamp` values without an offset are read as UTC so parsing does not depend on the server's timezone.
+Parser requirements: reject XML with DTDs or external entities (XXE), tolerate unknown attributes, fail with a specific message on malformed input. Entity processing is off; only the five predefined entities and numeric character references are decoded, in one non-recursive pass. JaCoCo is the one exception to the DOCTYPE rule: every JaCoCo report opens with its own public DOCTYPE, so exactly that declaration is stripped before the check and any other DOCTYPE, internal subset, or SYSTEM identifier is still rejected. `suite` and `name` over 1,000 characters are rejected, not truncated, and so are empty ones; per-test durations above 2,147,483,647 ms and report durations above one year are rejected because the columns and timestamps cannot hold them; `message` and `detail` are truncated per 5.6. Text containing U+0000, lone surrogates, or numeric references outside the XML character range is rejected, since Postgres cannot store it. The DOCTYPE check covers the prolog; after the root element a markup-level DOCTYPE is malformed XML and is rejected by the validator, while one inside CDATA or a comment is data and is kept. CDATA content is never entity-decoded. JUnit `time` must be a plain decimal; `timestamp` values without an offset are read as UTC so parsing does not depend on the server's timezone.
 
 ## 8. Layer mapping
 
@@ -641,6 +643,10 @@ Phase 0 complete 2026-09-21.
 | 2026-09-22 | Layer globs match the repo-relative suite, so project rules carry the workspace prefix | Section 7 makes suites repo-relative for stability across runners; Appendix B's globs were workspace-relative and never matched. Keeping globs anchored and standard was preferred over per-workspace `path_prefix` values |
 | 2026-09-22 | API keys are `tp_` + base64url of 32 random bytes; the database stores the SHA-256 hex of the presented string | The prefix makes a leaked key recognisable in logs and secret scanners; hashing the presented string keeps lookup a single indexed equality on a digest |
 | 2026-09-22 | `projects/<slug>.yaml` requires `description`; the secret-key client lives in `lib/supabase/server.ts` and ESLint forbids importing it from `app/` or `components/` | The column has no database default, so an omitted description would be an empty project page; a lint rule is the only enforceable boundary against shipping the secret client to the browser |
+| 2026-09-22 | Compressed request bodies are refused with 415 until a real file needs them | The largest captured file is 0.19 MB against a 4 MB limit; accepting gzip without an inflated-size cap would let a small body expand past every limit |
+| 2026-09-22 | `test_key` hashes `module`, `suite`, `name` joined by U+0000 | A separator that cannot appear in the parts makes `ab`+`c` and `a`+`bc` distinct without rejecting any legal test name; newlines are legal in JUnit and Jest names, NUL is not storable and is already refused |
+| 2026-09-22 | Ingestion refuses in the order key, rate limit, size, encoding, body | An unknown caller learns nothing and costs nothing beyond a hash lookup; the body is never read before the cheap checks pass |
+| 2026-09-22 | The route handler calls `ingestReportWithSecretClient`, never the secret client directly | `app/` cannot import the secret client by lint rule, so the boundary lives one level down in `lib/ingest` |
 | 2026-09-22 | Layer acceptance counts are asserted against what the captured fixtures contain | The backend fixture omits the PostGIS suite, so "integration 3" is unprovable from it; the glob is proven by a unit test and the count by CI once the project reports |
 
 ---

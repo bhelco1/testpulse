@@ -5,35 +5,62 @@ export const MAX_NAME_LENGTH = 1000;
 export const MAX_FAILURE_MESSAGE_LENGTH = 2000;
 export const MAX_FAILURE_DETAIL_LENGTH = 10_000;
 
+// `results.duration_ms` is int4, so a per-test duration is capped at its maximum; a report
+// duration is added to a timestamp, so it is capped at one year, far beyond any real run.
+export const MAX_TEST_DURATION_MS = 2_147_483_647;
+export const MAX_REPORT_DURATION_MS = 31_536_000_000;
+
+// The largest epoch-millisecond value a Date can hold; beyond it `toISOString` throws.
+export const MAX_EPOCH_MS = 8.64e15;
+
 type TextField = 'suite' | 'name' | 'message' | 'detail';
 
 const LONE_SURROGATE = /[\uD800-\uDFFF]/u;
 
-function errorOptions(field: TextField, location: string | undefined): ParseErrorOptions {
+function errorOptions(field: string, location: string | undefined): ParseErrorOptions {
   return location === undefined ? { field } : { field, location };
 }
 
 /**
  * Postgres `text` rejects U+0000 and any string that is not valid UTF-8, which a lone surrogate
- * is not. Both can arrive from JSON escapes or a raw byte, so they are refused here with a
- * specific message instead of surfacing as a database error.
+ * is not. Both can arrive from JSON escapes or a raw byte. Returns what is wrong with the text
+ * as the tail of a sentence, or undefined when it can be stored.
  */
-export function assertStorableText(field: TextField, value: string, location?: string): string {
-  if (value.includes('\u0000')) {
-    throw new ParseError(
-      `${field} contains U+0000, which cannot be stored`,
-      errorOptions(field, location),
-    );
-  }
+export function storabilityIssue(value: string): string | undefined {
+  if (value.includes('\u0000')) return 'U+0000, which cannot be stored';
   const lone = LONE_SURROGATE.exec(value);
-  if (lone !== null) {
-    const codeUnit = lone[0].charCodeAt(0).toString(16).toUpperCase();
-    throw new ParseError(
-      `${field} contains a lone surrogate U+${codeUnit}, which cannot be stored`,
-      errorOptions(field, location),
-    );
+  if (lone === null) return undefined;
+  const codeUnit = lone[0].charCodeAt(0).toString(16).toUpperCase();
+  return `a lone surrogate U+${codeUnit}, which cannot be stored`;
+}
+
+export function assertStorableText(field: TextField, value: string, location?: string): string {
+  const issue = storabilityIssue(value);
+  if (issue !== undefined) {
+    throw new ParseError(`${field} contains ${issue}`, errorOptions(field, location));
   }
   return value;
+}
+
+/**
+ * Refuses a duration the database cannot hold. The comparison is written so that NaN and
+ * Infinity, which a huge decimal in the input produces, fail it too.
+ */
+export function assertDuration(
+  scope: 'test' | 'report',
+  field: string,
+  valueMs: number,
+  location?: string,
+): number {
+  const max = scope === 'test' ? MAX_TEST_DURATION_MS : MAX_REPORT_DURATION_MS;
+  if (!(valueMs <= max)) {
+    throw new ParseError(
+      `${field} gives a ${scope} duration of ${valueMs} ms, above the ` +
+        `${max.toLocaleString('en-US')} ms that can be stored`,
+      errorOptions(field, location),
+    );
+  }
+  return valueMs;
 }
 
 export function assertName(field: 'suite' | 'name', value: string, location?: string): string {

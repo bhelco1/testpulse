@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
 import { formatPath, parseJsonText, validateShape } from './json';
-import { assertName, firstNonEmptyLine, stripAnsi, toFailure } from './limits';
+import {
+  assertDuration,
+  assertName,
+  firstNonEmptyLine,
+  MAX_EPOCH_MS,
+  stripAnsi,
+  toFailure,
+} from './limits';
 import { ParseError, type NormalizedReport, type NormalizedTest, type TestStatus } from './types';
-
-// The largest epoch-millisecond value a Date can hold; beyond it `toISOString` throws.
-const MAX_EPOCH_MS = 8.64e15;
 
 // Only the fields the parser reads; Jest's other fields are ignored (spec section 7).
 const assertionResultSchema = z.object({
@@ -85,7 +89,12 @@ function toTest(
     suite,
     name,
     status,
-    durationMs: Math.round(assertion.duration ?? 0),
+    durationMs: assertDuration(
+      'test',
+      'duration',
+      Math.round(assertion.duration ?? 0),
+      formatPath([...path, 'duration']),
+    ),
   };
   if (status === 'failed' || status === 'error') {
     const detail = assertion.failureMessages.join('\n');
@@ -122,6 +131,12 @@ export function parseJestJson(text: string, options: JestJsonOptions): Normalize
 
   root.testResults.forEach((file, fileIndex) => {
     durationMs += file.endTime - file.startTime;
+    assertDuration(
+      'report',
+      'endTime',
+      durationMs,
+      formatPath(['testResults', fileIndex, 'endTime']),
+    );
     const suite = toSuite(file.name, options.pathPrefix, formatPath(['testResults', fileIndex]));
     const suiteTests = file.assertionResults.map((assertion, assertionIndex) =>
       toTest(suite, assertion, ['testResults', fileIndex, 'assertionResults', assertionIndex]),

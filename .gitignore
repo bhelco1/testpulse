@@ -32,3 +32,6 @@ supabase/signing_keys.json
 # Logs
 *.log
 npm-debug.log*
+
+# Agent worktrees created by Claude Code
+.claude/worktrees/

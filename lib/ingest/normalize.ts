@@ -1,0 +1,208 @@
+import { createHash } from 'node:crypto';
+
+import {
+  ParseError,
+  type NormalizedCoverage,
+  type NormalizedReport,
+  type TestFailure,
+  type TestStatus,
+} from '../parsers';
+import { compileLayerRules, type Layer } from './layer-rules';
+import type { ReportEvent, ReportMeta } from './meta';
+
+export type RunStatus = 'passed' | 'failed' | 'empty';
+export type ReportFormat = 'junit' | 'jest-json';
+export type CoverageFormat = 'jacoco' | 'istanbul';
+
+export interface Totals {
+  readonly total: number;
+  readonly passed: number;
+  readonly failed: number;
+  readonly skipped: number;
+}
+
+/** The columns of the project row that ingestion needs. */
+export interface IngestProject {
+  readonly id: string;
+  readonly layer_rules: unknown;
+}
+
+export interface ParsedResults {
+  readonly format: ReportFormat;
+  readonly report: NormalizedReport;
+}
+
+export interface CoverageInput {
+  readonly format: CoverageFormat;
+  readonly coverage: NormalizedCoverage;
+}
+
+export interface PayloadTest {
+  readonly test_key: string;
+  readonly module: string;
+  readonly suite: string;
+  readonly name: string;
+  readonly layer: Layer;
+  readonly status: TestStatus;
+  readonly duration_ms: number;
+  readonly failure: TestFailure | null;
+}
+
+export interface PayloadCoverage {
+  readonly module: string;
+  readonly format: CoverageFormat;
+  readonly lines_covered: number;
+  readonly lines_total: number;
+  readonly branches_covered: number | null;
+  readonly branches_total: number | null;
+}
+
+/** The argument of the `ingest_report` database function; every write comes from here. */
+export interface IngestPayload {
+  readonly project_id: string;
+  readonly received_at: string;
+  readonly run: {
+    readonly ci_run_id: string;
+    readonly run_attempt: number;
+    readonly commit_sha: string;
+    readonly branch: string;
+    readonly event: ReportEvent;
+    readonly run_url: string | null;
+  };
+  readonly report: Totals & {
+    readonly job: string;
+    readonly module: string;
+    readonly platform: string;
+    readonly format: ReportFormat;
+    readonly duration_ms: number;
+    readonly started_at: string;
+    readonly finished_at: string;
+  };
+  readonly tests: readonly PayloadTest[];
+  readonly coverage: readonly PayloadCoverage[];
+}
+
+// U+0000 cannot be stored in Postgres text, so the parsers and the meta schema refuse it in
+// every part; that makes it the one separator that cannot appear inside a part.
+const KEY_SEPARATOR = '\u0000';
+
+/**
+ * Spec 5.4: the stable identity of a test. The parts are joined with a separator none of them
+ * can contain, so ("ab", "c") and ("a", "bc") hash differently.
+ */
+export function testKey(module: string, suite: string, name: string): string {
+  return createHash('sha256')
+    .update([module, suite, name].join(KEY_SEPARATOR), 'utf8')
+    .digest('hex');
+}
+
+// Postgres reads timestamps with a four-digit year; a Date reaches year 275760 but renders
+// anything past 9999 (or before 1) in the extended form the database rejects.
+const MIN_STORABLE_MS = Date.parse('0001-01-01T00:00:00.000Z');
+const MAX_STORABLE_MS = Date.parse('9999-12-31T23:59:59.999Z');
+
+function storableInstant(field: 'started_at' | 'finished_at', ms: number): string {
+  if (!(ms >= MIN_STORABLE_MS && ms <= MAX_STORABLE_MS)) {
+    throw new ParseError(
+      `the report's ${field} falls outside the years 1 to 9999 a timestamp can store`,
+      { field },
+    );
+  }
+  return new Date(ms).toISOString();
+}
+
+// Spec 5.2 rolls errors into `failed`: the results table keeps the distinction, the totals
+// only need to know that the run cannot be green.
+export function summarize(tests: ReadonlyArray<{ readonly status: TestStatus }>): Totals {
+  let passed = 0;
+  let failed = 0;
+  let skipped = 0;
+  for (const test of tests) {
+    if (test.status === 'passed') passed += 1;
+    else if (test.status === 'skipped') skipped += 1;
+    else failed += 1;
+  }
+  return { total: tests.length, passed, failed, skipped };
+}
+
+export function sumTotals(reports: readonly Totals[]): Totals {
+  return reports.reduce<Totals>(
+    (sum, report) => ({
+      total: sum.total + report.total,
+      passed: sum.passed + report.passed,
+      failed: sum.failed + report.failed,
+      skipped: sum.skipped + report.skipped,
+    }),
+    { total: 0, passed: 0, failed: 0, skipped: 0 },
+  );
+}
+
+/** Spec 5.2: failed beats empty, and a run of only skipped tests still passed. */
+export function deriveStatus(totals: Totals): RunStatus {
+  if (totals.failed > 0) return 'failed';
+  if (totals.total === 0) return 'empty';
+  return 'passed';
+}
+
+/**
+ * Turns one parsed report into the payload `ingest_report` writes. Pure: the receipt time is an
+ * argument, and it stands in for the report's own start only when the file carried none.
+ */
+export function normalizeReport(
+  meta: ReportMeta,
+  project: IngestProject,
+  results: ParsedResults,
+  coverage: readonly CoverageInput[],
+  receivedAt: Date,
+): IngestPayload {
+  const resolveLayer = compileLayerRules(project.layer_rules);
+  const { report } = results;
+  const startedAtMs =
+    report.startedAt === undefined ? receivedAt.getTime() : Date.parse(report.startedAt);
+
+  return {
+    project_id: project.id,
+    received_at: receivedAt.toISOString(),
+    run: {
+      ci_run_id: meta.ci_run_id,
+      run_attempt: meta.run_attempt,
+      commit_sha: meta.commit_sha,
+      branch: meta.branch,
+      event: meta.event,
+      run_url: meta.run_url ?? null,
+    },
+    report: {
+      job: meta.job,
+      module: meta.module,
+      platform: meta.platform,
+      format: results.format,
+      ...summarize(report.tests),
+      duration_ms: report.durationMs,
+      started_at: storableInstant('started_at', startedAtMs),
+      finished_at: storableInstant('finished_at', startedAtMs + report.durationMs),
+    },
+    tests: report.tests.map((test) => ({
+      test_key: testKey(meta.module, test.suite, test.name),
+      module: meta.module,
+      suite: test.suite,
+      name: test.name,
+      layer: resolveLayer({
+        job: meta.job,
+        module: meta.module,
+        platform: meta.platform,
+        suite: test.suite,
+      }),
+      status: test.status,
+      duration_ms: test.durationMs,
+      failure: test.failure ?? null,
+    })),
+    coverage: coverage.map((entry) => ({
+      module: meta.module,
+      format: entry.format,
+      lines_covered: entry.coverage.linesCovered,
+      lines_total: entry.coverage.linesTotal,
+      branches_covered: entry.coverage.branchesCovered ?? null,
+      branches_total: entry.coverage.branchesTotal ?? null,
+    })),
+  };
+}

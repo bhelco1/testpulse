@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { parseJestJson, type JestAssertionResult, type JestJson } from './jest-json';
+import { MAX_REPORT_DURATION_MS, MAX_TEST_DURATION_MS } from './limits';
 import { ParseError } from './types';
 
 const fixturesDir = fileURLToPath(new URL('../../fixtures/', import.meta.url));
@@ -409,5 +410,76 @@ describe('parseJestJson edge cases derived from the real fixtures', () => {
 
     const notAnObject = catchError(() => parseJestJson('[1, 2, 3]', { pathPrefix }));
     expect(notAnObject).toBeInstanceOf(ParseError);
+  });
+});
+
+describe('parseJestJson duration caps (results.duration_ms is int4; report timestamps are bounded)', () => {
+  const shared = readFixture('routeserve/jest/shared.json');
+  const rewrite = (text: string, edit: (root: JestJson) => void): string => {
+    const root = JSON.parse(text) as JestJson;
+    edit(root);
+    return JSON.stringify(root);
+  };
+  const at = <T>(list: readonly T[], index: number): T => {
+    const entry = list[index];
+    if (entry === undefined) throw new Error(`fixture has no entry at index ${index}`);
+    return entry;
+  };
+
+  it('accepts a per-test duration at 2,147,483,647 ms and rejects one more, naming its path', () => {
+    const atCap = rewrite(shared, (root) => {
+      at(at(root.testResults, 0).assertionResults, 0).duration = MAX_TEST_DURATION_MS;
+    });
+    expect(parseJestJson(atCap, { pathPrefix }).tests[0]?.durationMs).toBe(MAX_TEST_DURATION_MS);
+
+    const over = rewrite(shared, (root) => {
+      at(at(root.testResults, 0).assertionResults, 0).duration = MAX_TEST_DURATION_MS + 1;
+    });
+    const caught = catchError(() => parseJestJson(over, { pathPrefix }));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).field).toBe('duration');
+    expect((caught as ParseError).location).toBe('testResults[0].assertionResults[0].duration');
+    expect((caught as ParseError).message).toMatch(/2,147,483,647/);
+  });
+
+  it('accepts a file span that brings the report to exactly one year and rejects one more', () => {
+    const others = (JSON.parse(shared) as JestJson).testResults
+      .slice(1)
+      .reduce((sum, file) => sum + (file.endTime - file.startTime), 0);
+    const atCap = rewrite(shared, (root) => {
+      const first = at(root.testResults, 0);
+      first.endTime = first.startTime + MAX_REPORT_DURATION_MS - others;
+    });
+    expect(parseJestJson(atCap, { pathPrefix }).durationMs).toBe(MAX_REPORT_DURATION_MS);
+
+    const over = rewrite(shared, (root) => {
+      const first = at(root.testResults, 0);
+      first.endTime = first.startTime + MAX_REPORT_DURATION_MS - others + 1;
+    });
+    const caught = catchError(() => parseJestJson(over, { pathPrefix }));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).field).toBe('endTime');
+    expect((caught as ParseError).message).toMatch(/31,536,000,000/);
+  });
+
+  it('names the file whose span crossed the cap when the sum overflows late', () => {
+    const over = rewrite(shared, (root) => {
+      const last = at(root.testResults, root.testResults.length - 1);
+      last.endTime = last.startTime + MAX_REPORT_DURATION_MS;
+    });
+    const caught = catchError(() => parseJestJson(over, { pathPrefix }));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).location).toBe(
+      `testResults[${(JSON.parse(shared) as JestJson).testResults.length - 1}].endTime`,
+    );
+  });
+
+  it('rejects a duration too large for a number without an unhandled overflow', () => {
+    const huge = rewrite(shared, (root) => {
+      at(at(root.testResults, 0).assertionResults, 0).duration = 1e308;
+    });
+    const caught = catchError(() => parseJestJson(huge, { pathPrefix }));
+    expect(caught).toBeInstanceOf(ParseError);
+    expect((caught as ParseError).field).toBe('duration');
   });
 });

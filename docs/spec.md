@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.13, 2026-09-22. Status: Phases 0 and 1 complete; Phase 2 in progress.
+Version 0.14, 2026-09-22. Status: Phases 0 to 2 complete; Phase 3 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -563,6 +563,17 @@ Phase 1 complete 2026-09-22.
 - Weekly `schedule:` trigger added to Ostomate2 CI.
 - A push to Ostomate2 main produces one run in production with at least two reports, correct totals, and coverage. (manual verification, then captured as a fixture)
 - With testpulse unreachable, Ostomate2 CI still passes and logs a warning.
+
+Evidence recorded 2026-09-22:
+
+- `projects/ostomate2.yaml` landed in PR #14; its layer rules are asserted against the captured fixtures in `lib/ingest/layer-rules.test.ts`.
+- Reporter and CI steps: Ostomate2 PR #24, merged. The reporter is `scripts/testpulse-report.sh` copied byte for byte from this repo, where PR #17 covers it with 24 contract tests.
+- Weekly `schedule:` trigger added in the same PR. The three end-to-end and dashboard jobs were narrowed from "not a pull request" to `push` or `workflow_dispatch` so the new trigger does not pull a macOS runner in every week.
+- Production run 35776037304, the merge commit of that PR, produced one run of 274 executions with four reports: `android`/`shared`/`jvm` 82, `android`/`composeApp`/`jvm` 60, `ios`/`shared`/`ios-sim` 82, `ios`/`composeApp`/`ios-sim` 50, with JaCoCo coverage 457/490 and 497/527 lines. All six CI jobs were green.
+- That run exposed the platform-stamped names described in section 7; the fix in PR #19 makes one test one row, and the affixes were confirmed against all 132 iOS rows in production before those rows were cleared so the next report repopulates them correctly.
+- Unreachable endpoint: proven by the reporter's contract test, which asserts exit 0 and a warning carrying `HTTP 000` when the server cannot be reached, against the same file Ostomate2 runs. Not drilled as a live outage.
+
+Phase 2 complete 2026-09-22.
 
 ### Phase 3: routeserve reporting live
 

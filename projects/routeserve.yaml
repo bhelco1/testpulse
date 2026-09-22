@@ -1,0 +1,55 @@
+slug: routeserve
+name: RouteServe
+tagline: Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.
+description: Field-service CRM with scheduling, SMS reminders, and route-corridor trip planning. Expo and React Native app plus an Express API; multi-tenant core, piano service first.
+visibility: private
+default_branch: main
+expected_cadence_days: 8
+sort_order: 20
+
+dev_stack:
+  - category: Mobile
+    items: [Expo SDK 57, React Native 0.86, React 19, WatermelonDB, TanStack Query]
+  - category: API
+    items: [Express 5, Prisma 7, PostgreSQL 18 + PostGIS 3.6, Zod 4]
+  - category: Services
+    items: [Supabase Auth, Twilio SMS, Anthropic Claude, Google Maps, Sentry]
+  - category: Delivery
+    items: [GitHub Actions, Railway, EAS Build]
+
+test_stack:
+  - category: Runners
+    items: [Jest 30, jest-expo]
+  - category: API and service
+    items: [Supertest, nock]
+  - category: Component
+    items: [React Native Testing Library, msw]
+  - category: E2E
+    items: [Maestro]
+
+coverage_floors:
+  apps/backend: 80
+  apps/mobile: 80
+  packages/shared: 80
+
+layer_rules:
+  - match: { module: apps/backend, suite: 'apps/backend/**/*.postgis.test.ts' }
+    layer: integration
+  - match: { module: apps/backend, suite: 'apps/backend/src/routes/**' }
+    layer: api
+  - match: { module: apps/mobile, suite: 'apps/mobile/src/screens/**' }
+    layer: component
+  - match: { module: apps/mobile, suite: 'apps/mobile/src/components/**' }
+    layer: component
+  - match: { module: apps/mobile, suite: 'apps/mobile/src/hooks/**' }
+    layer: component
+  - match: { module: apps/mobile, suite: 'apps/mobile/src/app/**' }
+    layer: component
+  - default: unit
+
+declared_suites:
+  - name: Maestro E2E (iOS)
+    layer: e2e
+    count: 13
+    status: authored_not_executed
+    note: Flows written; not yet certified on a simulator. Workflow is manual-only.

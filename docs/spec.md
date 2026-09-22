@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.8, 2026-09-22. Status: Phase 0 complete; Phase 1 in progress.
+Version 0.9, 2026-09-22. Status: Phase 0 complete; Phase 1 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -384,11 +384,11 @@ Initial settings: Ostomate2 `public`, routeserve `private`, testpulse `public`.
 ## 10. Adding a project
 
 1. Create `projects/<slug>.yaml` (metadata, stacks, layer rules, declared suites, coverage floors).
-2. Run `npm run project:add <slug>`. It validates the YAML, inserts the row, generates an API key, stores its hash, and prints the key once.
+2. Run `npm run project:add <slug>`. It validates the YAML, inserts the row, generates an API key (32 random bytes, presented as `tp_` plus base64url), stores its SHA-256 hash, and prints the key once.
 3. In the project's repo, add `TESTPULSE_TOKEN` as a secret and `TESTPULSE_URL` as a variable.
 4. Add the reporting step to CI (appendix A).
 
-`npm run projects:sync` runs on every deploy and updates database rows from the YAML files. It never touches `api_key_hash`. `npm run project:rotate-key <slug>` issues a new key.
+`npm run projects:sync` runs on every deploy and updates database rows from the YAML files. It never touches `api_key_hash`, skips a file whose slug has no row yet, reports rows that have no file, and exits non-zero if any file fails validation before writing anything. Rows are updated one at a time, which is acceptable at this scale. `npm run project:rotate-key <slug>` issues a new key.
 
 ## 11. Stats definitions
 
@@ -639,6 +639,8 @@ Phase 0 complete 2026-09-21.
 | 2026-09-22 | `zod` declared as a direct dependency | It was only present transitively; production code now imports it and it is part of the approved stack |
 | 2026-09-21 | Failing-test fixtures are captured from the real tools: testpulse's own Playwright JUnit with one deliberately failing spec, and routeserve Jest JSON with one test broken in an uncommitted local change | No captured CI file contains a failure, and hand-written samples are forbidden; tool output from a forced failure is still real output, and the capture command is recorded |
 | 2026-09-22 | Layer globs match the repo-relative suite, so project rules carry the workspace prefix | Section 7 makes suites repo-relative for stability across runners; Appendix B's globs were workspace-relative and never matched. Keeping globs anchored and standard was preferred over per-workspace `path_prefix` values |
+| 2026-09-22 | API keys are `tp_` + base64url of 32 random bytes; the database stores the SHA-256 hex of the presented string | The prefix makes a leaked key recognisable in logs and secret scanners; hashing the presented string keeps lookup a single indexed equality on a digest |
+| 2026-09-22 | `projects/<slug>.yaml` requires `description`; the secret-key client lives in `lib/supabase/server.ts` and ESLint forbids importing it from `app/` or `components/` | The column has no database default, so an omitted description would be an empty project page; a lint rule is the only enforceable boundary against shipping the secret client to the browser |
 | 2026-09-22 | Layer acceptance counts are asserted against what the captured fixtures contain | The backend fixture omits the PostGIS suite, so "integration 3" is unprovable from it; the glob is proven by a unit test and the count by CI once the project reports |
 
 ---
@@ -729,6 +731,7 @@ routeserve, `ci.yml`, job `test`, after the test step (which must now emit `test
 slug: routeserve
 name: RouteServe
 tagline: Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.
+description: Field-service CRM with scheduling, SMS reminders, and route-corridor trip planning. Expo and React Native app plus an Express API; multi-tenant core, piano service first.
 visibility: private
 default_branch: main
 expected_cadence_days: 8
@@ -760,17 +763,17 @@ coverage_floors:
   packages/shared: 80
 
 layer_rules:
-  - match: { module: apps/backend, suite: "apps/backend/**/*.postgis.test.ts" }
+  - match: { module: apps/backend, suite: 'apps/backend/**/*.postgis.test.ts' }
     layer: integration
-  - match: { module: apps/backend, suite: "apps/backend/src/routes/**" }
+  - match: { module: apps/backend, suite: 'apps/backend/src/routes/**' }
     layer: api
-  - match: { module: apps/mobile, suite: "apps/mobile/src/screens/**" }
+  - match: { module: apps/mobile, suite: 'apps/mobile/src/screens/**' }
     layer: component
-  - match: { module: apps/mobile, suite: "apps/mobile/src/components/**" }
+  - match: { module: apps/mobile, suite: 'apps/mobile/src/components/**' }
     layer: component
-  - match: { module: apps/mobile, suite: "apps/mobile/src/hooks/**" }
+  - match: { module: apps/mobile, suite: 'apps/mobile/src/hooks/**' }
     layer: component
-  - match: { module: apps/mobile, suite: "apps/mobile/src/app/**" }
+  - match: { module: apps/mobile, suite: 'apps/mobile/src/app/**' }
     layer: component
   - default: unit
 

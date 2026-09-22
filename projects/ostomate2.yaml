@@ -1,0 +1,60 @@
+slug: ostomate2
+name: Ostomate 2.0
+tagline: Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform rewrite of Ostomate v1.
+description: >-
+  Track ostomy supply changes, predict reorders, and manage inventory, privately and locally.
+  Logs bag and flange changes by tap or QR deep link, predicts days of supply, schedules reorder
+  notifications, and adds calendar and stats views, QR label printing, backup and restore,
+  home-screen widgets, and an optional biometric lock. No analytics; crash reporting is opt-in.
+visibility: public
+repo_url: https://github.com/bhelco1/Ostomate2
+default_branch: main
+expected_cadence_days: 8
+sort_order: 10
+
+dev_stack:
+  - category: Mobile
+    items: [Kotlin Multiplatform 2.3.21, Compose Multiplatform 1.11.0, Room KMP 2.8.4, Koin 4.2.1]
+  - category: Platforms
+    items: ['Android (minSdk 26, targetSdk 36)', 'iOS 15.3+ (SwiftUI shell, WidgetKit)']
+  - category: Services
+    items: ['Sentry (opt-in crash reporting)']
+  - category: Delivery
+    items: [Gradle 9.3.1, JDK 21, GitHub Actions, Fastlane]
+
+test_stack:
+  - category: Runners
+    items: [kotlin.test, JUnit4, Robolectric 4.14.1, kotlinx-coroutines-test]
+  - category: Property
+    items: [kotest-property 5.9.1]
+  - category: Visual
+    items: [Roborazzi 1.68.0]
+  - category: Coverage
+    items: [JaCoCo 0.8.13]
+  - category: E2E
+    items: [Maestro 2.6.1]
+
+coverage_floors:
+  shared: 91
+  composeApp: 93
+
+layer_rules:
+  - match: { module: shared, suite: 'com.ostomate.app.data.db.*' }
+    layer: integration
+  - match: { module: shared, suite: 'com.ostomate.app.data.RepositoryTest' }
+    layer: integration
+  - match: { module: composeApp, suite: 'com.ostomate.app.ui.screenshot.*' }
+    layer: visual
+  - default: unit
+
+declared_suites:
+  - name: Maestro E2E (Android)
+    layer: e2e
+    count: 7
+    status: runs_in_ci_not_reported
+    note: Runs on an API 29 emulator after merge and on dispatch; console PASS/FAIL only, no JUnit output yet.
+  - name: Maestro E2E (iOS)
+    layer: e2e
+    count: 5
+    status: runs_in_ci_not_reported
+    note: Runs on a fresh simulator after merge and on dispatch; console PASS/FAIL only, no JUnit output yet.

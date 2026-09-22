@@ -23,6 +23,9 @@ stats, phases, and acceptance criteria.
 - `npm run test:e2e` runs the Playwright end-to-end test in Chromium against the production build
 - `npm run db:reset` resets the local database and applies migrations (needs `supabase start`)
 - `npm run test:int` runs the Vitest integration tests against the local database
+- `npm run project:add <slug>` registers `projects/<slug>.yaml` and prints its API key once
+- `npm run projects:sync` updates database rows from `projects/*.yaml`; it never touches API keys
+- `npm run project:rotate-key <slug>` issues a new API key for a project and prints it once
 
 ## Continuous integration
 

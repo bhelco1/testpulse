@@ -15,7 +15,10 @@
     "test:int": "vitest run --config vitest.int.config.ts",
     "check:secrets": "node scripts/check-tracked-secrets.ts",
     "test:e2e": "playwright test",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "project:add": "node --env-file-if-exists=.env.local scripts/project-add.ts",
+    "projects:sync": "node --env-file-if-exists=.env.local scripts/projects-sync.ts",
+    "project:rotate-key": "node --env-file-if-exists=.env.local scripts/project-rotate-key.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
@@ -24,6 +27,7 @@
     "picomatch": "^4.0.7",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "yaml": "^2.9.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

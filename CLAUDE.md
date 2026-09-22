@@ -73,10 +73,10 @@ npm run format:check   Prettier, check only
 npm run typecheck      tsc --noEmit
 npm run test           Vitest unit tests with coverage (90% lines floor)
 npm run check:secrets  fail if any tracked path looks like a secret
+npm run test:e2e       Playwright
 
 Planned, not yet available:
 npm run test:int       Vitest integration tests (requires `supabase start`)
-npm run test:e2e       Playwright
 npm run db:reset       reset local database and apply migrations
 npm run project:add    register a project and print its API key once
 npm run projects:sync  sync projects/*.yaml to the database

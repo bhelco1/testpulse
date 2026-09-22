@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.6, 2026-09-21. Status: Phase 0 complete; Phase 1 in progress.
+Version 0.7, 2026-09-22. Status: Phase 0 complete; Phase 1 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -349,18 +349,18 @@ Result files do not say whether a test is unit, integration, or E2E. Each projec
 
 ```yaml
 layer_rules:
-  - match: { module: "apps/backend", suite: "src/routes/**" }
-    layer: api
-  - match: { module: "apps/backend", suite: "**/*.postgis.test.ts" }
+  - match: { module: "apps/backend", suite: "apps/backend/**/*.postgis.test.ts" }
     layer: integration
+  - match: { module: "apps/backend", suite: "apps/backend/src/routes/**" }
+    layer: api
   - match: { job: "android-e2e" }
     layer: e2e
   - default: unit
 ```
 
-Match keys: `job`, `module`, `platform`, `suite` (glob). Allowed layers: `unit`, `component`, `integration`, `api`, `visual`, `e2e`. Pyramid charts order them in that sequence.
+Match keys: `job`, `module`, `platform` (exact), `suite` (glob, anchored, `**` crosses `/`; a dot is an ordinary character, so a JVM class name is one segment). Suites are repo-relative (section 7), so globs carry the workspace prefix. The rule list has exactly one `default`, and it is last. Globs use picomatch syntax, so `{a,b}`, `!`, `@(...)`, and `[...]` are live; escape a literal `[ ] ( ) { } ! ? + @ *` with a backslash (Expo Router directories such as `(tabs)` need this). Allowed layers: `unit`, `component`, `integration`, `api`, `visual`, `e2e`. Pyramid charts order them in that sequence.
 
-Acceptance check for each project's rules: resolved counts per layer match the inventory's layer table for that project (for example routeserve: api 269, integration 3).
+Acceptance check for each project's rules: resolved counts per layer match the inventory's layer table for that project against the captured fixtures (routeserve backend: api 269, unit 229; the PostGIS suite resolves to integration but was excluded when the fixture was captured, so it contributes 3 only in CI).
 
 ## 9. Visibility
 
@@ -634,6 +634,8 @@ Phase 0 complete 2026-09-21.
 | 2026-09-21 | `anon` and `authenticated` lose all table grants by default; each table is opened by an explicit grant plus policy | RLS does not cover TRUNCATE, and Supabase's default grants would otherwise hand every new table to any signed-up user |
 | 2026-09-21 | Deleting a tracked link sets `visits.tracked_link_id` to null instead of cascading | Visits are retained for 365 days as history; a deleted link should not erase them |
 | 2026-09-21 | Failing-test fixtures are captured from the real tools: testpulse's own Playwright JUnit with one deliberately failing spec, and routeserve Jest JSON with one test broken in an uncommitted local change | No captured CI file contains a failure, and hand-written samples are forbidden; tool output from a forced failure is still real output, and the capture command is recorded |
+| 2026-09-22 | Layer globs match the repo-relative suite, so project rules carry the workspace prefix | Section 7 makes suites repo-relative for stability across runners; Appendix B's globs were workspace-relative and never matched. Keeping globs anchored and standard was preferred over per-workspace `path_prefix` values |
+| 2026-09-22 | Layer acceptance counts are asserted against what the captured fixtures contain | The backend fixture omits the PostGIS suite, so "integration 3" is unprovable from it; the glob is proven by a unit test and the count by CI once the project reports |
 
 ---
 
@@ -717,7 +719,7 @@ routeserve, `ci.yml`, job `test`, after the test step (which must now emit `test
 
 ## Appendix B: example project file
 
-`projects/routeserve.yaml`. Layer rules are drawn from the inventory's directory table; confirm each against real suite paths in Phase 3.
+`projects/routeserve.yaml`. Layer rules are drawn from the inventory's directory table and checked against the captured fixtures in `lib/ingest/layer-rules.test.ts`; the PostGIS rule is confirmed against a real CI run in Phase 3.
 
 ```yaml
 slug: routeserve
@@ -754,17 +756,17 @@ coverage_floors:
   packages/shared: 80
 
 layer_rules:
-  - match: { module: apps/backend, suite: "**/*.postgis.test.ts" }
+  - match: { module: apps/backend, suite: "apps/backend/**/*.postgis.test.ts" }
     layer: integration
-  - match: { module: apps/backend, suite: "src/routes/**" }
+  - match: { module: apps/backend, suite: "apps/backend/src/routes/**" }
     layer: api
-  - match: { module: apps/mobile, suite: "src/screens/**" }
+  - match: { module: apps/mobile, suite: "apps/mobile/src/screens/**" }
     layer: component
-  - match: { module: apps/mobile, suite: "src/components/**" }
+  - match: { module: apps/mobile, suite: "apps/mobile/src/components/**" }
     layer: component
-  - match: { module: apps/mobile, suite: "src/hooks/**" }
+  - match: { module: apps/mobile, suite: "apps/mobile/src/hooks/**" }
     layer: component
-  - match: { module: apps/mobile, suite: "src/app/**" }
+  - match: { module: apps/mobile, suite: "apps/mobile/src/app/**" }
     layer: component
   - default: unit
 

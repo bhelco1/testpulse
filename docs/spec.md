@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.2, 2026-09-21. Status: draft for review.
+Version 0.3, 2026-09-21. Status: draft for review.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -86,6 +86,8 @@ The site is itself a portfolio piece. Its own code, tests, and CI will be read b
 | Local DB for tests | Supabase CLI (Docker) | Integration tests hit a real Postgres with real RLS |
 
 Cost case (required by Ostomate2's `planning/08-test-strategy.md`): all services above are used within free tiers, recurring cost $0. Verify current free-tier terms before Phase 1, in particular Supabase's policy on pausing inactive projects and Vercel's request body size limit (see 6.5).
+
+Free tier pauses inactive databases. Mitigated by the daily scheduled function (section 12). Database growth is bounded by retention (5.11); at 10 projects reporting daily with ~1,500 results each, steady state is roughly 3 million result rows, well under 500 MB with the indexes planned. Re-check when the fifth project joins.
 
 ## 5. Data model
 
@@ -226,6 +228,22 @@ These are displayed on the project page with their status. They are never added 
 `tracked_links`: `token` (12-char random, unique), `company`, `role`, `contact`, `sent_at`, `notes`, `lead_project_slug` (optional, which project to feature first).
 
 `visits`: `tracked_link_id` (null for anonymous), `session_id`, `path`, `entered_at`, `seconds_on_page`, `user_agent_class` (`browser`, `bot`, `preview`), `ip_hash` (salted hash, used only to count distinct visitors per link).
+
+### 5.11 Data retention
+
+testpulse runs on the Supabase free tier (500 MB database). Row-level results are the only table that grows without bound, so retention is tiered:
+
+| Data | Retained | Reason |
+|---|---|---|
+| projects, runs, reports, coverage, alerts | forever | Small; these drive every trend chart |
+| tests (identity rows) | forever | Small; one row per distinct test |
+| results, result_failures | rolling 180 days | Flakiness and time-to-green look back at most 90 days; 180 gives headroom |
+| results for the most recent 5 runs per project | always kept, regardless of age | An idle project must still show a drillable latest run |
+| visits | rolling 365 days | Tracked-link history for a job search |
+
+Add to `runs`: `results_pruned_at timestamptz null`. When a run's results are deleted, set this and keep the run row. The run detail page shows "per-test results retained for 180 days; summary totals are permanent" in place of the results table.
+
+A prune job runs daily (same scheduled function as the stale check). It deletes in batches of 5,000 rows to avoid long locks, is idempotent, and logs rows removed per project. Add a `retention_days` column to `projects` (default 180) so a project can override.
 
 ## 6. Ingestion API
 
@@ -395,10 +413,13 @@ These exist because of real incidents recorded in Ostomate2's post-mortems: CI s
 | `count_drop` | Executed tests for a `(job, module, platform)` fall by more than 20% versus the previous default-branch run | Count recovers, or admin acknowledges |
 | `empty_run` | A report parses but contains zero tests | Next non-empty report for the same key |
 | `coverage_below_floor` | Reported lines % is under the project's declared floor | Next report at or above floor |
+| `keep_alive` | (not an alert) The daily scheduled function writes a row to a `heartbeats` table every run. This keeps the free-tier database out of Supabase's inactivity pause, which triggers after roughly a week without database queries and would take the site offline until manually restored. | n/a |
 
 Staleness only works if CI runs when no one is committing. Each reporting project adds a weekly `schedule:` trigger to its main workflow; `expected_cadence_days` defaults to 8 to match. A stale check runs daily as a scheduled function.
 
 Open alerts appear on the admin page and as a small status marker on the public project page ("reporting healthy" / "no report in 12 days"). Email notification to the admin is optional and only if a free-tier mail service is used.
+
+The scheduled function therefore does three things each day: write heartbeat, run stale check, run prune. It is triggered by Vercel cron. Its last-run timestamp is shown on the admin page; if it is more than 36 hours old, that is itself displayed as a warning.
 
 ## 13. Pages
 
@@ -456,7 +477,7 @@ The look of the site is a first-class requirement (G9). A hiring manager forms a
 | Layer | Tool | Scope |
 |---|---|---|
 | Unit | Vitest | Parsers (against real fixtures), layer resolution, stat calculations, alert rules, token and key utilities, bot classification |
-| Integration | Vitest + local Supabase | Ingestion endpoint end to end against real Postgres: idempotency, transactions, rollups, RLS policies verified with an anon client |
+| Integration | Vitest + local Supabase | Ingestion endpoint end to end against real Postgres: idempotency, transactions, rollups, RLS policies verified with an anon client. Prune job: verified against a seeded database that rows older than the window are removed, the latest 5 runs per project are always kept, run rows and rollups are untouched, and re-running deletes nothing further. |
 | E2E | Playwright | Seeded database; landing, project, run, test-history pages; visibility rules in the rendered UI; tracked-link flow; admin auth |
 | Accessibility | axe via Playwright | Every public page |
 | Contract | Vitest | Appendix A reporter script against a local server |
@@ -533,6 +554,8 @@ Each phase is one or more PRs. A phase is done when every criterion has a passin
 - Creating a tracked link yields a unique token; visiting `/v/[token]` sets the cookie, redirects, and subsequent page views attach to that link.
 - Requests classified as bot or preview are stored but excluded from visit counts. Test set includes Slackbot, LinkedInBot, and common mail-scanner user agents.
 - No raw IP is stored anywhere. `/privacy` exists and is linked from every page.
+- Daily scheduled function (heartbeat, stale check, prune) deployed and observed running on two consecutive days. (manual)
+- Run detail page shows the pruned-results notice for a run with results_pruned_at set.
 
 ### Phase 7: Self-reporting and launch
 
@@ -570,6 +593,8 @@ Each phase is one or more PRs. A phase is done when every criterion has a passin
 | 2026-09-21 | "Real time" means seconds after a job ends | Live per-test streaming needs custom reporters in every project for little benefit |
 | 2026-09-21 | Visual design in Claude Design, handed off to Claude Code as a bundle | Appearance is a primary goal; design gets a fast visual loop, and coding sessions implement a fixed target instead of inventing styling |
 | 2026-09-21 | Weekly scheduled CI in each project | Makes staleness detection meaningful when no commits are landing |
+| 2026-09-21 | Rolling 180-day retention for per-test results; summaries permanent | Keeps free-tier storage bounded for 5 to 10 projects; no displayed stat needs row-level data older than 90 days |
+| 2026-09-21 | Daily heartbeat write | Free-tier Supabase pauses after about a week of inactivity; weekly CI posts are not enough |
 
 ---
 

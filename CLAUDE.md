@@ -65,8 +65,14 @@ Fill in and keep accurate as scripts are added in Phase 0. Until a command exist
 
 ```
 npm run dev            start the site locally
+npm run build          build for production
+npm run start          serve the production build
 npm run lint           ESLint
+npm run format         Prettier, write
+npm run format:check   Prettier, check only
 npm run typecheck      tsc --noEmit
+
+Planned, not yet available:
 npm run test           Vitest unit tests with coverage (90% lines floor)
 npm run test:int       Vitest integration tests (requires `supabase start`)
 npm run test:e2e       Playwright

@@ -47,6 +47,55 @@ jobs:
       - name: Build
         run: npm run build
 
+  integration:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
+        with:
+          version: 2.117.0
+
+      - name: Start local Supabase and apply migrations
+        run: supabase start
+
+      # The local keys are public constants (supabase start prints them), so masking is habit
+      # for when this step runs against anything real: mask before use, then drop the file.
+      - name: Export Supabase connection details
+        run: |
+          set -euo pipefail
+          supabase status -o env > "$RUNNER_TEMP/supabase.env"
+          while IFS='=' read -r name value; do
+            value="${value%\"}"
+            value="${value#\"}"
+            case "$name" in
+              API_URL) echo "NEXT_PUBLIC_SUPABASE_URL=$value" >> "$GITHUB_ENV" ;;
+              PUBLISHABLE_KEY)
+                echo "::add-mask::$value"
+                echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$value" >> "$GITHUB_ENV" ;;
+              SECRET_KEY)
+                echo "::add-mask::$value"
+                echo "SUPABASE_SECRET_KEY=$value" >> "$GITHUB_ENV" ;;
+            esac
+          done < "$RUNNER_TEMP/supabase.env"
+          rm -f "$RUNNER_TEMP/supabase.env"
+
+      - name: Integration tests against local Supabase
+        run: npm run test:int
+
   e2e:
     needs: checks
     runs-on: ubuntu-latest

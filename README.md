@@ -21,9 +21,12 @@ stats, phases, and acceptance criteria.
 - `npm run test` runs Vitest unit tests with coverage (90% lines floor)
 - `npm run check:secrets` fails if any tracked path looks like a secret
 - `npm run test:e2e` runs the Playwright end-to-end test in Chromium against the production build
+- `npm run db:reset` resets the local database and applies migrations (needs `supabase start`)
+- `npm run test:int` runs the Vitest integration tests against the local database
 
 ## Continuous integration
 
 CI runs on every pull request and on every push to `main`. It checks formatting, lints,
 typechecks, checks for tracked secrets, runs the unit tests with coverage, builds the site, and
-then runs the end-to-end test in Chromium against the production build.
+then runs two jobs in parallel: the integration tests against a local Supabase started on the
+runner, and the end-to-end test in Chromium against the production build.

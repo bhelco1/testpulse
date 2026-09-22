@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.5, 2026-09-21. Status: Phase 0 complete; Phase 1 in progress.
+Version 0.6, 2026-09-21. Status: Phase 0 complete; Phase 1 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -76,7 +76,7 @@ The site is itself a portfolio piece. Its own code, tests, and CI will be read b
 |---|---|---|
 | Web framework | Next.js (App Router), TypeScript strict | Server components for data pages, route handlers for the API, one deployable |
 | Database | Postgres on Supabase | Already used in routeserve; realtime and auth included; free tier |
-| Realtime | Supabase Realtime on `runs` and `reports` | Satisfies G2 without building a socket layer |
+| Realtime | Supabase Realtime on `reports` | Satisfies G2 without building a socket layer. Every `reports` column is public, so anon can subscribe; `runs` has hidden columns and is read through a view, so the browser refetches run rollups when a report event arrives |
 | Admin auth | Supabase magic link, single allowlisted email | Real auth for the one private page |
 | Hosting | Vercel free tier | Zero-config Next.js deploys, preview URLs per PR |
 | Charts | Recharts | Sufficient for trends and pyramids; no licence cost |
@@ -87,7 +87,7 @@ The site is itself a portfolio piece. Its own code, tests, and CI will be read b
 
 Cost case (required by Ostomate2's `planning/08-test-strategy.md`): all services above are used within free tiers, recurring cost $0. Verify current free-tier terms before Phase 1, in particular Supabase's policy on pausing inactive projects and Vercel's request body size limit (see 6.5).
 
-Free tier pauses inactive databases. Mitigated by the daily scheduled function (section 12). Database growth is bounded by retention (5.11); at 10 projects reporting daily with ~1,500 results each, steady state is roughly 3 million result rows, well under 500 MB with the indexes planned. Re-check when the fifth project joins.
+Free tier pauses inactive databases. Mitigated by the daily scheduled function (section 12). Database growth is bounded by retention (5.12); at 10 projects reporting daily with ~1,500 results each, steady state is roughly 3 million result rows, well under 500 MB with the indexes planned. Re-check when the fifth project joins.
 
 ## 5. Data model
 
@@ -227,9 +227,17 @@ These are displayed on the project page with their status. They are never added 
 
 `tracked_links`: `token` (12-char random, unique), `company`, `role`, `contact`, `sent_at`, `notes`, `lead_project_slug` (optional, which project to feature first).
 
-`visits`: `tracked_link_id` (null for anonymous), `session_id`, `path`, `entered_at`, `seconds_on_page`, `user_agent_class` (`browser`, `bot`, `preview`), `ip_hash` (salted hash, used only to count distinct visitors per link).
+`visits`: `tracked_link_id` (null for anonymous; set to null if the link is deleted, so history survives), `session_id`, `path`, `entered_at`, `seconds_on_page`, `user_agent_class` (`browser`, `bot`, `preview`), `ip_hash` (salted hash, used only to count distinct visitors per link).
 
-### 5.11 Data retention
+### 5.11 Operational tables
+
+`heartbeats`: `id`, `created_at`, `note text null`. The daily scheduled function inserts one row per run (section 12) so the free-tier database never goes idle.
+
+`rate_limit_buckets`: `api_key_hash text`, `minute timestamptz`, `count int`, primary key `(api_key_hash, minute)`. Backs the 60-requests-per-minute limit in 6.3; serverless functions share no memory, so the counter lives in the database. The daily prune job deletes buckets older than one day.
+
+Neither table is readable by anon.
+
+### 5.12 Data retention
 
 testpulse runs on the Supabase free tier (500 MB database). Row-level results are the only table that grows without bound, so retention is tiered:
 
@@ -306,7 +314,7 @@ The project is identified by the API key. One request equals one report (section
 
 ### 6.5 Size
 
-Target limit 4 MB per request; confirm against the hosting platform's current request body limit. This is why reports are per module: routeserve's three Jest JSON files are posted as three requests. If a single file exceeds the limit, the reporter script gzips it and sends `Content-Encoding: gzip`.
+Target limit 4 MB per request. Verified 2026-09-21: Vercel Functions reject request bodies over 4.5 MB with 413 on every plan, so 4 MB leaves headroom. This is why reports are per module: routeserve's three Jest JSON files are posted as three requests. If a single file exceeds the limit, the reporter script gzips it and sends `Content-Encoding: gzip`.
 
 ## 7. Parsers
 
@@ -616,6 +624,16 @@ Phase 0 complete 2026-09-21.
 | 2026-09-21 | Vercel connected through the GitHub import, no Vercel CLI | Preview deploys per PR and production on `main` without another global tool to keep current |
 | 2026-09-21 | Squash merges only; every PR is reviewed adversarially before merge | `main` reads as one conventional commit per task, which is the history hiring managers will see |
 | 2026-09-21 | Private-repo fixtures: rewrite the local checkout path to the GitHub Actions workspace path, change nothing else | Removes the only sensitive content found; keeps the files byte-faithful to the tool output otherwise |
+| 2026-09-21 | Phase 1 dependencies: `@supabase/supabase-js`, `fast-xml-parser`, `picomatch`, `yaml` | Each is the maintained standard for its job and small; no other runtime dependencies are planned for Phase 1 |
+| 2026-09-21 | Anon reads `projects` and `runs` only through `projects_public` and `runs_public`, definer views owned by `postgres`; no direct grant on the tables | The views choose the columns, so `api_key_hash`, private `repo_url`, `run_url`, and full private SHAs never reach the browser regardless of UI code |
+| 2026-09-21 | `result_failures` policy walks result → report → run → project through a `security definer` function | anon has no grant on `runs` or `projects`, so a plain policy subquery would fail; the function keeps the walk inside the database |
+| 2026-09-21 | `projects.api_key_hash` is `not null unique` | Ingestion resolves the project from the key hash; two projects sharing a hash would make auth ambiguous |
+| 2026-09-21 | `heartbeats` and `rate_limit_buckets` added to section 5 | Section 12 already needed the heartbeat; the rate limit in 6.3 cannot live in serverless memory |
+| 2026-09-21 | Transactional report write is a Postgres function called by RPC with the secret key | supabase-js has no transactions; a database function makes the whole write atomic and testable from the integration suite |
+| 2026-09-21 | Realtime subscribes to `reports` only; `runs` is never in the publication | Realtime evaluates the subscriber's table grants, and anon has none on `runs` by design; granting them would leak `run_url` and full private SHAs |
+| 2026-09-21 | `anon` and `authenticated` lose all table grants by default; each table is opened by an explicit grant plus policy | RLS does not cover TRUNCATE, and Supabase's default grants would otherwise hand every new table to any signed-up user |
+| 2026-09-21 | Deleting a tracked link sets `visits.tracked_link_id` to null instead of cascading | Visits are retained for 365 days as history; a deleted link should not erase them |
+| 2026-09-21 | Failing-test fixtures are captured from the real tools: testpulse's own Playwright JUnit with one deliberately failing spec, and routeserve Jest JSON with one test broken in an uncommitted local change | No captured CI file contains a failure, and hand-written samples are forbidden; tool output from a forced failure is still real output, and the capture command is recorded |
 
 ---
 

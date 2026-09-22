@@ -18,3 +18,5 @@ stats, phases, and acceptance criteria.
 - `npm run format` formats with Prettier
 - `npm run format:check` checks formatting
 - `npm run typecheck` runs `tsc --noEmit`
+- `npm run test` runs Vitest unit tests with coverage (90% lines floor)
+- `npm run check:secrets` fails if any tracked path looks like a secret

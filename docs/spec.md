@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.14, 2026-09-22. Status: Phases 0 to 2 complete; Phase 3 in progress.
+Version 0.15, 2026-09-24. Status: Phases 0 to 3 complete; Phase 4 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -342,7 +342,7 @@ type NormalizedReport = {
 | Format | Source | Mapping notes |
 |---|---|---|
 | JUnit XML | Gradle (Ostomate2), Playwright (testpulse), Maestro `--format junit` (future) | `testcase@classname` → suite, `@name` → name, `@time` s → ms. Child `failure`/`error`/`skipped` sets status. Handles both a single `testsuite` root and a `testsuites` wrapper. Multiple files per request are merged |
-| Jest JSON | routeserve | `testResults[].name` minus `path_prefix` → suite. `assertionResults[].fullName` → name. `passed`/`focused`→passed, `failed`→failed, `pending`/`todo`/`skipped`/`disabled`→skipped. A file whose `status` is `failed` with no failed assertion (it did not load) becomes one synthetic `error` result named `<suite load failure>` carrying the file's message, so a broken test file can never ingest as green. `failureMessages[]` joined → detail, first line → message. Run pass/fail comes from these results, never from the process exit code, because routeserve's `test:ci` script masks it |
+| Jest JSON | routeserve | `testResults[].name` minus `path_prefix` → suite. `assertionResults[].fullName` → name. `passed`/`focused`→passed, `failed`→failed, `pending`/`todo`/`skipped`/`disabled`→skipped. A file whose `status` is `failed` with no failed assertion (it did not load) becomes one synthetic `error` result named `<suite load failure>` carrying the file's message, so a broken test file can never ingest as green. `failureMessages[]` joined → detail, first line → message. Run pass/fail comes from these results, never from the process exit code, because the exit code also goes non-zero for reasons that are not test failures (routeserve's 80% coverage threshold fails the step with every test green) and the reporter step runs under `always()` regardless |
 | JaCoCo XML | Ostomate2 | Report-level `counter` elements, `type=LINE` and `type=BRANCH`, `covered` and `missed` |
 | istanbul summary | routeserve | `total.lines.covered/total`, `total.branches.covered/total` |
 
@@ -578,9 +578,23 @@ Phase 2 complete 2026-09-22.
 ### Phase 3: routeserve reporting live
 
 - `projects/routeserve.yaml` written with `visibility: private`; layer rules resolve to the inventory's counts; Maestro flows listed under `declared_suites` as `authored_not_executed`.
-- routeserve `ci.yml` `test` job emits Jest JSON and posts three reports (backend, mobile, shared) with istanbul summaries. Nothing posts from `dashboard.yml`.
+- routeserve `ci.yml` `test` job runs `test:ci`, which emits Jest JSON, and posts three reports (backend, mobile, shared) with istanbul summaries. Nothing posts from `dashboard.yml`.
 - Weekly `schedule:` trigger added.
 - A failing test in routeserve produces a `failed` run in testpulse regardless of the CI step's exit code.
+
+Evidence recorded 2026-09-24:
+
+- `projects/routeserve.yaml` landed in PR #14; its layer rules are asserted against the captured fixtures in `lib/ingest/layer-rules.test.ts`.
+- Reporter and CI steps: a routeserve PR. The `test` step switched from `test:coverage` to `test:ci`, a strict superset (the same Jest run plus `--json --outputFile`), so there is still one test run. The reporter is copied byte for byte from this repo. `dashboard.yml` is untouched.
+- Weekly `schedule:` trigger, Sunday 06:43 UTC, added in the same PR.
+- npm runs every workspace even when one fails and exits non-zero at the end, and the failing workspace still writes its Jest JSON, so a red run reports all three modules. Verified locally with a temporary failing test before the PR.
+- Production run for CI run 36071406865, the push to main: status `passed`, 1048 executions across three reports, `test`/`apps/backend`/`node` 501, `test`/`apps/mobile`/`node` 428, `test`/`packages/shared`/`node` 119, with istanbul line coverage 1870/1968 (backend), 1496/1551 (mobile), and 102/102 (shared). CI was green, and so was the QA Dashboard workflow on the same commit.
+- Layer counts in production for `apps/backend`: api 269, unit 229, integration 3. The PostGIS suite's 3 is now proven by CI, as the section 8 acceptance note anticipated.
+- Failing run: proven by a live drill, a deliberately failing test in `packages/shared` on the PR branch. CI run 36052961901 went red and production recorded that run as `failed`, 1049 executions, 1 failed, attributed to `packages/shared/src/testpulseDrill.test.ts`. The test was reverted on the branch before merge (CI run 36053871423 green, recorded `passed` with 1048); `main` never carried it.
+- Private visibility: verified live on 2026-09-24 as the anon role with the publishable key against production. `projects` and `runs` refuse anon with permission denied; `projects_public` returns routeserve with `repo_url` null and no `api_key_hash`; `runs_public` returns all four routeserve runs (36051124972, the PR's first run with the key; the drill and its revert; the push to main) with `run_url` null and `commit_sha` truncated to 7 characters; the drill's one `result_failures` row is visible to the service role and returns nothing to anon; `alerts`, `tracked_links`, and `visits` refuse anon. `lib/visibility/rls.int.test.ts` covers the same rules locally.
+- Registration: the production row was created by `project:add` on 2026-09-24, but its key never reached the routeserve repo, so the key was rotated with `project:rotate-key` before first use. The key now in routeserve's `TESTPULSE_TOKEN` is the only valid one.
+
+Phase 3 complete 2026-09-24.
 
 ### Phase 4: Backfill
 
@@ -689,6 +703,7 @@ Phase 2 complete 2026-09-22.
 | 2026-09-22 | The route handler calls `ingestReportWithSecretClient`, never the secret client directly | `app/` cannot import the secret client by lint rule, so the boundary lives one level down in `lib/ingest` |
 | 2026-09-22 | Platform affixes in test names are stripped by per-project `name_normalization` at ingestion, not by the parsers | Ostomate2's first reporting run stored 274 tests where there are 142, and resolved every iOS test to `unit`, because Kotlin Multiplatform's simulator target prefixes the suite and suffixes the name. The affixes belong to one project's toolchain, so encoding them in the JUnit parser would make a generic parser project-specific and would still miss the next toolchain; as configuration they are reviewable in the project file, apply before both the test key and the layer, and leave the parsers pure |
 | 2026-09-22 | Layer acceptance counts are asserted against what the captured fixtures contain | The backend fixture omits the PostGIS suite, so "integration 3" is unprovable from it; the glob is proven by a unit test and the count by CI once the project reports |
+| 2026-09-24 | routeserve's CI reports from `test:ci` rather than from a separate reporting run | `test:ci` is `test:coverage` plus `--json --outputFile`, so one run produces both the gate and the report; a second run would double CI time and could disagree with the first |
 
 ---
 

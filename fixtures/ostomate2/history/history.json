@@ -1,0 +1,842 @@
+[
+  {
+    "generatedAt": "2026-07-13T10:48:11+00:00",
+    "run": {
+      "sha": "56dab5496d4a4e163bd3e644a6426b8f0cfca576",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29242541217"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T11:08:28+00:00",
+    "run": {
+      "sha": "0dae59ed5458c5b94f727554309ea3c41ba9c7d4",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29244244408"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.4,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T11:41:17+00:00",
+    "run": {
+      "sha": "1dd4f522d858d342a0b7cea4d1b30ecf59544692",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29245913248"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T12:02:50+00:00",
+    "run": {
+      "sha": "fff37615d89cdf2e56238037aa065926f2ac007d",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29247266505"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T12:27:27+00:00",
+    "run": {
+      "sha": "86810e3427c6b3812511bb9814b3d2b23bf776e1",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29248497669"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T15:21:01+00:00",
+    "run": {
+      "sha": "4bf8c8bf0e65ad095a6ecad801482b858b263dce",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29260178467"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T15:30:31+00:00",
+    "run": {
+      "sha": "69a23887571f4bba52e02a75e1bd0be54061f402",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29261519622"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T15:54:18+00:00",
+    "run": {
+      "sha": "d6c4f5ab65d393c1c22fbf66355edf64c98d6ece",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29262734525"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T16:12:01+00:00",
+    "run": {
+      "sha": "cb4f9dd75a85681149aa71e63fc511b45fecf3c3",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29264306564"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T17:01:54+00:00",
+    "run": {
+      "sha": "5cdb4b75069d1e928824d01e3325396ad0cc0b26",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29267222025"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T17:18:06+00:00",
+    "run": {
+      "sha": "5d8cc49aedf71505dc52525f5704bbd37c24c9c3",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29269066815"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T17:40:45+00:00",
+    "run": {
+      "sha": "5d8cc49aedf71505dc52525f5704bbd37c24c9c3",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29269066815"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T17:43:57+00:00",
+    "run": {
+      "sha": "ea1eed163984ee28690fc6c7b06c968f98f74c38",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29270149319"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T18:11:32+00:00",
+    "run": {
+      "sha": "324508aecc95a74ce54418544193b2262effeeca",
+      "branch": "fix-ci-secrets-context",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29271755324"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T18:37:47+00:00",
+    "run": {
+      "sha": "d2bfcdf58ada5a63bad5552446e375e1cd0fff10",
+      "branch": "feat/2.5.8-orphan-flows",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29273689980"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T19:45:38+00:00",
+    "run": {
+      "sha": "f5de92522e8c77e31c6012f6c6ada318ce9d4936",
+      "branch": "feat/2.5.8-orphan-flows",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29278288158"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 93.7
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T20:10:42+00:00",
+    "run": {
+      "sha": "a132513e34ebbe832cc62fc5a62f3e999658e820",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29279945808"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 39,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.2,
+      "composeApp": 93.6
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T20:21:42+00:00",
+    "run": {
+      "sha": "3a406c07bd831ef51d4c5acd065c989246cc96ca",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29280659512"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 93.7
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T20:23:24+00:00",
+    "run": {
+      "sha": "5a19a94ae3707473ef9622f55d738155b0fc356f",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29280597297"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 93.7
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T20:23:42+00:00",
+    "run": {
+      "sha": "3c0c31b40cb460e6fbe4c9cc8ae6fb471325447b",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29280676164"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 47,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 93.7
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T20:42:44+00:00",
+    "run": {
+      "sha": "3921567bf7ad80bb801808aa7e45cb363e2cb37a",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29282127683"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 57,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-07-13T21:01:22+00:00",
+    "run": {
+      "sha": "ab3255289cc302d8ad7244556072f381ba2793ac",
+      "branch": "fix/ios-e2e-driver-timeout",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29282945106"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 57,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-07-14T04:09:11+00:00",
+    "run": {
+      "sha": "ad1c19e43829d70568ad5088ef7d82cf03bc4ae9",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29304309488"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 57,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-07-14T04:11:05+00:00",
+    "run": {
+      "sha": "fb8a12211a7e29b67df311467ce81c134fb7432b",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/29304334118"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 57,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-09-21T19:35:44+00:00",
+    "run": {
+      "sha": "964c1108cdcaaead567352bb91230df29edd1a6f",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/35642780279"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 60,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-09-21T19:41:49+00:00",
+    "run": {
+      "sha": "0e2d0b4c8213fdef29a5c0d5a9cec3bd6b25a5f9",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/35643254905"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 60,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "fail",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-09-21T19:55:10+00:00",
+    "run": {
+      "sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/35644117162"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 60,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-09-22T01:58:22+00:00",
+    "run": {
+      "sha": "14feb888bc691aca9205b934f3584b9df5f3998f",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/35648045822"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 60,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-09-22T03:30:33+00:00",
+    "run": {
+      "sha": "f64c197dbc2dccd95c96d4e032f74d472960e67f",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/35682334551"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 60,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  },
+  {
+    "generatedAt": "2026-09-22T20:14:18+00:00",
+    "run": {
+      "sha": "cebddb1c9aae4d0459224d84bb0237327465cb0a",
+      "branch": "main",
+      "url": "https://github.com/bhelco1/Ostomate2/actions/runs/35776037304"
+    },
+    "unit": {
+      "tests": 40,
+      "failed": 0,
+      "status": "pass"
+    },
+    "integration": {
+      "tests": 42,
+      "failed": 0,
+      "status": "pass"
+    },
+    "ui": {
+      "tests": 60,
+      "failed": 0,
+      "status": "pass"
+    },
+    "cicd": "pass",
+    "coverage": {
+      "shared": 93.3,
+      "composeApp": 94.3
+    }
+  }
+]

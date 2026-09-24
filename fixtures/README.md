@@ -25,6 +25,20 @@ The `shared` JVM results and `shared.xml` in this run were restored from Gradle'
 
 The iOS-simulator composeApp files did not come from CI, which does not upload them. They were copied from a local `:composeApp:iosSimulatorArm64Test` run on a developer machine (hence `hostname="Bobbys-MacBook-Pro.local"`) with mtimes preserved. The local checkout was at `14feb88` at copy time, but the run happened earlier that day, so the files may predate the repo's HEAD at capture time.
 
+### Dashboard history
+
+The QA dashboard's history file, the backfill source described in spec section 17, Phase 4. Captured 2026-09-24 from the `test-dashboard` branch at commit `ec92502` (committed 2026-09-22) and committed byte for byte (2-space indented, no trailing newline):
+
+```
+git show origin/test-dashboard:history.json > <scratch>/Ostomate2-history.json
+```
+
+| Path | Source | Counts |
+|---|---|---|
+| `ostomate2/history/history.json` | `test-dashboard` branch, `history.json`, written by `scripts/generate_test_dashboard.py` | 30 entries, 13 on `main` and 17 on feature branches, 29 distinct run IDs; every `unit`, `integration`, and `ui` status `pass` |
+
+No scrub was needed: the repo is public and the file holds only commit SHAs, branch names, Actions run URLs, timestamps, counts, statuses, and coverage percentages. routeserve's `qa-dashboard` history was not captured because it is not a backfill source.
+
 ## routeserve
 
 Private repo, captured from its `main` as of 2026-07-18. Its commit SHAs are left out here because the project is private. CI does not upload Jest JSON, so all three workspaces were run locally on 2026-09-21 with `--ci`. The backend ran with the `corridor.postgis` suite excluded (it needs a live PostGIS database) and `DATABASE_URL` pointed at a closed port; `SENTRY_DSN` was unset. Coverage was written outside the repo with `--coverageReporters=json-summary`, so no lcov or HTML was produced. No `.env*` file was read.

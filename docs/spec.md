@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.15, 2026-09-24. Status: Phases 0 to 3 complete; Phase 4 in progress.
+Version 0.16, 2026-09-24. Status: Phases 0 to 3 complete; Phase 4 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -599,8 +599,32 @@ Phase 3 complete 2026-09-24.
 ### Phase 4: Backfill
 
 - First task: inspect the actual `history.json` shape on each project's dashboard branch and record it in this spec.
-- `npm run backfill <slug> <file>` imports historical runs as `source = backfill` with summary totals and coverage only. Re-running it creates no duplicates.
+- `npm run backfill <slug> <file>` imports the default-branch entries of a project's history file as `source = backfill` runs with per-module summary totals and line-coverage percentages; re-running it creates no duplicates and never alters a `source = ci` run.
 - Trend queries include backfilled runs; flakiness and time-to-green exclude them.
+
+#### Backfill sources
+
+Recorded 2026-09-24 from each project's dashboard branch and the script that writes it.
+
+**Ostomate2.** Branch `test-dashboard`, a single commit force-pushed on every publish; file `history.json`. Written by `scripts/generate_test_dashboard.py` (`append_history`, `HISTORY_LIMIT = 200`, so the newest 200 entries are kept) in CI's `Publish QA dashboard` job, which runs on `push` and `workflow_dispatch`. The file is a JSON array, oldest first. Each entry:
+
+- `generatedAt`: ISO 8601 timestamp to the second in UTC, written as `+00:00` (`datetime.isoformat(timespec="seconds")`). It is when the dashboard was built, not when the tests ran.
+- `run`: `sha` (40 hex characters), `branch`, and `url`, the Actions run URL, whose last path segment is the run ID.
+- `unit`, `integration`, `ui`: each `{tests, failed, status}`. `failed` is JUnit failures plus errors. `status` is `pass`, `fail`, or `empty` (zero tests).
+- `cicd`: `pass`, `fail`, or `empty`, derived from the workflow's job conclusions, not from test results.
+- `coverage`: `{shared, composeApp}`, JaCoCo line coverage as a percentage rounded to one decimal, or `null` when that module's JaCoCo report was missing.
+
+The counts are JVM host tests only. `unit` is the `shared` suites whose name does not contain `.data.`, `integration` is the `shared` suites whose name does, and `ui` is `composeApp`. So `unit` plus `integration` is module `shared` and `ui` is module `composeApp`, both job `android`, platform `jvm`, the same keys the live reports use. Not recorded: skipped counts, durations, iOS results, branch coverage, the triggering event, and the run attempt.
+
+As captured (`fixtures/ostomate2/history/history.json`, taken 2026-09-24 from branch commit `ec92502` of 2026-09-22): 30 entries generated from 2026-07-13 10:48:11 to 2026-09-22 20:14:18 UTC, 13 on `main` and 17 on feature branches. The GitHub API shows all 13 `main` entries were `push` events, attempt 1. Of the 29 distinct runs, 16 were `workflow_dispatch`; run 29269066815 appears twice (attempts 1 and 2, which the file cannot tell apart). Every entry has all three test categories `pass`; `cicd` is `fail` in 16. No entry has a `null` coverage value.
+
+**routeserve.** Branch `qa-dashboard`, file `history.json`. Written by `scripts/build-dashboard.mjs` in `dashboard.yml`, which runs on push to `main` and `workflow_dispatch`. It keeps the last 10 entries (`prevHistory.slice(-9)` plus the new one). Each entry: `timestamp` (ISO 8601), `sha` (first 7 characters), `green` (every workspace's Jest JSON had zero failed tests), `coverage` (backend line percentage, a legacy field), and `coverages` `{backend, mobile, shared}` (line percentages). There are no test counts, no run ID or URL, and no branch (it is always `main`). As of 2026-09-24 it holds 10 entries starting 2026-07-16; the newest is also a live CI run in testpulse.
+
+Decisions (section 19, 2026-09-24):
+
+- Backfill imports Ostomate2 only. routeserve's history has no test counts to supply summary totals and no run ID to deduplicate on, and 9 of its 10 entries predate go-live. routeserve's trend starts at go-live, 2026-09-24.
+- Only default-branch entries are imported, as event `push`, attempt 1, which the API confirms for all 13. Trends read only the default branch, so feature-branch entries carry no stat value, and their events and attempts cannot be recovered from the file.
+- Backfilled coverage is stored as the recorded percentage. A later migration adds a nullable `lines_pct` to `coverage`, makes the count columns nullable, and checks that each row has either counts or a percentage. Section 5.7 changes with that migration.
 
 ### Design track (runs alongside Phases 1 to 4, must finish before Phase 5)
 
@@ -704,6 +728,9 @@ Phase 3 complete 2026-09-24.
 | 2026-09-22 | Platform affixes in test names are stripped by per-project `name_normalization` at ingestion, not by the parsers | Ostomate2's first reporting run stored 274 tests where there are 142, and resolved every iOS test to `unit`, because Kotlin Multiplatform's simulator target prefixes the suite and suffixes the name. The affixes belong to one project's toolchain, so encoding them in the JUnit parser would make a generic parser project-specific and would still miss the next toolchain; as configuration they are reviewable in the project file, apply before both the test key and the layer, and leave the parsers pure |
 | 2026-09-22 | Layer acceptance counts are asserted against what the captured fixtures contain | The backend fixture omits the PostGIS suite, so "integration 3" is unprovable from it; the glob is proven by a unit test and the count by CI once the project reports |
 | 2026-09-24 | routeserve's CI reports from `test:ci` rather than from a separate reporting run | `test:ci` is `test:coverage` plus `--json --outputFile`, so one run produces both the gate and the report; a second run would double CI time and could disagree with the first |
+| 2026-09-24 | Backfill imports Ostomate2's `history.json` only; routeserve's history is not a backfill source and its trend starts at go-live | routeserve's entries carry no test counts to supply summary totals and no run ID to deduplicate on, and 9 of its 10 entries predate go-live |
+| 2026-09-24 | Backfill imports only default-branch entries, as event `push`, attempt 1 | Trends read only the default branch, so feature-branch runs carry no stat value; the file records neither event nor attempt, and the GitHub API confirms `push`, attempt 1 for all 13 `main` entries |
+| 2026-09-24 | Backfilled coverage is stored as the recorded line percentage: a later migration adds a nullable `lines_pct` to `coverage`, makes the count columns nullable, and checks that a row has counts or a percentage | The history file keeps only a percentage rounded to one decimal; inventing covered and total counts to fit the current columns would store numbers nobody measured |
 
 ---
 

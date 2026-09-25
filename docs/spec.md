@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.18, 2026-09-24. Status: Phases 0 to 3 complete; Phase 4 in progress.
+Version 0.19, 2026-09-24. Status: Phases 0 to 4 complete; design track in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -639,6 +639,22 @@ Decisions (section 19, 2026-09-24):
 - Backfilled coverage is stored as the recorded percentage. A later migration adds a nullable `lines_pct` to `coverage`, makes the count columns nullable, and checks that each row has either counts or a percentage. Section 5.7 changes with that migration.
 
 Write path. `npm run backfill <slug> <file>` picks the parser by slug (only `ostomate2` has one), reads the project's `default_branch`, and calls the Postgres function `backfill_run(payload)` once per run with the secret key. Each call is one transaction and re-validates the payload before any write, as `ingest_report` does. If `(project_id, ci_run_id, run_attempt)` already exists, whether from CI or an earlier backfill, it changes nothing and says which; otherwise it inserts the run with `source = backfill`, `duration_ms` 0, a zero-length span at `generatedAt`, totals and status derived as in 5.2, and one report per module with its coverage in the `lines_pct` form. Only `service_role` may execute it.
+
+Evidence recorded 2026-09-24:
+
+- `history.json` shapes: recorded in PR #22, squash-merged as `5374ac8`, as the Backfill sources subsection above. The Ostomate2 file is captured as `fixtures/ostomate2/history/history.json`.
+- `npm run backfill`: PR #23, squash-merged as `7d99665`, with migration `20260924234718_backfill`. The command refuses a project with no backfill source, so routeserve cannot be imported by mistake (`lib/backfill/sources.test.ts`, `scripts/backfill.test.ts`).
+- Default-branch entries only: `lib/backfill/ostomate2-history.test.ts` keeps exactly the 13 `main` entries of the captured fixture and keeps only the branch it is given.
+- `source = backfill` with per-module totals and line-coverage percentages: `lib/backfill/backfill.int.test.ts` imports the real fixture and finds 13 runs, all `source = backfill`, `branch` `main`, `push`, attempt 1, with 26 reports and 26 coverage rows in the `lines_pct` form. The first and last runs roll up from their `shared` and `composeApp` reports with the recorded totals and percentages.
+- No duplicates: in the same file, running the import again inserts nothing and leaves every row as it was.
+- Never alters a `source = ci` run: in the same file, a run first posted through `/api/v1/reports` is left exactly as `ingest_report` stored it, with its reports and count-form coverage, while the other 12 are imported.
+- `backfill_run` is refused to anon and authenticated with permission denied, and writes nothing (`lib/backfill/backfill.int.test.ts`).
+- Trends include backfilled runs; flakiness and time-to-green exclude them: PR #24, squash-merged as `285ad43`. The rule lives in one pair of predicates, `countsTowardTrends` and `countsTowardCiOnlyStats`, tested in `lib/stats/rules.test.ts`. `lib/stats/trends.test.ts` shows pass-rate, run-count, and coverage trends taking both CI and backfilled runs, coverage from counts for CI and from the recorded percentage for backfill. `lib/stats/time-to-green.test.ts` shows a backfilled red to green pair ignored, and a backfilled pass neither ending a CI red episode nor opening one. `lib/stats/flaky.test.ts` ignores results from backfilled runs, even on a commit CI also ran.
+- End to end: `lib/stats/load.int.test.ts` backfills the real fixture, posts one CI run, and loads the stats input with the anon client. Every trend contains the 13 backfilled runs and the CI run; time-to-green and flakiness see the CI run alone.
+- Production: migration `20260924234718_backfill` applied on 2026-09-24. `npm run backfill ostomate2 fixtures/ostomate2/history/history.json` inserted 13 runs with `source = backfill` and 26 coverage rows in the `lines_pct` form, two modules per run; running it again inserted 0. As the anon role with the publishable key, calling `backfill_run` is refused with Postgres error 42501, permission denied.
+- CI on `main` after #24: run 36077709946, with checks, e2e, and integration all green.
+
+Phase 4 complete 2026-09-24.
 
 ### Design track (runs alongside Phases 1 to 4, must finish before Phase 5)
 

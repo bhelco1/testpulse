@@ -12,7 +12,7 @@ If a request conflicts with the spec, stop and say so. If a decision changes, up
 
 ## Current phase
 
-Phase 4: Backfill. Update this line when a phase completes.
+Design track: finish the design/ bundle before Phase 5. Update this line when a phase completes.
 
 ## How to work
 

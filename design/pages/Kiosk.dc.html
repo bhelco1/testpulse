@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;background:#0b0a09;overflow:hidden}
+a{color:inherit}a:hover{color:inherit}
+@keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="position:fixed;inset:0;overflow:hidden;background:#0b0a09">
+<div style="{{ stageStyle }}">
+<div data-screen-label="Kiosk" style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral-tint:#252320;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;width:1920px;height:1080px;box-sizing:border-box;padding:44px 64px;background:var(--bg);color:var(--ink);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:30px">
+
+<header style="display:flex;align-items:center;justify-content:space-between;gap:32px;height:64px">
+<div style="display:flex;align-items:center;gap:32px">
+<span style="display:flex;align-items:center;gap:14px;font:600 40px/1 'Source Serif 4',serif"><span style="width:14px;height:14px;border-radius:50%;background:var(--attn)"></span>testpulse</span>
+<span style="display:flex;align-items:center;gap:10px;padding:10px 20px;border-radius:99px;background:{{ overall.tint }};color:{{ overall.ink }};font-size:26px;font-weight:600"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="{{ overall.d }}"></path></svg><span>{{ overall.label }}</span></span>
+</div>
+<div style="display:flex;align-items:center;gap:36px;font-size:26px;color:var(--ink-3)">
+<span style="display:flex;align-items:center;gap:12px;color:{{ liveInk }}">{{ liveDot }}<span>{{ liveLabel }}</span></span>
+<span>{{ lastReport }}</span>
+<span style="font:500 44px/1 'Source Serif 4',serif;color:var(--ink)">{{ clock }}</span>
+</div>
+</header>
+
+<main style="display:grid;grid-template-columns:480px minmax(0,1fr) minmax(0,1fr);gap:28px;min-height:0">
+<section style="display:flex;flex-direction:column;min-height:0">
+<div style="font-size:26px;color:var(--ink-3)">Tests on the latest runs</div>
+<div style="font:500 200px/.92 'Source Serif 4',serif;letter-spacing:-.04em;margin-top:14px;color:{{ heroInk }}">{{ heroTotal }}</div>
+<div style="font:400 30px/1.35 'Source Serif 4',serif;color:var(--ink-2);margin-top:20px;text-wrap:pretty">{{ heroNote }}</div>
+<div style="display:flex;flex-direction:column;gap:14px;margin-top:auto">
+<sc-for list="{{ tiles }}" as="t" hint-placeholder-count="3">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 26px;background:var(--surface);border:1px solid var(--line);border-radius:18px">
+<span style="display:flex;align-items:center;gap:10px;font-size:24px;color:var(--ink-3)"><span>{{ t.label }}</span><sc-if value="{{ t.sample }}" hint-placeholder-val="{{ false }}"><span style="font:500 14px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:2px 6px;border-radius:5px">SAMPLE</span></sc-if></span>
+<span style="font:500 52px/1 'Source Serif 4',serif;color:{{ t.ink }}">{{ t.value }}</span>
+</div>
+</sc-for>
+</div>
+</section>
+
+<sc-for list="{{ cards }}" as="c" hint-placeholder-count="2">
+<article style="display:flex;flex-direction:column;min-height:0;background:var(--surface);border:3px solid {{ c.frame }};border-radius:24px;padding:30px 34px 0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<span style="display:flex;align-items:center;gap:10px;padding:8px 18px;border-radius:99px;background:{{ c.st.tint }};color:{{ c.st.ink }};font-size:26px;font-weight:600"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="{{ c.st.d }}"></path></svg><span>{{ c.st.label }}</span></span>
+<span style="display:flex;align-items:center;gap:10px;font-size:24px;color:{{ c.whenInk }}"><span>{{ c.when }}</span><span>·</span><span style="font-family:'JetBrains Mono',monospace;font-size:22px">{{ c.sha }}</span></span>
+</div>
+<h2 style="margin:22px 0 0;display:flex;align-items:center;gap:18px;font:500 64px/1 'Source Serif 4',serif;letter-spacing:-.02em"><span>{{ c.name }}</span><sc-if value="{{ c.private }}" hint-placeholder-val="{{ false }}"><svg aria-label="Private repository" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if></h2>
+<div style="display:flex;align-items:baseline;gap:16px;margin-top:26px"><span style="font:500 104px/1 'Source Serif 4',serif;letter-spacing:-.03em">{{ c.total }}</span><span style="font-size:26px;color:var(--ink-2)">tests</span></div>
+<div style="display:flex;gap:10px;margin-top:10px;font-size:26px;color:var(--ink-2)"><sc-for list="{{ c.subParts }}" as="sp" hint-placeholder-count="3"><span style="color:{{ sp.ink }};font-weight:{{ sp.w }}">{{ sp.t }}</span></sc-for></div>
+
+<sc-if value="{{ c.failLine }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:22px;padding:16px 20px;border-radius:14px;background:var(--fail-tint);display:flex;flex-direction:column;gap:6px"><span style="font:500 22px 'JetBrains Mono',monospace;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.failLine }}</span><span style="font-size:22px;color:var(--ink-2)">{{ c.failSub }}</span></div>
+</sc-if>
+<sc-if value="{{ c.showLayers }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top:28px">
+<div style="display:flex;height:14px;gap:4px;border-radius:99px;overflow:hidden"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:5px;background:{{ l.bg }}"></div></sc-for></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 24px;margin-top:12px;font-size:24px;color:var(--ink-2)"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><span style="display:flex;gap:8px"><span>{{ l.name }}</span><span style="color:var(--ink)">{{ l.label }}</span></span></sc-for></div>
+</div>
+</sc-if>
+
+<div style="display:flex;flex-direction:column;gap:16px;margin-top:28px;font-size:24px">
+<span style="display:flex;align-items:center;gap:10px;font-size:22px;color:var(--ink-3)"><span>Line coverage</span><span style="width:3px;height:18px;background:var(--attn)"></span><span>floor</span></span>
+<sc-for list="{{ c.cov }}" as="v" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:150px minmax(40px,1fr) 100px;align-items:center;column-gap:18px">
+<span style="color:var(--ink-3)">{{ v.m }}</span>
+<div style="position:relative;height:10px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};top:-6px;width:3px;height:22px;background:var(--attn)"></div></div>
+<b style="font-weight:600;text-align:right">{{ v.v }}</b>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:auto;padding:20px 0 24px;border-top:1px solid var(--line);font-size:24px">
+<span style="display:flex;align-items:center;gap:10px;color:{{ c.health.ink }};font-weight:600"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.health.d }}"></path></svg><span>{{ c.health.label }}</span></span>
+</div>
+</article>
+</sc-for>
+</main>
+
+<section style="display:grid;grid-template-columns:200px repeat(3,minmax(0,1fr));gap:16px;align-items:stretch">
+<div style="display:flex;flex-direction:column;justify-content:center;gap:6px"><span style="font:500 32px/1.1 'Source Serif 4',serif">Recent runs</span><span style="font-size:22px;color:var(--ink-3)">{{ feedNote }}</span></div>
+<sc-for list="{{ feed }}" as="r" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;justify-content:center;gap:8px;padding:18px 24px;border-radius:18px;background:{{ r.bg }};border:1px solid var(--line);min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span style="display:flex;align-items:center;gap:8px;color:{{ r.st.ink }};font-weight:600;font-size:24px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.label }}</span></span><span style="font-size:22px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span></div>
+<div style="display:flex;gap:10px;font-size:24px;white-space:nowrap;overflow:hidden"><span style="font-weight:600">{{ r.project }}</span><span style="color:var(--ink-3)">{{ r.branch }}</span><span style="color:{{ r.countInk }};margin-left:auto">{{ r.count }}</span></div>
+</div>
+</sc-for>
+</section>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all passing&quot;,&quot;failed run&quot;,&quot;stale project&quot;,&quot;realtime disconnected&quot;],&quot;default&quot;:&quot;all passing&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { now: new Date(), vw: window.innerWidth, vh: window.innerHeight };
+  static ST = {
+    pass: { label: 'Passed', ink: 'var(--pass)', tint: 'var(--pass-tint)', d: 'm8 12 3 3 5-6' },
+    fail: { label: 'Failed', ink: 'var(--fail)', tint: 'var(--fail-tint)', d: 'm15 9-6 6M9 9l6 6' },
+  };
+  componentDidMount() {
+    this.t = setInterval(() => this.setState({ now: new Date() }), 15000);
+    this.onR = () => this.setState({ vw: window.innerWidth, vh: window.innerHeight });
+    window.addEventListener('resize', this.onR);
+  }
+  componentWillUnmount() { clearInterval(this.t); window.removeEventListener('resize', this.onR); }
+
+  renderVals() {
+    const ST = Component.ST;
+    const sc = this.props.scenario ?? 'all passing';
+    const live = sc !== 'realtime disconnected';
+    const s = Math.min(this.state.vw / 1920, this.state.vh / 1080);
+    const stageStyle = { position: 'absolute', left: (this.state.vw - 1920 * s) / 2, top: (this.state.vh - 1080 * s) / 2, width: 1920, height: 1080, transform: `scale(${s})`, transformOrigin: '0 0' };
+
+    const part = (t, ink, w) => ({ t, ink: ink || 'inherit', w: w || 400 });
+    const healthy = { label: 'Reporting healthy', ink: 'var(--pass)', d: 'M20 6 9 17l-5-5' };
+    const cov = (m, v, f) => ({ m, v: (v === 100 ? '100' : v.toFixed(1)) + '%', w: v + '%', fl: f + '%' });
+    const L = (arr) => arr.map(([name, n, bg]) => ({ name, n, label: String(n), bg }));
+
+    const osto = { name: 'Ostomate2', private: false, st: ST.pass, frame: 'var(--line)', when: '4 min ago', whenInk: 'var(--ink-3)', sha: '0e2d0b4', total: '142',
+      subParts: [part('0 failed ·'), part('0 skipped ·'), part('27 s')], failLine: '', failSub: '', showLayers: true,
+      layers: L([['Unit', 103, 'var(--layer-1)'], ['Integration', 29, 'var(--layer-2)'], ['Visual', 10, 'var(--layer-4)']]),
+      cov: [cov('shared', 92.0, 91), cov('composeApp', 94.3, 93)], health: healthy };
+    const route = { name: 'RouteServe', private: true, st: ST.pass, frame: 'var(--line)', when: '2 h ago', whenInk: 'var(--ink-3)', sha: 'c238574', total: '1,048',
+      subParts: [part('0 failed ·'), part('0 skipped ·'), part('29 s')], failLine: '', failSub: '', showLayers: true,
+      layers: L([['Unit', 608, 'var(--layer-1)'], ['Component', 165, 'var(--layer-2)'], ['Integration', 3, 'var(--layer-3)'], ['API', 269, 'var(--layer-4)']]),
+      cov: [cov('backend', 96.1, 80), cov('mobile', 96.1, 80), cov('shared', 100, 80)], health: healthy };
+
+    const row = (st, project, branch, count, when, x = {}) => ({ st, project, branch, count, when, countInk: 'var(--ink-2)', bg: 'var(--surface)', ...x });
+    let feed = [
+      row(ST.pass, 'Ostomate2', 'main', '142 tests', '4 min ago'),
+      row(ST.pass, 'RouteServe', 'main', '1,048 tests', '2 h ago'),
+      row(ST.fail, 'Ostomate2', 'PR #52', '1 failed', 'yesterday', { countInk: 'var(--fail)' }),
+    ];
+    let overall = { label: 'All projects passing', ink: 'var(--pass)', tint: 'var(--pass-tint)', d: 'm8 12 3 3 5-6' };
+    let heroTotal = '1,190', heroInk = 'inherit', heroNote = '100% passing across two projects. 0 skipped or disabled.';
+    let tiles = [
+      { label: 'Pass rate', value: '100%', sample: false, ink: 'inherit' },
+      { label: 'Projects reporting', value: '2', sample: false, ink: 'inherit' },
+      { label: 'Green streak', value: '41', sample: false, ink: 'inherit' },
+    ];
+    let lastReport = 'Last report 4 min ago';
+
+    if (sc === 'failed run') {
+      Object.assign(osto, { st: ST.fail, frame: 'var(--fail)', sha: 'a41f9c2', subParts: [part('1 failed', 'var(--fail)', 600), part('· 0 skipped ·'), part('27 s')], showLayers: false,
+        failLine: 'HomeViewModelTest › rendersToday', failSub: 'Failed on iOS simulator, passed on JVM' });
+      overall = { label: '1 project failing', ink: 'var(--fail)', tint: 'var(--fail-tint)', d: 'm15 9-6 6M9 9l6 6' };
+      heroNote = '1 failing on Ostomate2’s latest run. 0 skipped or disabled.';
+      tiles[0] = { label: 'Pass rate', value: '99.9%', sample: false, ink: 'inherit' };
+      tiles[2] = { label: 'Green streak', value: '0', sample: false, ink: 'var(--fail)' };
+      feed = [row(ST.fail, 'Ostomate2', 'main', '1 failed', '4 min ago', { countInk: 'var(--fail)', bg: 'var(--fail-tint)' }), feed[1], row(ST.pass, 'Ostomate2', 'main', '142 tests', '6 h ago')];
+    } else if (sc === 'stale project') {
+      Object.assign(route, { when: '12 days ago', whenInk: 'var(--attn)', frame: 'var(--attn)', health: { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0' } });
+      overall = { label: '1 project silent', ink: 'var(--attn)', tint: 'var(--attn-tint)', d: 'M12 7v5l3 2' };
+      tiles[1] = { label: 'Projects reporting', value: '1 of 2', sample: false, ink: 'var(--attn)' };
+      feed[1] = { ...feed[1], when: '12 days ago' };
+    }
+
+    const p2 = n => String(n).padStart(2, '0');
+    const d = this.state.now;
+    const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 14, height: 14, borderRadius: '50%', flex: 'none', boxSizing: 'border-box', background: live ? 'var(--pass)' : 'transparent', border: live ? 'none' : '2px solid var(--ink-3)', color: 'var(--pass)', animation: live ? 'tpPulse 2.4s ease-out infinite' : 'none' } });
+
+    return {
+      stageStyle, liveDot, overall, heroTotal, heroInk, heroNote, tiles, cards: [osto, route], feed, lastReport,
+      liveLabel: live ? 'Live' : 'Offline · reconnecting', liveInk: live ? 'var(--ink-3)' : 'var(--ink)',
+      feedNote: live ? 'Updates as reports arrive' : 'As of 10:42',
+      clock: p2(d.getHours()) + ':' + p2(d.getMinutes()),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@ node_modules
 .next
 coverage
 package-lock.json
-design/
+/design/
 docs/
 fixtures/
 # Prettier reads only the root .gitignore, not supabase/.gitignore where .temp is ignored

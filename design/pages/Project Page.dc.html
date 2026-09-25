@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#121110}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
+@keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;--shadow-card:none;--shadow-menu:0 16px 40px -12px rgba(0,0,0,.7);background:var(--bg);color:var(--ink);min-height:100vh">
+<div style="{{ themeVars }}">
+<a href="#main" style="position:absolute;left:-9999px;top:12px;z-index:20;padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:600 14px 'Public Sans',sans-serif" style-focus="left:16px">Skip to content</a>
+<div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
+
+<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
+<a href="#" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+<div style="position:relative"><button onClick="{{ toggleMenu }}" aria-expanded="{{ menuOpen }}" aria-haspopup="menu" style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+<sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+<div role="menu" style="position:absolute;top:52px;right:0;width:300px;padding:6px;background:var(--raised);border:1px solid var(--line-strong);border-radius:12px;box-shadow:var(--shadow-menu);z-index:10">
+<sc-for list="{{ menuItems }}" as="m" hint-placeholder-count="2">
+<button role="menuitem" onClick="{{ m.pick }}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 12px;border-radius:8px;background:{{ m.bg }}"><span style="font-weight:600;display:flex;align-items:center;gap:6px">{{ m.name }}<sc-if value="{{ m.priv }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.4" aria-label="Private"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if></span><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-size:13px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></button>
+</sc-for>
+<div style="height:1px;background:var(--line);margin:6px 4px"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 12px;color:var(--ink-2)"><span style="font-weight:600">testpulse</span><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-size:13px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="3.5 3"><circle cx="12" cy="12" r="10"></circle></svg>Not reporting yet</span></div>
+</div>
+</sc-if></div>
+<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it's tested</a>
+<span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}Live</span>
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</nav>
+</header>
+
+<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0 0;font-size:14.5px;color:var(--ink-3)"><a href="#">Overview</a><span aria-hidden="true">/</span><span aria-current="page" style="color:var(--ink)">{{ p.name }}</span></nav>
+
+<main id="main">
+<sc-if value="{{ isStale }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="display:flex;gap:12px;align-items:flex-start;margin-top:24px;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div style="flex:1"><div style="font-weight:600;font-size:14.5px;color:var(--attn)">{{ p.name }} hasn't reported in 12 days</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">The weekly scheduled run should have posted by Sep 20. Its CI may be failing silently. Everything below is from the last report, Sep 12.</div></div><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span></div>
+</sc-if>
+
+<!-- HERO -->
+<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:40px;align-items:start;padding:40px 0 56px">
+<div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+<h1 style="margin:0;display:flex;align-items:center;gap:14px;font:500 clamp(44px,6vw,72px)/1 'Source Serif 4',serif;letter-spacing:-.03em">{{ p.name }}<sc-if value="{{ p.private }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" aria-label="Private repository"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if></h1>
+<p style="margin:0;max-width:640px;font:400 24px/1.35 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">{{ p.tagline }}</p>
+<p style="margin:0;max-width:620px;font-size:16px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">{{ p.description }}</p>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;font-size:14px">
+<sc-if value="{{ isHealthy }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:7px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Reporting healthy<span style="font-weight:400;color:var(--ink-3)">· last report {{ p.lastReport }}</span></span></sc-if>
+<sc-if value="{{ isStale }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:7px;color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg>No report in 12 days<span style="font-weight:400;color:var(--ink-3)">· expected every 8</span></span></sc-if>
+<sc-if value="{{ isPublic }}" hint-placeholder-val="{{ true }}"><a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;color:var(--ink-2)">Source on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a></sc-if>
+</div>
+<sc-if value="{{ p.private }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:12px;align-items:flex-start;max-width:620px;padding:14px 16px;border-radius:12px;background:var(--neutral-tint);border:1px solid var(--line-strong)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div style="font-size:14px;color:var(--ink-2);line-height:1.5">This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.</div></div>
+</sc-if>
+</div>
+
+<article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card);min-width:0">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px">
+<sc-if value="{{ isPass }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if>
+<sc-if value="{{ isFail }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if>
+<span style="color:var(--ink-3)">Latest run · {{ run.when }} · {{ run.branch }} · <span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ run.sha }}</span></span>
+</div>
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px"><span style="font:500 64px/1 'Source Serif 4',serif;color:{{ run.figColor }}">{{ run.figure }}</span><span style="font-size:15px;color:var(--ink-2)">{{ run.line }}</span></div>
+<sc-if value="{{ isFail }}" hint-placeholder-val="{{ false }}">
+<a href="#" style="display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--fail-tint);font:12.5px 'JetBrains Mono',monospace;color:var(--ink);text-decoration:none"><span>{{ run.failName }} <span style="color:var(--ink-3)">· {{ run.failPlat }}</span></span><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px;align-self:center">SAMPLE STATE</span></a>
+</sc-if>
+<div style="margin-top:10px;font-size:13.5px;color:var(--ink-3)">{{ p.platforms }}</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
+<div><div style="font-size:13px;color:var(--ink-3)">Pass rate, 30 days</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">100%</div></div>
+<div><div style="font-size:13px;color:var(--ink-3);display:flex;gap:6px;align-items:center">Green streak</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ p.streak }} <span style="font-size:18px;color:var(--ink-3)">runs</span></div></div>
+<div><div style="font-size:13px;color:var(--ink-3);display:flex;gap:6px;align-items:center">Time to green</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ p.ttg }}</div></div>
+</div>
+<a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:10px;font-size:14.5px;font-weight:600;color:var(--ink)">View this run →</a>
+</article>
+</section>
+
+<!-- 01 STACK -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">01</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">What it's built with</h2></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px 56px">
+<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px">Built with</div>
+<div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px 16px;align-items:start;font-size:13.5px">
+<sc-for list="{{ p.built }}" as="g" hint-placeholder-count="4"><span style="color:var(--ink-3);padding-top:5px">{{ g.g }}</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ g.t }}" as="t" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">{{ t }}</span></sc-for></div></sc-for>
+</div></div>
+<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px">Tested with</div>
+<div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px 16px;align-items:start;font-size:13.5px">
+<sc-for list="{{ p.tested }}" as="g" hint-placeholder-count="4"><span style="color:var(--ink-3);padding-top:5px">{{ g.g }}</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ g.t }}" as="t" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:6px;border:1px {{ t.border }} var(--line-strong);color:{{ t.ink }}">{{ t.n }}</span></sc-for></div></sc-for>
+</div></div>
+</div>
+</section>
+
+<!-- 02 PYRAMID -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">How it's tested</h2></div>
+<figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:clamp(20px,3vw,40px);box-shadow:var(--shadow-card)">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 16px;margin-bottom:28px"><div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 56px/1 'Source Serif 4',serif">{{ p.total }}</span><span style="font-size:15px;color:var(--ink-2)">tests executed in the latest run</span></div><span style="font-size:13.5px;color:var(--ink-3)">{{ p.pyrNote }}</span></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ p.pyramid }}" as="l" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:minmax(80px,120px) minmax(0,1fr) minmax(90px,170px);align-items:center;gap:16px;font-size:14.5px">
+<span style="text-align:right;color:{{ l.labelInk }}">{{ l.name }}</span>
+<div style="display:flex;justify-content:center"><div style="width:{{ l.w }};min-width:{{ l.minW }};height:40px;border-radius:5px;background:{{ l.bg }};border:{{ l.border }};box-sizing:border-box"></div></div>
+<span style="display:flex;align-items:baseline;gap:8px;white-space:nowrap"><b style="font-weight:600;color:{{ l.countInk }}">{{ l.count }}</b><span style="font-size:13px;color:var(--ink-3)">{{ l.note }}</span></span>
+</div>
+</sc-for>
+</div>
+<figcaption style="margin-top:24px;max-width:760px;font-size:14.5px;line-height:1.55;color:var(--ink-2);text-wrap:pretty">{{ p.pyrCaption }}</figcaption>
+</figure>
+
+<div style="margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<div style="padding:16px 20px;border-bottom:1px solid var(--line)"><div style="font:500 20px 'Source Serif 4',serif">Declared suites</div><p style="margin:4px 0 0;font-size:13.5px;color:var(--ink-3)">These tests exist but don't report here yet. They aren't counted in any total.</p></div>
+<sc-for list="{{ p.declared }}" as="d" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 80px 90px minmax(0,260px);gap:12px;align-items:center;padding:14px 20px;border-top:1px solid var(--line);font-size:14px"><span style="font-weight:600">{{ d.name }}</span><span style="color:var(--ink-3)">E2E</span><span>{{ d.flows }} flows</span><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg style="flex:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="{{ d.dash }}" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle></svg>{{ d.status }}</span></div>
+</sc-for>
+</div>
+</section>
+
+<!-- 03 COVERAGE + REPORTS -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">03</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Coverage and reports</h2></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
+<div style="font:500 22px 'Source Serif 4',serif">Coverage against enforced floors</div>
+<p style="margin:4px 0 22px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">The amber tick is the floor CI enforces. A build below it fails. Scale runs 0 to 100.</p>
+<div style="display:flex;flex-direction:column;gap:22px">
+<sc-for list="{{ coverage }}" as="c" hint-placeholder-count="2">
+<div><div style="font:13.5px 'JetBrains Mono',monospace;margin-bottom:10px">{{ c.module }}</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ c.metrics }}" as="m" hint-placeholder-count="1">
+<div style="display:grid;grid-template-columns:72px minmax(0,1fr) minmax(150px,auto);align-items:center;gap:14px;font-size:14px">
+<span style="color:var(--ink-3)">{{ m.label }}</span>
+<div style="position:relative;height:8px;border-radius:99px;background:var(--raised)"><div style="width:{{ m.w }};height:100%;border-radius:99px;background:{{ m.fill }}"></div><div style="position:absolute;left:{{ m.floorLeft }};top:-5px;width:2px;height:18px;background:var(--attn)"></div></div>
+<span style="white-space:nowrap;color:{{ m.ink }};font-weight:{{ m.weight }}">{{ m.text }} <span style="font-weight:400;color:var(--ink-3)">{{ m.sub }}</span></span>
+</div>
+</sc-for>
+</div></div>
+</sc-for>
+</div>
+<sc-if value="{{ isBelow }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;margin-top:20px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span>Below-floor figure is illustrative.</div></sc-if>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
+<div style="font:500 22px 'Source Serif 4',serif">Reports per run</div>
+<p style="margin:4px 0 18px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">{{ p.reportsNote }}</p>
+<div style="border-radius:12px;background:var(--inset);border:1px solid var(--line)">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font:600 11.5px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>JOB / MODULE / PLATFORM</span><span>TESTS</span></div>
+<sc-for list="{{ p.reports }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font:13px 'JetBrains Mono',monospace"><span style="color:var(--ink-2);overflow-wrap:anywhere">{{ r.k }}</span><span>{{ r.n }}</span></div></sc-for>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;font-size:13.5px"><span style="color:var(--ink-3)">{{ p.reportsFoot }}</span><b style="font-weight:600">{{ p.total }}</b></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 04 HISTORY -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">04</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">History</h2><span style="font-size:13.5px;color:var(--ink-3)">Default branch, CI runs only</span></div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap"><div style="max-width:720px"><div style="font:500 24px 'Source Serif 4',serif;display:flex;align-items:center;gap:10px">{{ p.covTitle }}<span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE POINTS</span></div><figcaption style="margin-top:6px;font-size:14.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ p.covCaption }}</figcaption></div><button onClick="{{ toggleTable }}" aria-expanded="{{ showTable }}" style="flex:none;min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer">{{ tableLabel }}</button></div>
+<div style="margin-top:18px">{{ covChart }}</div>
+<sc-if value="{{ showTable }}" hint-placeholder-val="{{ false }}">
+<div style="overflow-x:auto;margin-top:12px;border:1px solid var(--line);border-radius:12px"><div style="display:grid;grid-template-columns:repeat(10,minmax(64px,1fr));min-width:640px;font-size:13px"><sc-for list="{{ covRows }}" as="r" hint-placeholder-count="10"><div style="padding:10px 12px;border-right:1px solid var(--line)"><div style="color:var(--ink-3)">{{ r.d }}</div><div style="font-weight:600;margin-top:2px">{{ r.v }}</div></div></sc-for></div></div>
+</sc-if>
+</figure>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px">
+<sc-for list="{{ smallCharts }}" as="ch" hint-placeholder-count="2">
+<figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
+<div style="font:500 20px 'Source Serif 4',serif;display:flex;align-items:center;gap:10px">{{ ch.title }}<span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></div>
+<figcaption style="margin-top:4px;font-size:14px;line-height:1.5;color:var(--ink-2)">{{ ch.caption }}</figcaption>
+<div style="margin-top:14px">{{ ch.svg }}</div>
+</figure>
+</sc-for>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div style="font:500 20px 'Source Serif 4',serif;display:flex;align-items:center;gap:10px">Last 40 runs<span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></div><span style="font-size:14px;color:var(--ink-2)">All 40 passed. Failed runs would show as tall cells marked ✕.</span></div>
+<div role="img" aria-label="40 runs, all passed" style="display:flex;align-items:flex-end;gap:3px;height:48px">
+<sc-for list="{{ strip }}" as="c" hint-placeholder-count="40"><span style="flex:1;height:14px;border-radius:2px;background:var(--pass)"></span></sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><span>40 runs ago</span><span>Latest</span></div>
+</div>
+</div>
+</section>
+
+<!-- 05 FLAKY + RECENT -->
+<section style="padding:48px 0 64px;border-top:1px solid var(--line)">
+<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">05</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Recent runs and flaky tests</h2></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:16px;align-items:start">
+<section style="grid-column:span 1;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;box-shadow:var(--shadow-card)">
+<div style="padding:14px 16px 8px;font:500 22px 'Source Serif 4',serif">Recent runs</div>
+<sc-for list="{{ p.runs }}" as="r" hint-placeholder-count="4">
+<a href="#" style="display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border-radius:12px;text-decoration:none" style-hover="background:var(--raised)">
+<span><sc-if value="{{ r.pass }}"><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if><sc-if value="{{ r.fail }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if></span>
+<div style="min-width:0"><div style="font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px;min-width:0"><sc-if value="{{ r.priv }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3);font-weight:400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><sc-if value="{{ r.pub }}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.title }}</span></sc-if><sc-if value="{{ r.sample }}"><span style="flex:none;font:500 9.5px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:0 4px;border-radius:4px">SAMPLE</span></sc-if></div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ r.branch }} · <span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span> · {{ r.counts }}</div></div>
+<span style="font-size:13px;color:var(--ink-3);text-align:right;white-space:nowrap">{{ r.when }}</span>
+</a>
+</sc-for>
+<a href="#" style="display:flex;align-items:center;min-height:44px;padding:0 16px;font-size:14px;font-weight:600">All runs →</a>
+</section>
+
+<section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
+<div style="font:500 22px 'Source Serif 4',serif">Flaky tests</div>
+<p style="margin:4px 0 16px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">A test is flaky when it both passes and fails on the same commit within the last 40 runs.</p>
+<sc-if value="{{ hasFlaky }}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{ p.flaky }}" as="f" hint-placeholder-count="1">
+<a href="#" style="display:block;padding:12px 14px;border-radius:12px;background:var(--inset);border:1px solid var(--line);text-decoration:none">
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><span style="font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ f.name }}</span><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></div>
+<div style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:3px">{{ f.suite }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px;font-size:13px;color:var(--ink-2)"><span>{{ f.rate }}</span><span>{{ f.layer }}</span><span>{{ f.plat }}</span></div>
+</a>
+</sc-for>
+<div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Illustrates the row. The inventory found no known flaky tests.</div>
+</sc-if>
+<sc-if value="{{ noFlaky }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;border:1px dashed var(--line-strong)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg><div><div style="font-weight:600;font-size:14.5px">No flaky tests in the last 40 runs</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">No test passed and failed on the same commit.</div></div></div>
+</sc-if>
+</section>
+</div>
+</section>
+</main>
+
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received {{ p.lastReport }}</span></footer>
+</div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;project&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ostomate2&quot;,&quot;routeserve&quot;],&quot;default&quot;:&quot;ostomate2&quot;,&quot;tsType&quot;:&quot;'ostomate2' | 'routeserve'&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;current&quot;,&quot;latest run failed&quot;,&quot;stale&quot;,&quot;coverage below floor&quot;],&quot;default&quot;:&quot;current&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+class Component extends DCLogic {
+  state = { project: null, theme: null, menuOpen: false, showTable: false };
+  static DARK = { bg:'#121110', surface:'#1a1917', inset:'#151412', raised:'#211f1c', line:'#2a2825', 'line-strong':'#3d3a35', ink:'#ede9e3', 'ink-2':'#cfc9bf', 'ink-3':'#a8a298', pass:'#7fd79a', 'pass-tint':'#1d2a20', fail:'#f4897c', 'fail-tint':'#33201c', attn:'#e3b35c', 'attn-tint':'#302716', neutral:'#b3ada3', 'neutral-tint':'#252320', 'on-ink':'#121110', 'layer-1':'#ede9e3', 'layer-2':'#b8b2a8', 'layer-3':'#8a847a', 'layer-4':'#6f6a62' };
+  static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0', 'layer-1':'#1c1a17', 'layer-2':'#57524b', 'layer-3':'#7a746b', 'layer-4':'#8f897f' };
+  static DATES = ['Jul 2','Jul 11','Jul 20','Jul 29','Aug 7','Aug 16','Aug 25','Sep 3','Sep 12','Sep 21'];
+
+  componentDidUpdate(prev) {
+    if (prev.project !== this.props.project && this.state.project) this.setState({ project: null });
+    if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null });
+  }
+
+  data() {
+    const tag = (n, dashed) => ({ n, border: dashed ? 'dashed' : 'solid', ink: dashed ? 'var(--ink-2)' : 'var(--ink)' });
+    const rep = (a, b) => Array.from({ length: b }, () => a);
+    return {
+      ostomate2: {
+        name: 'Ostomate2', private: false, lastReport: '4 minutes ago', streak: 41, ttg: '2h 14m',
+        tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
+        description: 'Logs bag and flange changes with a tap or a QR deep link, predicts days of supply, and sends reorder reminders. Data stays on the device. Crash reporting is opt-in and off by default, and there is no analytics.',
+        run: { when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', figure: '142', line: 'tests · 142 passed · 0 failed · 0 skipped · 27 s' },
+        failRun: { when: 'yesterday', branch: 'PR #52', sha: 'a41f9c2', figure: '1', line: 'failed · 141 of 142 passed · 31 s', failName: 'HomeViewModelTest › rendersToday', failPlat: 'ios-sim' },
+        platforms: 'Same suites on JVM (142) and iOS simulator (132)',
+        built: [
+          { g: 'Language', t: ['Kotlin 2.3', 'Kotlin Multiplatform', 'Swift (iOS shell and widget)'] },
+          { g: 'UI', t: ['Compose Multiplatform 1.11'] },
+          { g: 'Data', t: ['Room KMP (SQLite)', 'Koin'] },
+          { g: 'Delivery', t: ['Gradle 9', 'GitHub Actions', 'Fastlane'] },
+        ],
+        tested: [
+          { g: 'Frameworks', t: [tag('kotlin.test'), tag('JUnit4'), tag('kotest-property')] },
+          { g: 'Android', t: [tag('Robolectric'), tag('Roborazzi (screenshot)')] },
+          { g: 'Coverage', t: [tag('JaCoCo')] },
+          { g: 'Static', t: [tag('detekt'), tag('ktlint'), tag('SwiftLint')] },
+          { g: 'E2E', t: [tag('Maestro · not yet reported', true)] },
+        ],
+        total: '142', pyrNote: 'JVM run shown; iOS simulator runs 132 of them',
+        layers: [['Visual', 10, 'var(--layer-4)'], ['Integration', 29, 'var(--layer-2)'], ['Unit', 103, 'var(--layer-1)']],
+        e2e: { flows: 12 },
+        pyrCaption: '73% of tests are unit tests. The same suites run on JVM and on the iOS simulator, so a platform-specific failure shows up as a mismatch rather than hiding. The 12 Maestro flows run in CI but are not counted until they report.',
+        declared: [
+          { name: 'Maestro E2E · Android', flows: 7, status: 'Runs in CI, not yet reported', dash: '3.5 3' },
+          { name: 'Maestro E2E · iOS', flows: 5, status: 'Runs in CI, not yet reported', dash: '3.5 3' },
+        ],
+        cov: [
+          { module: 'shared', metrics: [['Lines', 92.0, 91]] },
+          { module: 'composeApp', metrics: [['Lines', 94.3, 93]] },
+        ],
+        below: { mi: 1, k: 0, v: 91.4 },
+        reportsNote: 'Each CI job posts its own report when it finishes. The four together make one run.',
+        reports: [{ k: 'android/shared/jvm', n: 82 }, { k: 'android/composeApp/jvm', n: 60 }, { k: 'ios/shared/ios-sim', n: 82 }, { k: 'ios/composeApp/ios-sim', n: 50 }],
+        reportsFoot: 'Counted once per test on JVM',
+        covTitle: 'Line coverage, shared',
+        covCaption: 'Rose from 52.6% on Jul 2 to 92.0% on Sep 21, and now sits above its 91% floor. The floor was raised as coverage climbed.',
+        covVals: [52.6, 57.9, 64.3, 69.8, 76.1, 81.4, 86.2, 89.7, 91.3, 92.0], covMin: 40, covFloor: 91, covTicks: [40, 60, 80, 100],
+        tests: [].concat(rep(118, 6), rep(124, 6), rep(131, 6), rep(137, 6), rep(142, 6)), testsMin: 100, testsMax: 150, testsTicks: [100, 125, 150],
+        testsCap: 'Grew from 118 to 142 over the last 30 runs.',
+        dur: [24, 25, 24, 26, 25, 27, 26, 25, 28, 26, 27, 25, 29, 27, 26, 28, 31, 27, 26, 28, 27, 26, 28, 27, 29, 26, 28, 27, 26, 27],
+        durCap: 'Between 24 s and 31 s, with no upward drift.',
+        runs: [
+          { pass: true, title: 'docs: BUG-10 verified on device', branch: 'main', sha: '0e2d0b4', counts: '142 tests · 27 s', when: '4 min ago' },
+          { fail: true, title: 'Pull request #52', branch: 'PR #52', sha: 'a41f9c2', counts: '141 of 142 · 31 s', when: 'yesterday' },
+          { pass: true, title: 'fix: widget refresh after restore', branch: 'main', sha: '7c1e5a0', counts: '142 tests · 26 s', when: '2 days ago', sample: true },
+          { pass: true, title: 'test: reorder prediction edge cases', branch: 'main', sha: 'b93d17e', counts: '142 tests · 28 s', when: '3 days ago', sample: true },
+        ],
+        flaky: [{ name: 'insertsAndQueriesByDay', suite: 'ChangeEventDaoTest', rate: 'Failed 2 of last 40 runs', layer: 'Integration', plat: 'jvm' }],
+      },
+      routeserve: {
+        name: 'RouteServe', private: true, lastReport: '2 hours ago', streak: 27, ttg: '1h 05m',
+        tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
+        description: 'For field-service pros covering a wide region: customer records, scheduling with calendar sync, SMS reminders, and route-corridor trip planning. Piano service first, on a multi-tenant core meant for other appointment-dispatch businesses.',
+        run: { when: '2 hours ago', branch: 'main', sha: 'c238574', figure: '1,048', line: 'tests · 1,048 passed · 0 failed · 0 skipped · 29 s' },
+        failRun: { when: 'yesterday', branch: 'main', sha: '5f0a2c9', figure: '1', line: 'failed · 1,047 of 1,048 passed · 30 s', failName: 'returns 409 when job overlaps', failPlat: 'details hidden' },
+        platforms: 'Node, across three workspaces',
+        built: [
+          { g: 'Language', t: ['TypeScript 6'] },
+          { g: 'Mobile', t: ['Expo SDK 57', 'React Native 0.86', 'React 19', 'WatermelonDB'] },
+          { g: 'API', t: ['Express 5', 'Prisma 7', 'PostgreSQL 18 + PostGIS', 'Zod'] },
+          { g: 'Services', t: ['Supabase Auth', 'Twilio'] },
+          { g: 'Delivery', t: ['Railway', 'EAS Build'] },
+        ],
+        tested: [
+          { g: 'Runners', t: [tag('Jest 30'), tag('jest-expo')] },
+          { g: 'API', t: [tag('Supertest'), tag('nock')] },
+          { g: 'Component', t: [tag('React Native Testing Library'), tag('msw')] },
+          { g: 'E2E', t: [tag('Maestro · not yet executed', true)] },
+        ],
+        total: '1,048', pyrNote: 'Approximate layer split',
+        layers: [['API', 269, 'var(--layer-4)'], ['Integration', 3, 'var(--layer-3)'], ['Component', 165, 'var(--layer-2)'], ['Unit', 608, 'var(--layer-1)']],
+        e2e: { flows: 13 },
+        pyrCaption: 'API tests outnumber component tests. Only 3 tests hit a real database, and all 13 E2E flows are authored but unexecuted. Showing that honestly is the point.',
+        declared: [{ name: 'Maestro E2E · iOS', flows: 13, status: 'Authored, not yet executed', dash: '1 3.2' }],
+        cov: [
+          { module: 'apps/backend', metrics: [['Lines', 96.1, 80], ['Branches', 84.4, 80]] },
+          { module: 'apps/mobile', metrics: [['Lines', 96.1, 80], ['Branches', 87.8, 80]] },
+          { module: 'packages/shared', metrics: [['Lines', 100, 80], ['Branches', 100, 80]] },
+        ],
+        below: { mi: 0, k: 1, v: 78.2 },
+        reportsNote: 'The monorepo reports once per workspace, so each report stays under the 4 MB request limit.',
+        reports: [{ k: 'test/apps/backend/node', n: '' }, { k: 'test/apps/mobile/node', n: '' }, { k: 'test/packages/shared/node', n: '' }],
+        reportsFoot: 'Total across workspaces',
+        covTitle: 'Line coverage, apps/backend',
+        covCaption: 'Held between 88% and 96% for the last 30 runs, well above the 80% floor.',
+        covVals: [88.2, 89.0, 90.4, 91.1, 92.6, 93.0, 94.4, 95.2, 95.8, 96.1], covMin: 60, covFloor: 80, covTicks: [60, 80, 100],
+        tests: [].concat(rep(1012, 8), rep(1027, 8), rep(1041, 7), rep(1048, 7)), testsMin: 1000, testsMax: 1060, testsTicks: [1000, 1030, 1060],
+        testsCap: 'Grew from 1,012 to 1,048 over the last 30 runs.',
+        dur: [27, 28, 27, 29, 28, 27, 30, 28, 29, 27, 28, 31, 29, 28, 27, 29, 28, 30, 29, 28, 27, 29, 30, 28, 29, 28, 30, 29, 28, 29],
+        durCap: 'Between 27 s and 31 s, with no upward drift.',
+        runs: [
+          { pass: true, branch: 'main', sha: 'c238574', counts: '1,048 tests · 29 s', when: '2 hours ago', priv: true },
+          { pass: true, branch: 'main', sha: '9ab41e2', counts: '1,048 tests · 28 s', when: 'yesterday', priv: true, sample: true },
+          { pass: true, branch: 'main', sha: 'e07c3d8', counts: '1,041 tests · 30 s', when: '3 days ago', priv: true, sample: true },
+          { pass: true, branch: 'main', sha: '41d9f06', counts: '1,041 tests · 29 s', when: '5 days ago', priv: true, sample: true },
+        ],
+        flaky: [],
+      },
+    };
+  }
+
+  chart(o) {
+    const h = React.createElement;
+    const W = o.w, H = o.h, L = 56, R = 28, T = 26, B = 34, n = o.ys.length;
+    const X = i => L + (n === 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1));
+    const Y = v => T + (o.max - v) / (o.max - o.min) * (H - T - B);
+    const k = [];
+    o.ticks.forEach(t => {
+      k.push(h('line', { key: 'g' + t, x1: L, x2: W - R, y1: Y(t), y2: Y(t), stroke: 'var(--line)' }));
+      k.push(h('text', { key: 't' + t, x: L - 10, y: Y(t) + 4, textAnchor: 'end', fill: 'var(--ink-3)', fontSize: 12 }, o.fmt(t)));
+    });
+    if (o.floor != null) {
+      k.push(h('line', { key: 'f', x1: L, x2: W - R, y1: Y(o.floor), y2: Y(o.floor), stroke: 'var(--attn)', strokeWidth: 1.5, strokeDasharray: '5 4' }));
+      k.push(h('text', { key: 'ft', x: L + 6, y: Y(o.floor) - 7, fill: 'var(--attn)', fontSize: 12, fontWeight: 600 }, 'floor ' + o.fmt(o.floor)));
+    }
+    const pts = o.ys.map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' ');
+    k.push(h('polyline', { key: 'l', points: pts, fill: 'none', stroke: 'var(--ink)', strokeWidth: 2.5, strokeLinejoin: 'round', strokeLinecap: 'round' }));
+    if (o.dots) o.ys.forEach((v, i) => { if (i > 0 && i < n - 1) k.push(h('circle', { key: 'd' + i, cx: X(i), cy: Y(v), r: 3, fill: 'var(--surface)', stroke: 'var(--ink)', strokeWidth: 1.5 })); });
+    [0, n - 1].forEach((i, j) => {
+      k.push(h('circle', { key: 'c' + i, cx: X(i), cy: Y(o.ys[i]), r: 4.5, fill: 'var(--ink)' }));
+      k.push(h('text', { key: 'v' + i, x: X(i) + (j ? -10 : 10), y: Y(o.ys[i]) + (j ? -12 : (o.firstAbove ? -12 : 22)), textAnchor: j ? 'end' : 'start', fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, o.fmt(o.ys[i], true)));
+    });
+    o.xl.forEach(([i, lab]) => k.push(h('text', { key: 'x' + i, x: X(i), y: H - 10, textAnchor: i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle'), fill: 'var(--ink-3)', fontSize: 12 }, lab)));
+    return h('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', role: 'img', 'aria-label': o.aria, style: { display: 'block', height: 'auto', fontFamily: "'Public Sans',sans-serif", fontVariantNumeric: 'tabular-nums', overflow: 'visible' } }, k);
+  }
+
+  renderVals() {
+    const D = Component.DARK, L = Component.LIGHT;
+    const theme = this.state.theme ?? this.props.theme ?? 'dark', dark = theme === 'dark';
+    const T = dark ? D : L;
+    const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
+    if (!dark) Object.keys(L).forEach(k => tv['--' + k] = L[k]);
+    tv['--shadow-card'] = dark ? 'none' : '0 1px 2px rgba(28,26,23,.06)';
+    tv['--shadow-menu'] = dark ? '0 16px 40px -12px rgba(0,0,0,.7)' : '0 16px 40px -12px rgba(28,26,23,.22)';
+
+    const all = this.data();
+    const key = this.state.project ?? this.props.project ?? 'ostomate2';
+    const p = all[key] || all.ostomate2;
+    const sc = this.props.scenario ?? 'current';
+    const failed = sc === 'latest run failed', stale = sc === 'stale', below = sc === 'coverage below floor';
+
+    const r0 = failed ? p.failRun : p.run;
+    const run = Object.assign({}, r0, { figColor: failed ? 'var(--fail)' : 'var(--ink)' });
+    if (stale) Object.assign(run, { when: 'Sep 12' });
+
+    const max = Math.max(...p.layers.map(l => l[1]));
+    const pyramid = [{ name: 'E2E', count: p.e2e.flows + ' flows', note: 'not counted', w: (p.e2e.flows / max * 100) + '%', minW: '28px', bg: 'transparent', border: '1.5px dashed var(--line-strong)', labelInk: 'var(--ink-3)', countInk: 'var(--ink-2)' }]
+      .concat(p.layers.map(([name, c, bg]) => ({ name, count: c.toLocaleString('en-US'), note: Math.round(c / max * 100) === 100 ? Math.round(c / p.layers.reduce((a, l) => a + l[1], 0) * 100) + '%' : Math.max(1, Math.round(c / p.layers.reduce((a, l) => a + l[1], 0) * 100)) + '%', w: (c / max * 100) + '%', minW: '6px', bg, border: 'none', labelInk: 'var(--ink-2)', countInk: 'var(--ink)' })));
+
+    const coverage = p.cov.map((m, mi) => ({ module: m.module, metrics: m.metrics.map(([label, v0, floor], k) => {
+      const v = below && p.below.mi === mi && p.below.k === k ? p.below.v : v0;
+      const isBelow = v < floor;
+      return { label, w: v + '%', floorLeft: floor + '%', fill: isBelow ? 'repeating-linear-gradient(135deg,var(--attn) 0 5px,var(--attn-tint) 5px 7px)' : 'var(--ink)',
+        text: isBelow ? `↓ ${v.toFixed(1)}% · ${(floor - v).toFixed(1)} below ${floor}%` : `${v.toFixed(1)}%`, sub: isBelow ? '' : `floor ${floor}% · +${(v - floor).toFixed(1)}`,
+        ink: isBelow ? 'var(--attn)' : 'var(--ink)', weight: 600 };
+    }) }));
+
+    const pct = (v, lab) => lab ? v.toFixed(1) + '%' : v + '%';
+    const dates = Component.DATES;
+    const covChart = this.chart({ w: 860, h: 250, ys: p.covVals, min: p.covMin, max: 100, ticks: p.covTicks, floor: p.covFloor, fmt: pct, dots: true, xl: dates.map((d, i) => [i, d]), firstAbove: p.covVals[0] > 80, aria: `${p.covTitle}: ${p.covVals[0]}% on Jul 2 to ${p.covVals[p.covVals.length - 1]}% on Sep 21. Floor ${p.covFloor}%.` });
+    const smallCharts = [
+      { title: 'Tests per run', caption: p.testsCap, svg: this.chart({ w: 520, h: 200, ys: p.tests, min: p.testsMin, max: p.testsMax, ticks: p.testsTicks, fmt: v => v.toLocaleString('en-US'), xl: [[0, '30 runs ago'], [29, 'Latest']], aria: 'Tests per run. ' + p.testsCap }) },
+      { title: 'Run duration', caption: p.durCap, svg: this.chart({ w: 520, h: 200, ys: p.dur, min: 0, max: 40, ticks: [0, 20, 40], fmt: v => v + ' s', xl: [[0, '30 runs ago'], [29, 'Latest']], firstAbove: true, aria: 'Run duration. ' + p.durCap }) },
+    ];
+
+    const on = true;
+    const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: T.pass, color: T.pass, animation: on ? 'tpPulse 2.4s ease-out infinite' : 'none' } });
+
+    const menuItems = Object.keys(all).map(k => ({ name: all[k].name, priv: all[k].private, bg: k === key ? 'var(--surface)' : 'transparent', pick: () => this.setState({ project: k, menuOpen: false }) }));
+
+    return {
+      themeVars: tv, liveDot,
+      toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
+      themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
+      menuOpen: this.state.menuOpen, toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })), menuItems,
+      p: Object.assign({}, p, { lastReport: stale ? '12 days ago' : p.lastReport, runs: p.runs.map(r => Object.assign({ pub: !r.priv, fail: !!r.fail, pass: !!r.pass, priv: !!r.priv, sample: !!r.sample }, r)) }),
+      isPublic: !p.private, isStale: stale, isHealthy: !stale, isPass: !failed, isFail: failed, isBelow: below,
+      run, pyramid, coverage, covChart, smallCharts,
+      showTable: this.state.showTable, tableLabel: this.state.showTable ? 'Hide table' : 'Show table',
+      toggleTable: () => this.setState(s => ({ showTable: !s.showTable })),
+      covRows: p.covVals.map((v, i) => ({ d: dates[i], v: v.toFixed(1) + '%' })),
+      strip: Array.from({ length: 40 }, (_, i) => i),
+      hasFlaky: p.flaky.length > 0, noFlaky: p.flaky.length === 0,
+    };
+  }
+}
+</script>
+</body>
+</html>

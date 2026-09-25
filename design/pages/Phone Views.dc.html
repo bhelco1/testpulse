@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#0c0b0a}a{color:#ede9e3}a:hover{color:#fff}</style>
+</helmet>
+<div style="padding:48px;font-family:'Public Sans',sans-serif;color:#ede9e3;background:#0c0b0a;min-height:100vh">
+<h1 style="margin:0 0 8px;font:600 28px 'Public Sans',sans-serif">Phone widths · 390px · dark and light</h1>
+<p style="margin:0 0 32px;color:#a8a298;font-size:15px">Each frame is the live page at 390 × 844. Scroll inside a frame to read the full page. Kiosk is dark-only and fixed at 1920 × 1080, so it isn't shown here.</p>
+<section style="margin-bottom:56px">
+<h2 style="margin:0 0 20px;font:600 20px 'Public Sans',sans-serif">Dark</h2>
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+<div id="D1" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">D1</span><span style="font-weight:600">Landing</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Landing" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="D2" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">D2</span><span style="font-weight:600">Project Page</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Project Page" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="D3" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">D3</span><span style="font-weight:600">Run Detail</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Run Detail" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="D4" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">D4</span><span style="font-weight:600">Test History</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Test History" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="D5" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">D5</span><span style="font-weight:600">How Its Tested</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="How Its Tested" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="D6" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">D6</span><span style="font-weight:600">Admin</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Admin" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="D7" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">D7</span><span style="font-weight:600">Privacy</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Privacy" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+</div>
+</section>
+<section style="margin-bottom:56px">
+<h2 style="margin:0 0 20px;font:600 20px 'Public Sans',sans-serif">Light</h2>
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+<div id="L1" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">L1</span><span style="font-weight:600">Landing</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Landing" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="L2" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">L2</span><span style="font-weight:600">Project Page</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Project Page" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="L3" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">L3</span><span style="font-weight:600">Run Detail</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Run Detail" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="L4" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">L4</span><span style="font-weight:600">Test History</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Test History" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="L5" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">L5</span><span style="font-weight:600">How Its Tested</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="How Its Tested" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="L6" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">L6</span><span style="font-weight:600">Admin</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Admin" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="L7" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">L7</span><span style="font-weight:600">Privacy</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Privacy" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

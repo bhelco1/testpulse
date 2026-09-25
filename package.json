@@ -14,6 +14,7 @@
     "test": "vitest run --coverage",
     "test:int": "vitest run --config vitest.int.config.ts",
     "check:secrets": "node scripts/check-tracked-secrets.ts",
+    "check:contrast": "node scripts/check-contrast.ts",
     "test:e2e": "playwright test",
     "db:reset": "supabase db reset",
     "project:add": "node --env-file-if-exists=.env.local scripts/project-add.ts",

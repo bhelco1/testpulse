@@ -1,0 +1,84 @@
+/* testpulse design tokens. Dark is the default; light applies with [data-theme="light"]
+   or prefers-color-scheme: light when no explicit choice is stored. */
+:root {
+  /* surfaces */
+  --bg: #121110;          /* page */
+  --surface: #1a1917;     /* cards, tiles */
+  --inset: #151412;       /* inset panels, inputs, per-report block */
+  --raised: #211f1c;      /* hover, newest feed row, menus, bar track */
+  --line: #2a2825;        /* hairlines, card borders */
+  --line-strong: #3d3a35; /* control borders, dashed outlines */
+  /* ink */
+  --ink: #ede9e3;
+  --ink-2: #cfc9bf;       /* secondary text */
+  --ink-3: #a8a298;       /* labels, meta; min 4.5:1 on --surface */
+  --on-ink: #121110;      /* text on --ink fills (primary button) */
+  /* status: always paired with an icon + word */
+  --pass: #7fd79a;  --pass-tint: #1d2a20;
+  --fail: #f4897c;  --fail-tint: #33201c;
+  --attn: #e3b35c;  --attn-tint: #302716;  /* attention only: empty, stale, below floor, floor marker, SAMPLE tag */
+  --neutral: #b3ada3; --neutral-tint: #252320; /* declared / not reporting, private tag */
+  /* test layers (pyramid, stacked bar) — ordered base to tip */
+  --layer-1: #ede9e3; --layer-2: #b8b2a8; --layer-3: #8a847a; --layer-4: #6f6a62;
+  /* depth */
+  --shadow-card: none;
+  --shadow-menu: 0 16px 40px -12px rgba(0,0,0,.7);
+
+  /* type */
+  --font-serif: 'Source Serif 4', Georgia, serif;   /* figures, headings, lede */
+  --font-sans: 'Public Sans', system-ui, sans-serif; /* UI, body */
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace; /* SHAs, test names, report keys, eyebrow labels */
+  /* size / line-height · desktop → phone (≤640px) */
+  --text-hero: 500 clamp(88px, 11vw, 152px)/.92 var(--font-serif);  /* letter-spacing -.04em; kiosk 200px */
+  --text-count: 500 56px/1 var(--font-serif);    /* phone 44 */
+  --text-title: 500 42px/1.05 var(--font-serif); /* phone 32; -.02em */
+  --text-stat: 500 40px/1.1 var(--font-serif);   /* phone 32 */
+  --text-h1: 500 clamp(38px, 5vw, 58px)/1.06 var(--font-serif); /* -.03em */
+  --text-h2: 500 30px/1.2 var(--font-serif);     /* phone 26 */
+  --text-lede: 400 24px/1.35 var(--font-serif);  /* phone 19 */
+  --text-body-l: 400 18px/1.5 var(--font-sans);  /* phone 15 */
+  --text-body: 400 15px/1.5 var(--font-sans);    /* phone 14.5 */
+  --text-small: 400 13.5px/1.45 var(--font-sans);/* floor: 13px */
+  --text-mono: 400 13px/1.6 var(--font-mono);    /* phone 12.5 */
+  --text-label: 600 12px/1.2 var(--font-mono);   /* uppercase, letter-spacing .08em */
+
+  /* space (4px base) */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
+  --space-7: 32px; --space-8: 40px; --space-9: 52px; --space-10: 64px; --space-11: 80px;
+  /* radius */
+  --radius-xs: 4px;   /* tags, markers */
+  --radius-sm: 10px;  /* buttons, inputs */
+  --radius-md: 12px;  /* inset panels, rows */
+  --radius-lg: 16px;  /* tiles */
+  --radius-xl: 20px;  /* cards */
+  --radius-pill: 999px;
+  /* motion */
+  --motion-fast: 120ms;  /* hover, focus, pressed */
+  --motion-base: 200ms;  /* row expand, menu open, theme change */
+  --motion-arrive: 2s;   /* new feed row tint fades to surface */
+  --motion-pulse: 2.4s;  /* live dot only */
+  /* layout */
+  --page-max: 1280px;
+  --page-gutter: clamp(20px, 4vw, 56px);
+  --target-min: 44px;
+}
+
+[data-theme="light"] {
+  --bg: #f6f4f0; --surface: #ffffff; --inset: #f3f0eb; --raised: #ece8e1; --line: #e4e0d9; --line-strong: #c9c3b9;
+  --ink: #1c1a17; --ink-2: #45413b; --ink-3: #68635b; --on-ink: #f6f4f0;
+  --pass: #197339; --pass-tint: #e4f2e7;
+  --fail: #b3261e; --fail-tint: #fbe8e5;
+  --attn: #8a5a00; --attn-tint: #fbf0d8;
+  --neutral: #5d5851; --neutral-tint: #efece7;
+  --layer-1: #1c1a17; --layer-2: #57524b; --layer-3: #7a746b; --layer-4: #8f897f;
+  --shadow-card: 0 1px 2px rgba(28,26,23,.06);
+  --shadow-menu: 0 16px 40px -12px rgba(28,26,23,.22);
+}
+
+@keyframes tp-pulse { 0% { box-shadow: 0 0 0 0 currentColor } 70% { box-shadow: 0 0 0 7px transparent } 100% { box-shadow: 0 0 0 0 transparent } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
+
+body { margin: 0; background: var(--bg); color: var(--ink); font: var(--text-body); font-variant-numeric: tabular-nums; }
+a { color: inherit; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+a:hover { text-decoration-color: currentColor; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

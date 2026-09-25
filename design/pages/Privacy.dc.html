@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#121110}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;background:var(--bg);color:var(--ink);min-height:100vh">
+<div style="{{ themeVars }}">
+<a href="#main" style="position:absolute;left:-9999px;top:12px;z-index:20;padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:600 14px 'Public Sans',sans-serif" style-focus="left:16px">Skip to content</a>
+<div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
+
+<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
+<a href="#" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+<button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it's tested</a>
+<span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}Live</span>
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</nav>
+</header>
+
+<main id="main" style="max-width:720px;padding:56px 0 72px">
+<div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Privacy</div>
+<h1 style="margin:14px 0 0;font:500 clamp(38px,5vw,58px)/1.06 'Source Serif 4',serif;letter-spacing:-.03em;text-wrap:balance">What this site records about you</h1>
+<p style="margin:22px 0 0;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">Which pages you view and for how long. That's it. There are no accounts, no raw IP addresses, and no third-party analytics.</p>
+
+<sc-if value="{{ showSummary }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:36px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
+<div style="font:500 20px 'Source Serif 4',serif">Recorded per page view</div>
+<ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>A random session identifier</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>The page address</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Time spent on the page</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Browser, bot, or link preview</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>A salted hash of your IP address</li>
+</ul>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
+<div style="font:500 20px 'Source Serif 4',serif">Never recorded</div>
+<ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Your IP address itself</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Your name or email</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Device fingerprints</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Anything sent to third-party analytics or ad networks</li>
+</ul>
+</div>
+</div>
+</sc-if>
+
+<section style="margin-top:48px;padding-top:32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">How a visit is recorded</h2>
+<div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
+<p style="margin:0">After a page finishes loading, a small script on the page sends one record back to this site. Link previews and mail scanners usually fetch a page without running it, so most of them are never counted.</p>
+<p style="margin:0">Each record is labelled as a browser, a bot, or a link preview. Known bots and previews are kept under that label and left out of every visit count.</p>
+<p style="margin:0">Your IP address is combined with a secret value and hashed before it is stored. The hash can't be turned back into an address; it is used only to count how many different visitors opened a link.</p>
+</div>
+</section>
+
+<section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">The cookie</h2>
+<div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
+<p style="margin:0">One cookie, set by this site only, holding the session identifier. It is marked httpOnly, so scripts on the page can't read it, and it is never shared with another site.</p>
+</div>
+</section>
+
+<section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">If someone sent you a link</h2>
+<div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
+<p style="margin:0">Some links to this site, for example ones included in a job application, carry a short code tied to the company and role they were sent to. Opening one sets the cookie and redirects you straight away, so the code doesn't stay in your address bar.</p>
+<p style="margin:0">Page views in that session are then attributed to the company and role, not to a person. If you arrived any other way, your visit is recorded anonymously.</p>
+<p style="margin:0">For each of these links, the site owner can see:</p>
+<ul style="margin:0;padding:0 0 0 20px;display:flex;flex-direction:column;gap:6px">
+<li>when it was first and last opened</li>
+<li>how many separate sessions used it</li>
+<li>how many different IP hashes opened it, which shows whether it was passed around</li>
+<li>which pages were viewed, and time spent on each project</li>
+</ul>
+</div>
+</section>
+</main>
+
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" aria-current="page" style="min-height:44px;display:flex;align-items:center;padding-right:16px;color:var(--ink);text-decoration-color:var(--ink)">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 minutes ago</span></footer>
+</div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;summary&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+class Component extends DCLogic {
+  state = { theme: null };
+  static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
+  componentDidUpdate(prev) { if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null }); }
+  renderVals() {
+    const L = Component.LIGHT;
+    const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
+    const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
+    if (!dark) Object.keys(L).forEach(k => tv['--' + k] = L[k]);
+    const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
+    return {
+      themeVars: tv, liveDot,
+      showSummary: this.props.summary ?? true,
+      toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
+      themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
+    };
+  }
+}
+</script>
+</body>
+</html>

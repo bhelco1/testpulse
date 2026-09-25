@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // The Claude Design handoff bundle is committed as exported and never edited by hand.
+    'design/**',
   ]),
   {
     // lib/supabase/server.ts holds the secret key, which bypasses row-level security (spec

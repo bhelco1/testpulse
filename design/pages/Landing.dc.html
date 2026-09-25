@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#121110}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes tpShimmer{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;background:var(--bg);color:var(--ink);min-height:100vh">
+<div style="{{ themeVars }}">
+<a href="#main" style="position:absolute;left:-9999px;top:12px;z-index:20;padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:600 14px 'Public Sans',sans-serif" style-focus="left:16px">Skip to content</a>
+<div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
+
+<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
+<a href="#" aria-current="page" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+<button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it's tested</a>
+<span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}<span>{{ liveLabel }}</span></span>
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</nav>
+</header>
+
+<main id="main" style="padding:28px 0 56px">
+
+<sc-if value="{{ sampleNote }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:20px;font-size:13.5px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span><span>{{ sampleNote }}</span></div>
+</sc-if>
+
+<sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+<section role="alert" style="max-width:640px;padding:40px 0 80px">
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600;font-size:14px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Error</span>
+<h1 style="margin:16px 0 0;font:500 clamp(34px,4.5vw,48px)/1.1 'Source Serif 4',serif;letter-spacing:-.02em;text-wrap:balance">Results couldn't be loaded</h1>
+<p style="margin:14px 0 0;font:400 19px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">The database didn't respond. Nothing is shown rather than numbers that might be out of date. Test runs are still being received and will appear when it recovers.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:24px"><button style="height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer">Try again</button><a href="#" style="min-height:44px;display:flex;align-items:center;padding:0 6px;font-size:15px">How it's tested</a></div>
+</section>
+</sc-if>
+
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+<div aria-busy="true" aria-label="Loading results" style="display:flex;flex-direction:column;gap:12px;animation:tpShimmer 1.6s ease-in-out infinite">
+<div style="width:min(100%,380px);height:24px;border-radius:8px;background:var(--raised)"></div>
+<div style="width:min(100%,300px);height:120px;border-radius:14px;background:var(--raised);margin:4px 0 20px"></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px"><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div></div>
+<div style="width:140px;height:28px;border-radius:8px;background:var(--raised);margin-top:36px"></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px"><div style="height:460px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:460px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"></div></div>
+<span style="font-size:14px;color:var(--ink-3);margin-top:8px">Loading results…</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
+<p style="margin:0 0 4px;font:400 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</p>
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 36px;margin-bottom:32px">
+<span style="font:500 clamp(88px,11vw,152px)/.92 'Source Serif 4',serif;letter-spacing:-.04em">{{ heroTotal }}</span>
+<p style="margin:0 0 14px;max-width:420px;font-size:18px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ heroNote }}</p>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
+<sc-for list="{{ tiles }}" as="t" hint-placeholder-count="5">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px">
+<div style="display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--ink-3)"><span>{{ t.label }}</span><sc-if value="{{ t.sample }}" hint-placeholder-val="{{ false }}"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px;align-self:flex-start">SAMPLE</span></sc-if></div>
+<div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px;color:{{ t.ink }}">{{ t.value }}</div>
+<div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ t.sub }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin:48px 0 16px"><h2 style="margin:0;font:500 30px 'Source Serif 4',serif;letter-spacing:-.01em">Projects</h2><span style="font-size:14px;color:var(--ink-3)">Latest default-branch run</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px">
+<sc-for list="{{ cards }}" as="c" hint-placeholder-count="2">
+<article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(20px,2.4vw,30px) 0;display:flex;flex-direction:column;min-width:0">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px">
+<span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:{{ c.st.tint }};color:{{ c.st.ink }};font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ c.st.dash }}"></circle><path d="{{ c.st.d }}"></path></svg>{{ c.st.label }}</span>
+<span style="display:flex;align-items:center;gap:6px;color:var(--ink-3)"><span>{{ c.when }}</span><span>·</span><span>main</span><span>·</span><a href="#" style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.sha }}</a></span>
+</div>
+<h3 style="margin:18px 0 6px;font:500 clamp(34px,3.4vw,42px)/1.05 'Source Serif 4',serif;letter-spacing:-.02em;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px"><a href="#" style="text-decoration:none">{{ c.name }}</a><sc-if value="{{ c.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font:500 13px 'Public Sans',sans-serif;color:var(--ink-2);background:var(--neutral-tint);padding:5px 10px;border-radius:99px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if></h3>
+<p style="margin:0 0 20px;font-size:15.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ c.desc }}</p>
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:18px"><span style="font:500 56px/1 'Source Serif 4',serif;color:{{ c.totalInk }}">{{ c.total }}</span><span style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:15px;color:var(--ink-2)"><sc-for list="{{ c.subParts }}" as="sp" hint-placeholder-count="4"><span style="color:{{ sp.ink }};font-weight:{{ sp.w }}">{{ sp.t }}</span></sc-for></span></div>
+
+<sc-if value="{{ c.hasLayers }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;height:8px;gap:3px;border-radius:99px;overflow:hidden;margin-bottom:8px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:3px;background:{{ l.bg }}"></div></sc-for></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--ink-2);margin-bottom:22px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><span style="display:flex;gap:5px"><span>{{ l.name }}</span><span>{{ l.label }}</span></span></sc-for></div>
+</sc-if>
+<sc-if value="{{ c.emptyNote }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin-bottom:22px;border-radius:12px;background:var(--attn-tint);font-size:14.5px;line-height:1.55;color:var(--ink)"><svg style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle><path d="M8 12h8"></path></svg><span>{{ c.emptyNote }}</span></div>
+</sc-if>
+
+<div style="display:flex;flex-direction:column;gap:14px;font-size:14px">
+<sc-for list="{{ c.cov }}" as="v" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:96px minmax(40px,1fr) auto;align-items:center;column-gap:14px">
+<span style="color:var(--ink-3)">{{ v.m }}</span>
+<div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:{{ v.fill }}"></div><div style="position:absolute;left:{{ v.fl }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
+<span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
+</div>
+</sc-for>
+</div>
+
+<div style="margin-top:22px;padding:14px 16px;border-radius:12px;background:var(--inset);font:13px/1.8 'JetBrains Mono',monospace;color:var(--ink-2)">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-family:'Public Sans',sans-serif;font-size:13px;color:var(--ink-3);margin-bottom:4px"><span>{{ c.repHead }}</span><span>{{ c.repSide }}</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));column-gap:24px"><sc-for list="{{ c.reports }}" as="r" hint-placeholder-count="3"><span style="display:flex;justify-content:space-between;gap:12px;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis">{{ r.k }}</span><span style="color:{{ r.ink }}">{{ r.n }}</span></span></sc-for></div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin-top:auto;padding:16px 0 18px;margin-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-3)"><span>{{ c.declared }}</span><span style="display:flex;align-items:center;gap:6px;color:{{ c.health.ink }};font-weight:{{ c.health.w }};flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.health.d }}"></path></svg>{{ c.health.label }}</span></div>
+</article>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-top:16px;align-items:start">
+<section style="grid-column:span 1;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;min-width:0">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;padding:16px 16px 10px"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">Recent runs</h2><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:{{ feedNoteInk }}">{{ liveDot }}<span>{{ feedNote }}</span></span></div>
+<div role="log" aria-live="polite" style="display:flex;flex-direction:column">
+<sc-for list="{{ feed }}" as="r" hint-placeholder-count="3">
+<a href="#" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:14px 16px;min-height:44px;border-radius:12px;background:{{ r.bg }};text-decoration:none">
+<span style="display:flex;align-items:center;gap:6px;width:92px;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg>{{ r.st.label }}</span>
+<div style="flex:1 1 220px;min-width:0">
+<div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;min-width:0"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3);font-weight:400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></div>
+<div style="display:flex;gap:6px;font-size:13px;color:var(--ink-3);margin-top:2px"><span>{{ r.project }}</span><span>·</span><span>{{ r.branch }}</span><span>·</span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></div>
+</div>
+<span style="display:flex;gap:6px;font-size:14px;white-space:nowrap"><span style="color:{{ r.countInk }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
+<span style="margin-left:auto;font-size:13px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span>
+</a>
+</sc-for>
+</div>
+<a href="#" style="display:flex;align-items:center;min-height:44px;padding:0 16px;font-size:14px;font-weight:600">All runs →</a>
+</section>
+<section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px clamp(20px,2.4vw,30px)">
+<h2 style="margin:0 0 14px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">About this site</h2>
+<p style="margin:0 0 20px;font:400 19px/1.5 'Source Serif 4',serif;text-wrap:pretty">I'm Bobby Helco, a quality engineering leader. Every project here reports its test results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard is tested the same way, and reports on itself.</p>
+<a href="#" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;background:var(--ink);color:var(--on-ink);font-size:14.5px;font-weight:600;text-decoration:none">How testpulse is tested →</a>
+</section>
+</div>
+</sc-if>
+</main>
+
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>{{ footerNote }}</span></footer>
+</div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;failed run&quot;,&quot;empty run&quot;,&quot;stale project&quot;,&quot;coverage below floor&quot;,&quot;live update&quot;,&quot;realtime disconnected&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;healthy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+class Component extends DCLogic {
+  state = { theme: null };
+  static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0', 'layer-1':'#1c1a17', 'layer-2':'#57524b', 'layer-3':'#7a746b', 'layer-4':'#8f897f' };
+  static ST = {
+    pass: { label: 'Passed', ink: 'var(--pass)', tint: 'var(--pass-tint)', d: 'm8 12 3 3 5-6', dash: 'none' },
+    fail: { label: 'Failed', ink: 'var(--fail)', tint: 'var(--fail-tint)', d: 'm15 9-6 6M9 9l6 6', dash: 'none' },
+    empty: { label: 'Empty', ink: 'var(--attn)', tint: 'var(--attn-tint)', d: 'M8 12h8', dash: '3.5 3' },
+  };
+  componentDidUpdate(prev) { if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null }); }
+
+  renderVals() {
+    const L = Component.LIGHT, ST = Component.ST;
+    const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
+    const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
+    if (!dark) Object.keys(L).forEach(k => tv['--' + k] = L[k]);
+    const sc = this.props.scenario ?? 'healthy';
+    const live = sc !== 'realtime disconnected';
+
+    const part = (t, ink, w) => ({ t, ink: ink || 'inherit', w: w || 400 });
+    const healthy = { label: 'Reporting healthy', ink: 'var(--pass)', d: 'M20 6 9 17l-5-5', w: 400 };
+    const cov = (m, v, f) => { const below = v < f; return { m, v: (v === 100 ? '100' : v.toFixed(1)) + '%', w: v + '%', fl: f + '%', below, fill: 'var(--ink)', ink: below ? 'var(--attn)' : 'inherit', floorInk: below ? 'var(--attn)' : 'var(--ink-3)', floorLabel: below ? `below floor ${f}%` : `floor ${f}%` }; };
+
+    const osto = {
+      name: 'Ostomate2', private: false, sha: '0e2d0b4', when: '4 minutes ago', st: ST.pass,
+      desc: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
+      total: '142', totalInk: 'inherit', subParts: [part('tests ·'), part('0 failed ·'), part('0 skipped ·'), part('27 s')],
+      hasLayers: true, emptyNote: '',
+      layers: [['Unit', 103, 'var(--layer-1)'], ['Integration', 29, 'var(--layer-2)'], ['Visual', 10, 'var(--layer-4)']].map(([name, n, bg]) => ({ name, n, label: String(n), bg })),
+      cov: [cov('shared', 92.0, 91), cov('composeApp', 94.3, 93)],
+      repHead: '4 reports in this run', repSide: 'JVM 142 · iOS simulator 132',
+      reports: [['android/shared/jvm', 82], ['ios/shared/ios-sim', 82], ['android/composeApp/jvm', 60], ['ios/composeApp/ios-sim', 50]].map(([k, n]) => ({ k, n: String(n), ink: 'var(--ink)' })),
+      declared: 'Not counted: 12 Maestro E2E flows, run in CI, not yet reported', health: healthy,
+    };
+    const route = {
+      name: 'RouteServe', private: true, sha: 'c238574', when: '2 hours ago', st: ST.pass,
+      desc: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
+      total: '1,048', totalInk: 'inherit', subParts: [part('tests ·'), part('0 failed ·'), part('0 skipped ·'), part('29 s')],
+      hasLayers: true, emptyNote: '',
+      layers: [['Unit', 608, 'var(--layer-1)'], ['Component', 165, 'var(--layer-2)'], ['Integration', 3, 'var(--layer-3)'], ['API', 269, 'var(--layer-4)']].map(([name, n, bg]) => ({ name, n, label: String(n), bg })),
+      cov: [cov('backend', 96.1, 80), cov('mobile', 96.1, 80), cov('shared', 100, 80)],
+      repHead: '3 reports in this run', repSide: 'node',
+      reports: [['test/apps/backend/node', 498], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]].map(([k, n]) => ({ k, n: String(n), ink: 'var(--ink)' })),
+      declared: 'Not counted: 13 Maestro E2E flows, authored, not yet executed', health: healthy,
+    };
+
+    const row = (st, title, project, branch, sha, count, count2, when, extra = {}) => ({ st, title, project, branch, sha, count, count2, when, countInk: 'inherit', bg: 'transparent', isNew: false, private: false, ...extra });
+    let feed = [
+      row(ST.pass, 'docs: BUG-10 verified on device', 'Ostomate2', 'main', '0e2d0b4', '142 tests', '· 27 s', '4 minutes ago', { bg: 'var(--raised)' }),
+      row(ST.pass, '', 'RouteServe', 'main', 'c238574', '1,048 tests', '· 29 s', '2 hours ago', { private: true }),
+      row(ST.fail, 'Pull request #52', 'Ostomate2', 'PR', 'a41f9c2', '1 failed', '· 141 of 142', 'yesterday', { countInk: 'var(--fail)' }),
+    ];
+
+    let heroTotal = '1,190', heroNote = 'automated tests across two projects. 100% passing on the latest runs, 0 skipped or disabled.';
+    const tile = (label, value, sub, sample, ink) => ({ label, value, sub, sample: !!sample, ink: ink || 'inherit' });
+    let tiles = [
+      tile('Pass rate', '100%', 'Latest runs · 0 skipped, excluded'),
+      tile('Projects reporting', '2', '3 once testpulse reports on itself'),
+      tile('Runs in last 30 days', '24', 'Ostomate2 18 · RouteServe 6'),
+      tile('Median time to green', '2h 14m', 'Last 90 days'),
+      tile('Green streak', '41 runs', 'Consecutive passed, default branch'),
+    ];
+    let sampleNote = '', feedNote = 'Updates as reports arrive', feedNoteInk = 'var(--ink-3)', footerNote = 'Last report received 4 minutes ago';
+
+    if (sc === 'failed run') {
+      sampleNote = 'Ostomate2’s latest default-branch run shown failing 1 of 142 to illustrate the state.';
+      osto.st = ST.fail; osto.sha = 'a41f9c2';
+      osto.subParts = [part('tests ·'), part('1 failed', 'var(--fail)', 600), part('· 0 skipped ·'), part('27 s')];
+      heroNote = 'automated tests across two projects. 1 failing on Ostomate2’s latest run, 0 skipped or disabled.';
+      tiles[0] = tile('Pass rate', '99.9%', '1,189 of 1,190 · 0 skipped, excluded');
+      tiles[4] = tile('Green streak', '0 runs', 'Broken by Ostomate2 a41f9c2');
+      feed[0] = row(ST.fail, 'fix: supply count rounding', 'Ostomate2', 'main', 'a41f9c2', '1 failed', '· 141 of 142', '4 minutes ago', { bg: 'var(--raised)', countInk: 'var(--fail)' });
+    } else if (sc === 'empty run') {
+      sampleNote = 'Ostomate2’s latest run shown with zero tests executed to illustrate the state.';
+      osto.st = ST.empty; osto.total = '0'; osto.totalInk = 'var(--attn)';
+      osto.subParts = [part('tests executed ·'), part('4 reports received')];
+      osto.hasLayers = false;
+      osto.emptyNote = 'Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn’t counted in any total.';
+      osto.reports = osto.reports.map(r => ({ ...r, n: '0', ink: 'var(--attn)' }));
+      osto.repSide = 'expected 142';
+      osto.health = { label: 'Empty run', ink: 'var(--attn)', d: 'M12 7v6M12 17h.01', w: 600 };
+      heroTotal = '1,048';
+      heroNote = 'tests executed on the latest runs. Ostomate2’s latest run executed none, so it isn’t counted.';
+      tiles[0] = tile('Pass rate', '100%', 'RouteServe only · 0 skipped, excluded');
+      feed[0] = row(ST.empty, 'docs: BUG-10 verified on device', 'Ostomate2', 'main', '0e2d0b4', '0 tests', '· 4 reports', '4 minutes ago', { bg: 'var(--raised)', countInk: 'var(--attn)' });
+    } else if (sc === 'stale project') {
+      sampleNote = 'RouteServe shown with no report for 12 days to illustrate the state.';
+      route.when = '12 days ago';
+      route.health = { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', w: 600 };
+      tiles[1] = tile('Projects reporting', '1 of 2', 'RouteServe silent for 12 days', false, 'var(--attn)');
+      feed[1] = { ...feed[1], when: '12 days ago' };
+    } else if (sc === 'coverage below floor') {
+      sampleNote = 'Ostomate2 composeApp coverage shown under its floor to illustrate the state.';
+      osto.cov = [cov('shared', 92.0, 91), cov('composeApp', 92.6, 93)];
+      osto.health = { label: 'Coverage below floor', ink: 'var(--attn)', d: 'M12 5v14M6 13l6 6 6-6', w: 600 };
+    } else if (sc === 'live update') {
+      sampleNote = 'A new Ostomate2 run arriving at the top of the feed.';
+      osto.when = 'Just now'; osto.sha = '7c1e05b';
+      feed = [row(ST.pass, 'test: cover reorder warnings', 'Ostomate2', 'main', '7c1e05b', '142 tests', '· 26 s', 'Just now', { bg: 'var(--pass-tint)', isNew: true }), { ...feed[0], bg: 'transparent' }, feed[1]];
+      footerNote = 'Last report received just now';
+    } else if (!live) {
+      feedNote = 'Offline. Showing runs as of 10:42; reconnecting'; feedNoteInk = 'var(--ink-2)';
+    }
+
+    const dotOn = live;
+    const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', boxSizing: 'border-box', background: dotOn ? 'var(--pass)' : 'transparent', border: dotOn ? 'none' : '1.5px solid var(--ink-3)', color: 'var(--pass)', animation: dotOn ? 'tpPulse 2.4s ease-out infinite' : 'none' } });
+
+    return {
+      themeVars: tv, liveDot, liveLabel: live ? 'Live' : 'Offline · reconnecting',
+      isLoading: sc === 'loading', isError: sc === 'error', isReady: sc !== 'loading' && sc !== 'error',
+      sampleNote, heroTotal, heroNote, tiles, cards: [osto, route], feed, feedNote, feedNoteInk, footerNote,
+      toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
+      themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
+    };
+  }
+}
+</script>
+</body>
+</html>

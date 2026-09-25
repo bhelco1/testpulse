@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#121110}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+</style>
+</helmet>
+<div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;background:var(--bg);color:var(--ink);min-height:100vh">
+<div style="{{ themeVars }}">
+<div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
+
+<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:14px"><a href="#" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a><span style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;padding:3px 7px;border-radius:5px;background:var(--ink);color:var(--on-ink)">ADMIN</span></div>
+<nav style="display:flex;align-items:center;gap:8px;font-size:14.5px;flex-wrap:wrap">
+<span style="color:var(--ink-3);padding:0 8px">Signed in with magic link</span>
+<a href="#" style="height:44px;padding:0 12px;display:flex;align-items:center">View public site</a>
+<button style="height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign out</button>
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</nav>
+</header>
+
+<main style="padding:24px 0 64px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px"><h1 style="margin:0;font:500 44px/1.05 'Source Serif 4',serif;letter-spacing:-.02em">Admin</h1><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Alerts, keys and timestamps are illustrative</span></div>
+
+<!-- ALERTS -->
+<section aria-labelledby="alerts-h">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px"><h2 id="alerts-h" style="margin:0;font:500 26px 'Source Serif 4',serif">Open alerts</h2><span style="font-size:14px;color:var(--ink-3)">{{ alertCount }}</span></div>
+<sc-if value="{{ hasAlerts }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ alerts }}" as="a" hint-placeholder-count="2">
+<div role="{{ a.role }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:{{ a.bg }};border:1px solid {{ a.line }}">
+<span style="flex:none;margin-top:1px;color:{{ a.ink }};font-weight:700">{{ a.glyph }}</span>
+<div style="flex:1;min-width:240px"><div style="font-weight:600;font-size:14.5px;color:{{ a.ink }}">{{ a.title }}</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">{{ a.body }}</div><div style="font-size:12.5px;color:var(--ink-3);margin-top:6px">Opened {{ a.opened }}</div></div>
+<button onClick="{{ a.dismiss }}" style="flex:none;min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer">Acknowledge</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ noAlerts }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;border:1px dashed var(--line-strong);font-size:14px;color:var(--ink-2)"><span style="color:var(--pass);font-weight:700">✓</span>No open alerts. Every project is reporting on schedule and the daily job ran on time.</div>
+</sc-if>
+</section>
+
+<!-- TRACKED LINKS -->
+<section aria-labelledby="links-h">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px"><div style="display:flex;align-items:baseline;gap:12px"><h2 id="links-h" style="margin:0;font:500 26px 'Source Serif 4',serif">Tracked links</h2><span style="font-size:14px;color:var(--ink-3)">{{ linkCount }}</span></div><button onClick="{{ openForm }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer">New link</button></div>
+
+<sc-if value="{{ formOpen }}" hint-placeholder-val="{{ false }}">
+<form onSubmit="{{ submit }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px 20px;margin-bottom:16px;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px">
+<div style="grid-column:1/-1;font:500 22px 'Source Serif 4',serif">New tracked link</div>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Company<input value="{{ f.company }}" onChange="{{ setCompany }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Role<input value="{{ f.role }}" onChange="{{ setRole }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Contact<input value="{{ f.contact }}" onChange="{{ setContact }}" placeholder="Name or email" aria-invalid="{{ contactInvalid }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ contactBorder }};background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><sc-if value="{{ contactInvalid }}"><span style="font-weight:500;color:var(--fail)">Add a contact so you can follow up</span></sc-if></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Lead project<select value="{{ f.lead }}" onChange="{{ setLead }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><option value="">None, open the overview</option><option value="Ostomate2">Ostomate2</option><option value="RouteServe">RouteServe</option></select></label>
+<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Notes<textarea rows="2" placeholder="Optional" style="padding:10px 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif;resize:vertical"></textarea></label>
+<div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end"><button type="button" onClick="{{ closeForm }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:none;color:var(--ink);font:600 14.5px 'Public Sans',sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Cancel</button><button type="submit" style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer">Create link</button></div>
+</form>
+</sc-if>
+
+<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
+<div style="min-width:1000px">
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 90px 150px 130px minmax(0,1.1fr) 170px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>COMPANY / ROLE</span><span>SENT</span><span>VISITS</span><span>LAST SEEN</span><span>PAGES VIEWED</span><span>LINK</span></div>
+<sc-for list="{{ links }}" as="l" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 90px 150px 130px minmax(0,1.1fr) 170px;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;background:{{ l.bg }}">
+<div style="min-width:0"><div style="font-weight:600;display:flex;align-items:center;gap:8px">{{ l.company }}<sc-if value="{{ l.isNew }}"><span style="font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 6px;border-radius:4px;background:var(--ink);color:var(--on-ink)">NEW</span></sc-if></div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ l.role }}</div></div>
+<span style="color:var(--ink-2)">{{ l.sent }}</span>
+<span style="color:{{ l.visitInk }};font-weight:{{ l.visitWeight }}">{{ l.visits }}</span>
+<span style="color:var(--ink-2)">{{ l.last }}</span>
+<span style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.pages }}" as="pg" hint-placeholder-count="1"><span style="padding:2px 8px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font-size:12.5px">{{ pg }}</span></sc-for><sc-if value="{{ l.noPages }}"><span style="color:var(--ink-3)">—</span></sc-if></span>
+<span style="display:flex;align-items:center;gap:8px"><code style="display:flex;font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)"><span>&lt;site origin&gt;</span><span>{{ l.token }}</span></code><button onClick="{{ l.copy }}" aria-label="Copy link for {{ l.company }}" style="min-height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 12.5px 'Public Sans',sans-serif;cursor:pointer">{{ l.copyLabel }}</button></span>
+</div>
+</sc-for>
+</div></div>
+<p style="margin:10px 0 0;font-size:13px;color:var(--ink-3)">Distinct visitors are counted by session cookie. Bot traffic is excluded. Visitors can read what's recorded on the privacy page.</p>
+</section>
+
+<!-- PROJECTS -->
+<section aria-labelledby="proj-h">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px"><h2 id="proj-h" style="margin:0;font:500 26px 'Source Serif 4',serif">Projects</h2></div>
+<p style="margin:0 0 14px;font-size:13.5px;color:var(--ink-3)">Metadata syncs from <code style="font:12.5px 'JetBrains Mono',monospace">projects/*.yaml</code> on every deploy. API keys are never touched by the sync.</p>
+<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
+<div style="min-width:940px">
+<div style="display:grid;grid-template-columns:150px 110px 170px 170px minmax(0,1fr) 150px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>PROJECT</span><span>VISIBILITY</span><span>LAST REPORT</span><span>YAML SYNC</span><span>API KEY</span><span></span></div>
+<sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+<div style="border-bottom:1px solid var(--line)">
+<div style="display:grid;grid-template-columns:150px 110px 170px 170px minmax(0,1fr) 150px;gap:14px;align-items:center;padding:14px 18px;font-size:14px">
+<span style="font-weight:600">{{ p.name }}</span>
+<span style="color:var(--ink-2)">{{ p.vis }}</span>
+<span style="display:flex;align-items:center;gap:6px;color:{{ p.reportInk }};font-weight:{{ p.reportWeight }}">{{ p.report }}</span>
+<span style="display:flex;align-items:center;gap:6px;color:{{ p.syncInk }}">{{ p.sync }}</span>
+<code style="font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)">{{ p.key }}</code>
+<span style="display:flex;justify-content:flex-end"><button onClick="{{ p.rotate }}" disabled="{{ p.noKey }}" style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid {{ p.btnLine }};background:none;color:{{ p.btnInk }};font:600 13.5px 'Public Sans',sans-serif;cursor:{{ p.btnCursor }}">{{ p.btnLabel }}</button></span>
+</div>
+<sc-if value="{{ p.confirming }}">
+<div style="margin:0 18px 16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-wrap:wrap;gap:12px;align-items:center"><div style="flex:1;min-width:260px;font-size:14px;line-height:1.5"><b style="color:var(--fail)">Rotate the {{ p.name }} key?</b> The current key stops working immediately. Reports fail with 401 until the project's CI secret is updated. Its build stays green either way.</div><button onClick="{{ p.cancel }}" style="min-height:40px;padding:0 12px;border:none;background:none;color:var(--ink);font:600 13.5px 'Public Sans',sans-serif;text-decoration:underline;cursor:pointer">Cancel</button><button onClick="{{ p.confirm }}" style="min-height:40px;padding:0 14px;border-radius:10px;border:none;background:var(--fail);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Rotate key</button></div>
+</sc-if>
+<sc-if value="{{ p.revealed }}">
+<div style="margin:0 18px 16px;padding:14px 16px;border-radius:12px;background:var(--inset);border:1px solid var(--line-strong)"><div style="font-size:14px;font-weight:600">New key. Copy it now; it won't be shown again.</div><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px"><code style="flex:1;min-width:260px;padding:10px 12px;border-radius:8px;background:var(--surface);border:1px dashed var(--line-strong);font:13px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ p.newKey }}</code><button onClick="{{ p.done }}" style="min-height:40px;padding:0 14px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Copied, hide it</button></div></div>
+</sc-if>
+</div>
+</sc-for>
+</div></div>
+</section>
+
+<!-- SCHEDULED JOB -->
+<section aria-labelledby="job-h">
+<h2 id="job-h" style="margin:0 0 6px;font:500 26px 'Source Serif 4',serif">Daily job</h2>
+<p style="margin:0 0 14px;font-size:13.5px;color:var(--ink-3)">Runs on Vercel cron. Keeps the free-tier database awake, flags stale projects, prunes old per-test results.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px">
+<sc-for list="{{ job }}" as="j" hint-placeholder-count="4"><div style="background:var(--surface);border:1px solid {{ j.line }};border-radius:16px;padding:16px 18px"><div style="font-size:13.5px;color:var(--ink-3)">{{ j.label }}</div><div style="font:500 24px/1.2 'Source Serif 4',serif;margin-top:6px;color:{{ j.ink }}">{{ j.value }}</div><div style="font-size:13px;color:var(--ink-2);margin-top:4px">{{ j.sub }}</div></div></sc-for>
+</div>
+</section>
+</main>
+</div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;alerts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+class Component extends DCLogic {
+  state = { theme: null, dismissed: {}, formOpen: false, touched: false, f: { company: '', role: '', contact: '', lead: '' }, added: [], copied: null, rotating: null, revealed: null };
+  static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
+
+  componentDidUpdate(prev) { if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null }); }
+
+  tok() { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < 12; i++) s += c[Math.floor(Math.random() * c.length)]; return s; }
+  setF(k) { return e => { const v = e.target.value; this.setState(s => ({ f: Object.assign({}, s.f, { [k]: v }) })); }; }
+
+  renderVals() {
+    const L = Component.LIGHT;
+    const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
+    const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
+    if (!dark) Object.keys(L).forEach(k => tv['--' + k] = L[k]);
+    const showAlerts = this.props.alerts ?? true;
+
+    const A = [
+      { id: 'stale', kind: 'attn', glyph: '◷', title: 'RouteServe hasn’t reported in 12 days', body: 'Expected every 8 days. The weekly scheduled run should have posted by Sep 20.', opened: 'Sep 21, 06:00' },
+      { id: 'drop', kind: 'attn', glyph: '↓', title: 'Test count fell 38% in ios/composeApp/ios-sim', body: 'Ostomate2 run on main reported 31 tests where the last 5 runs averaged 50.', opened: 'Sep 24, 14:06' },
+    ].filter(a => showAlerts && !this.state.dismissed[a.id]).map(a => Object.assign({}, a, {
+      role: 'status', bg: 'var(--attn-tint)', line: 'var(--attn)', ink: 'var(--attn)',
+      dismiss: () => this.setState(s => ({ dismissed: Object.assign({}, s.dismissed, { [a.id]: true }) })),
+    }));
+
+    const base = [
+      { id: 'acme', company: 'Acme Health', role: 'Director of Quality Engineering', sent: 'Sep 18', visits: '3 sessions · 2 visitors', last: '2 hours ago', pages: ['Ostomate2', 'How it’s tested'], token: '/v/Qm8r2LxT0aZe' },
+      { id: 'nw', company: 'Northwind Software', role: 'Sr. Engineering Manager, QA', sent: 'Sep 15', visits: '1 session', last: 'Sep 16', pages: ['Overview'], token: '/v/Hn4kWp7cYs2d' },
+      { id: 'gx', company: 'Globex', role: 'QA Manager', sent: 'Sep 12', visits: 'Not yet opened', last: '—', pages: [], token: '/v/Tb9eJx3mRq6u' },
+    ];
+    const links = this.state.added.concat(base).map(l => ({
+      company: l.company, role: l.role, sent: l.sent, visits: l.visits, last: l.last, pages: l.pages, noPages: l.pages.length === 0, token: l.token,
+      isNew: !!l.isNew, bg: l.isNew ? 'var(--raised)' : 'transparent',
+      visitInk: l.visits === 'Not yet opened' ? 'var(--ink-3)' : 'var(--ink)', visitWeight: l.visits === 'Not yet opened' ? 400 : 600,
+      copyLabel: this.state.copied === l.id ? 'Copied' : 'Copy',
+      copy: () => { try { navigator.clipboard && navigator.clipboard.writeText(window.location.origin + l.token); } catch (e) {} this.setState({ copied: l.id }); },
+    }));
+
+    const f = this.state.f, contactInvalid = this.state.touched && !f.contact.trim();
+    const submit = e => {
+      e.preventDefault();
+      if (!f.contact.trim() || !f.company.trim()) { this.setState({ touched: true }); return; }
+      const id = 'n' + Date.now();
+      this.setState(s => ({ added: [{ id, isNew: true, company: f.company, role: f.role || '—', sent: 'Today', visits: 'Not yet opened', last: '—', pages: [], token: '/v/' + this.tok() }].concat(s.added), formOpen: false, touched: false, f: { company: '', role: '', contact: '', lead: '' }, copied: null }));
+    };
+
+    const P = [
+      { id: 'o2', name: 'Ostomate2', vis: 'Public', report: '4 minutes ago', sync: '✓ In sync', key: 'tp_••••••••••••7Qx2' },
+      { id: 'rs', name: 'RouteServe', vis: 'Private', report: showAlerts ? '◷ 12 days ago' : '2 hours ago', stale: showAlerts, sync: '✓ In sync', key: 'tp_••••••••••••c9Lm' },
+      { id: 'tp', name: 'testpulse', vis: 'Public', report: 'Never', sync: 'No row yet · skipped', syncWarn: true, key: 'No key issued', noKey: true },
+    ];
+    const projects = P.map(p => {
+      const confirming = this.state.rotating === p.id, revealed = this.state.revealed === p.id;
+      return Object.assign({}, p, {
+        noKey: !!p.noKey, confirming, revealed,
+        reportInk: p.stale ? 'var(--attn)' : (p.report === 'Never' ? 'var(--ink-3)' : 'var(--ink-2)'), reportWeight: p.stale ? 600 : 400,
+        syncInk: p.syncWarn ? 'var(--ink-3)' : 'var(--pass)',
+        btnLabel: p.noKey ? 'Issue in Phase 7' : 'Rotate key', btnLine: p.noKey ? 'var(--line)' : 'var(--fail)', btnInk: p.noKey ? 'var(--ink-3)' : 'var(--fail)', btnCursor: p.noKey ? 'not-allowed' : 'pointer',
+        newKey: 'tp_' + 'x7Kq2mZr9LwB4vNs1YtE8hGd3PaC6uFj0oRi5nMeWbQ',
+        rotate: () => this.setState({ rotating: p.id, revealed: null }),
+        cancel: () => this.setState({ rotating: null }),
+        confirm: () => this.setState({ rotating: null, revealed: p.id }),
+        done: () => this.setState({ revealed: null }),
+      });
+    });
+
+    const job = [
+      { label: 'Last run', value: 'Today, 06:00', sub: 'Next in 18 hours', ink: 'var(--ink)', line: 'var(--line)' },
+      { label: 'Heartbeat', value: '✓ Written', sub: 'Database active', ink: 'var(--pass)', line: 'var(--line)' },
+      { label: 'Stale check', value: showAlerts ? '1 flagged' : '✓ All current', sub: showAlerts ? 'RouteServe' : '3 projects checked', ink: showAlerts ? 'var(--attn)' : 'var(--pass)', line: 'var(--line)' },
+      { label: 'Prune', value: '0 rows', sub: 'Nothing older than 180 days yet', ink: 'var(--ink)', line: 'var(--line)' },
+    ];
+
+    return {
+      themeVars: tv,
+      toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
+      themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
+      alerts: A, hasAlerts: A.length > 0, noAlerts: A.length === 0, alertCount: A.length ? A.length + ' open' : 'None',
+      links, linkCount: links.length + ' links',
+      formOpen: this.state.formOpen, openForm: () => this.setState({ formOpen: true }), closeForm: () => this.setState({ formOpen: false, touched: false }),
+      f, setCompany: this.setF('company'), setRole: this.setF('role'), setContact: this.setF('contact'), setLead: this.setF('lead'),
+      contactInvalid, contactBorder: contactInvalid ? '1.5px solid var(--fail)' : '1px solid var(--line-strong)', submit,
+      projects, job,
+    };
+  }
+}
+</script>
+</body>
+</html>

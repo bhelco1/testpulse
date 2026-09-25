@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#121110}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
+@keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes tpShimmer{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;--shadow-card:none;--shadow-menu:0 16px 40px -12px rgba(0,0,0,.7);background:var(--bg);color:var(--ink)">
+<div style="{{ themeVars }}">
+<div style="max-width:1360px;margin:0 auto;padding:0 56px;font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
+
+<header style="display:flex;justify-content:space-between;align-items:flex-end;gap:32px;padding:56px 0 40px;flex-wrap:wrap">
+<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">testpulse · design system v0.1 · direction 1d</div><h1 style="margin:10px 0 0;font:500 64px/1 'Source Serif 4',serif;letter-spacing:-.03em">Foundations and components</h1><p style="margin:14px 0 0;max-width:720px;font-size:16px;line-height:1.55;color:var(--ink-2);text-wrap:pretty">Every token below is a CSS variable. Components use only these variables, so the theme switch changes the whole page. Figures come from the brief; anything not in §5 is tagged <span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>.</p></div>
+<div role="radiogroup" aria-label="Theme" style="display:flex;padding:4px;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px">
+<button onClick="{{ setDark }}" aria-pressed="{{ isDark }}" style="min-height:44px;padding:0 18px;border-radius:9px;border:none;cursor:pointer;font:600 14px 'Public Sans',sans-serif;background:{{ darkBtnBg }};color:{{ darkBtnInk }}">Dark</button>
+<button onClick="{{ setLight }}" aria-pressed="{{ isLight }}" style="min-height:44px;padding:0 18px;border-radius:9px;border:none;cursor:pointer;font:600 14px 'Public Sans',sans-serif;background:{{ lightBtnBg }};color:{{ lightBtnInk }}">Light</button>
+</div>
+</header>
+
+<!-- ===== COLOR ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">01</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Color</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Warm neutrals with one accent. Amber means a threshold or something that needs attention: floor markers, stale, empty, flaky, sample tags. Buttons and links use ink, not amber, so amber always carries meaning.</p></div>
+<div>
+<div style="display:grid;grid-template-columns:170px minmax(0,1fr) 110px 110px;gap:0 16px;font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3);padding:0 0 10px;border-bottom:1px solid var(--line)"><span>TOKEN</span><span>USE</span><span>DARK</span><span>LIGHT</span></div>
+<sc-for list="{{ tokens }}" as="t" hint-placeholder-count="21">
+<div style="display:grid;grid-template-columns:170px minmax(0,1fr) 110px 110px;gap:0 16px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px">
+<code style="font:13px 'JetBrains Mono',monospace">{{ t.name }}</code><span style="color:var(--ink-2)">{{ t.use }}</span>
+<span style="display:flex;align-items:center;gap:8px;font:12px 'JetBrains Mono',monospace;color:var(--ink-3)"><span style="width:28px;height:20px;border-radius:5px;border:1px solid var(--line-strong);background:{{ t.d }}"></span>{{ t.d }}</span>
+<span style="display:flex;align-items:center;gap:8px;font:12px 'JetBrains Mono',monospace;color:var(--ink-3)"><span style="width:28px;height:20px;border-radius:5px;border:1px solid var(--line-strong);background:{{ t.l }}"></span>{{ t.l }}</span>
+</div>
+</sc-for>
+
+<h3 style="margin:40px 0 6px;font:500 22px 'Source Serif 4',serif">Contrast pairs</h3>
+<p style="margin:0 0 16px;font-size:14px;color:var(--ink-3)">Worked out live from the token values. Every ink and status ink is checked on all four surfaces, and each status ink on its own tint; all need 4.5:1 (AA). Graphics such as bars and markers need 3:1. CI runs the same check against tokens.css.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:24px">
+<div><div style="font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-bottom:8px">DARK</div>
+<sc-for list="{{ pairsDark }}" as="p" hint-placeholder-count="36"><div style="display:grid;grid-template-columns:56px 1fr 64px 64px;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px"><span style="height:30px;border-radius:6px;display:grid;place-items:center;font:600 14px 'Public Sans',sans-serif;background:{{ p.bg }};color:{{ p.fg }};border:1px solid var(--line)">Aa</span><span style="color:var(--ink-2)">{{ p.label }}</span><span style="font:13px 'JetBrains Mono',monospace;text-align:right">{{ p.ratio }}</span><span style="font:600 12px 'JetBrains Mono',monospace;color:{{ p.verdictColor }}">{{ p.verdict }}</span></div></sc-for></div>
+<div><div style="font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-bottom:8px">LIGHT</div>
+<sc-for list="{{ pairsLight }}" as="p" hint-placeholder-count="36"><div style="display:grid;grid-template-columns:56px 1fr 64px 64px;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px"><span style="height:30px;border-radius:6px;display:grid;place-items:center;font:600 14px 'Public Sans',sans-serif;background:{{ p.bg }};color:{{ p.fg }};border:1px solid var(--line)">Aa</span><span style="color:var(--ink-2)">{{ p.label }}</span><span style="font:13px 'JetBrains Mono',monospace;text-align:right">{{ p.ratio }}</span><span style="font:600 12px 'JetBrains Mono',monospace;color:{{ p.verdictColor }}">{{ p.verdict }}</span></div></sc-for></div>
+</div>
+</div></div></section>
+
+<!-- ===== TYPE ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Type</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Source Serif 4 for figures and headings, Public Sans for interface text, JetBrains Mono for SHAs, test names and report keys. Tabular numerals everywhere. Phone sizes are in the right-hand column.</p></div>
+<div>
+<div style="display:grid;grid-template-columns:150px minmax(0,1fr) 150px;gap:6px 24px;align-items:baseline">
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-hero</code><span style="font:500 152px/.95 'Source Serif 4',serif;letter-spacing:-.04em">1,190</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">152 / 92 · kiosk 220</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-count</code><span style="font:500 56px/1 'Source Serif 4',serif">1,048</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">56 / 44</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-title</code><span style="font:500 42px/1.05 'Source Serif 4',serif;letter-spacing:-.02em">Ostomate2</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">42 / 32</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-stat</code><span style="font:500 40px/1.1 'Source Serif 4',serif">2h 14m</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">40 / 32</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-h2</code><span style="font:500 30px/1.2 'Source Serif 4',serif">Recent runs</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">30 / 26</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-lede</code><span style="font:400 24px/1.35 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">24 / 19</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-body-l</code><span style="font-size:18px;line-height:1.5">automated tests across two projects.</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">18 / 15 · Public Sans</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-body</code><span style="font-size:15px;line-height:1.5">Local-first ostomy supply tracker for Android and iOS.</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">15 / 14.5</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-small</code><span style="font-size:13.5px;line-height:1.45;color:var(--ink-3)">Not counted: 12 Maestro E2E flows, run in CI, not yet reported</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">13.5 / 13 · min</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-mono</code><span style="font:13px 'JetBrains Mono',monospace">android/composeApp/jvm · 0e2d0b4</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">13 / 12.5</span>
+<code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">--text-label</code><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">About this site</span><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">12 · +0.08em caps</span>
+</div>
+</div></div></section>
+
+<!-- ===== SPACE / RADII / SHADOW / MOTION ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">03</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Space, radius, depth, motion</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">A 4 px base. Cards are separated by surface tone and a hairline, not by shadow. Shadows only appear on floating layers.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:32px">
+<div><div style="font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-bottom:12px">SPACING --space-*</div>
+<sc-for list="{{ spaces }}" as="s" hint-placeholder-count="11"><div style="display:grid;grid-template-columns:40px 48px 1fr;gap:12px;align-items:center;padding:3px 0;font:12px 'JetBrains Mono',monospace;color:var(--ink-3)"><span>{{ s.k }}</span><span>{{ s.v }}px</span><span style="height:10px;background:var(--layer-3);border-radius:2px;width:{{ s.w }}"></span></div></sc-for></div>
+<div style="display:flex;flex-direction:column;gap:24px">
+<div><div style="font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-bottom:12px">RADIUS --radius-*</div><div style="display:flex;gap:12px;flex-wrap:wrap;font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:56px;height:44px;background:var(--surface);border:1px solid var(--line-strong);border-radius:4px"></span>xs 4</div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:56px;height:44px;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px"></span>sm 10</div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:56px;height:44px;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px"></span>md 12</div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:56px;height:44px;background:var(--surface);border:1px solid var(--line-strong);border-radius:16px"></span>lg 16</div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:56px;height:44px;background:var(--surface);border:1px solid var(--line-strong);border-radius:20px"></span>xl 20</div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><span style="width:56px;height:44px;background:var(--surface);border:1px solid var(--line-strong);border-radius:999px"></span>pill</div>
+</div><p style="margin:10px 0 0;font-size:13px;color:var(--ink-3)">xs tags and markers · sm buttons and inputs · md inset panels and rows · lg tiles · xl cards</p></div>
+<div><div style="font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-bottom:12px">DEPTH --shadow-*</div><div style="display:flex;gap:16px">
+<div style="flex:1;height:72px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-card);display:grid;place-items:center;font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">card</div>
+<div style="flex:1;height:72px;background:var(--raised);border:1px solid var(--line-strong);border-radius:12px;box-shadow:var(--shadow-menu);display:grid;place-items:center;font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">menu / popover</div>
+</div></div>
+<div><div style="font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-bottom:10px">MOTION --motion-*</div><div style="display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:13.5px;color:var(--ink-2)"><code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">fast 120ms</code><span>Hover, focus, pressed</span><code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">base 200ms</code><span>Row expand, menu open, theme change</span><code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">arrive 2s</code><span>A new feed row's raised tint fades to the surface colour</span><code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3)">pulse 2.4s</code><span>Live dot only</span></div><p style="margin:10px 0 0;font-size:13px;color:var(--ink-3)">With reduced motion turned on, all of these are instant and the live dot is static. No count-ups.</p></div>
+</div>
+</div></div></section>
+
+<!-- ===== STATUS BADGE ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">04</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Status badge</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Every status has its own icon shape and a word, so none depends on colour. The pill is used in headers, the inline form in rows and tables.</p></div>
+<div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 2 2 20h20Z"></path><path d="M12 9v5M12 17v.5"></path></svg>Error</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M5 19 19 5"></path></svg>Empty · 0 tests</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg>Stale</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"></path></svg>Below floor</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg>Skipped</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="3.5 3"><circle cx="12" cy="12" r="10"></circle></svg>Not yet reported</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;font-size:14px;font-weight:600">
+<span style="display:inline-flex;align-items:center;gap:6px;color:var(--pass)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span>
+<span style="display:inline-flex;align-items:center;gap:6px;color:var(--fail)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span>
+<span style="display:inline-flex;align-items:center;gap:6px;color:var(--fail)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 2 2 20h20Z"></path><path d="M12 9v5M12 17v.5"></path></svg>Error</span>
+<span style="display:inline-flex;align-items:center;gap:6px;color:var(--attn)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M5 19 19 5"></path></svg>Empty</span>
+<span style="display:inline-flex;align-items:center;gap:6px;color:var(--attn)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span>
+<span style="display:inline-flex;align-items:center;gap:6px;color:var(--neutral)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg>Skipped</span>
+<span style="display:inline-flex;align-items:center;gap:6px;color:var(--fail)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed on iOS simulator<span style="font-weight:400;color:var(--ink-3)">· passed on JVM</span></span>
+</div>
+</div></div></section>
+
+<!-- ===== HEADER / BREADCRUMBS / FOOTER ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">05</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Header, breadcrumbs, footer</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">The project switcher lists every project with its current status, so any project is one click away. Click it to open or close. The live indicator shows the realtime connection, not the run status.</p></div>
+<div style="display:flex;flex-direction:column;gap:28px">
+<div style="position:relative;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding-bottom:{{ menuPad }}">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px">
+<a href="#" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<nav style="display:flex;align-items:center;gap:8px;font-size:15px">
+<div style="position:relative"><button onClick="{{ toggleMenu }}" aria-expanded="{{ menuOpen }}" aria-haspopup="menu" style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer;outline:2px solid var(--ink);outline-offset:2px">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+<sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ true }}">
+<div role="menu" style="position:absolute;top:52px;left:0;width:320px;padding:6px;background:var(--raised);border:1px solid var(--line-strong);border-radius:12px;box-shadow:var(--shadow-menu);z-index:5">
+<a href="#" role="menuitem" style="display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 12px;border-radius:8px;background:var(--surface);text-decoration:none"><span style="font-weight:600">Ostomate2</span><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-size:13px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></a>
+<a href="#" role="menuitem" style="display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 12px;border-radius:8px;text-decoration:none"><span style="font-weight:600;display:flex;align-items:center;gap:6px">RouteServe <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-size:13px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></a>
+<div style="height:1px;background:var(--line);margin:6px 4px"></div>
+<a href="#" role="menuitem" style="display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 12px;border-radius:8px;text-decoration:none"><span style="font-weight:600">testpulse</span><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-size:13px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="3.5 3"><circle cx="12" cy="12" r="10"></circle></svg>Not reporting yet</span></a>
+</div>
+</sc-if></div>
+<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it's tested</a>
+<button onClick="{{ toggleLive }}" style="height:44px;padding:0 12px;display:flex;align-items:center;gap:8px;font:14px 'Public Sans',sans-serif;color:var(--ink-3);background:none;border:none;cursor:pointer" aria-label="Toggle realtime connection demo">{{ liveDot }}{{ liveLabel }}</button>
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</nav></div></div>
+<div style="font-size:13px;color:var(--ink-3);margin-top:-16px">Focus ring shown on the switcher: 2 px ink outline, offset 2 px. Clicking the live indicator here toggles its disconnected state.</div>
+
+<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;color:var(--ink-3)"><a href="#">Overview</a><span aria-hidden="true">/</span><a href="#">Ostomate2</a><span aria-hidden="true">/</span><a href="#">Run 35776037304</a><span aria-hidden="true">/</span><span aria-current="page" style="color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13.5px">HomeViewModelTest › rendersToday</span></nav>
+
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 minutes ago</span></footer>
+</div></div></section>
+
+<!-- ===== STAT TILE ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">06</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Stat tile</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">A label, a figure, and an optional line of context. The hero figure on the landing page is the same component with the hero type size and no tile around it.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)"><div style="font-size:14px;color:var(--ink-3)">Pass rate</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px">100%</div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">Latest runs · 0 skipped, excluded</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)"><div style="font-size:14px;color:var(--ink-3)">Runs in last 30 days</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px">24</div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">Ostomate2 18 · RouteServe 6</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)"><div style="font-size:14px;color:var(--ink-3);display:flex;justify-content:space-between;gap:8px">Green streak</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px">41 <span style="font-size:22px;color:var(--ink-3)">runs</span></div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">Consecutive passed, default branch</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)"><div style="font-size:14px;color:var(--ink-3)">Projects reporting</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px">2</div><div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--attn);margin-top:2px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg>1 stale <span style="font:500 10px 'JetBrains Mono',monospace;border:1px solid var(--attn);padding:0 4px;border-radius:4px">SAMPLE</span></div></div>
+<div aria-busy="true" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="width:60%;height:12px;border-radius:4px;background:var(--raised);animation:tpShimmer 1.6s ease-in-out infinite"></div><div style="width:45%;height:34px;border-radius:6px;background:var(--raised);margin-top:14px;animation:tpShimmer 1.6s ease-in-out infinite"></div><div style="width:75%;height:10px;border-radius:4px;background:var(--raised);margin-top:12px;animation:tpShimmer 1.6s ease-in-out infinite"></div><div style="font-size:12px;color:var(--ink-3);margin-top:10px">Loading</div></div>
+</div></div></section>
+
+<!-- ===== PROJECT CARD ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">07</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Project card</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">The full card comes first. The failed, stale and empty variants that follow show the same parts. A failed card leads with how many failed. An empty run is never shown as green.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px;align-items:start">
+<article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px 0;box-shadow:var(--shadow-card)">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span><span style="color:var(--ink-3)">4 minutes ago · main · <a href="#" style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">0e2d0b4</a></span></div>
+<h3 style="margin:16px 0 6px;font:500 38px/1 'Source Serif 4',serif;letter-spacing:-.02em"><a href="#" style="text-decoration:none">Ostomate2</a></h3>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.5;color:var(--ink-2)">Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.</p>
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap"><span style="font:500 52px/1 'Source Serif 4',serif">142</span><span style="font-size:14.5px;color:var(--ink-2)">tests · 0 failed · 0 skipped · 27 s</span></div>
+<div style="display:flex;height:8px;gap:3px;border-radius:99px;overflow:hidden;margin-bottom:8px"><div style="flex:103;background:var(--layer-1)"></div><div style="flex:29;background:var(--layer-2)"></div><div style="flex:10;background:var(--layer-4)"></div></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 18px;white-space:nowrap;font-size:13px;color:var(--ink-2);margin-bottom:20px"><span>Unit 103</span><span>Integration 29</span><span>Visual 10</span></div>
+<div style="display:grid;grid-template-columns:100px 1fr 130px;align-items:center;row-gap:12px;column-gap:14px;font-size:14px">
+<span style="color:var(--ink-3)">shared</span><div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:92%;height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:91%;top:-4px;width:2px;height:14px;background:var(--attn)"></div></div><span style="white-space:nowrap"><b style="font-weight:600">92.0%</b> <span style="color:var(--ink-3)">floor 91%</span></span>
+<span style="color:var(--ink-3)">composeApp</span><div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:94.3%;height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:93%;top:-4px;width:2px;height:14px;background:var(--attn)"></div></div><span style="white-space:nowrap"><b style="font-weight:600">94.3%</b> <span style="color:var(--ink-3)">floor 93%</span></span>
+</div>
+<div style="margin-top:20px;padding:12px 14px;border-radius:12px;background:var(--inset);font:12.5px/1.8 'JetBrains Mono',monospace;color:var(--ink-2)"><div style="font-family:'Public Sans',sans-serif;font-size:13px;color:var(--ink-3);margin-bottom:2px">4 reports · JVM 142 · iOS simulator 132</div><div style="display:grid;grid-template-columns:1fr auto;column-gap:12px"><span>android/shared/jvm</span><span style="color:var(--ink)">82</span><span>android/composeApp/jvm</span><span style="color:var(--ink)">60</span><span>ios/shared/ios-sim</span><span style="color:var(--ink)">82</span><span>ios/composeApp/ios-sim</span><span style="color:var(--ink)">50</span></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 0 16px;margin-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)"><span>Not counted: 12 Maestro E2E flows, run in CI, not yet reported</span><span style="display:flex;align-items:center;gap:6px;color:var(--pass);white-space:nowrap;flex:none;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Reporting healthy</span></div>
+</article>
+<div style="display:flex;flex-direction:column;gap:12px">
+<article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px 22px;box-shadow:var(--shadow-card)">
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span><span style="display:flex;gap:8px;align-items:center;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span>31 s · main</span></div>
+<h3 style="margin:12px 0 10px;font:500 28px/1 'Source Serif 4',serif"><a href="#" style="text-decoration:none">Ostomate2</a></h3>
+<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font:500 40px/1 'Source Serif 4',serif;color:var(--fail)">1</span><span style="font-size:14.5px;color:var(--ink-2)">failed · 141 of 142 passed</span></div>
+<a href="#" style="display:block;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--inset);font:12.5px 'JetBrains Mono',monospace;color:var(--ink-2);text-decoration:none">HomeViewModelTest › rendersToday <span style="color:var(--ink-3)">· ios-sim</span></a>
+</article>
+<article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px 22px;box-shadow:var(--shadow-card)">
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span><span style="color:var(--ink-3)">Sep 12 · main</span></div>
+<h3 style="margin:12px 0 10px;font:500 28px/1 'Source Serif 4',serif;display:flex;align-items:center;gap:10px"><a href="#" style="text-decoration:none">RouteServe</a><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.4" aria-label="Private repository"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></h3>
+<div style="display:flex;align-items:baseline;gap:10px"><span style="font:500 40px/1 'Source Serif 4',serif">1,048</span><span style="font-size:14.5px;color:var(--ink-2)">tests · last run passed</span></div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--attn-tint);color:var(--attn);font-size:13.5px;font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg>No report in 12 days <span style="font-weight:400">· expected every 8</span><span style="margin-left:auto;font:500 10px 'JetBrains Mono',monospace;border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></div>
+</article>
+<article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px 22px;box-shadow:var(--shadow-card)">
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M5 19 19 5"></path></svg>Empty run</span><span style="display:flex;gap:8px;align-items:center;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span>main</span></div>
+<h3 style="margin:12px 0 10px;font:500 28px/1 'Source Serif 4',serif"><a href="#" style="text-decoration:none">Ostomate2</a></h3>
+<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font:500 40px/1 'Source Serif 4',serif;color:var(--attn)">0</span><span style="font-size:14.5px;color:var(--ink-2)">tests executed · 4 reports received</span></div>
+<p style="margin:10px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">A run with no tests is treated as a problem, not a pass. Last run with tests: 142 passed.</p>
+</article>
+</div>
+</div></div></section>
+
+<!-- ===== STACK TAGS ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">08</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Stack tag group</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Grouped by category from the project file. Tags are plain text, not links, and have no hover state.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:32px">
+<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px">Built with</div>
+<div style="display:grid;grid-template-columns:90px 1fr;gap:12px 16px;align-items:start;font-size:13.5px">
+<span style="color:var(--ink-3);padding-top:5px">Mobile</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">Expo SDK 57</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">React Native 0.86</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">React 19</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">WatermelonDB</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">TanStack Query</span></div>
+<span style="color:var(--ink-3);padding-top:5px">API</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">Express 5</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">Prisma 7</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">PostgreSQL 18 + PostGIS 3.6</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">Zod 4</span></div>
+<span style="color:var(--ink-3);padding-top:5px">Delivery</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">GitHub Actions</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">Railway</span><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">EAS Build</span></div>
+</div></div>
+<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px">Tested with</div>
+<div style="display:grid;grid-template-columns:90px 1fr;gap:12px 16px;align-items:start;font-size:13.5px">
+<span style="color:var(--ink-3);padding-top:5px">Runners</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="padding:4px 10px;border-radius:6px;border:1px solid var(--line-strong)">Jest 30</span><span style="padding:4px 10px;border-radius:6px;border:1px solid var(--line-strong)">jest-expo</span></div>
+<span style="color:var(--ink-3);padding-top:5px">API</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="padding:4px 10px;border-radius:6px;border:1px solid var(--line-strong)">Supertest</span><span style="padding:4px 10px;border-radius:6px;border:1px solid var(--line-strong)">nock</span></div>
+<span style="color:var(--ink-3);padding-top:5px">Component</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="padding:4px 10px;border-radius:6px;border:1px solid var(--line-strong)">React Native Testing Library</span><span style="padding:4px 10px;border-radius:6px;border:1px solid var(--line-strong)">msw</span></div>
+<span style="color:var(--ink-3);padding-top:5px">E2E</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="padding:4px 10px;border-radius:6px;border:1px dashed var(--line-strong);color:var(--ink-2)">Maestro · not yet executed</span></div>
+</div></div>
+</div></div></section>
+
+<!-- ===== PYRAMID ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">09</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Test pyramid</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">The main visual on the project page: centred bars with widths in proportion to test counts, from unit at the bottom up to E2E. Declared suites appear as a dashed outline and are excluded from the total. It can be built in plain HTML/CSS or with Recharts horizontal bars.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:24px">
+<figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px"><span style="font:500 22px 'Source Serif 4',serif">Ostomate2</span><span style="font-size:13px;color:var(--ink-3)">142 tests, latest run</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-3)">E2E</span><div style="display:flex;justify-content:center"><div style="width:11.7%;height:30px;border:1.5px dashed var(--line-strong);border-radius:4px"></div></div><span style="color:var(--ink-3)">12 flows · not counted</span></div>
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-2)">Visual</span><div style="display:flex;justify-content:center"><div style="width:9.7%;height:30px;background:var(--layer-4);border-radius:4px"></div></div><span style="font-weight:600">10</span></div>
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-2)">Integration</span><div style="display:flex;justify-content:center"><div style="width:28.2%;height:30px;background:var(--layer-2);border-radius:4px"></div></div><span style="font-weight:600">29</span></div>
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-2)">Unit</span><div style="display:flex;justify-content:center"><div style="width:100%;height:30px;background:var(--layer-1);border-radius:4px"></div></div><span style="font-weight:600">103</span></div>
+</div>
+<figcaption style="margin-top:16px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">73% of tests are unit tests. The same suites run on JVM (142) and on the iOS simulator (132).</figcaption>
+</figure>
+<figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px"><span style="font:500 22px 'Source Serif 4',serif">RouteServe</span><span style="font-size:13px;color:var(--ink-3)">approx. layer split</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-3)">E2E</span><div style="display:flex;justify-content:center"><div style="width:4%;min-width:18px;height:30px;border:1.5px dashed var(--line-strong);border-radius:4px"></div></div><span style="color:var(--ink-3)">13 flows · not counted</span></div>
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-2)">API</span><div style="display:flex;justify-content:center"><div style="width:44.2%;height:30px;background:var(--layer-4);border-radius:4px"></div></div><span style="font-weight:600">269</span></div>
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-2)">Integration</span><div style="display:flex;justify-content:center"><div style="width:4px;height:30px;background:var(--layer-3);border-radius:2px"></div></div><span style="font-weight:600">3</span></div>
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-2)">Component</span><div style="display:flex;justify-content:center"><div style="width:27.1%;height:30px;background:var(--layer-2);border-radius:4px"></div></div><span style="font-weight:600">165</span></div>
+<div style="display:grid;grid-template-columns:110px 1fr 110px;width:100%;align-items:center;gap:12px;font-size:13.5px"><span style="text-align:right;color:var(--ink-2)">Unit</span><div style="display:flex;justify-content:center"><div style="width:100%;height:30px;background:var(--layer-1);border-radius:4px"></div></div><span style="font-weight:600">608</span></div>
+</div>
+<figcaption style="margin-top:16px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">API tests outnumber component tests. Only 3 tests hit a real database, and all 13 E2E flows are unexecuted. Showing that honestly is the point.</figcaption>
+</figure>
+</div></div></section>
+
+<!-- ===== COVERAGE BAR ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">10</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Coverage bar with floor</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">The scale always runs 0 to 100, so small headroom looks small. The amber tick is the floor enforced in CI. Below the floor, the bar turns amber and gets an arrow and a written gap.</p></div>
+<div style="display:grid;grid-template-columns:130px 1fr 220px;align-items:center;row-gap:20px;column-gap:18px;font-size:14.5px;max-width:880px">
+<span style="color:var(--ink-3)">shared</span><div style="position:relative;height:8px;border-radius:99px;background:var(--raised)"><div style="width:92%;height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:91%;top:-5px;width:2px;height:18px;background:var(--attn)"></div></div><span><b style="font-weight:600">92.0%</b> <span style="color:var(--ink-3)">floor 91% · +1.0</span></span>
+<span style="color:var(--ink-3)">apps/backend</span><div style="position:relative;height:8px;border-radius:99px;background:var(--raised)"><div style="width:96.1%;height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:80%;top:-5px;width:2px;height:18px;background:var(--attn)"></div></div><span><b style="font-weight:600">96.1%</b> <span style="color:var(--ink-3)">floor 80% · branches 84.4%</span></span>
+<span style="color:var(--ink-3);display:flex;align-items:center;gap:8px">composeApp</span><div style="position:relative;height:8px;border-radius:99px;background:var(--raised)"><div style="width:91.4%;height:100%;border-radius:99px;background:repeating-linear-gradient(135deg,var(--attn) 0 5px,var(--attn-tint) 5px 7px)"></div><div style="position:absolute;left:93%;top:-5px;width:2px;height:18px;background:var(--attn)"></div></div><span style="display:flex;align-items:center;gap:6px;color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"></path></svg>91.4% · 1.6 below 93% <span style="font:500 10px 'JetBrains Mono',monospace;border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></span>
+</div></div></section>
+
+<!-- ===== TREND CHART FRAME ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">11</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Trend chart frame</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Title, a caption that states the takeaway, the chart, and a data-table toggle. Lines are labelled directly, with no legend. Axis labels are plain words. A single run shows a dot and an explanation, never empty axes. Buildable in Recharts as a LineChart with a ReferenceLine for the floor.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px">
+<figure style="grid-column:1/-1;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px"><div><div style="font:500 22px 'Source Serif 4',serif">Line coverage, shared</div><figcaption style="margin-top:4px;font-size:14px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">Rose from 52.6% on Jul 2 to 92.0% on Sep 21, now above its 91% floor.</figcaption></div><button style="flex:none;min-height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 13px 'Public Sans',sans-serif;cursor:pointer">Show table</button></div>
+<svg viewBox="0 0 560 220" width="560" height="220" style="display:block;max-width:none;margin-top:14px;font-family:'Public Sans',sans-serif" role="img" aria-label="Line coverage for shared, 52.6 percent on July 2 rising to 92.0 percent on September 21">
+<g stroke="var(--line)" stroke-width="1"><line x1="48" y1="20" x2="540" y2="20"></line><line x1="48" y1="73" x2="540" y2="73"></line><line x1="48" y1="127" x2="540" y2="127"></line><line x1="48" y1="180" x2="540" y2="180"></line></g>
+<g fill="var(--ink-3)" font-size="12" text-anchor="end"><text x="40" y="24">100%</text><text x="40" y="77">80%</text><text x="40" y="131">60%</text><text x="40" y="184">40%</text></g>
+<line x1="48" y1="44" x2="540" y2="44" stroke="var(--attn)" stroke-width="1.5" stroke-dasharray="5 4"></line><text x="52" y="38" fill="var(--attn)" font-size="12" font-weight="600">floor 91%</text>
+<polyline points="60,146.4 520,41.3" fill="none" stroke="var(--ink)" stroke-width="2.5"></polyline>
+<circle cx="60" cy="146.4" r="4.5" fill="var(--ink)"></circle><circle cx="520" cy="41.3" r="4.5" fill="var(--ink)"></circle>
+<text x="72" y="164" fill="var(--ink)" font-size="13" font-weight="600">52.6%</text><text x="512" y="64" fill="var(--ink)" font-size="13" font-weight="600" text-anchor="end">92.0%</text>
+<g fill="var(--ink-3)" font-size="12"><text x="60" y="204" text-anchor="middle">Jul 2</text><text x="520" y="204" text-anchor="middle">Sep 21</text></g>
+</svg>
+</figure>
+<div style="display:flex;flex-direction:column;gap:16px">
+<figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
+<div style="font:500 20px 'Source Serif 4',serif">Tests per run, testpulse</div><figcaption style="margin-top:4px;font-size:13.5px;line-height:1.5;color:var(--ink-2)">One run so far. The trend appears after the second.</figcaption>
+<div style="position:relative;height:110px;margin-top:14px;border-bottom:1px solid var(--line)"><span style="position:absolute;left:50%;top:44px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--ink)"></span><span style="position:absolute;left:50%;top:18px;transform:translateX(-50%);font-size:13px;font-weight:600;white-space:nowrap">First run <span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:0 4px;border-radius:4px">SAMPLE</span></span></div>
+</figure>
+<figure aria-busy="true" style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px">
+<div style="width:50%;height:16px;border-radius:4px;background:var(--raised);animation:tpShimmer 1.6s ease-in-out infinite"></div><div style="width:80%;height:10px;border-radius:4px;background:var(--raised);margin-top:10px;animation:tpShimmer 1.6s ease-in-out infinite"></div><div style="height:70px;border-radius:8px;background:var(--raised);margin-top:16px;animation:tpShimmer 1.6s ease-in-out infinite"></div>
+</figure>
+</div>
+</div></div></section>
+
+<!-- ===== RUN FEED ROW ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">12</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Run feed row</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">The whole row is a link to the run. A newly arrived row enters at the top with a raised tint and a "New" tag, and the tint fades over 2 s. Private rows show a lock instead of the commit message.</p></div>
+<section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;box-shadow:var(--shadow-card)">
+<a href="#" style="display:grid;grid-template-columns:110px minmax(0,1fr) 140px 110px;gap:14px;align-items:center;padding:14px 16px;border-radius:12px;background:var(--raised);text-decoration:none;box-shadow:inset 0 0 0 1px var(--line-strong)">
+<span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span>
+<div style="min-width:0"><div style="font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px"><span style="font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 6px;border-radius:4px;background:var(--ink);color:var(--on-ink)">NEW</span>docs: BUG-10 verified on device</div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">Ostomate2 · main · <span style="font-family:'JetBrains Mono',monospace">0e2d0b4</span></div></div>
+<span style="font-size:14px;white-space:nowrap">142 tests · 27 s</span><span style="font-size:13px;color:var(--ink-3);text-align:right">just now</span></a>
+<a href="#" style="display:grid;grid-template-columns:110px minmax(0,1fr) 140px 110px;gap:14px;align-items:center;padding:14px 16px;text-decoration:none">
+<span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span>
+<div style="min-width:0"><div style="font-size:15px;color:var(--ink-3);display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">RouteServe · main · <span style="font-family:'JetBrains Mono',monospace">c238574</span></div></div>
+<span style="font-size:14px;white-space:nowrap">1,048 tests · 29 s</span><span style="font-size:13px;color:var(--ink-3);text-align:right">2 hours ago</span></a>
+<a href="#" style="display:grid;grid-template-columns:110px minmax(0,1fr) 140px 110px;gap:14px;align-items:center;padding:14px 16px;text-decoration:none">
+<span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span>
+<div style="min-width:0"><div style="font-size:15px;font-weight:500">Pull request #52</div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">Ostomate2 · <span style="font-family:'JetBrains Mono',monospace">a41f9c2</span></div></div>
+<span style="font-size:14px;white-space:nowrap"><span style="color:var(--fail)">1 failed</span> · 141 of 142</span><span style="font-size:13px;color:var(--ink-3);text-align:right">yesterday</span></a>
+<a href="#" style="display:grid;grid-template-columns:110px minmax(0,1fr) 140px 110px;gap:14px;align-items:center;padding:14px 16px;text-decoration:none">
+<span style="display:flex;align-items:center;gap:6px;color:var(--attn);font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M5 19 19 5"></path></svg>Empty</span>
+<div style="min-width:0"><div style="font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px">No tests executed <span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span></div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">Ostomate2 · main · 4 reports, all empty</div></div>
+<span style="font-size:14px;white-space:nowrap;color:var(--attn)">0 tests</span><span style="font-size:13px;color:var(--ink-3);text-align:right">—</span></a>
+</section>
+</div></section>
+
+<!-- ===== RESULTS TABLE ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">13</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Results table</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Filter by status, layer and search. Click the failed row to collapse or expand it; failure detail opens inline. On narrow screens the table scrolls inside its own container. Row names apart from rendersToday, and the failure text, are <span style="color:var(--attn)">sample</span>.</p></div>
+<div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+<div role="radiogroup" aria-label="Status" style="display:flex;padding:3px;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px;font-size:13.5px">
+<button style="min-height:36px;padding:0 12px;border-radius:8px;border:none;background:var(--raised);color:var(--ink);font:600 13.5px 'Public Sans',sans-serif">All 142</button>
+<button style="min-height:36px;padding:0 12px;border-radius:8px;border:none;background:none;color:var(--ink-2);font:500 13.5px 'Public Sans',sans-serif">Passed 141</button>
+<button style="min-height:36px;padding:0 12px;border-radius:8px;border:none;background:none;color:var(--fail);font:600 13.5px 'Public Sans',sans-serif">Failed 1</button>
+<button style="min-height:36px;padding:0 12px;border-radius:8px;border:none;background:none;color:var(--ink-2);font:500 13.5px 'Public Sans',sans-serif">Skipped 0</button>
+</div>
+<button style="min-height:42px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 13.5px 'Public Sans',sans-serif">Layer: all <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+<label style="flex:1;min-width:220px;min-height:42px;display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink-3);font-size:13.5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input placeholder="Search test or suite name" style="flex:1;min-width:0;border:none;background:none;outline:none;color:var(--ink);font:inherit"></label>
+</div>
+<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
+<div style="min-width:820px">
+<div style="display:grid;grid-template-columns:36px 150px minmax(0,1fr) 110px 110px 80px;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span></span><span>STATUS</span><span>TEST</span><span>LAYER</span><span>PLATFORM</span><span style="text-align:right">TIME</span></div>
+<button onClick="{{ toggleRow }}" aria-expanded="{{ rowOpen }}" style="all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:36px 150px minmax(0,1fr) 110px 110px 80px;gap:12px;align-items:center;padding:12px 16px;background:var(--fail-tint);font-size:14px;color:var(--ink)">
+<span style="display:grid;place-items:center;transform:{{ chevronRot }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"></path></svg></span>
+<span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span>
+<span style="min-width:0"><span style="display:block;font:13.5px 'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">rendersToday</span><span style="display:block;font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">com.ostomate.app.ui.home.HomeViewModelTest</span></span>
+<span style="color:var(--ink-2)">Unit</span><span style="display:flex;flex-direction:column;gap:2px;font-size:12.5px"><span style="color:var(--fail)">ios-sim ✕</span><span style="color:var(--ink-3)">jvm ✓</span></span><span style="text-align:right;color:var(--ink-2)">0.41 s</span>
+</button>
+<sc-if value="{{ rowOpen }}" hint-placeholder-val="{{ true }}">
+<div style="padding:4px 16px 18px 64px;background:var(--fail-tint);border-bottom:1px solid var(--line)">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">Passed on JVM, failed on the iOS simulator in the same run.</span><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE TEXT</span></div>
+<div style="font:600 13.5px/1.5 'JetBrains Mono',monospace;color:var(--ink);margin-bottom:8px">AssertionError: expected "2 changes today" but was "1 change today"</div>
+<pre style="margin:0;padding:12px 14px;border-radius:10px;background:var(--inset);border:1px solid var(--line);font:12.5px/1.65 'JetBrains Mono',monospace;color:var(--ink-2);overflow-x:auto;white-space:pre">at kotlin.test.assertEquals(Assertions.kt:63)
+at com.ostomate.app.ui.home.HomeViewModelTest.rendersToday(HomeViewModelTest.kt:48)
+at kotlinx.coroutines.test.TestBuildersKt.runTest(TestBuilders.kt:210)</pre>
+<div style="display:flex;gap:16px;margin-top:10px;font-size:13.5px"><a href="#">Test history</a><a href="#">View source at a41f9c2</a></div>
+</div>
+</sc-if>
+<div style="display:grid;grid-template-columns:36px 150px minmax(0,1fr) 110px 110px 80px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px">
+<span></span><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span>
+<span style="min-width:0;display:flex;align-items:center;gap:10px"><span style="min-width:0"><span style="display:block;font:13.5px 'JetBrains Mono',monospace">insertsAndQueriesByDay</span><span style="display:block;font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:2px">ChangeEventDaoTest</span></span><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></span>
+<span style="color:var(--ink-2)">Integration</span><span style="font-size:12.5px;color:var(--ink-3)">jvm · ios-sim</span><span style="text-align:right;color:var(--ink-2)">1.12 s</span></div>
+<div style="display:grid;grid-template-columns:36px 150px minmax(0,1fr) 110px 110px 80px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);font-size:14px">
+<span></span><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span>
+<span style="min-width:0"><span style="display:block;font:13.5px 'JetBrains Mono',monospace">predictsReorderDate</span><span style="display:block;font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:2px">PredictionEngineTest</span></span>
+<span style="color:var(--ink-2)">Unit</span><span style="font-size:12.5px;color:var(--ink-3)">jvm · ios-sim</span><span style="text-align:right;color:var(--ink-2)">0.02 s</span></div>
+<div style="display:grid;grid-template-columns:36px 150px minmax(0,1fr) 110px 110px 80px;gap:12px;align-items:center;padding:12px 16px;font-size:14px">
+<span></span><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg>Skipped</span>
+<span style="min-width:0"><span style="display:block;font:13.5px 'JetBrains Mono',monospace">rendersEmptyCalendar</span><span style="display:block;font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:2px">CalendarScreenshotTest</span></span>
+<span style="color:var(--ink-2)">Visual</span><span style="font-size:12.5px;color:var(--ink-3)">jvm</span><span style="text-align:right;color:var(--ink-3)">—</span></div>
+</div></div>
+
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow-x:auto">
+<div style="min-width:820px">
+<div style="display:grid;grid-template-columns:36px 150px minmax(0,1fr) 110px 110px 80px;gap:12px;align-items:center;padding:12px 16px;background:var(--fail-tint);font-size:14px">
+<span style="display:grid;place-items:center;transform:rotate(90deg)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"></path></svg></span>
+<span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span>
+<span style="min-width:0"><span style="display:block;font:13.5px 'JetBrains Mono',monospace">returns 409 when job overlaps</span><span style="display:block;font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:2px">apps/backend/src/routes/jobs.test.ts</span></span>
+<span style="color:var(--ink-2)">API</span><span style="font-size:12.5px;color:var(--ink-3)">node</span><span style="text-align:right;color:var(--ink-2)">0.08 s</span></div>
+<div style="padding:4px 16px 18px 64px;background:var(--fail-tint)"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:10px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px">Details hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);max-width:620px">This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.</p></div></div></div>
+</div>
+</div>
+<div style="font-size:13px;color:var(--ink-3)">Private-project variant: the failure message is replaced by a clear notice, not left as an empty gap. The test name above is <span style="color:var(--attn)">sample</span>.</div>
+</div></div></section>
+
+<!-- ===== TIMELINE STRIP ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">14</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Status timeline strip</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">One cell per run, oldest on the left. Failed cells are full height with a ✕, flaky cells half height, and passes thin, so shape carries the status as well as colour. Hover or focus shows the run.</p></div>
+<div style="max-width:880px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font-family:'JetBrains Mono',monospace;font-size:14px">HomeViewModelTest › rendersToday</span><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></div>
+<div style="position:relative;display:flex;align-items:flex-end;gap:3px;height:48px;padding-top:4px">
+<sc-for list="{{ timeline }}" as="c" hint-placeholder-count="40"><span style="flex:1;border-radius:2px;display:flex;justify-content:center;align-items:flex-start;font-size:10px;line-height:14px;font-weight:700;color:var(--on-ink);height:{{ c.h }};background:{{ c.bg }};outline:{{ c.ol }};outline-offset:2px">{{ c.g }}</span></sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><span>40 runs ago</span><span>Latest</span></div>
+<div style="display:inline-flex;flex-direction:column;gap:2px;margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--raised);border:1px solid var(--line-strong);box-shadow:var(--shadow-menu);font-size:13px"><span style="font-weight:600;color:var(--fail)">✕ Failed · PR #52</span><span style="color:var(--ink-3)"><span style="font-family:'JetBrains Mono',monospace">a41f9c2</span> · yesterday · 0.41 s</span></div>
+<span style="font-size:12.5px;color:var(--ink-3);margin-left:12px">tooltip for the outlined cell</span>
+</div></div></section>
+
+<!-- ===== HEALTH / DECLARED / ALERTS ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">15</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Reporting health, declared suites, alerts</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Health markers are small and factual. Declared suites are neutral, not alarming, and marked as not counted. Alert banners are for real problems only.</p></div>
+<div style="display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-wrap:wrap;gap:24px;font-size:14px">
+<span style="display:flex;align-items:center;gap:7px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Reporting healthy<span style="font-weight:400;color:var(--ink-3)">· last report 4 minutes ago</span></span>
+<span style="display:flex;align-items:center;gap:7px;color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg>No report in 12 days<span style="font-weight:400;color:var(--ink-3)">· expected every 8</span></span>
+<span style="display:flex;align-items:center;gap:7px;color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"></path></svg>Test count fell 38%<span style="font-weight:400;color:var(--ink-3)">· ios/composeApp/ios-sim</span><span style="font:500 10px 'JetBrains Mono',monospace;border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></span>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<div style="padding:14px 18px;border-bottom:1px solid var(--line)"><div style="font:500 20px 'Source Serif 4',serif">Declared suites</div><p style="margin:4px 0 0;font-size:13.5px;color:var(--ink-3)">These tests exist but don't report here yet. They aren't counted in any total.</p></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px 260px;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px"><span style="font-weight:600">Maestro E2E · Android</span><span style="color:var(--ink-3)">E2E</span><span>7 flows</span><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="3.5 3"><circle cx="12" cy="12" r="10"></circle></svg>Runs in CI, not yet reported</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px 260px;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px"><span style="font-weight:600">Maestro E2E · iOS</span><span style="color:var(--ink-3)">E2E</span><span>5 flows</span><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="3.5 3"><circle cx="12" cy="12" r="10"></circle></svg>Runs in CI, not yet reported</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 70px 260px;gap:12px;align-items:center;padding:14px 18px;font-size:14px"><span style="font-weight:600">Maestro E2E · iOS <span style="font-weight:400;color:var(--ink-3)">(RouteServe)</span></span><span style="color:var(--ink-3)">E2E</span><span>13 flows</span><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="1 3.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle></svg>Authored, not yet executed</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div role="status" style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div style="flex:1"><div style="font-weight:600;font-size:14.5px;color:var(--attn)">RouteServe hasn't reported in 12 days</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">The weekly scheduled run should have posted by Sep 20. Its CI may be failing silently.</div></div><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></div>
+<div role="alert" style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 2 20h20Z"></path><path d="M12 9v5M12 17v.5"></path></svg><div style="flex:1"><div style="font-weight:600;font-size:14.5px;color:var(--fail)">Scheduled job last ran 38 hours ago</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">Heartbeat, stale check and prune run daily. Past 36 hours, the database may pause.</div></div><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--neutral-tint);border:1px solid var(--line-strong)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div style="font-size:14px;color:var(--ink-2);line-height:1.5">This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.</div></div>
+</div>
+</div></div></section>
+
+<!-- ===== FORMS & BUTTONS ===== -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">16</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Buttons and form inputs</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Used mostly on the admin page. Primary buttons are ink on the page colour. Every control is at least 44 px tall and has a visible focus ring. Try tabbing through them.</p></div>
+<div style="display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+<button style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer" style-focus="outline:2px solid var(--ink);outline-offset:2px">Create link</button>
+<button style="min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer" style-focus="outline:2px solid var(--ink);outline-offset:2px">Copy link</button>
+<button style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:none;color:var(--ink);font:600 14.5px 'Public Sans',sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-focus="outline:2px solid var(--ink);outline-offset:2px">Cancel</button>
+<button style="min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer" style-focus="outline:2px solid var(--ink);outline-offset:2px">Rotate API key</button>
+<button disabled="" style="min-height:44px;padding:0 18px;border-radius:10px;border:1px dashed var(--line-strong);background:none;color:var(--ink-3);font:600 14.5px 'Public Sans',sans-serif;cursor:not-allowed">Disabled</button>
+<button style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;outline:2px solid var(--ink);outline-offset:2px">Focused</button>
+<button aria-busy="true" style="min-height:44px;padding:0 18px;display:flex;align-items:center;gap:8px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;opacity:.8"><span style="width:12px;height:12px;border-radius:50%;border:2px solid var(--on-ink);border-right-color:transparent"></span>Saving</button>
+</div>
+<form style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 20px;max-width:880px;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px">
+<div style="grid-column:1/-1;font:500 22px 'Source Serif 4',serif">New tracked link</div>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Company<input value="Acme Health" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif;outline:2px solid var(--ink);outline-offset:1px"><span style="font-weight:400;color:var(--ink-3)">Focused</span></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Role<input value="Director of Quality Engineering" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif" style-focus="outline:2px solid var(--ink);outline-offset:1px"></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Contact<input value="" placeholder="Name or email" aria-invalid="true" style="min-height:44px;padding:0 12px;border-radius:10px;border:1.5px solid var(--fail);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><span style="display:flex;align-items:center;gap:6px;font-weight:500;color:var(--fail)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 2 2 20h20Z"></path><path d="M12 9v5M12 17v.5"></path></svg>Add a contact so you can follow up</span></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Sent<input value="Sep 18, 2026" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif" style-focus="outline:2px solid var(--ink);outline-offset:1px"></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Lead project<span style="min-height:44px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);font:400 15px 'Public Sans',sans-serif">Ostomate2 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></span></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Link<span style="min-height:44px;padding:0 12px;display:flex;align-items:center;border-radius:10px;border:1px dashed var(--line-strong);font:400 14px 'JetBrains Mono',monospace;color:var(--ink-3)">/v/Qm8r2LxT0aZe <span style="margin-left:8px;font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span></span></label>
+<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Notes<textarea rows="2" placeholder="Optional" style="padding:10px 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif;resize:vertical"></textarea></label>
+<div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end"><button type="button" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:none;color:var(--ink);font:600 14.5px 'Public Sans',sans-serif;text-decoration:underline;text-underline-offset:3px">Cancel</button><button type="button" style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif">Create link</button></div>
+</form>
+</div></div></section>
+
+<!-- ===== SKELETON / EMPTY / ERROR ===== -->
+<section style="padding:48px 0 72px;border-top:1px solid var(--line)">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="max-width:760px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">17</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">Loading, empty, error</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">Skeletons match the shape of what's loading. Empty and error messages say what happened and what to do, in one or two plain sentences.</p></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px">
+<div aria-busy="true" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px">
+<div style="display:grid;grid-template-columns:90px 1fr 70px;gap:14px;align-items:center;padding:14px 16px"><span style="height:14px;border-radius:4px;background:var(--raised);animation:tpShimmer 1.6s ease-in-out infinite"></span><span><span style="display:block;width:80%;height:14px;border-radius:4px;background:var(--raised);animation:tpShimmer 1.6s ease-in-out infinite"></span><span style="display:block;width:50%;height:10px;border-radius:4px;background:var(--raised);margin-top:8px;animation:tpShimmer 1.6s ease-in-out infinite"></span></span><span style="height:12px;border-radius:4px;background:var(--raised);animation:tpShimmer 1.6s ease-in-out infinite"></span></div>
+<div style="display:grid;grid-template-columns:90px 1fr 70px;gap:14px;align-items:center;padding:14px 16px"><span style="height:14px;border-radius:4px;background:var(--raised);animation:tpShimmer 1.6s ease-in-out infinite"></span><span><span style="display:block;width:65%;height:14px;border-radius:4px;background:var(--raised);animation:tpShimmer 1.6s ease-in-out infinite"></span><span style="display:block;width:40%;height:10px;border-radius:4px;background:var(--raised);margin-top:8px;animation:tpShimmer 1.6s ease-in-out infinite"></span></span><span style="height:12px;border-radius:4px;background:var(--raised);animation:tpShimmer 1.6s ease-in-out infinite"></span></div>
+<div style="padding:4px 16px 12px;font-size:12.5px;color:var(--ink-3)">Feed rows loading</div>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-dasharray="3.5 3"><circle cx="12" cy="12" r="10"></circle></svg>
+<div style="font:500 20px 'Source Serif 4',serif">No runs yet</div><p style="margin:0;font-size:14px;line-height:1.5;color:var(--ink-2)">testpulse is set up but hasn't received a report. Runs appear here within seconds of the first CI job finishing.</p></div>
+<div role="alert" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.4" stroke-linecap="round"><path d="M12 2 2 20h20Z"></path><path d="M12 9v5M12 17v.5"></path></svg>
+<div style="font:500 20px 'Source Serif 4',serif">Couldn't load recent runs</div><p style="margin:0 0 6px;font-size:14px;line-height:1.5;color:var(--ink-2)">The database didn't respond. The rest of the page is still current.</p><button style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px 'Public Sans',sans-serif;cursor:pointer">Try again</button></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:flex-start;gap:8px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg>
+<div style="font:500 20px 'Source Serif 4',serif">Per-test results retained for 180 days</div><p style="margin:0;font-size:14px;line-height:1.5;color:var(--ink-2)">Summary totals for this run are permanent: 142 tests, 142 passed.</p></div>
+<div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;border:1px dashed var(--line-strong);font-size:14px;color:var(--ink-2)"><span style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ink-3)"></span><b style="font-weight:600;color:var(--ink)">Live updates paused.</b> Reconnecting. The feed below is current as of 4 minutes ago.</div>
+</div></div></section>
+
+</div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+class Component extends DCLogic {
+  state = { theme: this.props.theme ?? 'dark', menuOpen: true, rowOpen: true, live: true };
+  static DARK = { bg:'#121110', surface:'#1a1917', inset:'#151412', raised:'#211f1c', line:'#2a2825', 'line-strong':'#3d3a35', ink:'#ede9e3', 'ink-2':'#cfc9bf', 'ink-3':'#a8a298', pass:'#7fd79a', 'pass-tint':'#1d2a20', fail:'#f4897c', 'fail-tint':'#33201c', attn:'#e3b35c', 'attn-tint':'#302716', neutral:'#b3ada3', 'neutral-tint':'#252320', 'on-ink':'#121110', 'layer-1':'#ede9e3', 'layer-2':'#b8b2a8', 'layer-3':'#8a847a', 'layer-4':'#6f6a62' };
+  static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0', 'layer-1':'#1c1a17', 'layer-2':'#57524b', 'layer-3':'#7a746b', 'layer-4':'#8f897f' };
+  lum(h){ const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)); return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2]; }
+  ratio(a,b){ const x=this.lum(a),y=this.lum(b); return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05); }
+  pairs(T){
+    const P=[];
+    for(const f of ['ink','ink-2','ink-3']) for(const b of ['bg','surface','inset','raised']) P.push([f,b,4.5]);
+    for(const f of ['pass','fail','attn','neutral']) for(const b of ['bg','surface','inset','raised',f+'-tint']) P.push([f,b,4.5]);
+    P.push(['ink-2','fail-tint',4.5],['on-ink','ink',4.5],['attn','surface',3,'graphic'],['layer-4','surface',3,'graphic']);
+    return P.map(([f,b,min,kind])=>{ const label='--'+f+' on --'+b+(kind?' ('+kind+')':''); const r=this.ratio(T[f],T[b]); const ok=r>=min; return { label, fg:T[f], bg:T[b], ratio:r.toFixed(2)+':1', verdict: ok?(min===3?'3:1 ✓':'AA ✓'):'FAIL', verdictColor: ok?'var(--pass)':'var(--fail)' }; });
+  }
+  renderVals() {
+    const D=Component.DARK, L=Component.LIGHT, dark=this.state.theme==='dark';
+    const T=dark?D:L; const tv={ background:'var(--bg)', color:'var(--ink)' };
+    if(!dark) Object.keys(L).forEach(k=>tv['--'+k]=L[k]);
+    tv['--shadow-card']= dark?'none':'0 1px 2px rgba(28,26,23,.06)';
+    tv['--shadow-menu']= dark?'0 16px 40px -12px rgba(0,0,0,.7)':'0 16px 40px -12px rgba(28,26,23,.22)';
+    const use={bg:'Page background',surface:'Cards, tiles',inset:'Inset panels, inputs',raised:'Hover, new row, menus, track',line:'Hairlines, card borders','line-strong':'Control borders, dashed outlines',ink:'Primary text, bars, primary button','ink-2':'Secondary text','ink-3':'Muted labels, metadata',pass:'Passed, healthy','pass-tint':'Passed pill background',fail:'Failed, error','fail-tint':'Failed pill, failed row',attn:'Floor, stale, empty, flaky, sample','attn-tint':'Attention pill, banner',neutral:'Skipped, declared, private','neutral-tint':'Neutral pill','on-ink':'Text on ink','layer-1':'Pyramid: unit','layer-2':'Pyramid: component / integration','layer-3':'Pyramid: integration (RouteServe)','layer-4':'Pyramid: visual / API'};
+    const tokens=Object.keys(D).map(k=>({name:'--'+k,use:use[k]||'',d:D[k],l:L[k]}));
+    const sp=[4,8,12,16,20,24,32,40,52,64,80];
+    const seq='ppppppppppppppfppppppppppppppfppppppfppp';
+    const timeline=seq.split('').map((s,i)=>({ h: s==='f'?'44px':(s==='k'?'24px':'14px'), bg: s==='f'?'var(--fail)':(s==='k'?'var(--attn)':'var(--pass)'), g: s==='f'?'✕':'', ol: i===36?'2px solid var(--ink)':'none' }));
+    timeline[22]={h:'24px',bg:'var(--attn)',g:'',ol:'none'};
+    const on=this.state.live;
+    const dot=React.createElement('span',{'aria-hidden':true,style:{width:8,height:8,borderRadius:'50%',flex:'none',background:on?T.pass:'transparent',border:on?'none':'1.5px solid '+T['ink-3'],color:T.pass,animation:on?'tpPulse 2.4s ease-out infinite':'none'}});
+    return {
+      themeVars: tv, isDark: dark, isLight: !dark,
+      darkBtnBg: dark?'var(--ink)':'transparent', darkBtnInk: dark?'var(--on-ink)':'var(--ink-2)',
+      lightBtnBg: !dark?'var(--ink)':'transparent', lightBtnInk: !dark?'var(--on-ink)':'var(--ink-2)',
+      setDark: ()=>this.setState({theme:'dark'}), setLight: ()=>this.setState({theme:'light'}),
+      toggleTheme: ()=>this.setState(s=>({theme:s.theme==='dark'?'light':'dark'})),
+      themeToggleLabel: dark?'Switch to light theme':'Switch to dark theme',
+      tokens, pairsDark:this.pairs(D), pairsLight:this.pairs(L),
+      spaces: sp.map((v,i)=>({k:String(i+1),v,w:(v*4)+'px'})),
+      timeline,
+      menuOpen:this.state.menuOpen, menuPad: this.state.menuOpen?'200px':'0px',
+      toggleMenu: ()=>this.setState(s=>({menuOpen:!s.menuOpen})),
+      rowOpen:this.state.rowOpen, chevronRot: this.state.rowOpen?'rotate(90deg)':'none',
+      toggleRow: ()=>this.setState(s=>({rowOpen:!s.rowOpen})),
+      liveDot: dot, liveLabel: on?'Live':'Offline · reconnecting',
+      toggleLive: ()=>this.setState(s=>({live:!s.live})),
+    };
+  }
+}
+</script>
+</body>
+</html>

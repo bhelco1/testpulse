@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.19, 2026-09-24. Status: Phases 0 to 4 complete; design track in progress.
+Version 0.20, 2026-09-25. Status: Phases 0 to 4 complete; design track in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -662,6 +662,14 @@ Phase 4 complete 2026-09-24.
 - Design system and all screens in 13.1 produced in Claude Design, reviewed on desktop and phone, in light and dark. (manual)
 - Token contrast pairs pass WCAG AA; the check is scripted so it can run in CI once tokens are in the repo.
 - Handoff bundle exported and committed under `design/`. Tokens are implemented as CSS variables and the core components are built and unit tested before any page work starts.
+
+Evidence recorded 2026-09-25:
+
+- Design brief as the opening prompt (manual): Bobby confirmed on 2026-09-25 that `docs/design-brief.md` was added to the Claude Design project as a reference file, and that the opening prompt he used there was written from that brief.
+- Design system and all screens reviewed (manual): Bobby reviewed the design system and every screen on desktop and phone, in light and dark, on 2026-09-25, after the v2 corrections below.
+- v2 corrections to the first export: the landing tiles were brought in line with section 11, with Skipped or disabled replaced by Runs in last 30 days and the skipped count moved to the Pass rate sub-line; light `--pass` was darkened from `#1b7a3d` to `#197339` because `--pass` on `--raised` was 4.41:1; the data map was corrected to read runs through `runs_public`, to fall back to `lines_pct` for coverage, and to leave the live-update transport to Phase 5; admin tracked links are shown as `<site origin>/v/<token>`.
+- Token contrast: `npm run check:contrast` reads `design/tokens.css` and checks 34 text pairs per theme at 4.5:1: each of `--ink`, `--ink-2`, `--ink-3` on each of `--bg`, `--surface`, `--inset`, `--raised`; each status colour on those four surfaces and on its own tint; `--on-ink` on `--ink`; and `--ink-2` on `--fail-tint`. A missing or malformed token fails the check. Lowest ratios: dark `--fail` on `--fail-tint` 6.39:1, light `--pass` on `--raised` 4.84:1. It runs as the `Check design token contrast` step of the CI `checks` job. `lib/design/contrast.test.ts` proves every pair passes in both themes, that the v1 light `--pass` is caught at 4.41:1 on `--raised`, and that `design/contrast.md` lists exactly the required pairs with the computed ratios.
+- Handoff bundle: the approved v2 export is committed under `design/` as exported. Tokens as CSS variables and the core components are still to do.
 
 ### Phase 5: Public site
 

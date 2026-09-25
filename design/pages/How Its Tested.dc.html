@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#121110}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;background:var(--bg);color:var(--ink);min-height:100vh">
+<div style="{{ themeVars }}">
+<a href="#main" style="position:absolute;left:-9999px;top:12px;z-index:20;padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:600 14px 'Public Sans',sans-serif" style-focus="left:16px">Skip to content</a>
+<div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
+
+<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
+<a href="#" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+<button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+<a href="#" aria-current="page" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:underline;text-decoration-color:var(--ink);text-underline-offset:6px">How it's tested</a>
+<span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}Live</span>
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</nav>
+</header>
+
+<main id="main">
+<!-- HERO -->
+<section style="padding:56px 0 64px;max-width:860px">
+<div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">How it's tested</div>
+<h1 style="margin:14px 0 0;font:500 clamp(40px,5.5vw,68px)/1.04 'Source Serif 4',serif;letter-spacing:-.03em;text-wrap:balance">This dashboard is tested the same way as the projects it reports on.</h1>
+<p style="margin:24px 0 0;max-width:680px;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">A test dashboard that isn't tested is just a claim. testpulse is built test-first, its own CI runs the full suite on every pull request, and it reports its results here alongside everything else.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:24px;font-size:14.5px">
+<a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;font-weight:600">Source on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
+<a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;color:var(--ink-2)">Read the specification<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
+</div>
+</section>
+
+<!-- 01 PRINCIPLES -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px 56px">
+<div style="max-width:380px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">01</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">Principles</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Five rules from the specification. Each one exists because breaking it has cost real time on a real project.</p></div>
+<ol style="grid-column:span 2;list-style:none;margin:0;padding:0;display:flex;flex-direction:column">
+<sc-for list="{{ principles }}" as="pr" hint-placeholder-count="5">
+<li style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:16px;padding:20px 0;border-top:1px solid var(--line)"><span style="font:500 26px/1.2 'Source Serif 4',serif;color:var(--ink-3)">{{ pr.n }}</span><div><div style="font:500 22px/1.3 'Source Serif 4',serif">{{ pr.title }}</div><p style="margin:6px 0 0;max-width:640px;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">{{ pr.body }}</p></div></li>
+</sc-for>
+</ol>
+</div>
+</section>
+
+<!-- 02 STRATEGY -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="max-width:760px;margin-bottom:28px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">What runs, and what it covers</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Parsers are tested against result files captured from Ostomate2 and RouteServe, not hand-written samples. Integration tests hit a real Postgres, including the row-level security that hides private projects.</p></div>
+<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:20px">
+<div style="min-width:760px">
+<div style="display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:14px 24px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>LAYER</span><span>TOOL</span><span>SCOPE</span></div>
+<sc-for list="{{ layers }}" as="l" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:18px 24px;border-bottom:1px solid var(--line);font-size:14.5px;align-items:start">
+<span style="display:flex;align-items:center;gap:10px;font-weight:600"><span style="width:12px;height:12px;border-radius:3px;flex:none;background:{{ l.swatch }};border:{{ l.swBorder }}"></span>{{ l.name }}</span>
+<span style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.tools }}" as="tl" hint-placeholder-count="1"><span style="padding:3px 9px;border-radius:6px;border:1px solid var(--line-strong);font-size:13.5px">{{ tl }}</span></sc-for></span>
+<span style="line-height:1.6;color:var(--ink-2);text-wrap:pretty">{{ l.scope }}</span>
+</div>
+</sc-for>
+</div></div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;margin-top:16px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Coverage floor</div><div style="font:500 36px/1.1 'Source Serif 4',serif;margin-top:6px">90% <span style="font-size:18px;color:var(--ink-3)">lines</span></div><div style="font-size:13.5px;color:var(--ink-2);margin-top:4px">Enforced by Vitest thresholds. Below it, CI fails.</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">On every pull request</div><div style="font:500 22px/1.35 'Source Serif 4',serif;margin-top:8px">Lint, typecheck, unit, integration, E2E</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Failure masking</div><div style="font:500 36px/1.1 'Source Serif 4',serif;margin-top:6px">None</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:4px">No <code style="font:12.5px 'JetBrains Mono',monospace">|| true</code>, no <code style="font:12.5px 'JetBrains Mono',monospace">continue-on-error</code> on test steps.</div></div>
+</div>
+</section>
+
+<!-- 03 ALERTS -->
+<section style="padding:48px 0;border-top:1px solid var(--line)">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:32px 56px;align-items:start">
+<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">03</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">Why it watches for silence</h2><p style="margin:0;max-width:520px;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Two incidents from Ostomate2's post-mortems shaped the alert rules. A green dashboard means nothing if the pipeline behind it has stopped running, or if a suite passes without executing anything.</p></div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
+<div style="font-size:13px;color:var(--ink-3)">Incident</div><div style="font:500 21px/1.3 'Source Serif 4',serif;margin-top:4px">CI was silently dead for 11 days</div>
+<div style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14.5px;line-height:1.55;color:var(--ink-2)"><svg style="flex:none;margin-top:3px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><span>Now: each project has an expected cadence. A daily check flags any project with no report past it, shown as "No report in 12 days" on the project page.</span></div>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
+<div style="font-size:13px;color:var(--ink-3)">Incident</div><div style="font:500 21px/1.3 'Source Serif 4',serif;margin-top:4px">E2E reported green without ever passing</div>
+<div style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14.5px;line-height:1.55;color:var(--ink-2)"><svg style="flex:none;margin-top:3px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M5 19 19 5"></path></svg><span>Now: a run with zero tests executed is marked Empty and treated as a problem, never as a pass. A sudden drop in a report's test count raises an alert too.</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 04 LIVE -->
+<section style="padding:48px 0 64px;border-top:1px solid var(--line)">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px"><div style="max-width:720px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">04</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">testpulse's own results</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">From Phase 7, testpulse's CI posts its JUnit and coverage output to this site as the project <code style="font:13.5px 'JetBrains Mono',monospace">testpulse</code>, the same way the other projects do.</p></div></div>
+
+<sc-if value="{{ notReporting }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:28px 48px;align-items:start">
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px">
+<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="3.5 3"><circle cx="12" cy="12" r="10"></circle></svg>Not reporting yet</span>
+<div style="font:500 26px/1.25 'Source Serif 4',serif;text-wrap:balance">Self-reporting starts in Phase 7.</div>
+<p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Until then this section stays empty rather than showing numbers nobody measured. The suites already run in CI on every pull request; you can see them in the repository's Actions tab.</p>
+<a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;font-size:14.5px;font-weight:600">CI runs on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
+</div>
+<div>
+<div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px">Build progress</div>
+<sc-for list="{{ phases }}" as="ph" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-3)">{{ ph.n }}</span><span>{{ ph.label }}</span><span style="display:flex;align-items:center;gap:6px;font-weight:600;color:{{ ph.ink }}">{{ ph.status }}</span></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ reporting }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start">
+<article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span><span style="display:flex;align-items:center;gap:8px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>12 minutes ago · main · <span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">8d3e1a2</span></span></div>
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px"><span style="font:500 64px/1 'Source Serif 4',serif">{{ selfTotal }}</span><span style="font-size:15px;color:var(--ink-2)">tests · 0 failed · 0 skipped · 1m 48s</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;margin-top:24px">
+<sc-for list="{{ selfPyramid }}" as="l" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:100px minmax(0,1fr) 56px;align-items:center;gap:12px;font-size:14px"><span style="text-align:right;color:var(--ink-2)">{{ l.name }}</span><div style="display:flex;justify-content:center"><div style="width:{{ l.w }};min-width:8px;height:30px;border-radius:4px;background:{{ l.bg }}"></div></div><b style="font-weight:600">{{ l.count }}</b></div>
+</sc-for>
+</div>
+<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Accessibility checks run inside the Playwright suite, one per public page, and are counted with E2E.</p>
+<a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:6px;font-size:14.5px;font-weight:600">Full project page →</a>
+</article>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
+<div style="font:500 22px 'Source Serif 4',serif">Coverage against the floor</div>
+<p style="margin:4px 0 20px;font-size:13.5px;color:var(--ink-3)">Lines, per workspace. Floor 90%, scale 0 to 100.</p>
+<div style="display:flex;flex-direction:column;gap:18px">
+<sc-for list="{{ selfCov }}" as="c" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) 150px;align-items:center;gap:14px;font-size:14px"><span style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.m }}</span><div style="position:relative;height:8px;border-radius:99px;background:var(--raised)"><div style="width:{{ c.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:90%;top:-5px;width:2px;height:18px;background:var(--attn)"></div></div><span style="white-space:nowrap"><b style="font-weight:600">{{ c.v }}</b> <span style="color:var(--ink-3)">floor 90%</span></span></div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span>Figures illustrate the reporting state; real values arrive in Phase 7.</div>
+</div>
+</div>
+</sc-if>
+</section>
+</main>
+
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 minutes ago</span></footer>
+</div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;selfReporting&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;not reporting yet&quot;,&quot;reporting (sample)&quot;],&quot;default&quot;:&quot;not reporting yet&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+class Component extends DCLogic {
+  state = { theme: null };
+  static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0', 'layer-1':'#1c1a17', 'layer-2':'#57524b', 'layer-3':'#7a746b', 'layer-4':'#8f897f' };
+
+  componentDidUpdate(prev) { if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null }); }
+
+  renderVals() {
+    const L = Component.LIGHT;
+    const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
+    const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
+    if (!dark) Object.keys(L).forEach(k => tv['--' + k] = L[k]);
+    const reporting = (this.props.selfReporting ?? 'not reporting yet') === 'reporting (sample)';
+
+    const principles = [
+      ['Test-first', 'Every phase starts with failing tests written from its acceptance criteria. A phase is done when each criterion has a passing automated test.'],
+      ['Real fixtures', 'Parsers are tested against actual result files captured from Ostomate2 and RouteServe: Gradle JUnit XML, Jest JSON, JaCoCo and istanbul coverage.'],
+      ['Normalize on the server', 'Projects send the files their tools already produce. testpulse does the parsing, so a project’s CI step stays a few lines long.'],
+      ['Never fail the caller’s build', 'If testpulse is down, a project’s CI stays green. The reporting step always exits 0 and logs a warning.'],
+      ['No swallowed failures', 'In testpulse’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.'],
+    ].map(([title, body], i) => ({ n: String(i + 1).padStart(2, '0'), title, body }));
+
+    const layers = [
+      ['Unit', ['Vitest'], 'Parsers against real fixtures, layer resolution, stat calculations, alert rules, token and key utilities, bot classification.', 'var(--layer-1)'],
+      ['Integration', ['Vitest', 'local Supabase'], 'The ingestion endpoint end to end against real Postgres: idempotent retries, transactions, rollups, and row-level security checked with an anonymous client. The prune job is checked against a seeded database.', 'var(--layer-2)'],
+      ['E2E', ['Playwright'], 'A seeded database behind the landing, project, run and test-history pages; visibility rules in the rendered UI; the tracked-link flow; admin sign-in.', 'var(--layer-3)'],
+      ['Accessibility', ['axe', 'Playwright'], 'Every public page, on every pull request.', 'var(--layer-4)'],
+      ['Contract', ['Vitest'], 'The reporter script that projects copy into their CI, run against a local server.', 'transparent'],
+    ].map(([name, tools, scope, swatch]) => ({ name, tools, scope, swatch, swBorder: swatch === 'transparent' ? '1.5px solid var(--line-strong)' : 'none' }));
+
+    const phases = [
+      ['Phase 0–2', 'Foundations, ingestion, Ostomate2 live', 'Done', 'var(--pass)'],
+      ['Phase 3', 'RouteServe reporting live', 'In progress', 'var(--attn)'],
+      ['Phase 4–6', 'Backfill, public site, alerts and admin', 'Planned', 'var(--ink-3)'],
+      ['Phase 7', 'Self-reporting and launch', 'Planned', 'var(--ink-3)'],
+    ].map(([n, label, status, ink]) => ({ n, label, status, ink }));
+
+    const sp = [['E2E', 38, 'var(--layer-3)'], ['Contract', 6, 'var(--layer-4)'], ['Integration', 64, 'var(--layer-2)'], ['Unit', 214, 'var(--layer-1)']];
+    const mx = 214;
+    const selfPyramid = sp.map(([name, c, bg]) => ({ name, count: String(c), w: (c / mx * 100) + '%', bg }));
+    const selfCov = [['app', 93.4], ['ingest', 96.8], ['parsers', 98.1]].map(([m, v]) => ({ m, v: v.toFixed(1) + '%', w: v + '%' }));
+
+    const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
+
+    return {
+      themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: String(sp.reduce((a, l) => a + l[1], 0)),
+      reporting, notReporting: !reporting,
+      toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
+      themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -41,6 +41,9 @@ jobs:
       - name: Check for tracked secrets
         run: npm run check:secrets
 
+      - name: Check design token contrast
+        run: npm run check:contrast
+
       - name: Unit tests with coverage
         run: npm run test
 

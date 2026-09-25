@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.17, 2026-09-24. Status: Phases 0 to 3 complete; Phase 4 in progress.
+Version 0.18, 2026-09-24. Status: Phases 0 to 3 complete; Phase 4 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -424,7 +424,7 @@ All trend stats use default-branch runs with `source = ci` unless stated. Backfi
 | Coverage | Latest lines % per module, plotted against that module's `coverage_floors` value. Lines % is `lines_covered / lines_total` when the counts are present, else `lines_pct` |
 | Suite duration | Sum of report durations per run, trended; slowest 10 tests listed |
 | Test growth | Distinct tests per week since first report |
-| Flaky test | A test with both a passing and a failing result on the same `commit_sha` (across attempts or re-runs) within 30 days. Flake rate = flaky tests / total tests |
+| Flaky test | A test with both a passing and a failing result on the same `commit_sha` and platform (across attempts or re-runs) within 30 days. Flake rate = flaky tests / total tests |
 | Flip rate | Secondary signal: tests that changed status between consecutive default-branch runs more than twice in 30 days |
 | Time to green | For each default-branch run that turned `failed` after a `passed` run, elapsed time until the next `passed` run. Report median and worst, 90 days |
 | Green streak | Consecutive `passed` default-branch runs, current and longest |
@@ -432,6 +432,15 @@ All trend stats use default-branch runs with `source = ci` unless stated. Backfi
 | Days since last report | Per project; feeds staleness |
 
 Headline tiles on the landing page: total tests, overall pass rate, projects reporting, runs in last 30 days, median time to green, current green streaks.
+
+How the trend, time-to-green and flakiness definitions are computed (`lib/stats`):
+
+- **Which runs.** Pass-rate, run-count and coverage trends read default-branch runs with `source` `ci` or `backfill`; every other stat reads `ci` only. One pair of predicates in `lib/stats/rules.ts` holds this rule.
+- **When a run happened.** Every window, ordering and bucket uses `finished_at`, when the run's status became known. Backfilled runs have `started_at` equal to `finished_at`.
+- **Windows.** "30 days" and "90 days" are the N whole UTC days ending on the current UTC day, up to the present moment. Whole days keep daily buckets the same length; UTC because viewers are in every time zone.
+- **Trend buckets.** Pass rate has a point per run and a bucket per UTC day. Run count has a bucket per UTC day, with empty days included. Coverage has a point per run per module. A day's pass rate adds up the day's counts, so a large run outweighs a small one; it is not the mean of the day's run rates. `runs.failed` already includes errors (5.2), so the pass rate is `passed / (passed + failed)`. A run or day with nothing passed or failed has no rate. A count-form coverage row with `lines_total` 0 has no percentage and is left out.
+- **Time to green.** Runs are ordered by `finished_at`; ties go by `started_at`, then run ID, then attempt. Elapsed time runs from the failing run's `finished_at` to the next passed run's. An episode belongs to the 90 days holding its failing run, and the passed run before it may be older. A branch still red at the present moment is reported on its own and left out of median and worst. With an even count, the median is the mean of the middle two.
+- **Flakiness.** A passing result is `passed`; a failing result is `failed` or `error`. Results come from default-branch CI runs that finished in the 30 days. A result is compared only with results for the same test on the same platform, the platform being its report's; a test that passes on one platform and fails on another is a cross-platform parity finding, not a flake. The denominator is "Total tests" for the latest default-branch CI run in that window; with no such run, or no results, there is no flake rate.
 
 ## 12. Integrity alerts
 
@@ -738,6 +747,11 @@ Write path. `npm run backfill <slug> <file>` picks the parser by slug (only `ost
 | 2026-09-24 | `backfill_run` never alters an existing run, including an earlier backfill, and inserts with `ON CONFLICT DO NOTHING` rather than a lookup first | CI's report is the better record of a run and must win; a no-op re-run makes the command safe to repeat after a partial failure; the conflict clause closes the gap between a check and an insert if CI reports the same run concurrently |
 | 2026-09-24 | When a history file lists one run ID twice, the later entry is imported | A re-run keeps its run ID and the file cannot tell attempts apart, so both would be attempt 1 and only one can be stored; the later entry is the run's final outcome |
 | 2026-09-24 | Backfilled coverage is stored as the recorded line percentage: a later migration adds a nullable `lines_pct` to `coverage`, makes the count columns nullable, and checks that a row has counts or a percentage | The history file keeps only a percentage rounded to one decimal; inventing covered and total counts to fit the current columns would store numbers nobody measured |
+| 2026-09-24 | Stats use `finished_at` for windows, ordering and buckets. Windows are whole UTC days ending today. Daily pass rate adds up the day's counts. Time to green runs from the failing run's finish to the next passed run's finish, and a branch still red is reported apart from median and worst | Section 11 names the stats but not these mechanics. `finished_at` is when a status became known, and measuring between finishes never goes negative for overlapping runs. Whole UTC days keep chart buckets equal and zone-neutral. Adding up counts weighs runs by size, as one run of all their tests would |
+| 2026-09-24 | Time to green: `passed`, `empty`, `failed` does not count as turning red. "After a passed run" means the run immediately before; an empty run neither starts nor ends a red spell | An empty run is neither passed nor failed, so it says nothing about whether the branch turned red or recovered |
+| 2026-09-24 | Flakiness is measured on default-branch runs only | Section 11 applies default-branch runs to every stat unless it states otherwise, and the flaky-test definition states no exception |
+| 2026-09-24 | A test passing on one platform and failing on another is not flaky. Flakiness compares results for the same test on the same platform and commit, across runs and attempts | That disagreement is what the cross-platform parity stat reports. Ostomate2 reports the same test from the JVM and the iOS simulator, and a deterministic iOS-only failure would otherwise read as flakiness |
+| 2026-09-24 | The "count" trend that backfill feeds is run count per day, not test count | Backfilled runs have no per-test rows, so a test-count trend would mean different things for the two sources |
 
 ---
 

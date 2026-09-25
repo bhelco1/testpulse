@@ -79,6 +79,7 @@ npm run test:int       Vitest integration tests (requires `supabase start`)
 npm run project:add <slug>         register projects/<slug>.yaml and print its API key once
 npm run projects:sync              update database rows from projects/*.yaml; never touches API keys
 npm run project:rotate-key <slug>  issue a new API key for a project and print it once
+npm run backfill <slug> <file>     import a project's dashboard history as source=backfill runs; re-running is a no-op
 ```
 
 ## Conventions

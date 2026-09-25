@@ -18,7 +18,8 @@
     "db:reset": "supabase db reset",
     "project:add": "node --env-file-if-exists=.env.local scripts/project-add.ts",
     "projects:sync": "node --env-file-if-exists=.env.local scripts/projects-sync.ts",
-    "project:rotate-key": "node --env-file-if-exists=.env.local scripts/project-rotate-key.ts"
+    "project:rotate-key": "node --env-file-if-exists=.env.local scripts/project-rotate-key.ts",
+    "backfill": "node --env-file-if-exists=.env.local scripts/backfill.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

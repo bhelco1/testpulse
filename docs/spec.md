@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.16, 2026-09-24. Status: Phases 0 to 3 complete; Phase 4 in progress.
+Version 0.17, 2026-09-24. Status: Phases 0 to 3 complete; Phase 4 in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -197,8 +197,11 @@ Kept in a separate table so row-level security can hide it entirely for private 
 | report_id | uuid fk | |
 | module | text | |
 | format | text | `jacoco`, `istanbul` |
-| lines_covered, lines_total | int | |
+| lines_covered, lines_total | int null | Counted lines, as the coverage report gives them |
+| lines_pct | numeric(5,2) null | Line coverage as a recorded percentage, 0 to 100 |
 | branches_covered, branches_total | int null | |
+
+Each row holds exactly one form of line coverage: both counts with `lines_pct` null, or `lines_pct` with both counts null, enforced by a check constraint. Live ingestion always writes counts; backfilled rows use the percentage, because the history files keep nothing else (Phase 4).
 
 ### 5.8 Declared suites
 
@@ -418,7 +421,7 @@ All trend stats use default-branch runs with `source = ci` unless stated. Backfi
 | Total tests | Distinct `tests` rows seen in the latest default-branch run, per project and summed. Same test on two platforms counts once here; "executions" counts both |
 | Pass rate | passed / (passed + failed + error), latest run and 30/90-day trend. Skipped excluded and shown separately |
 | Test pyramid | Count of distinct tests per layer in the latest default-branch run |
-| Coverage | Latest lines % per module, plotted against that module's `coverage_floors` value |
+| Coverage | Latest lines % per module, plotted against that module's `coverage_floors` value. Lines % is `lines_covered / lines_total` when the counts are present, else `lines_pct` |
 | Suite duration | Sum of report durations per run, trended; slowest 10 tests listed |
 | Test growth | Distinct tests per week since first report |
 | Flaky test | A test with both a passing and a failing result on the same `commit_sha` (across attempts or re-runs) within 30 days. Flake rate = flaky tests / total tests |
@@ -626,6 +629,8 @@ Decisions (section 19, 2026-09-24):
 - Only default-branch entries are imported, as event `push`, attempt 1, which the API confirms for all 13. Trends read only the default branch, so feature-branch entries carry no stat value, and their events and attempts cannot be recovered from the file.
 - Backfilled coverage is stored as the recorded percentage. A later migration adds a nullable `lines_pct` to `coverage`, makes the count columns nullable, and checks that each row has either counts or a percentage. Section 5.7 changes with that migration.
 
+Write path. `npm run backfill <slug> <file>` picks the parser by slug (only `ostomate2` has one), reads the project's `default_branch`, and calls the Postgres function `backfill_run(payload)` once per run with the secret key. Each call is one transaction and re-validates the payload before any write, as `ingest_report` does. If `(project_id, ci_run_id, run_attempt)` already exists, whether from CI or an earlier backfill, it changes nothing and says which; otherwise it inserts the run with `source = backfill`, `duration_ms` 0, a zero-length span at `generatedAt`, totals and status derived as in 5.2, and one report per module with its coverage in the `lines_pct` form. Only `service_role` may execute it.
+
 ### Design track (runs alongside Phases 1 to 4, must finish before Phase 5)
 
 - Design brief written from sections 11, 13, and 13.1 and used as the opening prompt in Claude Design. (manual)
@@ -730,6 +735,8 @@ Decisions (section 19, 2026-09-24):
 | 2026-09-24 | routeserve's CI reports from `test:ci` rather than from a separate reporting run | `test:ci` is `test:coverage` plus `--json --outputFile`, so one run produces both the gate and the report; a second run would double CI time and could disagree with the first |
 | 2026-09-24 | Backfill imports Ostomate2's `history.json` only; routeserve's history is not a backfill source and its trend starts at go-live | routeserve's entries carry no test counts to supply summary totals and no run ID to deduplicate on, and 9 of its 10 entries predate go-live |
 | 2026-09-24 | Backfill imports only default-branch entries, as event `push`, attempt 1 | Trends read only the default branch, so feature-branch runs carry no stat value; the file records neither event nor attempt, and the GitHub API confirms `push`, attempt 1 for all 13 `main` entries |
+| 2026-09-24 | `backfill_run` never alters an existing run, including an earlier backfill, and inserts with `ON CONFLICT DO NOTHING` rather than a lookup first | CI's report is the better record of a run and must win; a no-op re-run makes the command safe to repeat after a partial failure; the conflict clause closes the gap between a check and an insert if CI reports the same run concurrently |
+| 2026-09-24 | When a history file lists one run ID twice, the later entry is imported | A re-run keeps its run ID and the file cannot tell attempts apart, so both would be attempt 1 and only one can be stored; the later entry is the run's final outcome |
 | 2026-09-24 | Backfilled coverage is stored as the recorded line percentage: a later migration adds a nullable `lines_pct` to `coverage`, makes the count columns nullable, and checks that a row has counts or a percentage | The history file keeps only a percentage rounded to one decimal; inventing covered and total counts to fit the current columns would store numbers nobody measured |
 
 ---

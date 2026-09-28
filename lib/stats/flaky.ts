@@ -30,11 +30,19 @@ export interface FlakyTests {
 
 const FLAKY_DAYS = 30;
 
-export function flakyTests(
+interface Outcome {
+  readonly testId: string;
+  readonly platform: string;
+  readonly seen: [passing: boolean, failing: boolean];
+  readonly resultIds: string[];
+}
+
+/** Every passing or failing result the rule reads, per commit, test and platform. */
+function outcomes(
   runs: readonly StatsRun[],
   results: readonly StatsResult[],
   options: FlakyOptions,
-): FlakyTests {
+): { counted: Map<string, StatsRun>; groups: Outcome[] } {
   const counted = new Map(
     runs
       .filter(
@@ -44,24 +52,36 @@ export function flakyTests(
       )
       .map((run) => [run.id, run]),
   );
-
-  // Per commit, test and platform: the test ID and [seen passing, seen failing].
-  const outcomes = new Map<string, { testId: string; seen: [boolean, boolean] }>();
+  const groups = new Map<string, Outcome>();
   for (const result of results) {
     const run = counted.get(result.runId);
     if (run === undefined || result.status === 'skipped') continue;
     // Postgres text cannot hold NUL, so no stored SHA, UUID or platform contains it and the
     // joined key is unambiguous.
     const key = `${run.commitSha}\u0000${result.testId}\u0000${result.platform}`;
-    const entry = outcomes.get(key) ?? { testId: result.testId, seen: [false, false] };
-    if (result.status === 'passed') entry.seen[0] = true;
-    else entry.seen[1] = true;
-    outcomes.set(key, entry);
+    const group = groups.get(key) ?? {
+      testId: result.testId,
+      platform: result.platform,
+      seen: [false, false],
+      resultIds: [],
+    };
+    if (result.status === 'passed') group.seen[0] = true;
+    else group.seen[1] = true;
+    group.resultIds.push(result.id);
+    groups.set(key, group);
   }
-  const flaky = new Set<string>();
-  for (const { testId, seen } of outcomes.values()) {
-    if (seen[0] && seen[1]) flaky.add(testId);
-  }
+  return { counted, groups: [...groups.values()] };
+}
+
+const flipped = (group: Outcome): boolean => group.seen[0] && group.seen[1];
+
+export function flakyTests(
+  runs: readonly StatsRun[],
+  results: readonly StatsResult[],
+  options: FlakyOptions,
+): FlakyTests {
+  const { counted, groups } = outcomes(runs, results, options);
+  const flaky = new Set(groups.filter(flipped).map((group) => group.testId));
 
   const latest = [...counted.values()].sort(byFinish).at(-1);
   const totalTests =
@@ -75,3 +95,43 @@ export function flakyTests(
     flakeRate: totalTests === 0 ? null : flaky.size / totalTests,
   };
 }
+
+export interface FlakyTest {
+  readonly testId: string;
+  /** The platforms the test both passed and failed on, for one commit. */
+  readonly platforms: readonly string[];
+}
+
+/** The flaky tests with the platforms each flipped on, for the project page's flaky list. */
+export function flakyPlatforms(
+  runs: readonly StatsRun[],
+  results: readonly StatsResult[],
+  options: FlakyOptions,
+): FlakyTest[] {
+  const platformsOf = new Map<string, Set<string>>();
+  for (const group of outcomes(runs, results, options).groups.filter(flipped)) {
+    platformsOf.set(group.testId, (platformsOf.get(group.testId) ?? new Set()).add(group.platform));
+  }
+  return [...platformsOf.entries()]
+    .sort(([a], [b]) => compareText(a, b))
+    .map(([testId, platforms]) => ({ testId, platforms: [...platforms].sort(compareText) }));
+}
+
+/**
+ * The results that make a test flaky: both sides of every commit and platform it flipped on.
+ * These are the test history's flaky cells (design/data-map.md).
+ */
+export function flakyResultIds(
+  runs: readonly StatsRun[],
+  results: readonly StatsResult[],
+  options: FlakyOptions,
+): Set<string> {
+  return new Set(
+    outcomes(runs, results, options)
+      .groups.filter(flipped)
+      .flatMap((group) => group.resultIds),
+  );
+}
+
+// Code-unit order rather than localeCompare, so the result does not depend on the server locale.
+const compareText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);

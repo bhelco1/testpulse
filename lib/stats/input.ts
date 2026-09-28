@@ -16,38 +16,64 @@ export const RUN_COLUMNS =
   'id, ci_run_id, run_attempt, commit_sha, branch, status, passed, failed, skipped, ' +
   'started_at, finished_at, source';
 
-export const RunRowSchema = z
-  .object({
-    id: z.string().min(1),
-    ci_run_id: z.string().min(1),
-    run_attempt: z.int().min(1),
-    commit_sha: z.string().min(1),
-    branch: z.string().min(1),
-    status: z.enum(['passed', 'failed', 'empty']),
-    passed: count,
-    // Section 5.2 rolls JUnit errors into failed; results keep the distinction.
-    failed: count,
-    skipped: count,
-    started_at: instant,
-    finished_at: instant,
-    source: RunSourceSchema,
-  })
-  .transform((row) => ({
-    id: row.id,
-    ciRunId: row.ci_run_id,
-    runAttempt: row.run_attempt,
-    commitSha: row.commit_sha,
-    branch: row.branch,
-    status: row.status,
-    passed: row.passed,
-    failed: row.failed,
-    skipped: row.skipped,
-    startedAt: row.started_at,
-    finishedAt: row.finished_at,
-    source: row.source,
-  }));
+const RunRowObject = z.object({
+  id: z.string().min(1),
+  ci_run_id: z.string().min(1),
+  run_attempt: z.int().min(1),
+  commit_sha: z.string().min(1),
+  branch: z.string().min(1),
+  status: z.enum(['passed', 'failed', 'empty']),
+  passed: count,
+  // Section 5.2 rolls JUnit errors into failed; results keep the distinction.
+  failed: count,
+  skipped: count,
+  started_at: instant,
+  finished_at: instant,
+  source: RunSourceSchema,
+});
+
+const toStatsRun = (row: z.output<typeof RunRowObject>) => ({
+  id: row.id,
+  ciRunId: row.ci_run_id,
+  runAttempt: row.run_attempt,
+  commitSha: row.commit_sha,
+  branch: row.branch,
+  status: row.status,
+  passed: row.passed,
+  failed: row.failed,
+  skipped: row.skipped,
+  startedAt: row.started_at,
+  finishedAt: row.finished_at,
+  source: row.source,
+});
+
+export const RunRowSchema = RunRowObject.transform(toStatsRun);
 
 export type StatsRun = z.output<typeof RunRowSchema>;
+
+// The rest of a runs_public row, which the project, run and test pages show beside the stats.
+// runs_public has already nulled run_url and cut commit_sha to 7 characters for a private
+// project (section 9); these columns are read as they arrive.
+export const PUBLIC_RUN_COLUMNS = `${RUN_COLUMNS}, event, run_url, total, duration_ms, results_pruned_at`;
+
+export const PublicRunRowSchema = RunRowObject.extend({
+  // Ingest accepts four events (lib/ingest/meta.ts); runTitle has a title for any other.
+  event: z.string().min(1),
+  run_url: z.string().nullable(),
+  total: count,
+  // Section 5.2: the sum of the run's report durations, rolled up at ingestion.
+  duration_ms: count,
+  results_pruned_at: instant.nullable(),
+}).transform((row) => ({
+  ...toStatsRun(row),
+  event: row.event,
+  runUrl: row.run_url,
+  total: row.total,
+  durationMs: row.duration_ms,
+  resultsPrunedAt: row.results_pruned_at,
+}));
+
+export type PublicRun = z.output<typeof PublicRunRowSchema>;
 
 // A many-to-one embed arrives as an object; the reports policy lets anon read every report.
 const embeddedRun = z.object({ run_id: z.string().min(1) });

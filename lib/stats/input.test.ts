@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CoverageRowSchema, ResultRowSchema, RunRowSchema } from './input.ts';
+import { CoverageRowSchema, PublicRunRowSchema, ResultRowSchema, RunRowSchema } from './input.ts';
 
 const runRow = {
   id: '7f0c3f2e-1d7a-4c55-9d6b-2a1e0c9b8a77',
@@ -102,5 +102,43 @@ describe('ResultRowSchema', () => {
     expect(
       ResultRowSchema.safeParse({ id: 'x', test_id: 't', status: 'passed', reports: null }).success,
     ).toBe(false);
+  });
+});
+
+describe('PublicRunRowSchema', () => {
+  const publicRow = {
+    ...runRow,
+    event: 'schedule',
+    run_url: null,
+    total: 82,
+    duration_ms: 25_750,
+    results_pruned_at: null,
+  };
+
+  it('reads the rest of a runs_public row beside the stats columns', () => {
+    expect(PublicRunRowSchema.parse(publicRow)).toEqual({
+      ...RunRowSchema.parse(runRow),
+      event: 'schedule',
+      runUrl: null,
+      total: 82,
+      durationMs: 25_750,
+      resultsPrunedAt: null,
+    });
+  });
+
+  it('reads when a run’s results were pruned', () => {
+    expect(
+      PublicRunRowSchema.parse({ ...publicRow, results_pruned_at: '2026-03-01T03:00:00+00:00' })
+        .resultsPrunedAt,
+    ).toEqual(new Date('2026-03-01T03:00:00Z'));
+  });
+
+  it.each([
+    ['a missing duration', { duration_ms: undefined }],
+    ['a negative total', { total: -1 }],
+    ['an empty event', { event: '' }],
+    ['a pruned time that is not ISO 8601', { results_pruned_at: 'last week' }],
+  ])('refuses %s', (_, change) => {
+    expect(PublicRunRowSchema.safeParse({ ...publicRow, ...change }).success).toBe(false);
   });
 });

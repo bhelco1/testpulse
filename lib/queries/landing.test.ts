@@ -81,6 +81,11 @@ const runRow = (id: string, finishedAt: string, overrides: Record<string, unknow
   started_at: finishedAt,
   finished_at: finishedAt,
   source: 'ci',
+  event: 'push',
+  run_url: null,
+  total: 11,
+  duration_ms: 26_000,
+  results_pruned_at: null,
   ...overrides,
 });
 

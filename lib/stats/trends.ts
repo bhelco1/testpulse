@@ -168,3 +168,29 @@ export function coverageTrend(
       points: entries.sort((a, b) => a.index - b.index).map((entry) => entry.point),
     }));
 }
+
+export interface WindowPassRate {
+  readonly runs: number;
+  readonly passed: number;
+  readonly failed: number;
+  readonly skipped: number;
+  readonly passRate: number | null;
+}
+
+/**
+ * The pass rate over a whole window ("Pass rate, 30 days" on the project page), pooled from the
+ * window's runs the way a day's rate is, so a large run outweighs a small one.
+ */
+export function windowPassRate(trend: PassRateTrend): WindowPassRate {
+  const sum = (pick: (point: PassRateRunPoint) => number) =>
+    trend.runs.reduce((total, point) => total + pick(point), 0);
+  const passed = sum((point) => point.passed);
+  const failed = sum((point) => point.failed);
+  return {
+    runs: trend.runs.length,
+    passed,
+    failed,
+    skipped: sum((point) => point.skipped),
+    passRate: passRate(passed, failed),
+  };
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { flakyTests, type FlakyOptions } from './flaky.ts';
+import { flakyPlatforms, flakyResultIds, flakyTests, type FlakyOptions } from './flaky.ts';
 import { at, result, run } from './records.test-support.ts';
 
 // Spec section 11: "A test with both a passing and a failing result on the same commit_sha
@@ -204,5 +204,63 @@ describe('flakyTests', () => {
       result(`${testId}-2`, 'a2', testId, 'passed'),
     ]);
     expect(flakyTests(runs, results, options).flakyTestIds).toEqual(['t-a', 't-b']);
+  });
+});
+
+// The same rule, read out per platform for the project page's flaky list and per result for the
+// test history's flaky cells (design/data-map.md).
+describe('flakyPlatforms and flakyResultIds', () => {
+  const runs = [
+    run('a1', '2026-09-20T00:00:00Z', { commitSha: 'c1' }),
+    run('a2', '2026-09-20T01:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
+    run('b1', '2026-09-21T00:00:00Z', { commitSha: 'c2' }),
+    run('pr', '2026-09-21T01:00:00Z', { commitSha: 'c2', branch: 'feature/x' }),
+  ];
+  const results = [
+    // Flips on c1 on both platforms.
+    result('x1', 'a1', 't-both', 'failed', 'jvm'),
+    result('x2', 'a2', 't-both', 'passed', 'jvm'),
+    result('x3', 'a1', 't-both', 'error', 'ios-sim'),
+    result('x4', 'a2', 't-both', 'passed', 'ios-sim'),
+    // Steady on c2, the commit after.
+    result('x5', 'b1', 't-both', 'passed', 'jvm'),
+    // Flips on c1 on the JVM only; skipped on the simulator, which is neither.
+    result('y1', 'a1', 't-jvm', 'passed', 'jvm'),
+    result('y2', 'a2', 't-jvm', 'failed', 'jvm'),
+    result('y3', 'a1', 't-jvm', 'skipped', 'ios-sim'),
+    result('y4', 'a2', 't-jvm', 'passed', 'ios-sim'),
+    // A pull request run on c2 does not count, so t-pr is steady.
+    result('z1', 'b1', 't-pr', 'passed', 'jvm'),
+    result('z2', 'pr', 't-pr', 'failed', 'jvm'),
+  ];
+
+  it('lists each flaky test with the platforms it flipped on, in a stable order', () => {
+    expect(flakyPlatforms(runs, results, options)).toEqual([
+      { testId: 't-both', platforms: ['ios-sim', 'jvm'] },
+      { testId: 't-jvm', platforms: ['jvm'] },
+    ]);
+  });
+
+  it('agrees with flakyTests on which tests are flaky', () => {
+    expect(flakyPlatforms(runs, results, options).map((flaky) => flaky.testId)).toEqual(
+      flakyTests(runs, results, options).flakyTestIds,
+    );
+  });
+
+  it('marks the passing and failing results of each flipping commit and platform, and no others', () => {
+    // x5 is on c2, where t-both only passed; y3 is skipped; y4 only passed on the simulator.
+    expect([...flakyResultIds(runs, results, options)].sort()).toEqual([
+      'x1',
+      'x2',
+      'x3',
+      'x4',
+      'y1',
+      'y2',
+    ]);
+  });
+
+  it('marks nothing with no runs or no results', () => {
+    expect(flakyPlatforms([], [], options)).toEqual([]);
+    expect(flakyResultIds(runs, [], options).size).toBe(0);
   });
 });

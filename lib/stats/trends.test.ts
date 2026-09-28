@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { at, countsCoverage, pctCoverage, run } from './records.test-support.ts';
-import { coverageTrend, passRateTrend, runCountTrend, type TrendOptions } from './trends.ts';
+import {
+  coverageTrend,
+  passRateTrend,
+  runCountTrend,
+  windowPassRate,
+  type TrendOptions,
+} from './trends.ts';
 
 // Spec section 11 and section 17, Phase 4: "Trend queries include backfilled runs".
 
@@ -174,5 +180,41 @@ describe('coverageTrend', () => {
   it('is empty for no coverage', () => {
     expect(coverageTrend(runs, [], options)).toEqual([]);
     expect(coverageTrend([], coverage, options)).toEqual([]);
+  });
+});
+
+describe('windowPassRate', () => {
+  it('pools every counted run of the window, as a day does', () => {
+    // ci-1 10/0, bf-1 8/0, ci-2 1/1: (10 + 8 + 1) / (10 + 8 + 1 + 0 + 0 + 1) = 19 / 20.
+    // Skipped 2 + 0 + 5 = 7. The feature-branch, too-old and future runs are left out.
+    expect(windowPassRate(passRateTrend(runs, options))).toEqual({
+      runs: 3,
+      passed: 19,
+      failed: 1,
+      skipped: 7,
+      passRate: 0.95,
+    });
+  });
+
+  it('has no rate for no runs, or for runs that passed and failed nothing', () => {
+    expect(windowPassRate(passRateTrend([], options))).toEqual({
+      runs: 0,
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      passRate: null,
+    });
+    const skippedOnly = [run('s', '2026-09-20T00:00:00Z', { passed: 0, failed: 0, skipped: 3 })];
+    expect(windowPassRate(passRateTrend(skippedOnly, options))).toMatchObject({
+      runs: 1,
+      skipped: 3,
+      passRate: null,
+    });
+  });
+
+  it('is the one run’s rate for a single run', () => {
+    const single = [run('one', '2026-09-20T00:00:00Z', { passed: 3, failed: 1 })];
+    // 3 / (3 + 1).
+    expect(windowPassRate(passRateTrend(single, options)).passRate).toBe(0.75);
   });
 });

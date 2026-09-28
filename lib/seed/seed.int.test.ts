@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url';
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { testKey } from '../ingest/normalize.ts';
 import { loadLanding, type Landing } from '../queries/landing.ts';
+import { loadProjectPage, type ProjectPage } from '../queries/project.ts';
+import { loadRunDetail } from '../queries/run.ts';
+import { loadTestHistory } from '../queries/test-history.ts';
 import { flakyTests } from '../stats/flaky.ts';
 import { loadStatsInput } from '../stats/load.ts';
 import { landingHeadline, type ProjectSummary } from '../stats/summary.ts';
@@ -528,6 +532,418 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
             { slug: 'testpulse', runs: 1 },
           ],
         },
+      });
+    });
+  });
+
+  describe('project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13)', () => {
+    const ROUTESERVE_TEST = {
+      module: 'packages/shared',
+      suite: 'packages/shared/src/schemas/asset.test.ts',
+      name: 'assetCreateSchema accepts a minimal valid asset',
+    };
+    const OSTOMATE2_TEST = {
+      module: 'composeApp',
+      suite: 'com.ostomate.app.ui.calendar.CalendarViewModelTest',
+      name: 'addEventForDateLogsAtNoon',
+    };
+    // Every seeded CI run of a project reports the same fixtures, so every run's duration is the
+    // sum of the same report durations, each what its file records: a JUnit report is the sum
+    // of its testsuite time attributes, a Jest report the sum of endTime - startTime per file.
+    const OSTOMATE2_RUN_MS = 17_746 + 17_747 + 111; // composeApp jvm, shared jvm, ios-sim
+    const ROUTESERVE_GREEN_MS = 115_412 + 68_719 + 22_604; // backend, mobile, shared
+    const ROUTESERVE_RED_MS = 115_412 + 68_719 + 19_989; // shared-one-failure.json
+    let ostomate2: ProjectPage;
+    let routeserve: ProjectPage;
+
+    const load = async (slug: string, options = {}): Promise<ProjectPage> => {
+      const page = await loadProjectPage(slug, options, anon, NOW);
+      if (page === null) throw new Error(`no project page for ${slug}`);
+      return page;
+    };
+
+    beforeAll(async () => {
+      ostomate2 = await load('ostomate2');
+      routeserve = await load('routeserve');
+    });
+
+    it('finds no page for a slug that is not registered', async () => {
+      expect(await loadProjectPage('not-a-project', {}, anon, NOW)).toBeNull();
+    });
+
+    it('carries each project’s own fields, a private one without its repository link', () => {
+      expect(ostomate2.project).toMatchObject({
+        visibility: 'public',
+        repoUrl: 'https://github.com/bhelco1/Ostomate2',
+      });
+      expect(ostomate2.project.devStack.map((group) => group.category)).toEqual([
+        'Mobile',
+        'Platforms',
+        'Services',
+        'Delivery',
+      ]);
+      expect(ostomate2.project.testStack.map((group) => group.category)).toEqual([
+        'Runners',
+        'Property',
+        'Visual',
+        'Coverage',
+        'E2E',
+      ]);
+      expect(
+        ostomate2.project.declaredSuites.map((suite) => [suite.name, suite.count, suite.status]),
+      ).toEqual([
+        ['Maestro E2E (Android)', 7, 'runs_in_ci_not_reported'],
+        ['Maestro E2E (iOS)', 5, 'runs_in_ci_not_reported'],
+      ]);
+      expect(routeserve.project).toMatchObject({ visibility: 'private', repoUrl: null });
+    });
+
+    it('summarises the latest run as the landing card does', () => {
+      // The same numbers as the landing checks above: 142 tests (103 + 29 + 10), 8 and 8.
+      expect(ostomate2.summary).toMatchObject({
+        totalTests: 142,
+        layers: { unit: 103, integration: 29, visual: 10 },
+        greenStreak: { current: 8, longest: 8 },
+        health: { marker: { health: 'healthy' } },
+      });
+      expect(routeserve.summary).toMatchObject({
+        totalTests: 1041,
+        latestRun: { status: 'failed' },
+        greenStreak: { current: 0, longest: 2 },
+        timeToGreen: { medianMs: 44 * 60_000, worstMs: 247 * 60_000 },
+      });
+    });
+
+    it('lists the latest run’s reports and its failing test', () => {
+      expect(
+        ostomate2.latestRun?.reports.map((r) => [
+          r.job,
+          r.module,
+          r.platform,
+          r.total,
+          r.durationMs,
+        ]),
+      ).toEqual([
+        ['android', 'composeApp', 'jvm', 60, 17_746],
+        ['android', 'shared', 'jvm', 82, 17_747],
+        ['ios', 'composeApp', 'ios-sim', 50, 111],
+      ]);
+      expect(ostomate2.latestRun?.failing).toEqual([]);
+      expect(routeserve.latestRun?.reports.map((r) => [r.module, r.total, r.durationMs])).toEqual([
+        ['apps/backend', 498, 115_412],
+        ['apps/mobile', 428, 68_719],
+        ['packages/shared', 119, 19_989],
+      ]);
+      expect(routeserve.latestRun?.failing).toEqual([
+        {
+          testKey: testKey(ROUTESERVE_TEST.module, ROUTESERVE_TEST.suite, ROUTESERVE_TEST.name),
+          suite: ROUTESERVE_TEST.suite,
+          name: ROUTESERVE_TEST.name,
+          platform: 'node',
+          status: 'failed',
+        },
+      ]);
+    });
+
+    it('trends Ostomate2 over CI and imported history, and duration and test count over CI', () => {
+      // 30 days from 2026-09-06: 6 imported runs (3 on 09-21, 3 on 09-22) and 8 CI runs on main.
+      const month = ostomate2.trends[30];
+      expect(month.passRate.runs.map((point) => point.source)).toEqual([
+        ...Array<string>(6).fill('backfill'),
+        ...Array<string>(8).fill('ci'),
+      ]);
+      // 6 x 142 + 8 x 192 = 852 + 1536 = 2388 passed, none failed.
+      expect(month.windowPassRate).toEqual({
+        runs: 14,
+        passed: 2388,
+        failed: 0,
+        skipped: 0,
+        passRate: 1,
+      });
+      expect(month.runCount.filter((day) => day.runs > 0)).toEqual([
+        { day: '2026-09-21', runs: 3 },
+        { day: '2026-09-22', runs: 3 },
+        { day: '2026-09-24', runs: 1 },
+        { day: '2026-09-25', runs: 1 },
+        { day: '2026-09-27', runs: 1 },
+        { day: '2026-09-29', runs: 1 },
+        { day: '2026-10-01', runs: 1 },
+        { day: '2026-10-02', runs: 1 },
+        { day: '2026-10-04', runs: 1 },
+        { day: '2026-10-05', runs: 1 },
+      ]);
+      expect(month.coverage.map(({ module, points }) => [module, points.length])).toEqual([
+        ['composeApp', 14],
+        ['shared', 14],
+      ]);
+      expect(month.coverage[1]?.points.at(-1)?.linesPct).toBe((457 / 490) * 100);
+      // The imported runs have no durations and no per-test rows: 8 CI points each.
+      expect(month.duration.map((point) => point.durationMs)).toEqual(
+        Array<number>(8).fill(OSTOMATE2_RUN_MS),
+      );
+      expect(month.testCount.map((point) => point.totalTests)).toEqual(Array<number>(8).fill(142));
+
+      // 90 days from 2026-07-08 hold all 13 imported runs: 126 + 3 x 129 + 3 x 139 + 6 x 142
+      // = 1782 passed, and 1536 from CI.
+      expect(ostomate2.trends[90].windowPassRate).toMatchObject({ runs: 21, passed: 3318 });
+    });
+
+    it('trends routeserve over its ten CI runs on main, red four times', () => {
+      const month = routeserve.trends[30];
+      // P F P P F P(attempt 2) F P P F, each run 1 min 55 s of reports summed.
+      const [G, R] = [ROUTESERVE_GREEN_MS, ROUTESERVE_RED_MS];
+      expect(month.duration.map((point) => point.durationMs)).toEqual([
+        G,
+        R,
+        G,
+        G,
+        R,
+        G,
+        R,
+        G,
+        G,
+        R,
+      ]);
+      expect(month.duration.filter((point) => point.status === 'failed')).toHaveLength(4);
+      // 1041 tests every run: 498 + 424 + 119, apps/mobile running one name five times.
+      expect(month.testCount.map((point) => point.totalTests)).toEqual(
+        Array<number>(10).fill(1041),
+      );
+      // 6 x 1045 + 4 x 1044 = 10446 passed, 4 failed.
+      expect(month.windowPassRate).toEqual({
+        runs: 10,
+        passed: 10_446,
+        failed: 4,
+        skipped: 0,
+        passRate: 10_446 / 10_450,
+      });
+    });
+
+    it('lists routeserve’s one flaky test, which failed and passed on one commit', () => {
+      expect(routeserve.flaky).toEqual({
+        tests: [
+          {
+            testKey: testKey(ROUTESERVE_TEST.module, ROUTESERVE_TEST.suite, ROUTESERVE_TEST.name),
+            ...ROUTESERVE_TEST,
+            layer: 'unit',
+            platforms: ['node'],
+          },
+        ],
+        totalTests: 1041,
+        flakeRate: 1 / 1041,
+      });
+      expect(ostomate2.flaky).toEqual({ tests: [], totalTests: 142, flakeRate: 0 });
+    });
+
+    it('lists CI runs newest first, the default branch unless asked for all', async () => {
+      expect(ostomate2.runs.hasMore).toBe(false);
+      expect(ostomate2.runs.items.map((run) => run.title)).toEqual([
+        'Push to main',
+        'Scheduled run',
+        'Push to main',
+        'Manual run',
+        'Push to main',
+        'Scheduled run',
+        'Push to main',
+        'Push to main',
+      ]);
+      expect(ostomate2.runs.items[0]).toMatchObject({
+        total: 192,
+        durationMs: OSTOMATE2_RUN_MS,
+        reports: 3,
+        runUrl: 'https://github.com/bhelco1/Ostomate2/actions/runs/36100000009',
+      });
+      const all = await load('ostomate2', { branches: 'all' });
+      expect(all.runs.items).toHaveLength(9);
+      expect(all.runs.items[5]?.title).toBe('Pull request from seed/pull-request');
+
+      // routeserve: 10 runs on main fit the first 10; all 11 do not.
+      expect(routeserve.runs).toMatchObject({ branches: 'default', hasMore: false });
+      expect(routeserve.runs.items).toHaveLength(10);
+      expect((await load('routeserve', { branches: 'all' })).runs).toMatchObject({
+        hasMore: true,
+      });
+      expect(routeserve.runs.items[0]).toMatchObject({ status: 'failed', runUrl: null });
+    });
+
+    it('loads a public run with its per-test rows on both platforms', async () => {
+      const runId = ostomate2.summary.latestRun?.id ?? '';
+      const detail = await loadRunDetail('ostomate2', runId, anon, NOW);
+      expect(detail?.run).toMatchObject({
+        title: 'Push to main',
+        status: 'passed',
+        total: 192,
+        durationMs: OSTOMATE2_RUN_MS,
+        reports: 3,
+        resultsPrunedAt: null,
+      });
+      expect(detail?.run.commitSha).toMatch(/^[0-9a-f]{40}$/);
+      // 192 executions are 142 tests; the 50 composeApp tests on the simulator also ran on the
+      // JVM, and passed on both, so no row has a mismatch.
+      expect(detail?.results).toHaveLength(142);
+      const platformCounts = (detail?.results ?? []).map((row) => row.platforms.length);
+      expect(platformCounts.filter((count) => count === 2)).toHaveLength(50);
+      expect(
+        detail?.results?.every((row) => row.status === 'passed' && row.mismatch === null),
+      ).toBe(true);
+      // A run of another project is not this project's.
+      expect(await loadRunDetail('routeserve', runId, anon, NOW)).toBeNull();
+    });
+
+    it('shows a public project’s failure text, which RLS allows', async () => {
+      const [testpulseRun] = await runIdsOf('testpulse');
+      const detail = await loadRunDetail('testpulse', testpulseRun ?? '', anon, NOW);
+      expect(detail?.results?.map((row) => row.status)).toEqual(['failed', 'passed', 'skipped']);
+      expect(detail?.results?.[0]?.platforms[0]?.failures[0]?.message).toBe(
+        'expect(received).toBe(expected) // Object.is equality',
+      );
+    });
+
+    it('loads a test’s history on both platforms', async () => {
+      const key = testKey(OSTOMATE2_TEST.module, OSTOMATE2_TEST.suite, OSTOMATE2_TEST.name);
+      const page = await loadTestHistory('ostomate2', key, anon, NOW);
+      expect(page?.test).toMatchObject({ ...OSTOMATE2_TEST, layer: 'unit', testKey: key });
+      expect(page?.history.platforms).toEqual(['jvm', 'ios-sim']);
+      // 8 runs on main and the pull request; 25 ms on the JVM and 3 ms on the simulator, as the
+      // two JUnit files record them.
+      expect(page?.history.runs).toHaveLength(9);
+      expect(
+        page?.history.runs.every(
+          (run) =>
+            JSON.stringify(
+              run.results.map((cell) => [cell.platform, cell.status, cell.durationMs]),
+            ) ===
+            JSON.stringify([
+              ['jvm', 'passed', 25],
+              ['ios-sim', 'passed', 3],
+            ]),
+        ),
+      ).toBe(true);
+      expect(page?.history.duration[30].points.map((point) => point.durationsMs)).toEqual(
+        Array.from({ length: 8 }, () => [25, 3]),
+      );
+      expect(page?.history.flaky).toBe(false);
+      // Never failed: it opens on the latest of its 9 runs.
+      expect(page?.history.initialRun).toBe(8);
+    });
+
+    it('loads the flaky test’s history with the flip marked on both of its cells', async () => {
+      const key = testKey(ROUTESERVE_TEST.module, ROUTESERVE_TEST.suite, ROUTESERVE_TEST.name);
+      const page = await loadTestHistory('routeserve', key, anon, NOW);
+      expect(page?.history.runs.map((run) => run.results[0]?.status)).toEqual([
+        'passed',
+        'failed',
+        'passed',
+        'passed',
+        'failed',
+        'passed',
+        'passed',
+        'failed',
+        'passed',
+        'passed',
+        'failed',
+      ]);
+      // The failed first attempt and the passing second attempt of one commit.
+      expect(page?.history.runs.map((run) => run.results[0]?.flaky)).toEqual([
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+      ]);
+      expect(page?.history.runs[6]?.title).toBe('Pull request from seed/pull-request');
+      // It opens on the latest failing run, the 11th: red at SEED_NOW.
+      expect(page?.history).toMatchObject({
+        flaky: true,
+        flakyPlatforms: ['node'],
+        initialRun: 10,
+      });
+      // 1 ms passing, 2 ms failing, as the two Jest files record it; the pull request is left out.
+      expect(page?.history.duration[30].points.map((point) => point.durationsMs[0])).toEqual([
+        1, 2, 1, 1, 2, 1, 2, 1, 1, 2,
+      ]);
+      expect(await loadTestHistory('ostomate2', key, anon, NOW)).toBeNull();
+    });
+
+    describe('a private project’s pages hold no failure text, repository links or full SHAs', () => {
+      let hidden: string[];
+      let latestRunId: string;
+
+      // The same string as it would appear inside a JSON document, so escaping cannot hide it.
+      const asJson = (value: string): string => JSON.stringify(value).slice(1, -1);
+      const expectNoneOf = (output: unknown) => {
+        const serialized = JSON.stringify(output);
+        expect(serialized.length).toBeGreaterThan(100);
+        for (const value of hidden) expect(serialized).not.toContain(asJson(value));
+      };
+
+      beforeAll(async () => {
+        latestRunId = routeserve.summary.latestRun?.id ?? '';
+        // Positive control: read with the secret key, the values exist and are not empty, so
+        // their absence below is RLS and the views at work, not missing data.
+        const failures = await admin
+          .from('result_failures')
+          .select('message, detail, results!inner(reports!inner(run_id))')
+          .in('results.reports.run_id', await runIdsOf('routeserve'));
+        if (failures.error) throw failed('secret result_failures', failures.error);
+        const runs = await admin
+          .from('runs')
+          .select('commit_sha, run_url, projects!inner(slug)')
+          .eq('projects.slug', 'routeserve');
+        if (runs.error) throw failed('secret runs', runs.error);
+
+        expect(failures.data).toHaveLength(4);
+        const detailLines = failures.data.flatMap((row) =>
+          String(row.detail)
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line.length >= 12),
+        );
+        expect(detailLines.length).toBeGreaterThan(0);
+        expect(runs.data).toHaveLength(11);
+        expect(runs.data.every((row) => /^[0-9a-f]{40}$/.test(String(row.commit_sha)))).toBe(true);
+        expect(
+          runs.data.every((row) => String(row.run_url).startsWith('https://github.com/')),
+        ).toBe(true);
+        hidden = [
+          ...new Set([
+            ...failures.data.flatMap((row) => [String(row.message), String(row.detail)]),
+            ...detailLines,
+            ...runs.data.flatMap((row) => [String(row.commit_sha), String(row.run_url)]),
+            'github.com/bhelco1/routeserve',
+          ]),
+        ];
+        expect(hidden.every((value) => value.length > 0)).toBe(true);
+      });
+
+      it('in the run page of its failed latest run, which still shows the failing row', async () => {
+        const detail = await loadRunDetail('routeserve', latestRunId, anon, NOW);
+        expect(detail?.run).toMatchObject({ status: 'failed', runUrl: null });
+        expect(detail?.run.commitSha).toMatch(/^[0-9a-f]{7}$/);
+        expect(detail?.results).toHaveLength(1041);
+        expect(detail?.results?.[0]).toMatchObject({
+          ...ROUTESERVE_TEST,
+          status: 'failed',
+          platforms: [{ platform: 'node', status: 'failed', failures: [] }],
+        });
+        expectNoneOf(detail);
+      });
+
+      it('in the project page', () => {
+        expectNoneOf(routeserve);
+      });
+
+      it('in the failing test’s history', async () => {
+        const key = testKey(ROUTESERVE_TEST.module, ROUTESERVE_TEST.suite, ROUTESERVE_TEST.name);
+        const page = await loadTestHistory('routeserve', key, anon, NOW);
+        expect(page?.history.runs).toHaveLength(11);
+        expectNoneOf(page);
       });
     });
   });

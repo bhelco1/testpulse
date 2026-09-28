@@ -1,0 +1,452 @@
+/* The table stacks below 720px of its own width, wherever it is placed. */
+.root {
+  container-type: inline-size;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--target-min);
+  padding: 0 4px 0 12px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.select {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 500 14px var(--font-sans);
+  padding-right: 8px;
+}
+
+.note {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.table,
+.head,
+.test,
+.detailRow {
+  display: block;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Undo the table cell defaults (padding, centred bold headers); the design sets these per row. */
+.cell {
+  padding: 0;
+  text-align: left;
+  font: inherit;
+}
+
+.headRow {
+  display: grid;
+  grid-template-columns: 36px 130px minmax(0, 1fr) 110px 130px 80px;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  font: 600 12px var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+}
+
+.timeHead {
+  text-align: right;
+}
+
+.test {
+  display: block;
+  border-bottom: 1px solid var(--line);
+}
+
+.failing {
+  background: var(--fail-tint);
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px 130px minmax(0, 1fr) 110px 130px 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  min-height: var(--target-min);
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.chevronCell {
+  display: grid;
+  place-items: center;
+}
+
+.chevron.open {
+  transform: rotate(90deg);
+}
+
+.testCell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.testText {
+  min-width: 0;
+}
+
+.name {
+  display: block;
+  font: 13.5px var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suite {
+  display: block;
+  font: 12px var(--font-mono);
+  color: var(--ink-3);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The toggle is labelled by the test name and stretched over the row, so the whole row opens
+   and closes the detail, as the design draws it, and the target is at least 44px tall. */
+.toggle {
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.flakyWide {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--attn-tint);
+  color: var(--attn);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.flakyNarrow,
+.narrowLayer {
+  display: none;
+}
+
+.layerCell {
+  color: var(--ink-2);
+}
+
+.platformCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+
+.platform {
+  color: var(--ink-3);
+}
+
+.platformFail {
+  color: var(--fail);
+}
+
+.timeCell {
+  text-align: right;
+  color: var(--ink-2);
+}
+
+/* Opens by growing the row track from 0fr to 1fr; hidden while closed so its link is out of
+   the Tab order. The reduced-motion rule in tokens.css removes the transition. */
+.collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--motion-base),
+    visibility var(--motion-base);
+}
+
+.collapse.expanded {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+
+.collapseInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.detail {
+  padding: 4px 16px 18px 64px;
+}
+
+.mismatch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 10px;
+  font-size: 13.5px;
+}
+
+.mismatchTitle {
+  font-weight: 600;
+  color: var(--fail);
+}
+
+.mismatchText {
+  color: var(--ink-3);
+}
+
+.message {
+  font: 600 13.5px/1.5 var(--font-mono);
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+
+.trace {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  font: 12.5px/1.65 var(--font-mono);
+  color: var(--ink-2);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.history {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.showing {
+  display: flex;
+  gap: 6px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.emptyTitle {
+  font: 500 20px var(--font-serif);
+}
+
+.emptyText {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.clear {
+  margin-top: 6px;
+}
+
+.skeletonHead {
+  height: 40px;
+  border-bottom: 1px solid var(--line);
+}
+
+.skeletonRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.skeletonGrow {
+  flex: 1;
+}
+
+.pruned {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.prunedIcon {
+  flex: none;
+  margin-top: 3px;
+  color: var(--ink-3);
+}
+
+.prunedTitle {
+  font: 500 22px var(--font-serif);
+}
+
+.prunedText {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+@container (width < 720px) {
+  .head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .chevronCell {
+    width: 20px;
+    flex: none;
+  }
+
+  .statusCell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .timeCell {
+    margin-left: auto;
+    font-size: 13px;
+  }
+
+  .testCell {
+    order: 1;
+    flex-basis: 100%;
+    padding-left: 30px;
+    box-sizing: border-box;
+  }
+
+  .platformCell {
+    order: 2;
+    flex-basis: 100%;
+    padding-left: 30px;
+    box-sizing: border-box;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0 6px;
+    color: var(--ink-3);
+  }
+
+  .layerCell,
+  .flakyWide {
+    display: none;
+  }
+
+  .narrowLayer {
+    display: inline;
+  }
+
+  .name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .suite {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    margin-top: 4px;
+  }
+
+  .flakyNarrow {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--attn-tint);
+    color: var(--attn);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .detail {
+    padding: 4px 16px 16px;
+  }
+
+  .mismatch {
+    gap: 4px 10px;
+    margin-bottom: 8px;
+  }
+}

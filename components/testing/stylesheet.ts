@@ -38,14 +38,17 @@ const sameSelector = (a: string, b: string) => oneLine(a) === oneLine(b);
 // Reads a component's CSS module as the browser would (jsdom's parser), so a test can prove a
 // value the design fixes. It takes a path: under jsdom, URL resolves against the page, not file:. Module class names are unhashed in the source, so selectors are written
 // as they appear in the file. `media` picks a rule inside that @media condition instead of a
-// top-level one.
+// top-level one; it also picks from an @container rule with that condition.
 export function ruleFor(file: string, selector: string, media?: string): Declarations {
   const rules = parse(readFileSync(file, 'utf8'));
   const scope =
     media === undefined
       ? [...rules]
       : [...rules]
-          .filter((rule): rule is CSSMediaRule => rule instanceof CSSMediaRule)
+          .filter(
+            (rule): rule is CSSMediaRule | CSSContainerRule =>
+              rule instanceof CSSMediaRule || rule instanceof CSSContainerRule,
+          )
           .filter((rule) => rule.conditionText === media)
           .flatMap((rule) => [...rule.cssRules]);
   const matches = scope.filter(

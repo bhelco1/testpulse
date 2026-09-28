@@ -1,0 +1,36 @@
+.group {
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.wrap {
+  flex-wrap: wrap;
+}
+
+.option {
+  min-height: var(--target-min);
+  padding: 0 14px;
+  border-radius: var(--radius-tag);
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--ink-2);
+  font: 500 14px var(--font-sans);
+}
+
+.on {
+  background: var(--raised);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.option.fail {
+  color: var(--fail);
+}

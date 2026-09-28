@@ -39,8 +39,13 @@ const EXPECTED: Record<
 };
 
 const STATUSES = Object.keys(EXPECTED) as BadgeStatus[];
-const VARIANTS: BadgeVariant[] = ['pill', 'inline', 'kiosk'];
-const ICON_SIZE: Record<BadgeVariant, string> = { pill: '14', inline: '15', kiosk: '26' };
+const VARIANTS: BadgeVariant[] = ['pill', 'inline', 'kiosk', 'kioskInline'];
+const ICON_SIZE: Record<BadgeVariant, string> = {
+  pill: '14',
+  inline: '15',
+  kiosk: '26',
+  kioskInline: '22',
+};
 
 describe('StatusBadge', () => {
   it('has exactly the statuses and variants the design lists, with no "running"', () => {
@@ -114,5 +119,13 @@ describe('StatusBadge', () => {
       gap: '10px',
       'font-size': '26px',
     });
+  });
+
+  it('kioskInline is the kiosk feed tile status: no fill, 24px, gap 8, icon 22', () => {
+    const { getByText } = render(<StatusBadge status="passed" variant="kioskInline" />);
+    const badge = getByText('Passed');
+
+    expect(badge.className).not.toContain('pill');
+    expect(ruleFor(CSS, '.kioskInline')).toEqual({ gap: '8px', 'font-size': '24px' });
   });
 });

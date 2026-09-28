@@ -1,0 +1,167 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 14px 16px;
+  min-height: var(--target-min);
+  box-sizing: border-box;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: var(--raised);
+}
+
+/* Starts at --raised and settles on the row's own background, so hover still works afterwards.
+   The reduced-motion rule in tokens.css removes the animation; the New chip still marks the row. */
+.new {
+  animation: arrive var(--motion-arrive);
+}
+
+@keyframes arrive {
+  from {
+    background-color: var(--raised);
+  }
+}
+
+.status {
+  display: flex;
+  width: 104px;
+  flex: none;
+}
+
+.content {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.titleLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  min-width: 0;
+}
+
+.chip {
+  flex: none;
+  font: 600 11px var(--font-sans);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.private {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+.sha {
+  font-family: var(--font-mono);
+}
+
+.count {
+  display: flex;
+  gap: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.countPassed {
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.countFailed {
+  color: var(--fail);
+  font-weight: 600;
+}
+
+.countEmpty {
+  color: var(--attn);
+  font-weight: 600;
+}
+
+.countRest {
+  color: var(--ink-3);
+}
+
+.when {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 24px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+
+.tileTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.tileWhen {
+  font-size: 22px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.tileBottom {
+  display: flex;
+  gap: 10px;
+  font-size: 24px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tileProject {
+  font-weight: 600;
+}
+
+.tileBranch {
+  color: var(--ink-3);
+}
+
+.tileCount {
+  color: var(--ink-2);
+  margin-left: auto;
+}
+
+.tileCountFailed {
+  color: var(--fail);
+}

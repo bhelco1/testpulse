@@ -135,6 +135,14 @@ export function ChevronUpIcon(props: IconProps) {
   );
 }
 
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <Svg {...props} linecap="round">
+      <path d="m9 6 6 6-6 6" />
+    </Svg>
+  );
+}
+
 export function CheckIcon(props: IconProps) {
   return (
     <Svg {...props} linecap="round" linejoin="round">

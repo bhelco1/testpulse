@@ -17,6 +17,11 @@
   font-size: 26px;
 }
 
+.kioskInline {
+  gap: 8px;
+  font-size: 24px;
+}
+
 .pass {
   color: var(--pass);
 }

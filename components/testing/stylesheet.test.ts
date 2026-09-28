@@ -20,6 +20,7 @@ const FILE = cssFile(`
   .twice { color: red; }
   .twice { color: blue; }
   @media (max-width: 640px) { .a { font-size: 32px; } }
+  @container (width < 720px) { .a { display: flex; } }
   @keyframes spin { to { transform: rotate(360deg); } }
 `);
 
@@ -40,6 +41,10 @@ describe('ruleFor', () => {
 
   it('reads a rule inside a media condition only when asked', () => {
     expect(ruleFor(FILE, '.a', '(max-width: 640px)')).toEqual({ 'font-size': '32px' });
+  });
+
+  it('reads a rule inside a container condition the same way', () => {
+    expect(ruleFor(FILE, '.a', '(width < 720px)')).toEqual({ display: 'flex' });
   });
 
   it('refuses a selector that is missing or defined twice', () => {

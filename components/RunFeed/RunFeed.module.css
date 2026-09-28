@@ -1,0 +1,116 @@
+.feed {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 8px;
+  min-width: 0;
+  box-shadow: var(--shadow-card);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 16px 16px 10px;
+}
+
+.header.projectHeader {
+  align-items: center;
+  gap: 10px 12px;
+  padding: 12px 12px 8px 16px;
+}
+
+.heading {
+  margin: 0;
+  font: 500 24px var(--font-serif);
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.note.offline {
+  color: var(--ink-2);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.more {
+  padding: 8px 16px 12px;
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+}
+
+.skeletonText {
+  flex: 1;
+}
+
+.skeletonMeta {
+  margin-top: 8px;
+}
+
+.empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 22px 24px;
+}
+
+.emptyTitle {
+  font: 500 20px var(--font-serif);
+}
+
+.emptyText {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin-top: 4px;
+}
+
+/* The design's grid is 200px and three equal tiles; the tiles sit in their own grid so the
+   log holds only the runs. */
+.kiosk {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.kioskLog {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.kioskHeader {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.kioskHeading {
+  margin: 0;
+  font: 500 32px/1.1 var(--font-serif);
+}
+
+.kioskNote {
+  font-size: 22px;
+  color: var(--ink-3);
+}

@@ -16,12 +16,12 @@
   box-sizing: border-box;
 }
 
-.on .dot {
+.dot.on {
   background: var(--pass);
   color: var(--pass);
 }
 
-.off .dot {
+.dot.off {
   background: transparent;
   border: 1.5px solid var(--ink-3);
 }

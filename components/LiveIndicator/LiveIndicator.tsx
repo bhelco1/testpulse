@@ -10,16 +10,24 @@ export interface LiveIndicatorProps {
 // tokens.css is !important, so it still stops the pulse.
 const PULSE = { animation: 'tp-pulse var(--motion-pulse) ease-out infinite' };
 
-export function LiveIndicator({ connected }: LiveIndicatorProps) {
+// The dot alone, for places that say something other than "Live" beside it (the RunFeed header).
+export function LiveDot({ connected }: LiveIndicatorProps) {
   const state = connected ? 'on' : 'off';
   return (
-    <span className={`${styles.indicator} ${styles[state]}`} data-state={state}>
-      <span
-        className={styles.dot}
-        data-part="dot"
-        aria-hidden="true"
-        style={connected ? PULSE : undefined}
-      />
+    <span
+      className={`${styles.dot} ${styles[state]}`}
+      data-part="dot"
+      data-state={state}
+      aria-hidden="true"
+      style={connected ? PULSE : undefined}
+    />
+  );
+}
+
+export function LiveIndicator({ connected }: LiveIndicatorProps) {
+  return (
+    <span className={styles.indicator} data-state={connected ? 'on' : 'off'}>
+      <LiveDot connected={connected} />
       <span>{connected ? 'Live' : 'Offline · reconnecting'}</span>
     </span>
   );

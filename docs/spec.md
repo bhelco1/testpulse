@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.27, 2026-09-28. Status: Phases 0 to 4 complete; design track in progress.
+Version 0.28, 2026-09-28. Status: Phases 0 to 4 complete; design track in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -510,7 +510,7 @@ The look of the site is a first-class requirement (G9). A hiring manager forms a
 - API keys: 32 random bytes, shown once, stored as SHA-256 hash, per project, rotatable.
 - Ingestion: size limit, rate limit, strict Zod validation, XML parser with DTD and entity expansion disabled, all text fields length-capped, all output HTML-escaped (failure messages are untrusted input).
 - The Supabase secret key (`sb_secret_…`, the successor to the service-role key) is used only in server code and never shipped to the browser. The browser uses the publishable key (`sb_publishable_…`, the successor to the anon key), which runs as the `anon` database role and is constrained by RLS (section 9).
-- Public pages read only through a publishable-key client (`lib/supabase/public.ts`) via `lib/queries/`, never the secret client, and a lint rule enforces it. Because pages render as `anon`, whatever reaches a public page is what RLS allowed.
+- Public pages read only through a publishable-key client (`lib/supabase/public.ts`) via `lib/queries/`, never the secret client, and a lint rule enforces it. Lint sees only a file's own imports, so `lib/queries/boundary.test.ts` also walks the static import graph from every page and layout outside `app/api` and every `lib/queries/` module and fails if `lib/supabase/server.ts` is reachable. Because pages render as `anon`, whatever reaches a public page is what RLS allowed.
 - Admin: magic link, single allowlisted email, checked server-side on every admin route and action.
 - Secrets live in Vercel and GitHub environment settings. `.env*` files are gitignored from the first commit, and a CI check fails the build if a file matching common secret patterns is tracked.
 

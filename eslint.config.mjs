@@ -3,6 +3,24 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier';
 
+// lib/supabase/server.ts holds the secret key, which bypasses row-level security (spec section
+// 15). Matched in any path form: "@/lib/supabase/server", "../supabase/server.ts" and so on.
+const SECRET_CLIENT = {
+  regex: String.raw`(^|/)supabase/server(\.ts)?$`,
+  message:
+    'lib/supabase/server is server-only: it holds the secret key and must not be imported from ' +
+    'app/, components/ or lib/queries/. Public pages read through lib/queries/.',
+};
+
+// lib/ingest/ingest.ts builds the secret client for the ingestion route, the one app/ file
+// allowed it. The rest of lib/ingest is pure and shared with components.
+const INGEST = {
+  regex: String.raw`(^|/)ingest/ingest(\.ts)?$`,
+  message:
+    'lib/ingest/ingest uses the secret client and is only for app/api/v1/reports. Public pages ' +
+    'read through lib/queries/.',
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -17,24 +35,21 @@ const eslintConfig = defineConfig([
     'design/**',
   ]),
   {
-    // lib/supabase/server.ts holds the secret key, which bypasses row-level security (spec
-    // section 15). Nothing under app/ or components/ may import it, in any path form, because
-    // those trees can end up in a client bundle.
-    files: ['app/**', 'components/**'],
+    // app/ and components/ can end up in a client bundle, and lib/queries/ is what public pages
+    // read through, so none of them may import the secret client directly. Lint sees only a
+    // file's own imports; lib/queries/boundary.test.ts walks the whole graph.
+    files: ['app/**', 'components/**', 'lib/queries/**'],
     rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              regex: String.raw`(^|/)lib/supabase/server(\.ts)?$`,
-              message:
-                'lib/supabase/server is server-only: it holds the secret key and must not be ' +
-                'imported from app/ or components/. Call a lib/ function instead.',
-            },
-          ],
-        },
-      ],
+      'no-restricted-imports': ['error', { patterns: [SECRET_CLIENT] }],
+    },
+  },
+  {
+    // The same files outside the ingestion route may not reach it through lib/ingest either.
+    // This object replaces the rule options above for the files it matches, so it repeats them.
+    files: ['app/**', 'components/**', 'lib/queries/**'],
+    ignores: ['app/api/**'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [SECRET_CLIENT, INGEST] }],
     },
   },
   prettier,

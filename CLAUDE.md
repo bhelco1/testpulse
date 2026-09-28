@@ -47,6 +47,8 @@ lib/ingest/          validation, normalization, upsert, rollups
 lib/stats/           stat calculations (spec section 11)
 lib/alerts/          integrity alerts (spec section 12)
 lib/visibility/      public/private rules shared by queries and UI
+lib/queries/         the only data source for public pages; publishable-key client only
+lib/supabase/        server.ts (secret key, server-only), public.ts (publishable key)
 components/          built from the design bundle
 projects/            one YAML per reporting project
 fixtures/            real result files captured from reporting projects

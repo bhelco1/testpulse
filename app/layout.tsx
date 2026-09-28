@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono, Public_Sans, Source_Serif_4 } from 'next/font/google';
+import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
 
 import { themeInitScript } from '../lib/design/theme';
@@ -7,25 +7,33 @@ import { themeInitScript } from '../lib/design/theme';
 import '../design/tokens.css';
 import './globals.css';
 
-// Source Serif 4 is variable, so next/font takes the opsz axis only with the full weight range.
-const sourceSerif = Source_Serif_4({
-  subsets: ['latin'],
-  axes: ['opsz'],
+// The files are the latin subsets Google Fonts serves, committed so the build never needs
+// the network. Each is variable, so one file covers the weight range; Source Serif 4 also carries
+// its opsz axis.
+const sourceSerif = localFont({
+  src: './fonts/source-serif-4/SourceSerif4-latin.woff2',
+  weight: '200 900',
+  style: 'normal',
   display: 'swap',
+  adjustFontFallback: 'Times New Roman',
   variable: '--font-source-serif-4',
 });
 
-const publicSans = Public_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+const publicSans = localFont({
+  src: './fonts/public-sans/PublicSans-latin.woff2',
+  weight: '400 700',
+  style: 'normal',
   display: 'swap',
+  adjustFontFallback: 'Arial',
   variable: '--font-public-sans',
 });
 
-const jetBrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
+const jetBrainsMono = localFont({
+  src: './fonts/jetbrains-mono/JetBrainsMono-latin.woff2',
+  weight: '400 600',
+  style: 'normal',
   display: 'swap',
+  adjustFontFallback: 'Arial',
   variable: '--font-jetbrains-mono',
 });
 

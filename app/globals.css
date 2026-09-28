@@ -1,4 +1,4 @@
-/* next/font serves the families under generated names, so the font tokens point at its variables, with tokens.css's fallbacks. */
+/* next/font/local serves the families under generated names, so the font tokens point at its variables, with tokens.css's fallbacks. */
 :root {
   --font-serif: var(--font-source-serif-4), Georgia, serif;
   --font-sans: var(--font-public-sans), system-ui, sans-serif;

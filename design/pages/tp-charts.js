@@ -2,19 +2,25 @@
    Drawn in real pixels from the measured container width (no viewBox scaling), the way Recharts lays out:
    text sizes are fixed (axis 12px, end labels 13px/600, tooltip 13px) at every width.
    Props: kind 'line'|'bar', series [{name, values, dashed}], labels [x label per point], floor, marks [{index,status}],
-   format 'pct'|'int'|'sec'|'dur', zero (y from 0), height, ariaLabel, loading, unit ('run'|'day'). */
+   format 'pct'|'int'|'sec'|'dur', zero (y from 0), height, ariaLabel, loading, error, onRetry, unit ('run'|'day').
+   v5: one counting rule (latest = "Latest", point i = n−1−i ago; axis, tooltip and table agree); whole-number steps for
+   int/dur; all-zero domain 0…1; no repeated x labels; "1 run ago"; right margin fits the end labels; in-chart error state. */
 (function () {
-  const R = window.React;
-  const h = R.createElement;
+  const R = new Proxy({}, { get: (_, k) => window.React[k] }); /* React may load after this script */
+  const h = (...a) => window.React.createElement(...a);
   const fmtFor = f => f === 'pct' ? (v, e) => (e ? v.toFixed(1) : String(Math.round(v * 10) / 10)) + '%'
     : f === 'sec' ? (v, e) => (e ? v.toFixed(2) : String(+v.toFixed(2))) + ' s'
     : f === 'dur' ? v => Math.round(v) + ' s'
     : v => Math.round(v).toLocaleString('en-US');
-  function nice(lo, hi, count, pct) {
+  const ago = (k, unit) => k === 0 ? 'Latest' : k + (unit === 'day' ? (k === 1 ? ' day ago' : ' days ago') : (k === 1 ? ' run ago' : ' runs ago'));
+  let mctx = null;
+  const textW = (t, f) => { mctx = mctx || document.createElement('canvas').getContext('2d'); mctx.font = f; return mctx.measureText(t).width; };
+  function nice(lo, hi, count, pct, whole, zero) {
     if (!isFinite(lo) || !isFinite(hi)) { lo = 0; hi = 1; }
-    if (hi === lo) { hi = lo + 1; lo = lo - 1; }
+    if (hi === lo) { if (zero || lo === 0) { lo = Math.max(0, lo); hi = lo + 1; } else { hi = lo + 1; lo = lo - 1; } }
     const raw = (hi - lo) / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
-    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || 10 * mag;
+    let step = (whole ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10]).map(m => m * mag).find(s => s >= raw) || 10 * mag;
+    if (whole) step = Math.max(1, Math.round(step));
     let a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
     if (pct) { a = Math.max(0, a); b = Math.min(100, b); }
     const t = []; if (!(step > 0)) return { min: a, max: b, ticks: [a, b] }; for (let v = a, g = 0; v <= b + 1e-9 && g < 20; v += step, g++) t.push(+v.toFixed(6));
@@ -29,7 +35,6 @@
       const ro = new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(read); });
       ro.observe(el); read();
       return () => { cancelAnimationFrame(raf); ro.disconnect(); };
-      return () => ro.disconnect();
     }, []);
     return w;
   }
@@ -49,7 +54,12 @@
     const f = fmtFor(props.format);
     const labels = props.labels || [];
     let body;
-    if (props.loading) body = Frame(props, H, h('span', { style: { font: '14px ' + font, color: 'var(--ink-3)' } }, 'Loading chart…'));
+    if (props.error) body = h('div', { role: 'alert', style: { height: H, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '0 16px', textAlign: 'center', borderRadius: 12, background: 'var(--inset)', border: '1px solid var(--line)' } },
+      h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--fail)', strokeWidth: 2.6, strokeLinecap: 'round', style: { marginBottom: 6 } }, h('circle', { cx: 12, cy: 12, r: 10 }), h('path', { d: 'M12 7v6M12 17h.01' })),
+      h('span', { style: { font: "500 20px 'Source Serif 4',serif", color: 'var(--ink)' } }, 'Chart couldn’t be loaded'),
+      h('span', { style: { font: '14px ' + font, color: 'var(--ink-2)' } }, 'The rest of the page is still current.'),
+      h('button', { onClick: props.onRetry, style: { marginTop: 12, minHeight: 44, padding: '0 16px', borderRadius: 10, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)', font: '600 15px ' + font, cursor: 'pointer' } }, 'Try again'));
+    else if (props.loading) body = Frame(props, H, h('span', { style: { font: '14px ' + font, color: 'var(--ink-3)' } }, 'Loading chart…'));
     else if (n === 0) body = Frame(props, H, h('span', { style: { font: '14px ' + font, color: 'var(--ink-3)' } }, 'No runs yet'));
     else if (n === 1) {
       const v = series[0].values[0];
@@ -59,13 +69,15 @@
         h('span', { style: { font: '14px ' + font, color: 'var(--ink-2)', textAlign: 'center', padding: '0 16px' } }, 'One run so far. The trend appears after the next run.'));
     } else if (W > 0) {
       const bar = props.kind === 'bar';
-      const L = phone ? 44 : 56, Rr = phone ? 44 : 60, T = 22, B = 30;
+      const bar0 = props.kind === 'bar';
+      const endW = bar0 ? 0 : Math.max(...series.map(s => textW(f(s.values[n - 1], true), '600 13px ' + font)));
+      const L = phone ? 44 : 56, Rr = Math.max(phone ? 44 : 60, Math.ceil(8 + endW + 6)), T = 22, B = 30;
       const all = series.flatMap(s => s.values).concat(props.floor != null ? [props.floor] : []);
       const zero = bar || props.zero;
       const pct = props.format === 'pct';
       let lo = zero ? 0 : Math.min(...all), hi = Math.max(...all);
       if (!zero) { const pad = Math.max((hi - lo) * 0.12, pct ? 1 : (hi || 1) * 0.02); lo -= pad; hi += pad; }
-      const dom = nice(lo, hi, phone ? 2 : 3, pct);
+      const dom = nice(lo, hi, phone ? 2 : 3, pct, props.format === 'int' || props.format === 'dur', zero);
       const X = bar ? (i => L + (i + 0.5) * (W - L - Rr) / n) : (i => L + i * (W - L - Rr) / (n - 1));
       const Y = v => T + (dom.max - v) / (dom.max - dom.min) * (H - T - B);
       const k = [];
@@ -93,8 +105,8 @@
         });
         (props.marks || []).forEach(m => { const v = series[0].values[m.index]; k.push(h('rect', { key: 'm' + m.index, x: X(m.index) - 4, y: Y(v) - 4, width: 8, height: 8, fill: m.status === 'fail' ? 'var(--fail)' : 'var(--attn)', stroke: 'var(--surface)', strokeWidth: 2 })); });
       }
-      const xi = phone || !labels.length ? [0, n - 1] : [0, Math.round((n - 1) / 3), Math.round((n - 1) * 2 / 3), n - 1];
-      xi.forEach((i, j) => k.push(h('text', { key: 'x' + j, x: X(i), y: H - 8, textAnchor: j === 0 ? 'start' : (j === xi.length - 1 ? 'end' : 'middle'), fill: 'var(--ink-3)', fontSize: 12 }, labels[i] || (j === 0 ? n + (props.unit === 'day' ? ' days ago' : ' runs ago') : (j === xi.length - 1 ? 'Latest' : '')))));
+      const xi = Array.from(new Set(phone || !labels.length ? [0, n - 1] : [0, Math.round((n - 1) / 3), Math.round((n - 1) * 2 / 3), n - 1]));
+      xi.forEach((i, j) => k.push(h('text', { key: 'x' + j, x: X(i), y: H - 8, textAnchor: j === 0 ? 'start' : (j === xi.length - 1 ? 'end' : 'middle'), fill: 'var(--ink-3)', fontSize: 12 }, labels[i] || ago(n - 1 - i, props.unit))));
       if (hover != null) {
         k.push(h('line', { key: 'hv', x1: X(hover), x2: X(hover), y1: T - 6, y2: H - B, stroke: 'var(--line-strong)' }));
         if (!bar) series.forEach((s, si) => k.push(h('circle', { key: 'hd' + si, cx: X(hover), cy: Y(s.values[hover]), r: 5, fill: 'var(--surface)', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: 2 })));
@@ -106,7 +118,7 @@
       if (hover != null) {
         const left = Math.min(Math.max(X(hover) - 90, 0), W - 180);
         tip = h('div', { role: 'status', style: { position: 'absolute', left, top: 0, width: 180, boxSizing: 'border-box', padding: '10px 12px', borderRadius: 12, background: 'var(--raised)', border: '1px solid var(--line-strong)', boxShadow: 'var(--shadow-menu)', font: '13px ' + font, pointerEvents: 'none' } },
-          h('div', { style: { color: 'var(--ink-3)', fontSize: 12 } }, labels[hover] || ((n - 1 - hover) === 0 ? 'Latest' : (n - 1 - hover) + (props.unit === 'day' ? ' days ago' : ' runs ago'))),
+          h('div', { style: { color: 'var(--ink-3)', fontSize: 12 } }, labels[hover] || ago(n - 1 - hover, props.unit)),
           series.map((s, si) => h('div', { key: si, style: { display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 4 } }, h('span', { style: { color: 'var(--ink-2)' } }, s.name), h('b', { style: { fontWeight: 600, color: 'var(--ink)' } }, f(s.values[hover], true)))),
           (props.marks || []).filter(m => m.index === hover).map(m => h('div', { key: 'mk', style: { marginTop: 4, color: m.status === 'fail' ? 'var(--fail)' : 'var(--attn)', fontWeight: 600 } }, m.status === 'fail' ? 'Run failed' : 'Run empty')));
       }
@@ -114,12 +126,12 @@
     } else body = h('div', { style: { height: H } });
     const legend = series.length > 1 ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px 18px', marginBottom: 10, font: '13px ' + font, color: 'var(--ink-2)' } },
       series.map((s, si) => h('span', { key: si, style: { display: 'flex', alignItems: 'center', gap: 8 } }, h('span', { style: { width: 20, height: 0, borderTop: (si ? '2px dashed var(--ink-3)' : '2.5px solid var(--ink)') } }), s.name))) : null;
-    const canTable = n > 1 && !props.loading;
+    const canTable = n > 1 && !props.loading && !props.error;
     const btn = canTable ? h('div', { style: { display: 'flex', justifyContent: 'flex-end', marginTop: 8 } }, h('button', { onClick: () => setTable(t => !t), 'aria-expanded': table, style: { minHeight: 44, padding: '0 14px', borderRadius: 10, border: '1px solid var(--line-strong)', background: 'none', color: 'var(--ink)', font: '500 14px ' + font, cursor: 'pointer' } }, table ? 'Hide table' : 'Show table')) : null;
     const tbl = table && canTable ? h('div', { style: { maxHeight: 320, overflow: 'auto', marginTop: 8, border: '1px solid var(--line)', borderRadius: 12 } },
       h('table', { style: { width: '100%', borderCollapse: 'collapse', font: '14px ' + font, fontVariantNumeric: 'tabular-nums' } },
         h('thead', null, h('tr', null, [h('th', { key: 'x', style: th }, props.unit === 'day' ? 'Day (UTC)' : 'Run')].concat(series.map((s, si) => h('th', { key: si, style: Object.assign({}, th, { textAlign: 'right' }) }, s.name))))),
-        h('tbody', null, Array.from({ length: n }, (_, i) => n - 1 - i).map(i => h('tr', { key: i }, [h('td', { key: 'x', style: td }, labels[i] || ((n - 1 - i) === 0 ? 'Latest' : (n - 1 - i) + (props.unit === 'day' ? ' days ago' : ' runs ago')))].concat(series.map((s, si) => h('td', { key: si, style: Object.assign({}, td, { textAlign: 'right', fontWeight: 600 }) }, f(s.values[i], true))))))))) : null;
+        h('tbody', null, Array.from({ length: n }, (_, i) => n - 1 - i).map(i => h('tr', { key: i }, [h('td', { key: 'x', style: td }, labels[i] || ago(n - 1 - i, props.unit))].concat(series.map((s, si) => h('td', { key: si, style: Object.assign({}, td, { textAlign: 'right', fontWeight: 600 }) }, f(s.values[i], true))))))))) : null;
     return h('div', { ref, style: { width: '100%', minWidth: 0 } }, legend, body, btn, tbl);
   }
   const th = { position: 'sticky', top: 0, background: 'var(--surface)', textAlign: 'left', padding: '10px 14px', borderBottom: '1px solid var(--line)', font: "600 12px 'JetBrains Mono',monospace", letterSpacing: '.04em', color: 'var(--ink-3)' };

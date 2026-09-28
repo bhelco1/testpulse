@@ -36,6 +36,14 @@ describe('declaredSummary', () => {
     );
   });
 
+  // Design v5 item 12: projects:sync rejects a count below 1, so this only guards a row written
+  // before that rule; the brackets go rather than print "(0 flows)".
+  it('drops the brackets for one suite without a count', () => {
+    expect(declaredSummary([{ ...iosFlows, count: 0 }])).toBe(
+      'Not counted: Maestro E2E · iOS, authored, not yet executed',
+    );
+  });
+
   it('sums several suites with one status', () => {
     expect(
       declaredSummary([

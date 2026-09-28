@@ -92,16 +92,17 @@
   padding: 14px 16px 16px;
 }
 
-/* The design's grid is 200px and three equal tiles; the tiles sit in their own grid so the
-   log holds only the runs. */
+/* The design's grid is 200px and three equal tiles. The run tiles sit in a grid of their own
+   across the three run columns, so the log holds only the runs. */
 .kiosk {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: 200px repeat(3, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
 }
 
 .kioskLog {
+  grid-column: 2 / -1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
@@ -149,6 +150,10 @@
   background: var(--surface);
   border: 1px solid var(--line);
   min-width: 0;
+}
+
+.kioskSpan {
+  grid-column: 2 / -1;
 }
 
 .kioskSkeleton {

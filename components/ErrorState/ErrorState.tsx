@@ -6,7 +6,8 @@ import { StatusBadge } from '../StatusBadge/StatusBadge';
 import styles from './ErrorState.module.css';
 
 export interface ErrorStateProps {
-  // page: a whole page failed (landing, project, run). inline: one section, feed, chart or table.
+  // page: a whole page failed (landing, project, run). inline: one section, feed or table; charts
+  // draw their own error inside the chart card (design v5 item 3).
   variant: 'page' | 'inline';
   title: string;
   message: string;

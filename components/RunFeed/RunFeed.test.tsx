@@ -419,6 +419,47 @@ describe('RunFeed (kiosk)', () => {
     expect(queryByRole('log')).toBeNull();
   });
 
+  // Design v5 item 11: empty and error are one tile across all three run columns of the grid.
+  it('empty and error: the tile spans the three run columns of the kiosk grid', () => {
+    for (const state of ['empty', 'error'] as const) {
+      const { container, unmount } = render(<RunFeed variant="kiosk" state={state} connected />);
+      const tile = container.querySelector<HTMLElement>(`[data-part="kiosk-${state}"]`);
+      expect(has(tile?.parentElement, 'kiosk')).toBe(true);
+      expect(has(tile, 'kioskSpan')).toBe(true);
+      unmount();
+    }
+    expect(ruleFor(CSS, '.kioskSpan')).toEqual({ 'grid-column': '2 / -1' });
+  });
+
+  it('error: the tile is a polite status, as nobody acts on a wall display', () => {
+    const { container, getByRole } = render(<RunFeed variant="kiosk" state="error" connected />);
+    expect(getByRole('status')).toBe(container.querySelector('[data-part="kiosk-error"]'));
+  });
+
+  it('shows the heading and the connection note in every state', () => {
+    const states = [
+      { state: 'ready', runs: KIOSK_RUNS },
+      { state: 'loading' },
+      { state: 'empty' },
+      { state: 'error' },
+    ] as const;
+    for (const feed of states) {
+      for (const connection of [
+        { connected: true } as const,
+        { connected: false, asOf: '10:42' } as const,
+      ]) {
+        const { container, getByRole, unmount } = render(
+          <RunFeed variant="kiosk" {...feed} {...connection} />,
+        );
+        expect(getByRole('heading', { level: 2 }).textContent).toBe('Recent runs');
+        expect(container.querySelector('[data-part="kiosk-note"]')?.textContent).toBe(
+          connection.connected ? 'Updates as reports arrive' : 'Offline. As of 10:42',
+        );
+        unmount();
+      }
+    }
+  });
+
   it('error: one tile with the error icon and "Retrying every minute.", no button, no rows', () => {
     const { container, queryByRole } = render(<RunFeed variant="kiosk" state="error" connected />);
 
@@ -480,11 +521,12 @@ describe('RunFeed (kiosk)', () => {
   it('lays out a 200px header column beside three equal tiles, gap 16', () => {
     expect(ruleFor(CSS, '.kiosk')).toEqual({
       display: 'grid',
-      'grid-template-columns': '200px minmax(0, 1fr)',
+      'grid-template-columns': '200px repeat(3, minmax(0, 1fr))',
       gap: '16px',
       'align-items': 'stretch',
     });
     expect(ruleFor(CSS, '.kioskLog')).toEqual({
+      'grid-column': '2 / -1',
       display: 'grid',
       'grid-template-columns': 'repeat(3, minmax(0, 1fr))',
       gap: '16px',

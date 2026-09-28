@@ -92,6 +92,79 @@ describe('Button', () => {
     expect(button.hasAttribute('aria-disabled')).toBe(false);
   });
 
+  // Design v5 item 13: an action that navigates is the same Button rendered as <a href>.
+  describe('with href', () => {
+    it('renders a link with the same variant, classes and no button type', () => {
+      for (const variant of VARIANTS) {
+        const { getByRole, unmount } = render(
+          <>
+            <Button variant={variant}>Go to overview</Button>
+            <Button variant={variant} href="/">
+              Go to overview
+            </Button>
+          </>,
+        );
+        const button = getByRole('button', { name: 'Go to overview' });
+        const link = getByRole('link', { name: 'Go to overview' });
+
+        expect(link.tagName.toLowerCase()).toBe('a');
+        expect(link.getAttribute('href')).toBe('/');
+        expect(link.hasAttribute('type')).toBe(false);
+        expect(link.dataset.variant).toBe(variant);
+        expect(link.className).toBe(button.className);
+        unmount();
+      }
+    });
+
+    it('when disabled is aria-disabled, still focusable, and does not navigate', () => {
+      const onClick = vi.fn();
+      const { getByRole } = render(
+        <Button href="/" disabled onClick={onClick}>
+          Go to overview
+        </Button>,
+      );
+      const link = getByRole('link', { name: 'Go to overview' });
+
+      expect(link.getAttribute('aria-disabled')).toBe('true');
+      link.focus();
+      expect(document.activeElement).toBe(link);
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      link.dispatchEvent(click);
+      expect(click.defaultPrevented).toBe(true);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('when busy shows the spinner before the label and does not navigate', () => {
+      const { getByRole } = render(
+        <Button href="/" busy>
+          Opening…
+        </Button>,
+      );
+      const link = getByRole('link', { name: 'Opening…' });
+
+      expect(link.getAttribute('aria-busy')).toBe('true');
+      expect(link.firstElementChild?.tagName.toLowerCase()).toBe('svg');
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      link.dispatchEvent(click);
+      expect(click.defaultPrevented).toBe(true);
+    });
+
+    it('calls onClick when pressed', () => {
+      const onClick = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
+      const { getByRole } = render(
+        <Button href="/" onClick={onClick}>
+          Go to overview
+        </Button>,
+      );
+      fireEvent.click(getByRole('link', { name: 'Go to overview' }));
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('drops the link underline, so it draws as the button does', () => {
+      expect(ruleFor(CSS, '.button')).toMatchObject({ 'text-decoration': 'none' });
+    });
+  });
+
   describe('styles, per the design system state grid', () => {
     it('is 44 tall, padded 0 16, 15px/600, radius sm', () => {
       expect(ruleFor(CSS, '.button')).toMatchObject({

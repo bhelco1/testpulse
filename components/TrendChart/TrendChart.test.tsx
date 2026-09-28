@@ -28,10 +28,27 @@ const CSS = join(import.meta.dirname, 'TrendChart.module.css');
 // is not mocked: every line, bar, tick and dot below is what it rendered.
 let chartWidth = 720;
 let resize: (() => void) | undefined;
+// jsdom has no canvas either. The chart measures its end-value labels with a 2D context's
+// measureText, as tp-charts.js does (design v5 item 6); this stand-in gives every character the
+// same width, so a test can say exactly how wide a label is.
+let charWidth = 7;
+let measuredFonts: string[] = [];
 
 beforeEach(() => {
   chartWidth = 720;
   resize = undefined;
+  charWidth = 7;
+  measuredFonts = [];
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => {
+    const context = {
+      font: '',
+      measureText: (text: string) => {
+        measuredFonts.push(context.font);
+        return { width: text.length * charWidth };
+      },
+    };
+    return context as unknown as CanvasRenderingContext2D;
+  });
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
     () =>
       ({
@@ -357,15 +374,44 @@ describe('TrendChart line, many points', () => {
     });
   });
 
+  // Design v5 item 2: the axis counts like the tooltip and the table, so the oldest of 30 is
+  // "29 runs ago" in all three.
   it('labels the ends of the x axis by runs back when points carry no labels', () => {
     const { container } = render(<TrendChart {...PASS_RATE} />);
     const ticks = parts(container, 'x-label');
-    expect(ticks.map((tick) => tick.textContent)).toEqual(['30 runs ago', 'Latest']);
+    expect(ticks.map((tick) => tick.textContent)).toEqual(['29 runs ago', 'Latest']);
     expect(ticks.map((tick) => tick.getAttribute('text-anchor'))).toEqual(['start', 'end']);
     ticks.forEach((tick) => {
       expect(num(tick, 'y')).toBe(250 - 8);
       expect(has(tick, 'axisText')).toBe(true);
     });
+  });
+
+  // Design v5 item 6: right margin = max(60, 8 + widest end label + 6), measured at 13/600.
+  it('widens the right margin to fit the end-value label, measured at 13/600', () => {
+    charWidth = 10;
+    const { container } = render(<TrendChart {...PASS_RATE} />);
+    // "100.0%" is 60 px here, so the margin is 8 + 60 + 6 = 74.
+    const ends = parts(container, 'end-dot');
+    expect(num(ends[1], 'cx')).toBe(720 - 74);
+    expect(num(parts(container, 'value-label')[1], 'x')).toBe(720 - 74 + 8);
+    expect(measuredFonts.length).toBeGreaterThan(0);
+    measuredFonts.forEach((font) => expect(font).toMatch(/^600 13px /));
+  });
+
+  it('measures the widest of the series’ end labels', () => {
+    charWidth = 10;
+    const { container } = render(
+      <TrendChart
+        {...DURATION}
+        series={[
+          { name: 'jvm', values: [1, 2] },
+          { name: 'ios-sim', values: [1, 12.5] },
+        ]}
+      />,
+    );
+    // "12.50 s" is 70 px: 8 + 70 + 6 = 84.
+    expect(num(parts(container, 'end-dot').at(-1), 'cx')).toBe(720 - 84);
   });
 
   it('draws no legend for one series', () => {
@@ -441,11 +487,20 @@ describe('TrendChart at phone width', () => {
   });
 
   it('is 200 px tall with 44 px side margins', () => {
+    // "92.0%" is 30 px here: 8 + 30 + 6 = 44.
+    charWidth = 6;
     const { container } = render(<TrendChart {...COVERAGE} />);
     expect(container.querySelector('svg')?.getAttribute('height')).toBe('200');
     const ends = parts(container, 'end-dot');
     expect(num(ends[0], 'cx')).toBe(44);
     expect(num(ends[1], 'cx')).toBe(342 - 44);
+  });
+
+  it('widens the right margin past 44 px when the end label needs it', () => {
+    // "92.0%" is 40 px here: 8 + 40 + 6 = 54.
+    charWidth = 8;
+    const { container } = render(<TrendChart {...COVERAGE} />);
+    expect(num(parts(container, 'end-dot')[1], 'cx')).toBe(342 - 54);
   });
 
   it('labels only the first and last x values and uses two y steps', () => {
@@ -569,9 +624,36 @@ describe('TrendChart bars (runs per UTC day)', () => {
       '3',
     ]);
     expect(parts(container, 'x-label').map((tick) => tick.textContent)).toEqual([
-      '30 days ago',
+      '29 days ago',
       'Latest',
     ]);
+  });
+
+  it('keeps the minimum right margin whatever the labels measure: bars have no end labels', () => {
+    const barXs = () => {
+      const { container, unmount } = render(<TrendChart {...RUNS_PER_DAY_CHART} />);
+      const xs = [...container.querySelectorAll('.recharts-bar-rectangle path')].map((bar) =>
+        num(bar, 'x'),
+      );
+      unmount();
+      return xs;
+    };
+    charWidth = 0;
+    const narrow = barXs();
+    charWidth = 40;
+    expect(barXs()).toEqual(narrow);
+    expect(measuredFonts).toEqual([]);
+  });
+
+  // Design v5 item 5, drawn as "BAR · all zero, 0…1".
+  it('runs an all-zero bar chart from 0 to 1', () => {
+    const { container } = render(
+      <TrendChart
+        {...RUNS_PER_DAY_CHART}
+        series={[{ name: 'Runs', values: [0, 0, 0, 0, 0, 0, 0] }]}
+      />,
+    );
+    expect(parts(container, 'y-label').map((tick) => tick.textContent)).toEqual(['0', '1']);
   });
 
   it('turns the hovered bar ink', () => {
@@ -917,18 +999,72 @@ describe('TrendChart empty, loading and error', () => {
     });
   });
 
-  it('error: the inline ErrorState in place of the chart, which retries', () => {
+  // Design v5 item 3: the plot area becomes an inset panel inside the chart card.
+  it('error: an inset panel in place of the plot, inside the same card, which retries', () => {
     const onRetry = vi.fn();
     const { getByRole, container } = render(
       <TrendChart title="Pass rate" scope={TREND_SCOPE.passRate} error onRetry={onRetry} />,
     );
-    const alert = getByRole('alert');
-    expect(alert.getAttribute('data-variant')).toBe('inline');
-    expect(alert.textContent).toContain('Chart couldn’t be loaded');
-    expect(alert.textContent).toContain('The rest of the page is still current.');
-    expect(container.querySelector('.recharts-wrapper')).toBeNull();
+    const figure = getByRole('figure');
+    const alert = within(figure).getByRole('alert');
+    expect(has(alert, 'errorPanel')).toBe(true);
+    expect(alert.getAttribute('data-variant')).toBeNull();
+    expect(alert.style.height).toBe('250px');
+    expect(alert.querySelector('[data-part="error-title"]')?.textContent).toBe(
+      'Chart couldn’t be loaded',
+    );
+    expect(alert.querySelector('[data-part="error-text"]')?.textContent).toBe(
+      'The rest of the page is still current.',
+    );
+    const icon = alert.querySelector('svg');
+    expect(icon?.getAttribute('width')).toBe('18');
+    expect(has(icon, 'errorIcon')).toBe(true);
+    // Title and scope stay; caption and "Show table" go.
+    expect(within(figure).getByRole('heading', { level: 3 }).textContent).toBe('Pass rate');
+    expect(container.querySelector('[data-part="scope"]')?.textContent).toBe(TREND_SCOPE.passRate);
     expect(container.querySelector('[data-part="caption"]')).toBeNull();
-    fireEvent.click(within(alert).getByRole('button', { name: 'Try again' }));
+    expect(container.querySelector('.recharts-wrapper')).toBeNull();
+    const retry = within(alert).getByRole('button', { name: 'Try again' });
+    expect(retry.dataset.variant).toBe('secondary');
+    expect(within(figure).getAllByRole('button')).toEqual([retry]);
+    fireEvent.click(retry);
     expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it('error: the panel is the plot’s height, 200 px on a phone', () => {
+    chartWidth = 342;
+    const { getByRole } = render(
+      <TrendChart title="Pass rate" scope={TREND_SCOPE.passRate} error onRetry={() => {}} />,
+    );
+    expect(getByRole('alert').style.height).toBe('200px');
+  });
+
+  it('error: draws the panel as the design does', () => {
+    expect(ruleFor(CSS, '.errorPanel')).toMatchObject({
+      display: 'flex',
+      'flex-direction': 'column',
+      'align-items': 'center',
+      'justify-content': 'center',
+      gap: '4px',
+      padding: '0px 16px',
+      'text-align': 'center',
+      'border-radius': 'var(--radius-md)',
+      background: 'var(--inset)',
+      border: '1px solid var(--line)',
+    });
+    expect(ruleFor(CSS, '.errorIcon')).toMatchObject({
+      color: 'var(--fail)',
+      'margin-bottom': '6px',
+    });
+    expect(ruleFor(CSS, '.errorTitle')).toMatchObject({
+      font: '500 20px var(--font-serif)',
+      color: 'var(--ink)',
+    });
+    expect(ruleFor(CSS, '.errorText')).toMatchObject({
+      'font-size': '14px',
+      color: 'var(--ink-2)',
+    });
+    // components.md puts "Try again" 12 px below the text: the 4 px gap plus 8.
+    expect(ruleFor(CSS, '.errorRetry')).toMatchObject({ 'margin-top': '8px' });
   });
 });

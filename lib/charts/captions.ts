@@ -4,7 +4,7 @@ import { formatTrendValue } from './format';
 // The line under each chart title naming which runs it reads (spec section 11).
 export const TREND_SCOPE = {
   passRate: 'Default branch · CI and imported history',
-  testCount: 'Default branch · CI and imported history',
+  testCount: 'Default branch · CI runs only',
   coverage: 'Default branch · CI and imported history',
   duration: 'Default branch · CI runs only (imported history has no durations)',
   runsPerDay: 'Default branch · CI and imported history',
@@ -38,14 +38,14 @@ export function testCountCaption(counts: readonly number[]): string | null {
 export function coverageCaption(pcts: readonly number[], floor: number): string | null {
   const first = pcts[0];
   const last = pcts.at(-1);
-  // The template has Rose and Fell only; unchanged coverage waits for design copy.
-  if (pcts.length < 2 || first === undefined || last === undefined || first === last) return null;
-  const moved = last > first ? 'Rose' : 'Fell';
+  if (pcts.length < 2 || first === undefined || last === undefined) return null;
+  // Compared as displayed, at one decimal (design v5 item 1).
+  const [from, to] = [formatTrendValue(first, 'pct', true), formatTrendValue(last, 'pct', true)];
   const side = last < floor ? 'below' : 'above';
-  return (
-    `${moved} from ${formatTrendValue(first, 'pct', true)} to ${formatTrendValue(last, 'pct', true)} ` +
-    `over ${pcts.length} runs; ${side} its ${formatTrendValue(floor, 'pct')} floor.`
-  );
+  const against = `${side} its ${formatTrendValue(floor, 'pct')} floor.`;
+  if (from === to) return `Held at ${to} over ${pcts.length} runs; ${against}`;
+  const moved = last > first ? 'Rose' : 'Fell';
+  return `${moved} from ${from} to ${to} over ${pcts.length} runs; ${against}`;
 }
 
 function median(values: readonly number[]): number {
@@ -73,5 +73,6 @@ export function durationCaption(
 export function runsPerDayCaption(perDay: readonly number[]): string | null {
   if (perDay.length < 2) return null;
   const total = perDay.reduce((sum, n) => sum + n, 0);
+  if (total === 0) return `No runs in the last ${perDay.length} days.`;
   return `${qty(total, 'run')} in the last ${perDay.length} days, ${Math.max(...perDay)} on the busiest day.`;
 }

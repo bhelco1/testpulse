@@ -26,7 +26,6 @@ import {
 
 import { formatTrendValue, type TrendFormat } from '../../lib/charts/format';
 import {
-  axisLabel,
   barWidth,
   chartHeight,
   chartLayout,
@@ -44,7 +43,7 @@ import {
 } from '../../lib/charts/layout';
 import { trendYScale } from '../../lib/charts/scale';
 import { Button } from '../Button/Button';
-import { ErrorState } from '../ErrorState/ErrorState';
+import { AlertCircleIcon } from '../icons/icons';
 import styles from './TrendChart.module.css';
 
 export interface TrendSeries {
@@ -118,6 +117,31 @@ function useMeasuredWidth(ref: RefObject<HTMLDivElement | null>): number {
   return width;
 }
 
+// The widest of the given labels as the value labels draw them, 13 px at 600 (design v5 item 6),
+// measured with a canvas as tp-charts.js does. Until the web font has loaded the fallback font is
+// what gets measured, so it measures again once fonts are ready.
+function useLabelWidth(ref: RefObject<HTMLDivElement | null>, labels: readonly string[]): number {
+  const key = labels.join('\n');
+  const [width, setWidth] = useState(0);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element || key === '') return;
+    let live = true;
+    const measure = () => {
+      const context = document.createElement('canvas').getContext('2d');
+      if (!live || !context) return;
+      context.font = `600 13px ${getComputedStyle(element).fontFamily}`;
+      setWidth(Math.max(...key.split('\n').map((label) => context.measureText(label).width)));
+    };
+    measure();
+    if ('fonts' in document) void document.fonts.ready.then(measure);
+    return () => {
+      live = false;
+    };
+  }, [ref, key]);
+  return key === '' ? 0 : width;
+}
+
 export function TrendChart(props: TrendChartProps) {
   const loading = 'loading' in props;
   const data = 'series' in props ? props : undefined;
@@ -141,33 +165,26 @@ export function TrendChart(props: TrendChartProps) {
           </p>
         )}
       </figcaption>
-      {'error' in props ? (
-        <div className={styles.body}>
-          <ErrorState
-            variant="inline"
-            title="Chart couldn’t be loaded"
-            message="The rest of the page is still current."
-            onRetry={props.onRetry}
-          />
-        </div>
-      ) : (
-        <ChartBody
-          data={data}
-          title={props.title}
-          label={caption ? `${props.title}. ${caption}` : props.title}
-        />
-      )}
+      <ChartBody
+        data={data}
+        onRetry={'error' in props ? props.onRetry : undefined}
+        title={props.title}
+        label={caption ? `${props.title}. ${caption}` : props.title}
+      />
     </figure>
   );
 }
 
 function ChartBody({
   data,
+  onRetry,
   title,
   label,
 }: {
-  // Undefined while loading.
+  // Undefined while loading and in the error state.
   data: TrendData | undefined;
+  // Set in the error state only.
+  onRetry: (() => void) | undefined;
   title: string;
   label: string;
 }) {
@@ -176,9 +193,17 @@ function ChartBody({
   const height = chartHeight(width);
   const series = data?.series ?? [];
   const points = series[0]?.values.length ?? 0;
+  const kind = data?.kind ?? 'line';
+  const endLabels =
+    data && kind === 'line' && points >= 2
+      ? series.map((s) => formatTrendValue(s.values[points - 1] ?? 0, data.format, true))
+      : [];
+  const endLabelWidth = useLabelWidth(measured, endLabels);
 
   let body;
-  if (!data) {
+  if (onRetry) {
+    body = <ErrorPanel height={height} onRetry={onRetry} />;
+  } else if (!data) {
     body = (
       <div
         className={cx(styles.frame, styles.loading)}
@@ -208,7 +233,7 @@ function ChartBody({
     );
   } else if (width > 0) {
     body = (
-      <Plot data={data} layout={chartLayout(width, points, data.kind ?? 'line')} label={label} />
+      <Plot data={data} layout={chartLayout(width, points, kind, endLabelWidth)} label={label} />
     );
   } else {
     // The server and the first client render do not know the width yet: hold the space.
@@ -220,6 +245,25 @@ function ChartBody({
       {series.length > 1 && <Legend series={series} />}
       {body}
       {data && points >= 2 && <TableToggle data={data} title={title} />}
+    </div>
+  );
+}
+
+// Design v5 item 3: the plot area, at its own height, becomes an inset panel inside the chart card;
+// the title and scope stay above it.
+function ErrorPanel({ height, onRetry }: { height: number; onRetry: () => void }) {
+  return (
+    <div role="alert" className={styles.errorPanel} style={{ height }} data-part="error">
+      <AlertCircleIcon size={18} strokeWidth={2.6} className={styles.errorIcon} />
+      <span className={styles.errorTitle} data-part="error-title">
+        Chart couldn’t be loaded
+      </span>
+      <span className={styles.errorText} data-part="error-text">
+        The rest of the page is still current.
+      </span>
+      <Button variant="secondary" className={styles.errorRetry} onClick={onRetry}>
+        Try again
+      </Button>
     </div>
   );
 }
@@ -295,7 +339,7 @@ function Plot({ data, layout, label }: { data: TrendData; layout: ChartLayout; l
             className={styles.axisText}
             data-part="x-label"
           >
-            {axisLabel(index, position, count, labels, unit)}
+            {pointLabel(index, count, labels, unit)}
           </text>
         );
       }}

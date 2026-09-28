@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  axisLabel,
   barWidth,
   chartHeight,
   chartLayout,
@@ -40,6 +39,24 @@ describe('chartLayout', () => {
       top: 22,
       bottom: 30,
     });
+  });
+
+  // Design v5 item 6: the right margin fits the widest end-value label, measured at 13/600.
+  it('widens the right margin to 8 + the widest end label + 6, rounded up', () => {
+    expect(chartLayout(720, 10, 'line', 40).right).toBe(60);
+    expect(chartLayout(720, 10, 'line', 46).right).toBe(60);
+    expect(chartLayout(720, 10, 'line', 46.2).right).toBe(61);
+    expect(chartLayout(720, 10, 'line', 60).right).toBe(74);
+  });
+
+  it('keeps at least 44 px on the right on a phone', () => {
+    expect(chartLayout(342, 10, 'line', 20).right).toBe(44);
+    expect(chartLayout(342, 10, 'line', 40).right).toBe(54);
+  });
+
+  it('leaves bars at the minimum right margin: they have no end labels', () => {
+    expect(chartLayout(720, 10, 'bar', 80).right).toBe(60);
+    expect(chartLayout(342, 10, 'bar', 80).right).toBe(44);
   });
 
   it('keeps the desktop height before the width is known', () => {
@@ -148,7 +165,6 @@ describe('labels', () => {
 
   it('uses the given label for a point', () => {
     expect(pointLabel(1, 3, dates, 'run')).toBe('Jul 11');
-    expect(axisLabel(0, 'first', 3, dates, 'run')).toBe('Jul 2');
   });
 
   it('counts back from the latest point when there are no labels', () => {
@@ -159,10 +175,16 @@ describe('labels', () => {
     expect(pointLabel(27, 30, [], 'day')).toBe('2 days ago');
   });
 
-  it('marks the axis ends as the span and Latest when there are no labels', () => {
-    expect(axisLabel(0, 'first', 30, [], 'run')).toBe('30 runs ago');
-    expect(axisLabel(0, 'first', 30, [], 'day')).toBe('30 days ago');
-    expect(axisLabel(29, 'last', 30, [], 'day')).toBe('Latest');
-    expect(axisLabel(10, 'middle', 30, [], 'run')).toBe('');
+  // Design v5 item 2: one counting rule for the axis, the tooltip and the table.
+  // The axis, the tooltip and the table all name a point with pointLabel.
+  it('counts the oldest of n points as n - 1 back, on the axis as everywhere else', () => {
+    expect(pointLabel(0, 30, [], 'day')).toBe('29 days ago');
+    expect(pointLabel(10, 30, [], 'run')).toBe('19 runs ago');
+    expect(pointLabel(0, 2, [], 'run')).toBe('1 run ago');
+    expect(pointLabel(1, 2, [], 'run')).toBe('Latest');
+  });
+
+  it('names a point with a blank given label by the counting rule', () => {
+    expect(pointLabel(1, 3, ['Jul 2', '', 'Jul 20'], 'run')).toBe('1 run ago');
   });
 });

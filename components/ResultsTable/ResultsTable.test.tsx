@@ -486,6 +486,28 @@ describe('ResultsTable rows', () => {
     );
   });
 
+  // Design v5 item 8: the line lives in the expanded detail, which only failed and error rows
+  // have, so a passed/skipped mismatch shows in the platform list only.
+  it('platform mismatch on a passed row: marked in the platform list, with no line', () => {
+    const settings = row('settings', {
+      suite: 'com.ostomate.app.ui.SettingsTest',
+      name: 'savesUnits',
+      status: 'passed',
+      platforms: [
+        { platform: 'ios-sim', status: 'skipped' },
+        { platform: 'jvm', status: 'passed' },
+      ],
+    });
+    const { container } = renderTable({ results: [settings] });
+    const [test] = testRows(container);
+
+    expect(
+      [...(test?.row.querySelectorAll('[data-part="platform"]') ?? [])].map((p) => p.textContent),
+    ).toEqual(['jvm ✓ passed', 'ios-sim – skipped']);
+    expect(test?.body.querySelector('[data-part="detail"]')).toBeNull();
+    expect(test?.body.querySelector('[data-part="mismatch"]')).toBeNull();
+  });
+
   it('has no mismatch line or marks when every platform agrees', () => {
     const { container } = renderTable();
     const test = testRows(container).find((t) => t.name === 'restoresBackup');

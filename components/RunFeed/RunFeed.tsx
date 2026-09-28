@@ -240,34 +240,35 @@ function KioskBody(props: KioskFeed) {
           ))}
         </div>
       );
+    // Empty and error are one tile across the three run columns (design v5 item 11).
     case 'empty':
       return (
-        <div className={styles.kioskLog}>
-          <div className={styles.kioskTile} data-part="kiosk-empty">
-            <span className={styles.kioskStateTitle} data-part="empty-title">
-              No runs yet
-            </span>
-            <span className={styles.kioskStateText} data-part="empty-text">
-              {EACH_PROJECT}
-            </span>
-          </div>
+        <div className={cx(styles.kioskTile, styles.kioskSpan)} data-part="kiosk-empty">
+          <span className={styles.kioskStateTitle} data-part="empty-title">
+            No runs yet
+          </span>
+          <span className={styles.kioskStateText} data-part="empty-text">
+            {EACH_PROJECT}
+          </span>
         </div>
       );
     case 'error':
       return (
-        <div className={styles.kioskLog}>
-          <div className={styles.kioskTile} data-part="kiosk-error">
-            <span
-              className={cx(styles.kioskStateTitle, styles.kioskErrorTitle)}
-              data-part="error-title"
-            >
-              <AlertCircleIcon size={24} strokeWidth={2.6} className={styles.kioskErrorIcon} />
-              Runs couldn’t be loaded
-            </span>
-            <span className={styles.kioskStateText} data-part="error-text">
-              Retrying every minute.
-            </span>
-          </div>
+        <div
+          role="status"
+          className={cx(styles.kioskTile, styles.kioskSpan)}
+          data-part="kiosk-error"
+        >
+          <span
+            className={cx(styles.kioskStateTitle, styles.kioskErrorTitle)}
+            data-part="error-title"
+          >
+            <AlertCircleIcon size={24} strokeWidth={2.6} className={styles.kioskErrorIcon} />
+            Runs couldn’t be loaded
+          </span>
+          <span className={styles.kioskStateText} data-part="error-text">
+            Retrying every minute.
+          </span>
         </div>
       );
   }

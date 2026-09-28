@@ -12,7 +12,7 @@ If a request conflicts with the spec, stop and say so. If a decision changes, up
 
 ## Current phase
 
-Design track: finish the design/ bundle before Phase 5. Update this line when a phase completes.
+Phase 5: Public site. The landing page waits on design v6: the two headline tiles that replace median time to green and green streak (removed in #40), and where a project card shows its time to green and green streaks. Other pages can proceed. Update this line when a phase completes.
 
 ## How to work
 

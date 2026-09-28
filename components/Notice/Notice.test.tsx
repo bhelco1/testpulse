@@ -142,6 +142,7 @@ describe('Notice', () => {
     });
   });
 
+  // Design v5 item 10 confirms the neutral title in --ink-2.
   it('sets the title 14.5/600 in the tone ink and the body 14/1.5 --ink-2 on every tone', () => {
     // jsdom serializes flex: none as its longhand values.
     expect(ruleFor(CSS, '.icon')).toEqual({ flex: '0 0 auto', 'margin-top': '1px' });

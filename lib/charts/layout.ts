@@ -28,14 +28,22 @@ export function chartHeight(width: number): number {
   return isPhone(width) ? 200 : 250;
 }
 
-export function chartLayout(width: number, count: number, kind: TrendKind): ChartLayout {
+// endLabelWidth is the widest last-point value label, measured at 13/600 (design v5 item 6): the
+// right margin grows to fit it so "100.0%" is never clipped. Bars have no end labels.
+export function chartLayout(
+  width: number,
+  count: number,
+  kind: TrendKind,
+  endLabelWidth = 0,
+): ChartLayout {
   const phone = isPhone(width);
+  const fit = kind === 'bar' ? 0 : Math.ceil(8 + endLabelWidth + 6);
   return {
     width,
     height: chartHeight(width),
     phone,
     left: phone ? 44 : 56,
-    right: phone ? 44 : 60,
+    right: Math.max(phone ? 44 : 60, fit),
     top: 22,
     bottom: 30,
     count,
@@ -102,7 +110,8 @@ export function nextIndex(current: number | null, key: string, count: number): n
 
 const ago = (n: number, unit: TrendUnit) => `${qty(n, unit)} ago`;
 
-// A point's name in the tooltip and the table.
+// A point's name on the x axis, in the tooltip and in the table: one counting rule for all three
+// (design v5 item 2), so the oldest of 30 is "29 runs ago" everywhere.
 export function pointLabel(
   index: number,
   count: number,
@@ -111,17 +120,4 @@ export function pointLabel(
 ): string {
   const back = count - 1 - index;
   return labels[index] || (back === 0 ? 'Latest' : ago(back, unit));
-}
-
-// An x-axis label. Without labels the ends read as the span covered and "Latest".
-export function axisLabel(
-  index: number,
-  position: 'first' | 'middle' | 'last',
-  count: number,
-  labels: readonly string[],
-  unit: TrendUnit,
-): string {
-  if (labels[index]) return labels[index];
-  if (position === 'first') return ago(count, unit);
-  return position === 'last' ? 'Latest' : '';
 }

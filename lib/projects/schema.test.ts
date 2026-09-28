@@ -241,6 +241,25 @@ describe('projects/<slug>.yaml (spec sections 5.1, 5.8, 8, 10, Appendix B)', () 
     );
   });
 
+  // Design v5 item 12: a declared suite always counts at least one test or flow.
+  it('rejects a declared suite with a count below 1', () => {
+    expect(routeserveYaml).toContain('count: 13');
+    expectRejected(
+      routeserveYaml.replace('count: 13', 'count: 0'),
+      'projects/routeserve.yaml',
+      '>=1',
+      'declared_suites.0.count',
+    );
+  });
+
+  it('accepts a declared suite with a count of 1', () => {
+    const file = parseProjectFile(
+      routeserveYaml.replace('count: 13', 'count: 1'),
+      'projects/routeserve.yaml',
+    );
+    expect(file.declared_suites[0]?.count).toBe(1);
+  });
+
   it('rejects a declared-suite status outside the two the spec names', () => {
     expectRejected(
       routeserveYaml.replace('status: authored_not_executed', 'status: planned'),

@@ -18,6 +18,8 @@ export interface TrendScaleInput {
 }
 
 const MULTIPLES = [1, 2, 2.5, 5, 10];
+// Values printed as whole numbers never step by 2.5 × 10ⁿ (design v5 item 5).
+const WHOLE_MULTIPLES = [1, 2, 5, 10];
 const MAX_TICKS = 20;
 // Tick arithmetic in tenths or hundredths drifts (0.1 * 3 is 0.30000000000000004).
 const tidy = (n: number) => Number(n.toFixed(6));
@@ -26,22 +28,29 @@ export function niceScale(
   lo: number,
   hi: number,
   steps: number,
-  { percent, integer }: { percent: boolean; integer: boolean },
+  { percent, integer, zero = false }: { percent: boolean; integer: boolean; zero?: boolean },
 ): YScale {
   if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
     lo = 0;
     hi = 1;
   }
   if (hi === lo) {
-    hi = lo + 1;
-    lo = lo - 1;
+    // A zero-based chart, or a lone zero, opens upwards: all zeros read 0…1, never -1…1.
+    if (zero || lo === 0) {
+      lo = Math.max(0, lo);
+      hi = lo + 1;
+    } else {
+      hi = lo + 1;
+      lo = lo - 1;
+    }
   }
   const raw = (hi - lo) / steps;
   const magnitude = 10 ** Math.floor(Math.log10(raw));
-  const fits = MULTIPLES.map((m) => m * magnitude).find(
-    (step) => step >= raw && (!integer || Number.isInteger(step)),
-  );
-  const step = integer ? Math.max(1, fits ?? 10 * magnitude) : (fits ?? 10 * magnitude);
+  const fits = (integer ? WHOLE_MULTIPLES : MULTIPLES)
+    .map((m) => m * magnitude)
+    .find((step) => step >= raw);
+  const found = fits ?? 10 * magnitude;
+  const step = integer ? Math.max(1, Math.round(found)) : found;
   let min = tidy(Math.floor(lo / step) * step);
   let max = tidy(Math.ceil(hi / step) * step);
   if (percent) {
@@ -66,13 +75,10 @@ export function trendYScale({
   const all = floor === undefined ? values : [...values, floor];
   let lo = zero ? 0 : Math.min(...all);
   let hi = Math.max(...all);
-  if (zero) {
-    // An all-zero chart would otherwise open to -1 to 1 and put a negative tick under the bars.
-    if (hi <= 0) hi = 1;
-  } else {
+  if (!zero) {
     const pad = Math.max((hi - lo) * 0.12, percent ? 1 : (hi || 1) * 0.02);
     lo -= pad;
     hi += pad;
   }
-  return niceScale(lo, hi, steps, { percent, integer });
+  return niceScale(lo, hi, steps, { percent, integer, zero });
 }

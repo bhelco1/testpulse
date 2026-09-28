@@ -42,7 +42,7 @@ Props: `health: 'healthy' | 'stale' | 'empty' | 'below_floor' | 'not_reporting'`
 - Page detail (project page) is not part of the marker: the page puts a separate 14px `--ink-3` span after it, gap 8: "Last report {relative}" when healthy, "Expected every {n} days" when stale.
 
 ## Button
-Props: `variant: 'primary' | 'secondary' | 'ghost' | 'danger'`, `busy?`, `disabled?`. Height 44, padding 0 16, `--radius-sm`, 15px/600, cursor pointer.
+Props: `variant: 'primary' | 'secondary' | 'ghost' | 'danger'`, `busy?`, `disabled?`, `href?`. With `href` it renders as `<a href>` (for actions that navigate, e.g. NotFound "Go to overview") with identical styling and states; only the element changes. Height 44, padding 0 16, `--radius-sm`, 15px/600, cursor pointer.
 | variant | default | hover | pressed |
 |---|---|---|---|
 | primary | bg `--ink`, text `--on-ink` | bg `--ink-2` | bg `--ink-3` |
@@ -87,7 +87,7 @@ Web variant (canonical, one layout for every state):
 - LayerBar, then CoverageBar rows (grid `128px minmax(40px,1fr) auto`, gap 14), then the per-report block (inset, mono 13: header "{n} reports in this run" + platform split; body `repeat(auto-fill, minmax(200px,1fr))` key/count pairs).
 - Platform split: platform = last segment of the report key "job/module/platform"; totals summed per platform, in first-seen order, always with counts: "jvm 142 · ios-sim 132", "node 1,045", "node 284 · chromium 38". Empty run: counts are 0.
 - Footer: hairline, left "Not counted: {declared summary}" 13.5 `--ink-3`; right HealthMarker. No declared suites: left side is empty and the marker stays right-aligned.
-- Declared summary (phrases: runs_in_ci_not_reported "run in CI, not yet reported"; authored_not_executed "authored, not yet executed"; unit "flows" for e2e, else "tests"; counts per unit joined with " and "):
+- Declared summary (a declared suite always has count ≥ 1: `projects:sync` rejects a YAML entry with count < 1; defensively, a missing count drops the brackets: "Not counted: {name}, {phrase}"; phrases: runs_in_ci_not_reported "run in CI, not yet reported"; authored_not_executed "authored, not yet executed"; unit "flows" for e2e, else "tests"; counts per unit joined with " and "):
   - one suite: "Not counted: {name} ({count} {unit}), {phrase}" → "Not counted: Maestro E2E · iOS (13 flows), authored, not yet executed"
   - several, one status: "Not counted: {sum} {unit} in {k} suites, {phrase}" → "Not counted: 12 flows in 2 suites, run in CI, not yet reported"
   - several, mixed: one clause per status (run in CI first), joined "; " → "Not counted: 7 flows run in CI, not yet reported; 5 flows authored, not yet executed"
@@ -171,7 +171,7 @@ Props: `runs[]`, `connected`, `state: 'ready' | 'loading' | 'empty' | 'error'`, 
 - Landing: default-branch runs only (spec §18 Q4), 3 rows, no "All runs" link.
 - Project page run list: segmented filter (radio group, 44px) "Default branch" (default) | "All branches"; 10 rows, then secondary Button "Load 20 more".
 - loading: 3 skeleton rows (104×14, two text bars, count bar), `aria-label="Loading runs"`. empty: "No runs yet" serif 20 + body 14 `--ink-2`: Landing "Runs appear here as each project’s CI reports."; project page "Runs appear here when {project}’s CI reports." error: ErrorState `inline`.
-Variant `kiosk`: 32px serif heading "Recent runs" + note 22 `--ink-3` ("Updates as reports arrive"; offline: 14px ring + "Offline. As of {HH:MM}" `--ink-2`). Tiles as RunFeedRow kiosk; every status can appear (passed, failed, empty, private). loading: 3 skeleton tiles; empty: one tile "No runs yet" serif 28 + "Runs appear here as each project’s CI reports." 22 `--ink-3`; error: one tile with the error icon 24 `--fail` + "Runs couldn’t be loaded" serif 28 + "Retrying every minute." 22 `--ink-3`, no button, no stale rows.
+Variant `kiosk`: 32px serif heading "Recent runs" + note 22 `--ink-3` ("Updates as reports arrive"; offline: 14px ring + "Offline. As of {HH:MM}" `--ink-2`). Tiles as RunFeedRow kiosk; every status can appear (passed, failed, empty, private). loading: 3 skeleton tiles; empty: one tile "No runs yet" serif 28 + "Runs appear here as each project’s CI reports." 22 `--ink-3`; error: one tile with the error icon 24 `--fail` + "Runs couldn’t be loaded" serif 28 + "Retrying every minute." 22 `--ink-3`, no button, no stale rows, `role="status"`. Empty and error tiles span all three run columns of the kiosk grid (`grid-column: 2 / -1`). The heading shows in every state; the note shows the connection (live or offline) in every state, independent of the feed state.
 
 ## ResultsTable
 Props: `results[]`, `visibility`, `pruned?`, `loading?`. Owns the status filter, layer filter, sort, count line and pagination.
@@ -182,7 +182,7 @@ Props: `results[]`, `visibility`, `pruned?`, `loading?`. Owns the status filter,
 - Wide layout (container ≥ 720): grid `36px 130px minmax(0,1fr) 110px 130px 80px` (chevron, status, test, layer, platform, time), padding 12×16, header row mono 12. Status icon 15, platform text 13.
 - Narrow layout (< 720, e.g. 390): no header; each row stacks — line 1 chevron + status + time right; line 2 test name + suite; line 3 "{layer} · {platforms}" 13 `--ink-3`. Same data, no horizontal scroll.
 - Row states: passed, failed (row bg `--fail-tint`, expandable, open by default), error (same as failed with Error badge), skipped, flaky (Flaky pill after the name), platform mismatch (platform list shows failing platforms first: "ios-sim ✕" `--fail`, then "jvm ✓" / "jvm –" `--ink-3`).
-- Platform mismatch: whenever a test’s statuses differ across platforms in one run (including failed on one, skipped on another). Line: "Platform mismatch" 600 `--fail` + sentence `--ink-3`, same in wide and narrow: "Failed on {a}, passed on {b} in the same run." Groups in order failed (error reads "errored on"), passed, skipped; platforms inside a group in data order, joined ", ". Example: "Failed on ios-sim, skipped on jvm in the same run."
+- Platform mismatch: whenever a test’s statuses differ across platforms in one run (any two different statuses). Line: "Platform mismatch" 600 `--fail` + sentence `--ink-3`, same in wide and narrow: "Failed on {a}, passed on {b} in the same run." Groups in order failed, errored, passed, skipped (verbs "failed on", "errored on", "passed on", "skipped on"; first letter capitalised); platforms inside a group in data order, joined ", ". Examples: "Failed on ios-sim, skipped on jvm in the same run." · "Failed on ios-sim, errored on jvm in the same run." · "Passed on jvm, skipped on ios-sim in the same run." The line appears in the expanded detail, so only failed and error rows show it; a passed/skipped mismatch shows in the platform list only.
 - Expanded (public): mismatch line if any, message mono 13.5/600, stack trace `<pre>` inset, horizontal scroll inside the pre; link "Test history" (44px). Padding `4px 16px 18px 64px` wide; `4px 16px 16px 16px` narrow.
 - Expanded (private): mismatch line still shown (statuses only), then the private-details notice: lock, "Details hidden: private repository", "This repository is private, so failure messages and stack traces are hidden. Test names and counts are real.", then the "Test history" link after the notice (not inside it).
 - Footer: "Showing {n} of {m}", m = rows matching the current filters (the total when no filter is set) + secondary Button "Load 50 more" (44px).
@@ -190,54 +190,58 @@ Props: `results[]`, `visibility`, `pruned?`, `loading?`. Owns the status filter,
 - Pruned: replaces the table: clock icon, serif 22 "Per-test results retained for 180 days", body (no max width) "This run is older than that, so its individual results were removed to keep the database small. Summary totals are permanent: {total} tests, {passed} passed, {failed} failed."
 
 ## StatusTimeline
-Props: `kind: 'results' | 'runs'`, `testName` (results), `runs: {title, branch, sha, when, href, results?: {platform, status, duration?}[], status?}[]` oldest → latest (results kind: one entry per platform in `results`; runs kind: run `status`), `interactive` (results default true; runs always false). Strips are derived: one per platform when the test ran on more than one, otherwise one strip with no label column.
+Props: `kind: 'results' | 'runs'`, `testName` (results), `runs: {title, branch, sha, when, href, results?: {platform, status, duration?}[], status?}[]` oldest → latest (results kind: one entry per platform in `results`; runs kind: run `status`), `initialRun?` (results kind: index of the run selected on load; default the latest). No `interactive` prop: results strips are always interactive, the runs strip never is. Strips are derived: one per platform when the test ran on more than one, otherwise one strip with no label column.
 - Label column: 76px + 12px gap (end labels indented 88px), mono 13 `--ink-2`.
 - Cell heights (bottom-aligned, 48px strip, gap 3, radius 2): passed 14 `--pass`; failed 44 `--fail` with ✕ in `--on-ink`; error 44 `--fail` with ! in `--on-ink`; flaky 24 `--attn`; skipped 14, 1.5px `--ink-3` outline, no fill; not run 4 `--line-strong`. For `kind: 'runs'`: passed / failed / empty (24 `--attn-tint`, 1.5px dashed `--attn`).
-- Sizing: cells `flex: 0 1 16px`, min 6px; latest on the right; fewer runs than fit → cells stay 16px, right-aligned, oldest label "{n} runs ago". Capacity = floor((width + 3) / 9); cap 40. More runs than fit → show the latest that fit (≈40 at desktop, ≈27 at 390) and label "Last {n} runs". One cell shown: no oldest label, only "Latest". End labels 12.5 `--ink-3`, 8 below.
+- Sizing: cells `flex: 0 1 16px`, min 6px; latest on the right; fewer runs than fit → cells stay 16px, right-aligned, oldest label "{n−1} runs ago" ("1 run ago" at 2; same counting rule as TrendChart: latest = "Latest", 40 cells → "39 runs ago"). Capacity = floor((width + 3) / 9); cap 40. More runs than fit → show the latest that fit (≈40 at desktop, ≈27 at 390) and label "Last {n} runs". One cell shown: no oldest label, only "Latest". End labels 12.5 `--ink-3`, 8 below.
 - Before measurement (and without JS): up to 40 cells render right-aligned, the oldest clipped by overflow, and the oldest label is empty until measured. No separate pre-measure state.
 - Spacing: strips gap 14; legend margin-top 14, padding-top 12, hairline, gap 8×18; card padding 22×24.
 - Legend: always, 13 `--ink-3`: each cell type present with its word; swatch 10 wide, height = min(cell height, 20) (Failed, Error, Flaky and Empty all 20).
-- Interaction (results kind): selection is a run, shared by every strip. Each strip is one Tab stop: `role="listbox"` `aria-orientation="horizontal"` with `aria-activedescendant` on the selected cell (`role="option"`, `aria-selected`); focus stays on the strip. Keys: ← → one run, Home / End oldest / latest, ↑ ↓ move focus to the other strip (same run). Pointer and touch: the whole 48px strip is the target; press, mouse hover, or drag across it selects the cell nearest the pointer’s x (`touch-action: pan-y` so vertical scrolling still works). Default selection: the latest run (Test History opens on the latest failing run when there is one).
+- Interaction (results kind): selection is a run, shared by every strip. Each strip is one Tab stop: `role="listbox"` `aria-orientation="horizontal"` with `aria-activedescendant` on the selected cell (`role="option"`, `aria-selected`); focus stays on the strip. Keys: ← → one run, Home / End oldest / latest, ↑ ↓ move focus to the other strip (same run). Pointer and touch: the whole 48px strip is the target; press, mouse hover, or drag across it selects the cell nearest the pointer’s x (`touch-action: pan-y` so vertical scrolling still works). Default selection: `initialRun`, else the latest run. Test History passes the latest failing run when there is one, else the latest run.
 - Selected: the run’s cell in every strip gets a 2px `--ink` outline, offset 2. Strip focus-visible: 2px `--ink` outline, offset 4, radius 4 around the strip.
 - Panel (always shown for the results kind, below the legend): `--inset`, 1px `--line`, `--radius-md`, padding 14×16, margin-top 14, flex-wrap, gap 12×28, 14px, `aria-live="polite"`. Fields (label 12.5 `--ink-3` above value): "Run" = "{title} · {sha7}" (title per RunFeedRow); "When" = relative time; then per platform: label = platform key (two or more platforms) or "Result" (one platform), value = status icon 14 + word 600 in status ink + " · {duration}" `--ink-3` (duration omitted for skipped and not run); "Open run →" link 44px, right.
   - one platform: Run · When · Result "Passed · 0.41 s" · Open run →
   - two platforms: Run · When · jvm "Passed · 0.41 s" · ios-sim "Failed · 0.63 s" · Open run →
-- Accessible names: results strip "{testName} on {platform}, last {n} runs" (one strip: "{testName}, last {n} runs"); cell "{Status word}, {when}, {title}, {sha7}", e.g. "Failed, yesterday, Pull request from fix-today-count, a41f9c2". Runs kind: one `role="img"` for the strip, name "Last {n} runs on {default branch}: {p} passed, {f} failed, {e} empty." (zero counts omitted); cells have no names.
+- Accessible names: results strip "{testName} on {platform}, last {n} runs" (one strip: "{testName}, last {n} runs"); cell "{Status word}, {when}, {title}, {sha7}", e.g. "Failed, yesterday, Pull request from fix-today-count, a41f9c2". Runs kind: one `role="img"` for the strip, name "Last {n} runs on {default branch}: {p} passed, {f} failed, {e} empty." (zero counts omitted; {default branch} = `projects.default_branch`, the branch the strip shows); cells have no names.
 - Project page "Last 40 runs" is this component with `kind: 'runs'` (run status per default-branch run).
 - Flaky meaning (spec §11): a test with both a passing and a failing result on the same commit and platform within 30 days.
 
 ## TrendChart
 Built with Recharts; the Design System page draws it with `tp-charts.js`, which lays out in real pixels at the measured width (fixed text sizes), as Recharts does.
-Props: `kind: 'line' | 'bar'`, `series: {name, values, dashed?}[]`, `labels[]`, `floor?`, `marks?: {index, status: 'fail' | 'empty'}[]`, `format: 'pct' | 'int' | 'sec' | 'dur'`, `zero?`, `unit: 'run' | 'day'`, `loading?`.
-- Height 250 (200 below 560 wide). Margins L 56 R 60 T 22 B 30 (phone L 44 R 44).
+Props: `kind: 'line' | 'bar'`, `series: {name, values, dashed?}[]`, `labels[]`, `floor?`, `marks?: {index, status: 'fail' | 'empty'}[]`, `format: 'pct' | 'int' | 'sec' | 'dur'`, `zero?`, `unit: 'run' | 'day'`, `loading?`, `error?`, `onRetry?`.
+- Card (every page, including Test History): `--surface`, 1px `--line`, `--radius-xl`, padding 22×24, `--shadow-card`; title serif 20; scope line 13 `--ink-3` 2 below; caption (figcaption) 14/1.5 `--ink-2` 6 below the scope; chart 14 below.
+- Height 250 (200 below 560 wide). Margins L 56, T 22, B 30 (phone L 44). Right margin fits the end labels: max(60, 8 + widest end-value label + 6), phone max(44, …); label width measured at 13/600 (Recharts: measure the formatted last values before render and set `margin.right`).
 - Text: axis 12 `--ink-3`; first/last value labels 13/600 `--ink`. Fixed at every width.
 - Line: primary stroke 2.5 `--ink`; second series 2 `--ink-3` dashed 6 4 with a legend above. Endpoint dots r 4.5 at first and last points. Hollow intermediate dots (r 3) only when ≤ 12 points and width ≥ 560. End label = value.
 - Marks: 8px square at non-pass runs (`--fail` failed, `--attn` empty), 2px `--surface` stroke.
 - Bar (runs per UTC day): width 62% of slot, min 2, radius 2, `--layer-2`; hovered bar `--ink`. Starts at zero.
 - Y axis: bars and counts-that-must-read-as-amounts start at 0; lines are fitted to data ∪ floor with 12% padding, snapped to nice steps (2–3 steps), percentages clamped to 0–100. The CoverageBar (a bar) always runs 0–100.
-- X axis: one point per run (pass rate, test count, coverage per module, duration), one bar per UTC day (runs per day). Desktop labels at 0, ⅓, ⅔, last; phone first and last only.
+- X axis: one point per run (pass rate, test count, coverage per module, duration), one bar per UTC day (runs per day). Desktop labels at 0, ⅓, ⅔, last; phone first and last only. Duplicate positions are dropped (2–3 points never repeat a label).
+- Counting rule (axis, tooltip, table alike): the latest point is "Latest"; point i of n is "{n−1−i} runs ago" ("1 run ago" at 1; "days" for bars, "1 day ago"). The oldest of 30 points is "29 runs ago". Date labels, when given, replace it.
+- Y steps: `int` and `dur` step by whole numbers only (1, 2, 5, 10 × 10ⁿ, never below 1). All-zero data on a from-zero chart (bars, `zero`): domain 0…1, never −1…1.
 - Floor: dashed 1.5 `--attn` line + "floor {n}%" 12/600.
 - Tooltip on hover and keyboard focus (chart is focusable; ← → move; Esc closes): vertical `--line-strong` rule, hollow dot, panel `--raised` 180 wide: label, each series value, "Run failed"/"Run empty" if marked.
 - "Show table" secondary Button (44px) under every chart with ≥ 2 points; table has sticky header, newest first, max-height 320 with scroll.
 - one point: dashed frame, value, dot, "One run so far. The trend appears after the next run." — no axes. Same everywhere.
 - empty: dashed frame, "No runs yet". loading: `--raised` block.
+- error: the plot area (same height) becomes an inset panel inside the chart card, not a card of its own: `--inset`, 1px `--line`, `--radius-md`, centred: error icon 18 `--fail`, "Chart couldn’t be loaded" serif 20, "The rest of the page is still current." 14 `--ink-2`, secondary Button "Try again" 12 below; `role="alert"`. Title and scope line stay; caption and "Show table" are hidden.
 - Phone: same chart, fewer x labels, no intermediate dots, 2-step y ticks.
 Caption templates (figcaption; generated from data; omitted when fewer than 2 points — the in-chart one-point text covers it):
 - Pass rate: "{latest}% on the latest run. {n_failed} of the last {n} runs failed." / all passed: "All {n} runs passed."
 - Test count: "Grew from {first} to {last} over the last {n} runs." / "Fell from…" / "Held at {last} for the last {n} runs."
-- Coverage: "{Rose|Fell} from {first}% to {last}% over {n} runs; {above|below} its {floor}% floor."
-- Duration: "Between {min} and {max} over the last {n} runs." + " Median {med}."
-- Runs per day: "{total} runs in the last {days} days, {max} on the busiest day."
-Scope line under each chart title: pass rate, test count, coverage — "Default branch · CI and imported history"; duration — "Default branch · CI runs only (imported history has no durations)"; runs per day — "Default branch · CI and imported history".
+- Coverage: "{Rose|Fell} from {first}% to {last}% over {n} runs; {above|below} its {floor}% floor." / last = first: "Held at {last}% over {n} runs; {above|below} its {floor}% floor." (compared at one decimal, as displayed)
+- Duration: "Between {min} and {max} over the last {n} runs." + " Median {med}." (median only with one series; with several, min and max are across all series). Test History uses this template.
+- Runs per day: "{total} runs in the last {days} days, {max} on the busiest day." / total 0: "No runs in the last {days} days."
+Scope line under each chart title: pass rate, coverage — "Default branch · CI and imported history"; test count — "Default branch · CI runs only" (distinct tests per CI run; imported history is JVM-only, so mixing it would jump when iOS results arrive); duration — "Default branch · CI runs only (imported history has no durations)"; runs per day — "Default branch · CI and imported history".
 
 ## ErrorState
 Two variants of one component. Props: `variant: 'page' | 'inline'`, `title`, `message`, `onRetry`.
 - page: StatusBadge pill `error`, headline serif clamp(34–48), body serif 19 `--ink-2`, actions 20 below (gap 12): primary Button "Try again" (padding 0 16) + link 44px tall, padding 0 8. Used for whole-page failures (landing, project, run).
-- inline: inside a section or card: error icon 18 `--fail`, title serif 20, body 14 `--ink-2`, secondary Button "Try again". Used by RunFeed, charts, tables.
+- inline: inside a section or card: error icon 18 `--fail`, title serif 20, body 14 `--ink-2`, secondary Button "Try again". Used by RunFeed and tables. Charts use the TrendChart error state (inside the chart card) instead.
 
 ## Notice
 Page-level banner. Props: `tone: 'attn' | 'fail' | 'neutral'`, `icon: 'clock' | 'x-circle' | 'lock'`, `title?` (optional on every tone), `body`. Padding 14×16, `--radius-md`, bg tone tint, 1px tone border (neutral: `--line-strong`), gap 12, icon 18 in the tone ink (neutral: `--ink-2`).
-- Title 14.5/600 in the tone ink. Body 14/1.5 `--ink-2` (2 below a title).
+- Title 14.5/600 in the tone ink (neutral: `--ink-2`). Body 14/1.5 `--ink-2` (2 below a title).
 - Uses: stale project (project page) attn + clock + title; failed-run summary (run page) fail + x-circle + title; private repository note neutral + lock, no title.
 - ARIA: a Notice rendered with the page has no live-region role. One inserted after load (a project going stale while the page is open) gets `role="status"`.
 - Not used inside ProjectCard.
@@ -251,6 +255,7 @@ Props: `kind: 'project' | 'run' | 'test'`, `path` (the requested path), `project
 - test: "This test isn’t in {project}" / "Test history follows each test’s key, so a renamed or moved test starts a new history under its new name. Nothing has reported under this key." Primary "Latest {project} results" (the latest run page), link "Overview".
 - Unknown project in a run or test URL → the project kind. No Error badge, no retry (nothing failed).
 
+## Skeleton
 `--raised` blocks in the shape of the content, `tpShimmer` 1.6 s opacity (off under reduced motion), `aria-busy="true"` and a hidden `aria-label` ("Loading runs", "Loading results", …) on the container. The container’s frame (border, radius) does not shimmer.
 
 ## SampleTag

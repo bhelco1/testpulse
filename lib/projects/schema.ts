@@ -31,7 +31,7 @@ export const DeclaredSuiteStatusSchema = z.enum([
 export const DeclaredSuiteSchema = z.strictObject({
   name: z.string().min(1),
   layer: LayerSchema,
-  count: z.int().nonnegative(),
+  count: z.int().min(1),
   status: DeclaredSuiteStatusSchema,
   note: z.string().min(1).optional(),
 });

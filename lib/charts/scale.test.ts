@@ -108,6 +108,37 @@ describe('trendYScale', () => {
 });
 
 describe('niceScale', () => {
+  // Design v5 item 5: whole-number formats step by 1, 2 or 5 × 10ⁿ, never 2.5 × 10ⁿ.
+  it('steps whole numbers by 1, 2, 5 or 10 times a power of ten, never 25', () => {
+    expect(niceScale(0, 66, 3, { percent: false, integer: true })).toEqual({
+      min: 0,
+      max: 100,
+      ticks: [0, 50, 100],
+    });
+    expect(niceScale(0, 66, 3, { percent: false, integer: false })).toEqual({
+      min: 0,
+      max: 75,
+      ticks: [0, 25, 50, 75],
+    });
+  });
+
+  // Design v5 item 5 (tp-charts.js nice()): a single value of zero opens upwards only.
+  it('opens a range of only zero to 0…1, never -1…1', () => {
+    expect(niceScale(0, 0, 3, { percent: false, integer: false })).toEqual({
+      min: 0,
+      max: 1,
+      ticks: [0, 0.5, 1],
+    });
+  });
+
+  it('opens a single value upwards on a zero-based chart', () => {
+    expect(niceScale(3, 3, 2, { percent: false, integer: true, zero: true })).toEqual({
+      min: 3,
+      max: 4,
+      ticks: [3, 4],
+    });
+  });
+
   it('falls back to 0 to 1 when given no finite range', () => {
     expect(niceScale(Number.NaN, Number.NaN, 2, { percent: false, integer: false })).toEqual({
       min: 0,

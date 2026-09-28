@@ -29,8 +29,11 @@ function counts(suites: readonly DeclaredSuite[]): string {
 export function declaredSummary(suites: readonly DeclaredSuite[]): string {
   const [only] = suites;
   if (only === undefined) return '';
-  if (suites.length === 1)
-    return `Not counted: ${only.name} (${counts(suites)}), ${PHRASE[only.status]}`;
+  if (suites.length === 1) {
+    // Design v5 item 12 (tp-kit.js): without a count the brackets go.
+    const count = only.count > 0 ? ` (${counts(suites)})` : '';
+    return `Not counted: ${only.name}${count}, ${PHRASE[only.status]}`;
+  }
   const groups = STATUS_ORDER.map(
     (status) => [status, suites.filter((suite) => suite.status === status)] as const,
   ).filter(([, group]) => group.length > 0);

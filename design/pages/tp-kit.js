@@ -56,7 +56,7 @@
   const counts = list => { const by = {}; list.forEach(s => { const u = s.layer === 'e2e' ? 'flow' : 'test'; by[u] = (by[u] || 0) + s.count; }); return ['flow', 'test'].filter(u => by[u]).map(u => qty(by[u], u)).join(' and '); };
   function declaredSummary(suites) {
     if (!suites || !suites.length) return '';
-    if (suites.length === 1) { const s = suites[0]; return `Not counted: ${s.name} (${counts([s])}), ${PHRASE[s.status]}`; }
+    if (suites.length === 1) { const s = suites[0]; return s.count > 0 ? `Not counted: ${s.name} (${counts([s])}), ${PHRASE[s.status]}` : `Not counted: ${s.name}, ${PHRASE[s.status]}`; } /* v5 item 12: sync rejects count < 1; defensive fallback drops the brackets */
     const groups = ['runs_in_ci_not_reported', 'authored_not_executed'].map(st => suites.filter(s => s.status === st)).filter(g => g.length);
     if (groups.length === 1) return `Not counted: ${counts(groups[0])} in ${groups[0].length} suites, ${PHRASE[groups[0][0].status]}`;
     return 'Not counted: ' + groups.map(g => `${counts(g)} ${PHRASE[g[0].status]}`).join('; ');

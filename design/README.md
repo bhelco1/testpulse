@@ -1,4 +1,4 @@
-# testpulse handoff v4
+# testpulse handoff v5
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -160,7 +160,7 @@ Ground rules: A — Design System page is canonical; pages were changed to match
 59. Tooltip on hover and keyboard focus (← → to move, Esc to close); drawn open.
 60. Every chart kind drawn at 390: height 200, first/last x labels only, no intermediate dots, text sizes unchanged.
 61. Caption templates per chart type are in components.md; with fewer than 2 points the caption is omitted and the in-chart one-point text is shown.
-62. Each chart states its scope under the title: pass rate, test count, coverage — "Default branch · CI and imported history"; duration — "Default branch · CI runs only (imported history has no durations)"; runs per day — "Default branch · CI and imported history" (corrected, see 72).
+62. Each chart states its scope under the title: pass rate, coverage — "Default branch · CI and imported history"; test count — "Default branch · CI runs only" (changed in v5, item 7); duration — "Default branch · CI runs only (imported history has no durations)"; runs per day — "Default branch · CI and imported history" (corrected, see 72).
 
 **Pyramid**
 63. Bar height 30, radius 4 (`--radius-xs`), grid `110px minmax(0,1fr) 120px` (phone `80px minmax(0,1fr) 88px`), 14 px, count + "% of total", min bar 6 px, header = big total + "tests executed in the latest run".
@@ -281,3 +281,33 @@ Same rules as v3: the Design System page is canonical, components.md matches it,
 - How Its Tested.dc.html, Admin.dc.html, Privacy.dc.html, Phone Views.dc.html (apostrophes only, item 23)
 - design/components.md, design/data-map.md, design/tokens.css, design/README.md
 - design/pages/ (re-copied)
+
+## Changes in v5
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing outside items 1–16 was changed.
+
+**TrendChart**
+1. Held wording added: "Held at {last}% over {n} runs; {above|below} its {floor}% floor." Used when last = first at one decimal (as displayed). Drawn ("LINE · coverage held").
+2. One rule for axis, tooltip and table: the latest point is "Latest"; point i of n is "{n−1−i} runs ago". The oldest of 30 is "29 runs ago" everywhere. Date labels replace it when given. tp-charts.js corrected (shared `ago()` helper).
+3. Drawn ("ERROR · inside the chart card"): the plot area becomes an inset panel in the same card (`--inset`, 1px `--line`, `--radius-md`, same height): icon 18 `--fail`, "Chart couldn’t be loaded" serif 20, "The rest of the page is still current." 14 `--ink-2`, secondary "Try again", `role="alert"`. Title and scope stay; caption and "Show table" hidden. New props `error`, `onRetry`. ErrorState inline is no longer used by charts.
+4. Test History now uses the standard card: 20 px title, scope then caption, 22×24 padding, `--shadow-card`. Caption is the Duration template: "Between {min} and {max} over the last {n} runs." + " Median {med}." (median only with one series; with several, min/max across all). The free prose is gone; with one run the caption is omitted.
+5. All four confirmed and tp-charts.js corrected: whole-number steps for `int`/`dur` (1, 2, 5, 10 × 10ⁿ, min 1); all-zero from-zero chart opens 0…1 (drawn); duplicate x positions dropped (drawn with 3 points); "1 run ago" / "1 day ago". Also drawn: runs-per-day caption at zero, "No runs in the last {days} days."
+6. Rule: right margin = max(60, 8 + widest end-value label + 6), phone max(44, …), label measured at 13/600. In Recharts, measure the formatted last values and set `margin.right`. The Design System no longer clips "100.0%" or "92.0%".
+7. Test count scope is "Default branch · CI runs only" (distinct tests, CI runs only) in components.md, data-map.md (Trends row), README item 62, the Design System and the Project page.
+
+**Components**
+8. Both confirmed: "Failed on ios-sim, errored on jvm in the same run." and "Passed on jvm, skipped on ios-sim in the same run." Group order failed, errored, passed, skipped. The line lives in the expanded detail, so a passed/skipped mismatch shows only in the platform list. Run Detail's script now flags any status difference and builds the sentence from data.
+9. `interactive` removed: results strips are always interactive, the runs strip never is. `initialRun` accepted (default latest). Test History opens on the latest failing run, else the latest run; its script is updated. Runs-kind `{branch}` is the project’s default branch (`projects.default_branch`).
+10. Confirmed: neutral Notice title is `--ink-2`. Written into components.md and the Design System.
+11. Empty and error tiles span all three run columns (`grid-column: 2 / -1`). Error tile `role="status"`. Heading in every state; the note shows the connection (live or offline) in every state. Drawn in the kiosk runs grid.
+12. A declared suite always has count ≥ 1 (`projects:sync` rejects < 1). tp-kit.js also drops the brackets if a count is missing: "Not counted: {name}, {phrase}".
+13. Confirmed: Button takes `href` and renders `<a href>` with identical styling and states. NotFound already uses the link form.
+
+**Bundle fixes**
+14. "## Skeleton" heading restored in components.md.
+15. Test History sample now reads "Pull request from fix-today-count, yesterday".
+16. data-map.md: "Projects reporting" counts projects with a latest run that is not stale (days since last report ≤ expected cadence). Health marker is also worked out from public data (stale by cadence, empty = latest total 0, below floor from latest coverage). `alerts` is now read only by Admin.
+
+**Follow-up**
+17. StatusTimeline's oldest label now uses the TrendChart counting rule (item 2): "{n−1} runs ago", "1 run ago" at 2, so 40 cells read "39 runs ago" (Design System, Project page, Test History, components.md). "Last {n} runs" when more runs than fit is unchanged.
+
+Files changed in v5: Design System.dc.html, Test History.dc.html, Run Detail.dc.html, Project Page.dc.html, tp-charts.js, tp-kit.js, design/README.md, design/components.md, design/data-map.md, and their copies in design/pages/.

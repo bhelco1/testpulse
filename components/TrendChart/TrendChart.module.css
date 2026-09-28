@@ -232,3 +232,39 @@
   text-align: right;
   font-weight: 600;
 }
+
+/* Design v5 item 3: the error state is an inset panel inside the chart card, not a card of its own. */
+.errorPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  text-align: center;
+  border-radius: var(--radius-md);
+  background: var(--inset);
+  border: 1px solid var(--line);
+}
+
+.errorIcon {
+  flex: none;
+  color: var(--fail);
+  margin-bottom: 6px;
+}
+
+.errorTitle {
+  font: 500 20px var(--font-serif);
+  color: var(--ink);
+}
+
+.errorText {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+/* components.md: "Try again" sits 12 px below the text, the 4 px gap plus this. */
+.errorRetry {
+  margin-top: 8px;
+}

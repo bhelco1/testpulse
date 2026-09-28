@@ -76,9 +76,9 @@ export interface MismatchGroup {
 // Failing platforms lead, both in the sentence and in the platform list (design v4 item 45).
 const MISMATCH_ORDER: readonly TestStatus[] = ['failed', 'error', 'passed', 'skipped'];
 
-// Section 11 cross-platform parity, as the table draws it (design v4 items 45 and 46): any
-// difference in status across the run's platforms, including failed on one and skipped on
-// another. Groups follow MISMATCH_ORDER; platforms keep data order inside a group.
+// Section 11 cross-platform parity, as the table draws it (design v4 items 45 and 46, confirmed
+// in v5 item 8): any two different statuses across the run's platforms, passed and skipped
+// included. Groups follow MISMATCH_ORDER; platforms keep data order inside a group.
 export function platformMismatch(platforms: readonly PlatformResult[]): MismatchGroup[] | null {
   const groups = MISMATCH_ORDER.map((status) => ({
     status,

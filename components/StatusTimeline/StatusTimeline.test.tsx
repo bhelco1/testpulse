@@ -372,14 +372,21 @@ describe('StatusTimeline, results kind', () => {
     expect(part(container, 'field-status')?.className).toContain('toneAttn');
   });
 
-  it('with few runs keeps them all and labels the oldest "{n} runs ago"', () => {
+  // Design v5 item 17: the oldest label counts as TrendChart does, the oldest of n being n - 1
+  // runs back.
+  it('with few runs keeps them all and labels the oldest "{n-1} runs ago"', () => {
     const { container } = render(
       results(history({ jvm: () => 'passed', 'ios-sim': () => 'passed' }, 3, 37)),
     );
 
     expect(stripsOf(container).map((s) => cellsOf(s).length)).toEqual([3, 3]);
-    expect(text(container, 'oldest')).toBe('3 runs ago');
+    expect(text(container, 'oldest')).toBe('2 runs ago');
     expect(text(container, 'latest')).toBe('Latest');
+  });
+
+  it('with two runs labels the oldest "1 run ago"', () => {
+    const { container } = render(results(history({ node: () => 'passed' }, 2, 38)));
+    expect(text(container, 'oldest')).toBe('1 run ago');
   });
 
   it('with one cell shown has no oldest label, only "Latest"', () => {
@@ -388,9 +395,9 @@ describe('StatusTimeline, results kind', () => {
     expect(text(container, 'latest')).toBe('Latest');
   });
 
-  it('with all 40 fitting labels the oldest "40 runs ago"', () => {
+  it('with all 40 fitting labels the oldest "39 runs ago"', () => {
     const { container } = render(results(TWO));
-    expect(text(container, 'oldest')).toBe('40 runs ago');
+    expect(text(container, 'oldest')).toBe('39 runs ago');
   });
 
   it('with more runs than fit shows the latest that fit and says "Last {n} runs"', () => {
@@ -470,6 +477,14 @@ describe('StatusTimeline, runs kind', () => {
     expect(container.querySelector('[role="listbox"], [tabindex]')).toBeNull();
     expect(part(container, 'panel')).toBeNull();
     expect(legendOf(container)).toEqual(['Passed', 'Failed', 'Empty']);
+  });
+
+  it('labels the oldest of the runs shown by the same counting rule', () => {
+    const { container } = render(
+      <StatusTimeline kind="runs" runs={runsOf(['passed', 'failed', 'empty', 'passed'])} />,
+    );
+    expect(text(container, 'oldest')).toBe('3 runs ago');
+    expect(text(container, 'latest')).toBe('Latest');
   });
 
   it('omits zero counts and is singular at one run', () => {

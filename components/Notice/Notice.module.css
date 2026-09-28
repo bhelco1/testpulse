@@ -36,7 +36,7 @@
   color: var(--fail);
 }
 
-/* The design gives --ink-2 as the neutral notice's ink (its icon); a neutral title uses it too. */
+/* Design v5 item 10: the neutral notice's ink, for its icon and its title, is --ink-2. */
 .neutral .icon,
 .neutral .title {
   color: var(--ink-2);

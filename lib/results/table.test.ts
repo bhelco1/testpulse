@@ -198,6 +198,29 @@ describe('platformMismatch', () => {
   });
 });
 
+// Design v5 item 8: the two examples components.md adds, built from the platforms' statuses.
+describe('platformMismatch and mismatchSentence together', () => {
+  it('reads "Failed on ios-sim, errored on jvm in the same run."', () => {
+    const groups = platformMismatch([
+      { platform: 'jvm', status: 'error' },
+      { platform: 'ios-sim', status: 'failed' },
+    ]);
+    expect(groups && mismatchSentence(groups)).toBe(
+      'Failed on ios-sim, errored on jvm in the same run.',
+    );
+  });
+
+  it('reads "Passed on jvm, skipped on ios-sim in the same run."', () => {
+    const groups = platformMismatch([
+      { platform: 'ios-sim', status: 'skipped' },
+      { platform: 'jvm', status: 'passed' },
+    ]);
+    expect(groups && mismatchSentence(groups)).toBe(
+      'Passed on jvm, skipped on ios-sim in the same run.',
+    );
+  });
+});
+
 describe('mismatchSentence', () => {
   it('reads failing platforms first: "Failed on ios-sim, passed on jvm in the same run."', () => {
     expect(

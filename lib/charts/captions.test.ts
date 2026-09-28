@@ -70,8 +70,23 @@ describe('coverageCaption', () => {
     );
   });
 
-  it('is omitted when coverage ended where it started, which the design has no words for', () => {
-    expect(coverageCaption([91.3, 90, 91.3], 80)).toBeNull();
+  // Design v5 item 1, with the Design System's "coverage held" sample.
+  it('says coverage held when it ended where it started', () => {
+    expect(coverageCaption([92.0, 91.6, 91.2, 91.8, 92.4, 92.1, 91.7, 91.9, 92.3, 92.0], 91)).toBe(
+      'Held at 92.0% over 10 runs; above its 91% floor.',
+    );
+    expect(coverageCaption([88.5, 90, 88.5], 91)).toBe(
+      'Held at 88.5% over 3 runs; below its 91% floor.',
+    );
+  });
+
+  it('compares first and last at one decimal, as they are displayed', () => {
+    expect(coverageCaption([92.01, 92.04], 91)).toBe(
+      'Held at 92.0% over 2 runs; above its 91% floor.',
+    );
+    expect(coverageCaption([92.04, 92.06], 91)).toBe(
+      'Rose from 92.0% to 92.1% over 2 runs; above its 91% floor.',
+    );
   });
 
   it('is omitted with fewer than two runs', () => {
@@ -124,16 +139,22 @@ describe('runsPerDayCaption', () => {
     );
   });
 
+  // Design v5 item 5, drawn as "BAR · all zero, 0…1".
+  it('says there were no runs when every day is zero', () => {
+    expect(runsPerDayCaption([0, 0, 0, 0, 0, 0, 0])).toBe('No runs in the last 7 days.');
+  });
+
   it('is omitted with fewer than two days', () => {
     expect(runsPerDayCaption([4])).toBeNull();
   });
 });
 
 describe('TREND_SCOPE', () => {
+  // Design v5 item 7: test count reads CI runs only.
   it('names the runs each chart reads, as the design words it', () => {
     expect(TREND_SCOPE).toEqual({
       passRate: 'Default branch · CI and imported history',
-      testCount: 'Default branch · CI and imported history',
+      testCount: 'Default branch · CI runs only',
       coverage: 'Default branch · CI and imported history',
       duration: 'Default branch · CI runs only (imported history has no durations)',
       runsPerDay: 'Default branch · CI and imported history',

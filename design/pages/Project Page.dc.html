@@ -174,7 +174,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div role="img" aria-label="{{ stripAria }}" style="display:flex;justify-content:flex-end;align-items:flex-end;gap:3px;height:48px;overflow:hidden">
 <sc-for list="{{ strip }}" as="c" hint-placeholder-count="40"><span style="flex:0 1 16px;min-width:6px;height:{{ c.h }};box-sizing:border-box;border-radius:2px;background:{{ c.bg }};border:{{ c.bd }};display:flex;justify-content:center;align-items:flex-start;font:700 10px/14px 'Public Sans',sans-serif;color:var(--on-ink)">{{ c.g }}</span></sc-for>
 </div>
-<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><span>40 runs ago</span><span>Latest</span></div>
+<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><span>39 runs ago</span><span>Latest</span></div>
 <div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)"><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:14px;border-radius:2px;background:var(--pass)"></span>Passed</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;border-radius:2px;background:var(--fail)"></span>Failed</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;box-sizing:border-box;border-radius:2px;background:var(--attn-tint);border:1.5px dashed var(--attn)"></span>Empty</span></div>
 </div>
 </section>
@@ -373,7 +373,7 @@ class Component extends DCLogic {
     const covScope = 'Default branch · CI and imported history';
     const charts = [
       { title: 'Pass rate', scope: covScope, caption: 'All 30 runs passed.', props: { series: [{ name: 'Pass rate', values: p.pass }], format: 'pct', unit: 'run', ariaLabel: 'Pass rate per run. All 30 runs passed.' } },
-      { title: 'Tests per run', scope: covScope, caption: p.testsCap, props: { series: [{ name: 'Tests', values: p.tests }], format: 'int', unit: 'run', ariaLabel: 'Tests per run. ' + p.testsCap } },
+      { title: 'Tests per run', scope: 'Default branch · CI runs only', caption: p.testsCap, props: { series: [{ name: 'Tests', values: p.tests }], format: 'int', unit: 'run', ariaLabel: 'Tests per run. ' + p.testsCap } },
       { title: p.covTitle, scope: covScope, caption: p.covCaption, props: { series: [{ name: p.cov[0][0], values: p.covVals }], labels: dates, floor: p.covFloor, format: 'pct', unit: 'run', ariaLabel: p.covTitle + '. ' + p.covCaption } },
       { title: 'Run duration', scope: 'Default branch · CI runs only (imported history has no durations)', caption: p.durCap, props: { series: [{ name: 'Duration', values: p.dur }], format: 'dur', unit: 'run', ariaLabel: 'Run duration. ' + p.durCap } },
     ];

@@ -51,8 +51,9 @@ export interface PlatformResult {
 export type ResultsTimelineRun = TimelineRunBase & { results: readonly PlatformResult[] };
 export type RunsTimelineRun = TimelineRunBase & { status: RunStatus };
 
-// results: one test's history (Test History), oldest run first. runs: the project page's "Last
-// 40 runs" strip of default-branch runs, oldest first; never interactive.
+// results: one test's history (Test History), oldest run first; always interactive. runs: the
+// project page's "Last 40 runs" strip of default-branch runs, oldest first; never interactive.
+// There is no interactive prop (design v5 item 9).
 export type StatusTimelineProps =
   | {
       kind: 'results';
@@ -140,10 +141,11 @@ function useCapacity() {
   return [measured, capacity] as const;
 }
 
-// The label under the oldest cell: none before measurement or with one cell shown.
+// The label under the oldest cell: none before measurement or with one cell shown. It counts as
+// TrendChart does (design v5 item 17): the oldest of n shown is n - 1 runs back.
 function oldestLabel(capacity: number | null, shown: number, total: number): string {
   if (capacity === null || shown <= 1) return '';
-  return shown < total ? `Last ${qty(shown, 'run')}` : `${qty(shown, 'run')} ago`;
+  return shown < total ? `Last ${qty(shown, 'run')}` : `${qty(shown - 1, 'run')} ago`;
 }
 
 function Ends({ oldest }: { oldest: string }) {
@@ -193,6 +195,8 @@ function RunsTimeline({ runs }: { runs: readonly RunsTimelineRun[] }) {
     .map((status) => [count(status), status] as const)
     .filter(([n]) => n > 0)
     .map(([n, status]) => `${n} ${status}`);
+  // The strip holds default-branch runs only, so its runs' branch is projects.default_branch,
+  // the branch design v5 item 9 names it by.
   const branch = runs.at(-1)?.branch ?? '';
   const name = `Last ${qty(shown.length, 'run')} on ${branch}: ${counts.join(', ')}.`;
 

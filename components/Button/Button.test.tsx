@@ -10,6 +10,7 @@ import { Button, type ButtonVariant } from './Button';
 afterEach(cleanup);
 
 const CSS = join(import.meta.dirname, 'Button.module.css');
+const TOKENS = join(import.meta.dirname, '..', '..', 'design', 'tokens.css');
 const VARIANTS: ButtonVariant[] = ['primary', 'secondary', 'ghost', 'danger'];
 
 describe('Button', () => {
@@ -143,7 +144,38 @@ describe('Button', () => {
         background: 'var(--raised)',
         color: 'var(--ink-3)',
         border: '0px',
+        cursor: 'not-allowed',
       });
+    });
+
+    it('draws the busy ring as stroke 3 in a 24 viewBox, track --ink-3 at 50% (design v4 item 32)', () => {
+      const { getByRole } = render(<Button busy>Saving…</Button>);
+      const ring = getByRole('button', { name: 'Saving…' }).querySelector('svg');
+      expect(ring?.getAttribute('viewBox')).toBe('0 0 24 24');
+      expect(ring?.getAttribute('stroke-width')).toBe('3');
+      expect(ring?.querySelector('path')?.getAttribute('stroke')).toBe('currentColor');
+      expect(ruleFor(CSS, '.track')).toEqual({ stroke: 'var(--ink-3)', opacity: '0.5' });
+    });
+
+    it('shows a pointer while pressable, progress while busy and not-allowed while disabled', () => {
+      expect(ruleFor(CSS, '.live')).toEqual({ cursor: 'pointer' });
+      expect(ruleFor(CSS, ".button[aria-busy='true']")).toEqual({ cursor: 'progress' });
+      expect(ruleFor(CSS, ".button[aria-disabled='true']")).toMatchObject({
+        cursor: 'not-allowed',
+      });
+    });
+
+    it('fades hover and pressed fills and borders over --motion-fast', () => {
+      // Prettier breaks the list over lines; the value is compared on one line.
+      expect(ruleFor(CSS, '.button').transition?.replace(/\s+/g, ' ')).toBe(
+        'background-color var(--motion-fast) ease, border-color var(--motion-fast) ease',
+      );
+    });
+
+    it('relies on the global reduced-motion rule, which turns every transition off', () => {
+      expect(ruleFor(TOKENS, '*, *::before, *::after', '(prefers-reduced-motion: reduce)')).toEqual(
+        { animation: 'none !important', transition: 'none !important' },
+      );
     });
 
     it('turns the busy ring every 0.9s with a keyframe of its own', () => {

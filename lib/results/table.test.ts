@@ -6,6 +6,7 @@ import {
   filterResults,
   layersPresent,
   orderResults,
+  mismatchSentence,
   platformMismatch,
   statusCounts,
   type TableResult,
@@ -118,23 +119,71 @@ describe('layersPresent', () => {
   });
 });
 
+// Design v4 items 45 and 46: any difference across platforms in one run is a mismatch. Groups run
+// failed, errored, passed, skipped; platforms keep data order inside a group.
 describe('platformMismatch', () => {
-  it('names the passing and failing platforms when they disagree', () => {
+  it('groups failing platforms first, then passed', () => {
     expect(
       platformMismatch([
         { platform: 'jvm', status: 'passed' },
         { platform: 'ios-sim', status: 'failed' },
       ]),
-    ).toEqual({ passed: ['jvm'], failed: ['ios-sim'] });
+    ).toEqual([
+      { status: 'failed', platforms: ['ios-sim'] },
+      { status: 'passed', platforms: ['jvm'] },
+    ]);
   });
 
-  it('counts error as failing', () => {
+  it('counts a skipped platform against a failing one as a mismatch', () => {
+    expect(
+      platformMismatch([
+        { platform: 'jvm', status: 'skipped' },
+        { platform: 'ios-sim', status: 'failed' },
+      ]),
+    ).toEqual([
+      { status: 'failed', platforms: ['ios-sim'] },
+      { status: 'skipped', platforms: ['jvm'] },
+    ]);
+  });
+
+  it('counts passed against skipped as a mismatch too', () => {
+    expect(
+      platformMismatch([
+        { platform: 'jvm', status: 'skipped' },
+        { platform: 'ios-sim', status: 'passed' },
+      ]),
+    ).toEqual([
+      { status: 'passed', platforms: ['ios-sim'] },
+      { status: 'skipped', platforms: ['jvm'] },
+    ]);
+  });
+
+  it('keeps error as its own group, after failed', () => {
     expect(
       platformMismatch([
         { platform: 'jvm', status: 'error' },
-        { platform: 'ios-sim', status: 'passed' },
+        { platform: 'ios-sim', status: 'failed' },
+        { platform: 'node', status: 'passed' },
       ]),
-    ).toEqual({ passed: ['ios-sim'], failed: ['jvm'] });
+    ).toEqual([
+      { status: 'failed', platforms: ['ios-sim'] },
+      { status: 'error', platforms: ['jvm'] },
+      { status: 'passed', platforms: ['node'] },
+    ]);
+  });
+
+  it('keeps data order inside a group', () => {
+    expect(
+      platformMismatch([
+        { platform: 'jvm', status: 'passed' },
+        { platform: 'ios-sim', status: 'failed' },
+        { platform: 'android', status: 'passed' },
+        { platform: 'chromium', status: 'failed' },
+      ]),
+    ).toEqual([
+      { status: 'failed', platforms: ['ios-sim', 'chromium'] },
+      { status: 'passed', platforms: ['jvm', 'android'] },
+    ]);
   });
 
   it('is null when every platform agrees, or when the test ran on one platform', () => {
@@ -144,22 +193,43 @@ describe('platformMismatch', () => {
         { platform: 'ios-sim', status: 'passed' },
       ]),
     ).toBeNull();
-    expect(
-      platformMismatch([
-        { platform: 'jvm', status: 'failed' },
-        { platform: 'ios-sim', status: 'error' },
-      ]),
-    ).toBeNull();
     expect(platformMismatch([{ platform: 'node', status: 'failed' }])).toBeNull();
+    expect(platformMismatch([])).toBeNull();
+  });
+});
+
+describe('mismatchSentence', () => {
+  it('reads failing platforms first: "Failed on ios-sim, passed on jvm in the same run."', () => {
+    expect(
+      mismatchSentence([
+        { status: 'failed', platforms: ['ios-sim'] },
+        { status: 'passed', platforms: ['jvm'] },
+      ]),
+    ).toBe('Failed on ios-sim, passed on jvm in the same run.');
   });
 
-  // The design draws only a pass against a fail; a skipped platform is not a mismatch it shows.
-  it('ignores skipped platforms', () => {
+  it('names a skipped platform: "Failed on ios-sim, skipped on jvm in the same run."', () => {
     expect(
-      platformMismatch([
-        { platform: 'jvm', status: 'skipped' },
-        { platform: 'ios-sim', status: 'failed' },
+      mismatchSentence([
+        { status: 'failed', platforms: ['ios-sim'] },
+        { status: 'skipped', platforms: ['jvm'] },
       ]),
-    ).toBeNull();
+    ).toBe('Failed on ios-sim, skipped on jvm in the same run.');
+  });
+
+  it('reads error as "errored on" and joins a group’s platforms with ", "', () => {
+    expect(
+      mismatchSentence([
+        { status: 'failed', platforms: ['ios-sim'] },
+        { status: 'error', platforms: ['jvm', 'android'] },
+        { status: 'passed', platforms: ['node'] },
+      ]),
+    ).toBe('Failed on ios-sim, errored on jvm, android, passed on node in the same run.');
+    expect(
+      mismatchSentence([
+        { status: 'error', platforms: ['jvm'] },
+        { status: 'passed', platforms: ['node'] },
+      ]),
+    ).toBe('Errored on jvm, passed on node in the same run.');
   });
 });

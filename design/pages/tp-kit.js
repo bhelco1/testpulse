@@ -38,43 +38,68 @@
     return { m, v: (v === 100 ? '100' : v.toFixed(1)) + '%', w: v + '%', fl: f + '%', below, ink: below ? 'var(--attn)' : 'var(--ink)', floorInk: below ? 'var(--attn)' : 'var(--ink-3)', floorLabel: below ? `below floor ${f}%` : `floor ${f}%` };
   }
   const part = (t, ink, w) => ({ t, ink: ink || 'inherit', w: w || 400 });
+  /* v4 item 28: run titles from stored data only (event, branch). */
+  function runTitle(event, branch) {
+    return { push: `Push to ${branch}`, pull_request: `Pull request from ${branch}`, schedule: 'Scheduled run', workflow_dispatch: 'Manual run' }[event] || `Run on ${branch}`;
+  }
+  /* v4 item 20: suite shortening. Path-style keeps the last path segment; dotted class names keep the last dotted segment. */
+  function shortSuite(s) { if (!s) return ''; return s.includes('/') ? s.split('/').pop() : s.split('.').pop(); }
+  /* v4 item 18: per-platform split, platform = last segment of the report key "job/module/platform"; counts always shown. */
+  function platformSplit(reports) {
+    const by = {}, order = [];
+    (reports || []).forEach(([k, v]) => { const p = String(k).split('/').pop(); if (!(p in by)) { by[p] = 0; order.push(p); } by[p] += v; });
+    return order.map(p => `${p} ${n(by[p])}`).join(' · ');
+  }
+  /* v4 item 17: "Not counted" footer summary from projects.declared_suites. */
+  const PHRASE = { runs_in_ci_not_reported: 'run in CI, not yet reported', authored_not_executed: 'authored, not yet executed' };
+  const qty = (c, u) => `${n(c)} ${u}${c === 1 ? '' : 's'}`; /* v4 item 50: every count noun is singular at 1 */
+  const counts = list => { const by = {}; list.forEach(s => { const u = s.layer === 'e2e' ? 'flow' : 'test'; by[u] = (by[u] || 0) + s.count; }); return ['flow', 'test'].filter(u => by[u]).map(u => qty(by[u], u)).join(' and '); };
+  function declaredSummary(suites) {
+    if (!suites || !suites.length) return '';
+    if (suites.length === 1) { const s = suites[0]; return `Not counted: ${s.name} (${counts([s])}), ${PHRASE[s.status]}`; }
+    const groups = ['runs_in_ci_not_reported', 'authored_not_executed'].map(st => suites.filter(s => s.status === st)).filter(g => g.length);
+    if (groups.length === 1) return `Not counted: ${counts(groups[0])} in ${groups[0].length} suites, ${PHRASE[groups[0][0].status]}`;
+    return 'Not counted: ' + groups.map(g => `${counts(g)} ${PHRASE[g[0].status]}`).join('; ');
+  }
   /* ProjectCard view-model. o: {name, tagline, private, run:{status, when, branch, sha, total, failed, skipped, dur}|null,
-     layers:{}, cov:[[m,v,f]], reports:[[k,n]], repSide, declared, health, failing:[{name, plat}], stale, emptyReports} */
+     layers:{}, cov:[[m,v,f]], reports:[[k,n]], declared:[{name, layer, count, status}], health, failing:[{suite, name, platform}], stale} */
   function card(o) {
     const run = o.run;
     const status = !run ? 'not_reporting' : run.status;
     const failed = status === 'failed', empty = status === 'empty';
     const f = run && run.failed || 0;
     const subParts = !run ? [] : empty
-      ? [part('tests executed ·'), part(`${o.reports.length} reports received`)]
+      ? [part('tests executed ·'), part(`${qty(o.reports.length, 'report')} received`)]
       : [part('tests ·'), f ? part(`${f} failed`, 'var(--fail)', 600) : part('0 failed'), part('·'), part(`${run.skipped || 0} skipped ·`), part(run.dur)];
     const health = H[o.health || (!run ? 'not_reporting' : empty ? 'empty' : o.stale ? 'stale' : 'healthy')];
-    const failing = o.failing || [];
+    const failing = (o.failing || []).map(x => ({ short: `${shortSuite(x.suite)} › ${x.name}`, full: `${x.suite} › ${x.name}`, plat: x.platform }));
+    const subK = subParts.slice(1);
     return {
       st: S[status], hasRun: !!run, notReporting: !run,
       when: run ? run.when : '', whenInk: o.stale ? 'var(--attn)' : 'var(--ink-3)', branch: run ? run.branch : '', sha: run ? run.sha : '',
       shaLink: !!run && !o.private, shaPlain: !!run && !!o.private,
       name: o.name, private: !!o.private, tagline: o.tagline,
       total: run ? (empty ? '0' : n(run.total)) : '', totalInk: empty ? 'var(--attn)' : 'var(--ink)', subParts,
-      hasFailing: failed && failing.length > 0, failName: failing[0] ? failing[0].name : '', failPlat: failing[0] ? failing[0].plat : '',
+      hasFailing: failed && failing.length > 0, failName: failing[0] ? failing[0].short : '', failFull: failing[0] ? failing[0].full : '', failPlat: failing[0] ? failing[0].plat : '',
       hasMore: failing.length > 1, more: `+${failing.length - 1} more`,
-      hasLayers: !!run && !empty && !!o.layers, layers: o.layers ? layers(o.layers) : [],
+      hasLayers: !!run && !empty && !!o.layers, kLayers: !!run && !empty && !failed && !!o.layers, layers: o.layers ? layers(o.layers) : [],
+      kHead: empty ? 'tests executed' : 'tests', kRest: subK, metaInk: o.stale ? 'var(--attn)' : 'var(--ink-3)',
       emptyNote: empty ? 'Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn’t counted in any total.' : '',
       hasCov: !!run && !empty && (o.cov || []).length > 0, noCov: !!run && !empty && !(o.cov || []).length, cov: (o.cov || []).map(x => cov(...x)),
-      hasReports: !!run && (o.reports || []).length > 0, repHead: `${(o.reports || []).length} reports in this run`, repSide: o.repSide || '',
+      hasReports: !!run && (o.reports || []).length > 0, repHead: `${qty((o.reports || []).length, 'report')} in this run`, repSide: platformSplit(empty ? (o.reports || []).map(([k]) => [k, 0]) : o.reports),
       reports: (o.reports || []).map(([k, v]) => ({ k, n: empty ? '0' : n(v), ink: empty ? 'var(--attn)' : 'var(--ink)' })),
-      declared: o.declared || '', health,
+      declared: Array.isArray(o.declared) ? declaredSummary(o.declared) : (o.declared || ''), health,
       frame: failed ? 'var(--fail)' : (o.stale || empty) ? 'var(--attn)' : 'var(--line)',
     };
   }
   /* RunFeedRow view-model. o: {status, title, project, branch, sha, total, failed, passed, dur, reports, when, private, isNew} */
   function row(o, showProject) {
     const st = S[o.status];
-    const count = o.status === 'failed' ? `${o.failed} failed` : o.status === 'empty' ? '0 tests' : `${n(o.total)} tests`;
-    const count2 = o.status === 'failed' ? `· ${n(o.passed)} of ${n(o.total)}` : o.status === 'empty' ? `· ${o.reports} reports` : `· ${o.dur}`;
+    const count = o.status === 'failed' ? `${n(o.failed)} failed` : o.status === 'empty' ? '0 tests' : qty(o.total, 'test');
+    const count2 = o.status === 'failed' ? `· ${n(o.passed)} of ${n(o.total)}` : o.status === 'empty' ? `· ${qty(o.reports, 'report')}` : `· ${o.dur}`;
     return { st, title: o.title || '', hasTitle: !o.private, private: !!o.private, project: o.project, showProject: showProject !== false,
       branch: o.branch, sha: o.sha, count, count2, countInk: o.status === 'failed' ? 'var(--fail)' : o.status === 'empty' ? 'var(--attn)' : 'var(--ink)',
-      countW: o.status === 'passed' ? 400 : 600, when: o.when, isNew: !!o.isNew, bg: o.isNew ? 'var(--raised)' : 'transparent' };
+      countW: o.status === 'passed' ? 400 : 600, kInk: o.status === 'passed' ? 'var(--ink-2)' : o.status === 'failed' ? 'var(--fail)' : 'var(--attn)', when: o.when, isNew: !!o.isNew, bg: o.isNew ? 'var(--raised)' : 'transparent' };
   }
   const lum = h => { const q = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * q[0] + 0.7152 * q[1] + 0.0722 * q[2]; };
   const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
@@ -88,5 +113,5 @@
     return P.map(([f, b, min, kind]) => { const r = ratio(T[f], T[b]); const ok = r >= min;
       return { label: `--${f} on --${b}` + (kind ? ' (graphic)' : ''), fg: T[f], bg: T[b], ratio: r.toFixed(2) + ':1', verdict: ok ? (min === 3 ? '3:1 ✓' : 'AA ✓') : 'FAIL', verdictColor: ok ? 'var(--pass)' : 'var(--fail)' }; });
   }
-  window.TPKit = { DARK, LIGHT, themeVars, S, H, ORDER, TONE, NAME, layers, cov, card, row, pairs, ratio, n };
+  window.TPKit = { DARK, LIGHT, themeVars, S, H, ORDER, TONE, NAME, layers, cov, card, row, pairs, ratio, n, runTitle, shortSuite, platformSplit, declaredSummary, qty };
 })();

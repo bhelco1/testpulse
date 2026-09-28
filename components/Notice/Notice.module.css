@@ -36,7 +36,9 @@
   color: var(--fail);
 }
 
-.neutral .icon {
+/* The design gives --ink-2 as the neutral notice's ink (its icon); a neutral title uses it too. */
+.neutral .icon,
+.neutral .title {
   color: var(--ink-2);
 }
 
@@ -46,13 +48,11 @@
 }
 
 .body {
-  font-size: 13.5px;
-  color: var(--ink-2);
-  margin-top: 2px;
-}
-
-.neutral .body {
   font-size: 14px;
   line-height: 1.5;
-  margin-top: 0;
+  color: var(--ink-2);
+}
+
+.title + .body {
+  margin-top: 2px;
 }

@@ -66,6 +66,8 @@ describe('LayerBar', () => {
       'Visual10',
     ]);
     expect(ruleFor(CSS, '.kiosk .bar')).toEqual({ height: '14px', 'margin-bottom': '12px' });
+    // v4 item 25b: segments keep the 3px gap and are at least 5px at kiosk size.
+    expect(ruleFor(CSS, '.kiosk .segment')).toEqual({ 'min-width': '5px' });
     expect(ruleFor(CSS, '.kiosk .labels')).toEqual({
       gap: '6px var(--space-6)',
       'font-size': '24px',

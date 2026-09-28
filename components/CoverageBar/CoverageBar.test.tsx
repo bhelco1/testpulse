@@ -71,11 +71,19 @@ describe('CoverageBar', () => {
       'font-size': '14px',
     });
     expect(ruleFor(CSS, '.module')).toEqual({
+      'min-width': '0px',
       font: '13px var(--font-mono)',
       color: 'var(--ink-2)',
+      'white-space': 'nowrap',
       overflow: 'hidden',
       'text-overflow': 'ellipsis',
     });
+  });
+
+  it('keeps a long module key on one line and puts the full key in its title (v4 item 34)', () => {
+    const key = 'packages/shared/src/very/long/module/path';
+    const { getByText } = render(<CoverageBar module={key} pct={92} floor={91} />);
+    expect(getByText(key).getAttribute('title')).toBe(key);
   });
 
   it('keeps the fill ink below the floor and turns the arrow, figure and floor words amber', () => {
@@ -103,21 +111,25 @@ describe('CoverageBar', () => {
       expect(floor?.style.left).toBe('91%');
     });
 
-    it('draws a below-floor row as the design draws the kiosk: no arrow, no amber', () => {
-      const { container } = render(
+    it('below floor: a 22px down arrow and the figure in --attn, still no floor words (v4 item 25h)', () => {
+      const { container, getByText } = render(
         <CoverageBar module="composeApp" pct={92.6} floor={93} variant="kiosk" />,
       );
       const { row, value } = parts(container);
 
       expect(row.dataset.state).toBe('below');
-      expect(row.className).not.toContain('below');
+      expect(row.className).toContain('below');
       expect(value?.textContent).toBe('92.6%');
-      expect(value?.querySelector('svg')).toBeNull();
+      const arrow = value?.querySelector('svg');
+      expect(arrow?.getAttribute('width')).toBe('22');
+      expect(arrow?.getAttribute('stroke-width')).toBe('2.8');
+      expect(arrow?.querySelector('path')?.getAttribute('d')).toBe('M12 5v14M6 13l6 6 6-6');
+      expect(getByText('composeApp').getAttribute('title')).toBe('composeApp');
     });
 
-    it('sets the kiosk row at 220 / fluid / 100 with a 10px track and a 3 by 22 floor tick', () => {
+    it('sets the kiosk row at 220 / fluid / 130 with a 10px track and a 3 by 22 floor tick', () => {
       expect(ruleFor(CSS, '.kiosk')).toEqual({
-        'grid-template-columns': '220px minmax(40px, 1fr) 100px',
+        'grid-template-columns': '220px minmax(40px, 1fr) 130px',
         'column-gap': '18px',
         'font-size': '24px',
       });
@@ -128,7 +140,10 @@ describe('CoverageBar', () => {
         width: '3px',
         height: '22px',
       });
-      expect(ruleFor(CSS, '.kiosk .value')).toEqual({ 'justify-content': 'flex-end' });
+      expect(ruleFor(CSS, '.kiosk .value')).toEqual({
+        'justify-content': 'flex-end',
+        gap: 'var(--space-2)',
+      });
     });
   });
 });

@@ -53,6 +53,8 @@
   --radius-lg: 16px;  /* tiles */
   --radius-xl: 20px;  /* cards */
   --radius-pill: 999px;
+  --radius-kiosk: 24px;       /* kiosk ProjectCard */
+  --radius-kiosk-inset: 14px; /* kiosk failing block and empty note */
   /* motion */
   --motion-fast: 120ms;  /* hover, focus, pressed */
   --motion-base: 200ms;  /* row expand, menu open, theme change */

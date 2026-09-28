@@ -1,8 +1,13 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
+import { formatCount, qty } from '../../lib/copy/count';
 import type { LayerSegment } from '../../lib/design/layers';
 import type { RunStatus } from '../../lib/ingest/normalize';
-import type { Visibility } from '../../lib/projects/schema';
+import { declaredSummary } from '../../lib/projects/declared-summary';
+import type { DeclaredSuite, Visibility } from '../../lib/projects/schema';
+import { shortSuite } from '../../lib/results/short-suite';
+import { platformSplit } from '../../lib/runs/platform-split';
 import { CoverageBar, type CoverageBarProps } from '../CoverageBar/CoverageBar';
 import { HealthMarker, type HealthState } from '../HealthMarker/HealthMarker';
 import { EmptyIcon } from '../icons/icons';
@@ -46,8 +51,12 @@ export interface ReportCount {
   total: number;
 }
 
+// The page sets the level so the card fits its outline (v4 item 25e).
+export type HeadingLevel = 2 | 3 | 4 | 5 | 6;
+
 interface Common {
   project: ProjectCardProject;
+  headingLevel?: HeadingLevel;
   // From layerSegments: section 8 order, fixed tones.
   layers: readonly LayerSegment[];
   coverage: readonly Omit<CoverageBarProps, 'variant'>[];
@@ -62,23 +71,54 @@ export type WebProjectCardProps = Common & {
   loading?: false;
   latestRun: ProjectCardRun | null;
   reports: readonly ReportCount[];
+  // projects.declared_suites, summarised in the footer.
+  declared: readonly DeclaredSuite[];
 };
 
-// The design draws the kiosk card only for a passed or failed run.
+// v4 draws the kiosk card in every state. It has no per-report block, but an empty run still
+// says how many reports arrived.
 export type KioskProjectCardProps = Common & {
   variant: 'kiosk';
-  latestRun: ProjectCardRun & { status: 'passed' | 'failed' };
+  latestRun: ProjectCardRun | null;
+  reports: readonly ReportCount[];
 };
 
 export type ProjectCardProps =
   WebProjectCardProps | KioskProjectCardProps | { variant?: 'web'; loading: true };
 
-const formatCount = new Intl.NumberFormat('en-US');
 const sha7 = (sha: string) => sha.slice(0, 7);
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
 const EMPTY_NOTE =
-  "Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn't counted in any total.";
+  'Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn’t counted in any total.';
+
+// The sub-line's unit follows the total it stands beside: "1 test", "142 tests".
+const testsWord = (total: number) => (total === 1 ? 'test' : 'tests');
+
+function Heading({
+  level = 3,
+  className,
+  children,
+}: {
+  level?: HeadingLevel;
+  className: string | undefined;
+  children: ReactNode;
+}) {
+  const Tag = `h${level}` as const;
+  return <Tag className={className}>{children}</Tag>;
+}
+
+function FailingName({ test }: { test: FailingTest }) {
+  return (
+    <span
+      className={styles.failingName}
+      title={`${test.suite} › ${test.name}`}
+      data-part="failing-name"
+    >
+      {shortSuite(test.suite)} › {test.name}
+    </span>
+  );
+}
 
 export function ProjectCard(props: ProjectCardProps) {
   if ('loading' in props && props.loading) return <LoadingCard />;
@@ -96,10 +136,12 @@ function FailedCount({ failed }: { failed: number }) {
 
 function WebCard({
   project,
+  headingLevel,
   latestRun: run,
   layers,
   coverage,
   reports,
+  declared,
   health,
   failing = [],
 }: WebProjectCardProps) {
@@ -126,19 +168,19 @@ function WebCard({
                 {sha7(run.sha)}
               </span>
             ) : (
-              <Link href={run.href} className={styles.sha} data-part="sha">
+              <Link href={run.href} className={cx(styles.sha, styles.shaLink)} data-part="sha">
                 {sha7(run.sha)}
               </Link>
             )}
           </span>
         )}
       </div>
-      <h3 className={styles.name}>
+      <Heading level={headingLevel} className={styles.name}>
         <Link href={project.href} className={styles.nameLink}>
           {project.name}
         </Link>
         {isPrivate && <PrivateTag />}
-      </h3>
+      </Heading>
       <p className={styles.tagline} data-part="tagline">
         {project.tagline}
       </p>
@@ -146,17 +188,17 @@ function WebCard({
       {run ? (
         <div className={styles.totals}>
           <span className={cx(styles.total, empty && styles.totalEmpty)} data-part="total">
-            {empty ? '0' : formatCount.format(run.total)}
+            {empty ? '0' : formatCount(run.total)}
           </span>
           <span className={styles.sub} data-part="sub">
             {empty ? (
               <>
                 <span>tests executed ·</span>
-                <span>{reports.length} reports received</span>
+                <span>{qty(reports.length, 'report')} received</span>
               </>
             ) : (
               <>
-                <span>tests ·</span>
+                <span>{testsWord(run.total)} ·</span>
                 <FailedCount failed={run.failed} />
                 <span>·</span>
                 <span>{run.skipped} skipped ·</span>
@@ -173,9 +215,7 @@ function WebCard({
 
       {run?.status === 'failed' && firstFailing && (
         <Link href={run.href} className={styles.failing} data-part="failing">
-          <span className={styles.failingName}>
-            {firstFailing.suite} › {firstFailing.name}
-          </span>
+          <FailingName test={firstFailing} />
           <span className={styles.failingSide}>
             <span>{firstFailing.platform}</span>
             {failing.length > 1 && <span>+{failing.length - 1} more</span>}
@@ -212,7 +252,10 @@ function WebCard({
       {run && reports.length > 0 && (
         <div className={styles.reports} data-part="reports">
           <div className={styles.reportsHead}>
-            <span data-part="reports-head">{reports.length} reports in this run</span>
+            <span data-part="reports-head">{qty(reports.length, 'report')} in this run</span>
+            <span data-part="reports-side">
+              {platformSplit(empty ? reports.map((r) => ({ ...r, total: 0 })) : reports)}
+            </span>
           </div>
           <ul className={styles.reportsGrid}>
             {reports.map((report) => (
@@ -222,7 +265,7 @@ function WebCard({
                   className={cx(styles.reportCount, empty && styles.reportEmpty)}
                   data-part="report-count"
                 >
-                  {formatCount.format(report.total)}
+                  {formatCount(empty ? 0 : report.total)}
                 </span>
               </li>
             ))}
@@ -231,7 +274,7 @@ function WebCard({
       )}
 
       <div className={styles.footer} data-part="footer">
-        <span />
+        <span data-part="declared">{declaredSummary(declared)}</span>
         <span className={styles.health}>
           <HealthMarker {...health} />
         </span>
@@ -242,15 +285,19 @@ function WebCard({
 
 function KioskCard({
   project,
+  headingLevel,
   latestRun: run,
   layers,
   coverage,
+  reports,
   health,
   failing = [],
 }: KioskProjectCardProps) {
-  const failed = run.status === 'failed';
+  const failed = run?.status === 'failed';
+  const empty = run?.status === 'empty';
   const stale = health.health === 'stale';
-  const frame = failed ? 'fail' : stale ? 'attn' : 'line';
+  const frame = failed ? 'fail' : stale || empty ? 'attn' : 'line';
+  const measured = run !== null && !empty;
   const [firstFailing] = failing;
 
   return (
@@ -265,44 +312,75 @@ function KioskCard({
       data-frame={frame}
     >
       <div className={styles.top}>
-        <StatusBadge status={run.status} variant="kiosk" />
-        <span className={cx(styles.meta, stale && styles.stale)} data-part="meta">
-          <span>{run.when}</span>
-          <span>·</span>
-          <span className={styles.sha}>{sha7(run.sha)}</span>
-        </span>
+        <StatusBadge status={run ? run.status : 'not_reporting'} variant="kiosk" />
+        {run && (
+          <span className={cx(styles.meta, stale && styles.stale)} data-part="meta">
+            <span>{run.when}</span>
+            <span>·</span>
+            <span className={styles.sha}>{sha7(run.sha)}</span>
+          </span>
+        )}
       </div>
-      <h3 className={styles.name}>
+      <Heading level={headingLevel} className={styles.name}>
         <span>{project.name}</span>
         {project.visibility === 'private' && <PrivateTag variant="kiosk" />}
-      </h3>
-      <div className={styles.totals} data-part="totals">
-        <span className={styles.total}>{formatCount.format(run.total)}</span>
-        <span className={styles.kioskUnit}>tests</span>
-      </div>
-      <div className={styles.sub} data-part="sub">
-        <FailedCount failed={run.failed} />
-        <span>
-          · {run.skipped} skipped · {run.duration}
-        </span>
-      </div>
+      </Heading>
+
+      {run ? (
+        <>
+          <div className={styles.totals} data-part="totals">
+            <span className={cx(styles.total, empty && styles.totalEmpty)} data-part="total">
+              {empty ? '0' : formatCount(run.total)}
+            </span>
+            <span className={styles.kioskUnit}>
+              {empty ? 'tests executed' : testsWord(run.total)}
+            </span>
+          </div>
+          <div className={styles.sub} data-part="sub">
+            {empty ? (
+              <span>{qty(reports.length, 'report')} received</span>
+            ) : (
+              <>
+                <FailedCount failed={run.failed} />
+                <span>·</span>
+                <span>{run.skipped} skipped ·</span>
+                <span>{run.duration}</span>
+              </>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className={styles.notReporting} data-part="not-reporting">
+          Registered. Results appear here after its CI posts the first report.
+        </p>
+      )}
 
       {failed && firstFailing && (
         <div className={styles.failing} data-part="failing">
           <span className={styles.failingName}>
-            {firstFailing.suite} › {firstFailing.name}
+            {shortSuite(firstFailing.suite)} › {firstFailing.name}
           </span>
-          <span className={styles.failingSide}>{firstFailing.platform}</span>
+          <span className={styles.failingSide}>
+            <span>{firstFailing.platform}</span>
+            {failing.length > 1 && <span>+{failing.length - 1} more</span>}
+          </span>
         </div>
       )}
 
-      {!failed && layers.length > 0 && (
+      {measured && !failed && layers.length > 0 && (
         <div className={styles.layers} data-part="layers">
           <LayerBar layers={layers} variant="kiosk" />
         </div>
       )}
 
-      {coverage.length > 0 && (
+      {empty && (
+        <div className={styles.emptyNote} data-part="empty-note">
+          <EmptyIcon size={24} strokeWidth={2.6} className={styles.emptyIcon} />
+          <span>{EMPTY_NOTE}</span>
+        </div>
+      )}
+
+      {measured && coverage.length > 0 && (
         <div className={styles.coverage}>
           <span className={styles.coverageLegend} data-part="coverage-legend">
             <span>Line coverage</span>
@@ -316,7 +394,7 @@ function KioskCard({
       )}
 
       <div className={styles.footer}>
-        <HealthMarker {...health} variant="kiosk" />
+        <HealthMarker {...health} size="kiosk" />
       </div>
     </article>
   );

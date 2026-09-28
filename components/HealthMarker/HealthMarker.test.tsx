@@ -78,17 +78,27 @@ describe('HealthMarker', () => {
     });
   }
 
+  it('stale: says "1 day" at one day (design v4 item 50)', () => {
+    const { container } = render(<HealthMarker health="stale" days={1} />);
+    expect(container.textContent).toBe('No report in 1 day');
+  });
+
+  it('is web size by default', () => {
+    const { container } = render(<HealthMarker health="healthy" />);
+    expect((container.firstElementChild as HTMLElement).dataset.size).toBe('web');
+  });
+
   it('uses the same icon for an empty run as the Empty status', () => {
     const { container } = render(<HealthMarker health="empty" />);
     expect(container.querySelector('svg circle')?.getAttribute('stroke-dasharray')).toBe('3.5 3');
   });
 
-  it('kiosk: the same words and icon at 24px, icon 24, gap 10', () => {
-    const { container } = render(<HealthMarker health="healthy" variant="kiosk" />);
+  it('size kiosk: the same words and icon at 24px, icon 24, gap 10 (components.md `size`)', () => {
+    const { container } = render(<HealthMarker health="healthy" size="kiosk" />);
     const marker = container.firstElementChild as HTMLElement;
 
     expect(marker.textContent).toBe('Reporting healthy');
-    expect(marker.dataset.variant).toBe('kiosk');
+    expect(marker.dataset.size).toBe('kiosk');
     expect(marker.querySelector('svg')?.getAttribute('width')).toBe('24');
     expect(marker.querySelector('svg')?.getAttribute('stroke-width')).toBe('2.8');
     expect(ruleFor(CSS, '.kiosk')).toEqual({ gap: '10px', 'font-size': '24px' });

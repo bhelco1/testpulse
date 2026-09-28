@@ -22,7 +22,7 @@ describe('DeclaredSuiteNote', () => {
     const { getByRole, getByText } = render(<DeclaredSuiteNote suites={SUITES} />);
     expect(getByRole('heading', { name: 'Declared suites' })).toBeTruthy();
     expect(
-      getByText("These tests exist but don't report here yet. They aren't counted in any total."),
+      getByText('These tests exist but don’t report here yet. They aren’t counted in any total.'),
     ).toBeTruthy();
   });
 
@@ -59,6 +59,22 @@ describe('DeclaredSuiteNote', () => {
     expect(getAllByRole('listitem')[0]?.textContent).toBe(
       'ContractAPI6 testsRuns in CI, not yet reported',
     );
+  });
+
+  // Design v4 item 50: count nouns are singular at 1.
+  it('says "1 flow" and "1 test" for a suite of one', () => {
+    const { getAllByRole } = render(
+      <DeclaredSuiteNote
+        suites={[
+          { name: 'Smoke', layer: 'e2e', count: 1, status: 'authored_not_executed' },
+          { name: 'Contract', layer: 'api', count: 1, status: 'runs_in_ci_not_reported' },
+        ]}
+      />,
+    );
+    expect(getAllByRole('listitem').map((row) => row.textContent)).toEqual([
+      'SmokeE2E1 flowAuthored, not yet executed',
+      'ContractAPI1 testRuns in CI, not yet reported',
+    ]);
   });
 
   it('renders nothing when a project declares no suites', () => {

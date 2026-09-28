@@ -38,7 +38,7 @@ export function ErrorState({ variant, title, message, onRetry }: ErrorStateProps
       <div className={styles.actions}>
         <Button onClick={onRetry}>Try again</Button>
         <Link href="/how-its-tested" className={styles.link}>
-          How it&apos;s tested
+          How it’s tested
         </Link>
       </div>
     </section>

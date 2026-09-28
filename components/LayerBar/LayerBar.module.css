@@ -45,6 +45,10 @@
   margin-bottom: 12px;
 }
 
+.kiosk .segment {
+  min-width: 5px;
+}
+
 .kiosk .labels {
   gap: 6px var(--space-6);
   font-size: 24px;

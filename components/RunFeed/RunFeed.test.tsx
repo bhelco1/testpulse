@@ -133,7 +133,7 @@ describe('RunFeed (web, landing)', () => {
 
     expect(container.querySelector('[data-part="empty-title"]')?.textContent).toBe('No runs yet');
     expect(container.querySelector('[data-part="empty-text"]')?.textContent).toBe(
-      "Runs appear here as each project's CI reports.",
+      'Runs appear here as each project’s CI reports.',
     );
     expect(queryByRole('log')).toBeNull();
   });
@@ -144,7 +144,7 @@ describe('RunFeed (web, landing)', () => {
     const alert = getByRole('alert');
 
     expect(alert.dataset.variant).toBe('inline');
-    expect(alert.textContent).toContain("Runs couldn't be loaded");
+    expect(alert.textContent).toContain('Runs couldn’t be loaded');
     expect(alert.textContent).toContain('The rest of the page is still current.');
     fireEvent.click(within(alert).getByRole('button', { name: 'Try again' }));
     expect(onRetry).toHaveBeenCalledOnce();
@@ -158,9 +158,11 @@ describe('RunFeed (web, project page)', () => {
       <RunFeed
         state="ready"
         list="project"
+        project="Ostomate2"
         runs={RUNS}
         branches="default"
         onBranchesChange={onBranchesChange}
+        connected
         {...extra}
       />,
     );
@@ -184,9 +186,11 @@ describe('RunFeed (web, project page)', () => {
       <RunFeed
         state="ready"
         list="project"
+        project="Ostomate2"
         runs={RUNS}
         branches="all"
         onBranchesChange={() => {}}
+        connected
       />,
     );
     expect(getByRole('radio', { name: 'All branches' }).getAttribute('aria-checked')).toBe('true');
@@ -217,9 +221,64 @@ describe('RunFeed (web, project page)', () => {
     expect(queryByRole('button', { name: 'Load 20 more' })).toBeNull();
   });
 
-  it('draws no live note in the header, where the filter sits', () => {
-    const { container } = renderProject();
-    expect(container.querySelector('[data-part="live-note"]')).toBeNull();
+  // v4 item 36: the header row holds the heading and the filter; the note gets its own line.
+  it('puts the live note on its own line under the header row, not in it', () => {
+    const { container, getByRole } = renderProject();
+    const note = container.querySelector<HTMLElement>('[data-part="live-note"]');
+
+    expect(note?.textContent).toBe('Updates as reports arrive');
+    expect(note?.querySelector<HTMLElement>('[data-part="dot"]')?.dataset.state).toBe('on');
+    expect(has(note, 'projectNote')).toBe(true);
+    const header = getByRole('heading', { level: 2 }).parentElement;
+    expect(header?.contains(note ?? null)).toBe(false);
+    expect(header?.nextElementSibling).toBe(note);
+  });
+
+  it('offline: the same line reads "Offline. Showing runs as of {HH:MM}; reconnecting"', () => {
+    const { container } = render(
+      <RunFeed
+        state="ready"
+        list="project"
+        project="Ostomate2"
+        runs={RUNS}
+        branches="default"
+        onBranchesChange={() => {}}
+        connected={false}
+        asOf="10:42"
+      />,
+    );
+    const note = container.querySelector<HTMLElement>('[data-part="live-note"]');
+
+    expect(note?.textContent).toBe('Offline. Showing runs as of 10:42; reconnecting');
+    expect(note?.querySelector<HTMLElement>('[data-part="dot"]')?.dataset.state).toBe('off');
+    expect(has(note, 'offline')).toBe(true);
+  });
+
+  // v4 item 37: the project run list keeps its header, filter and note when there are no runs.
+  it('empty: header, filter and note stay; "No runs yet" names the project', () => {
+    const { container, getByRole, queryByRole } = render(
+      <RunFeed
+        state="empty"
+        list="project"
+        project="Ostomate2"
+        branches="default"
+        onBranchesChange={() => {}}
+        connected
+      />,
+    );
+
+    expect(getByRole('heading', { level: 2 }).textContent).toBe('Runs');
+    expect(getByRole('radiogroup', { name: 'Branches' })).toBeTruthy();
+    expect(container.querySelector('[data-part="live-note"]')?.textContent).toBe(
+      'Updates as reports arrive',
+    );
+    const empty = container.querySelector<HTMLElement>('[data-part="project-empty"]');
+    expect(empty?.querySelector('[data-part="empty-title"]')?.textContent).toBe('No runs yet');
+    expect(empty?.querySelector('[data-part="empty-text"]')?.textContent).toBe(
+      'Runs appear here when Ostomate2’s CI reports.',
+    );
+    expect(queryByRole('log')).toBeNull();
+    expect(queryByRole('button', { name: 'Load 20 more' })).toBeNull();
   });
 });
 
@@ -227,6 +286,7 @@ const KIOSK_RUNS: KioskFeedRun[] = [
   {
     id: '3',
     status: 'passed',
+    visibility: 'public',
     project: 'Ostomate2',
     branch: 'main',
     when: '4 min ago',
@@ -235,6 +295,7 @@ const KIOSK_RUNS: KioskFeedRun[] = [
   {
     id: '2',
     status: 'passed',
+    visibility: 'private',
     project: 'RouteServe',
     branch: 'main',
     when: '2 h ago',
@@ -243,8 +304,9 @@ const KIOSK_RUNS: KioskFeedRun[] = [
   {
     id: '1',
     status: 'failed',
+    visibility: 'public',
     project: 'Ostomate2',
-    branch: 'PR #52',
+    branch: 'fix-today-count',
     when: 'yesterday',
     failed: 1,
   },
@@ -253,7 +315,7 @@ const KIOSK_RUNS: KioskFeedRun[] = [
 describe('RunFeed (kiosk)', () => {
   it('heads three tiles with "Recent runs" and "Updates as reports arrive"', () => {
     const { getByRole, container } = render(
-      <RunFeed variant="kiosk" runs={KIOSK_RUNS} connected />,
+      <RunFeed variant="kiosk" state="ready" runs={KIOSK_RUNS} connected />,
     );
 
     expect(getByRole('heading', { level: 2 }).textContent).toBe('Recent runs');
@@ -265,11 +327,154 @@ describe('RunFeed (kiosk)', () => {
     expect(container.querySelector('a, button')).toBeNull();
   });
 
-  it('disconnected: "As of {HH:MM}"', () => {
+  it('passes private and empty runs to their tiles (v4 item 41)', () => {
     const { container } = render(
-      <RunFeed variant="kiosk" runs={KIOSK_RUNS} connected={false} asOf="10:42" />,
+      <RunFeed
+        variant="kiosk"
+        state="ready"
+        runs={[
+          ...KIOSK_RUNS,
+          {
+            id: '0',
+            status: 'empty',
+            visibility: 'public',
+            project: 'Ostomate2',
+            branch: 'main',
+            when: '2 days ago',
+          },
+        ]}
+        connected
+      />,
     );
-    expect(container.querySelector('[data-part="kiosk-note"]')?.textContent).toBe('As of 10:42');
+    expect(container.querySelector('[data-part="private"]')?.getAttribute('aria-label')).toBe(
+      'Private repository',
+    );
+    expect([...container.querySelectorAll('[data-part="count"]')].at(-1)?.textContent).toBe(
+      '0 tests',
+    );
+  });
+
+  it('connected: the note has no dot', () => {
+    const { container } = render(
+      <RunFeed variant="kiosk" state="ready" runs={KIOSK_RUNS} connected />,
+    );
+    const note = container.querySelector<HTMLElement>('[data-part="kiosk-note"]');
+    expect(note?.querySelector('[data-part="kiosk-ring"]')).toBeNull();
+    expect(has(note, 'kioskOffline')).toBe(false);
+  });
+
+  it('disconnected: a 14px ring and "Offline. As of {HH:MM}" in --ink-2 (v4 item 41)', () => {
+    const { container } = render(
+      <RunFeed variant="kiosk" state="ready" runs={KIOSK_RUNS} connected={false} asOf="10:42" />,
+    );
+    const note = container.querySelector<HTMLElement>('[data-part="kiosk-note"]');
+
+    expect(note?.textContent).toBe('Offline. As of 10:42');
+    const ring = note?.querySelector<HTMLElement>('[data-part="kiosk-ring"]');
+    expect(ring?.getAttribute('aria-hidden')).toBe('true');
+    expect(has(note, 'kioskOffline')).toBe(true);
+    expect(ruleFor(CSS, '.kioskNote.kioskOffline')).toEqual({
+      display: 'flex',
+      'align-items': 'center',
+      gap: '10px',
+      color: 'var(--ink-2)',
+    });
+    expect(ruleFor(CSS, '.kioskRing')).toEqual({
+      width: '14px',
+      height: '14px',
+      'border-radius': '50%',
+      border: '2px solid var(--ink-3)',
+      'box-sizing': 'border-box',
+    });
+  });
+
+  it('loading: 3 skeleton tiles named "Loading runs", no log (v4 items 41, 51)', () => {
+    const { container, getByLabelText, queryByRole } = render(
+      <RunFeed variant="kiosk" state="loading" connected />,
+    );
+    const busy = getByLabelText('Loading runs');
+
+    expect(busy.getAttribute('aria-busy')).toBe('true');
+    const tiles = busy.querySelectorAll<HTMLElement>('[data-part="skeleton-tile"]');
+    expect(tiles).toHaveLength(3);
+    const blocks = [...(tiles[0]?.querySelectorAll<HTMLElement>('[data-part="skeleton"]') ?? [])];
+    expect(blocks.map((block) => [block.style.width, block.style.height])).toEqual([
+      ['130px', '24px'],
+      ['90px', '22px'],
+      ['75%', '24px'],
+    ]);
+    expect(queryByRole('log')).toBeNull();
+    expect(container.querySelector('[data-part="kiosk-note"]')).not.toBeNull();
+  });
+
+  it('empty: one tile, "No runs yet" and the landing reason (v4 item 41)', () => {
+    const { container, queryByRole } = render(<RunFeed variant="kiosk" state="empty" connected />);
+
+    const tile = container.querySelector<HTMLElement>('[data-part="kiosk-empty"]');
+    expect(tile?.querySelector('[data-part="empty-title"]')?.textContent).toBe('No runs yet');
+    expect(tile?.querySelector('[data-part="empty-text"]')?.textContent).toBe(
+      'Runs appear here as each project’s CI reports.',
+    );
+    expect(has(tile, 'kioskTile')).toBe(true);
+    expect(queryByRole('log')).toBeNull();
+  });
+
+  it('error: one tile with the error icon and "Retrying every minute.", no button, no rows', () => {
+    const { container, queryByRole } = render(<RunFeed variant="kiosk" state="error" connected />);
+
+    const tile = container.querySelector<HTMLElement>('[data-part="kiosk-error"]');
+    expect(tile?.querySelector('[data-part="error-title"]')?.textContent).toBe(
+      'Runs couldn’t be loaded',
+    );
+    expect(tile?.querySelector('[data-part="error-text"]')?.textContent).toBe(
+      'Retrying every minute.',
+    );
+    const icon = tile?.querySelector('svg');
+    expect(icon?.getAttribute('width')).toBe('24');
+    expect(icon?.getAttribute('stroke-width')).toBe('2.6');
+    expect(icon?.querySelector('path')?.getAttribute('d')).toBe('M12 7v6M12 17h.01');
+    expect(has(tile, 'kioskTile')).toBe(true);
+    expect(container.querySelector('button, a')).toBeNull();
+    expect(container.querySelector('[data-variant="kiosk"]')).toBeNull();
+    expect(queryByRole('log')).toBeNull();
+  });
+
+  it('sets the state tiles: padding 18 24, --radius-lg, --surface, 1px --line', () => {
+    expect(ruleFor(CSS, '.kioskTile')).toEqual({
+      display: 'flex',
+      'flex-direction': 'column',
+      'justify-content': 'center',
+      gap: '6px',
+      padding: '18px 24px',
+      'border-radius': 'var(--radius-lg)',
+      background: 'var(--surface)',
+      border: '1px solid var(--line)',
+      'min-width': '0px',
+    });
+    expect(ruleFor(CSS, '.kioskSkeleton')).toEqual({
+      display: 'flex',
+      'flex-direction': 'column',
+      gap: '12px',
+      padding: '18px 24px',
+      'border-radius': 'var(--radius-lg)',
+      background: 'var(--surface)',
+      border: '1px solid var(--line)',
+    });
+    expect(ruleFor(CSS, '.kioskSkeletonTop')).toEqual({
+      display: 'flex',
+      'justify-content': 'space-between',
+    });
+    expect(ruleFor(CSS, '.kioskStateTitle')).toEqual({ font: '500 28px var(--font-serif)' });
+    expect(ruleFor(CSS, '.kioskErrorTitle')).toEqual({
+      display: 'flex',
+      'align-items': 'center',
+      gap: '10px',
+    });
+    expect(ruleFor(CSS, '.kioskErrorIcon')).toEqual({ flex: '0 0 auto', color: 'var(--fail)' });
+    expect(ruleFor(CSS, '.kioskStateText')).toEqual({
+      'font-size': '22px',
+      color: 'var(--ink-3)',
+    });
   });
 
   it('lays out a 200px header column beside three equal tiles, gap 16', () => {
@@ -322,12 +527,20 @@ describe('RunFeed styles', () => {
     expect(ruleFor(CSS, '.heading')).toEqual({ margin: '0px', font: '500 24px var(--font-serif)' });
   });
 
-  it('sets the project header: centred, gap 10 12, padding 12 12 8 16', () => {
+  it('sets the project header: centred, gap 10 12, padding 12 12 4 16', () => {
     expect(ruleFor(CSS, '.header.projectHeader')).toEqual({
       'align-items': 'center',
       gap: '10px 12px',
-      padding: '12px 12px 8px 16px',
+      padding: '12px 12px 4px 16px',
     });
+  });
+
+  it('sets the project live note line: padding 0 16 10, left-aligned', () => {
+    expect(ruleFor(CSS, '.note.projectNote')).toEqual({ padding: '0px 16px 10px' });
+  });
+
+  it('sets the project empty body: padding 14 16 16', () => {
+    expect(ruleFor(CSS, '.projectEmpty')).toEqual({ padding: '14px 16px 16px' });
   });
 
   it('sets the live note 13.5 --ink-3 with gap 8, and --ink-2 when offline', () => {

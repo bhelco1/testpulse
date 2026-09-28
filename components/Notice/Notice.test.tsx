@@ -14,19 +14,23 @@ const CSS = join(import.meta.dirname, 'Notice.module.css');
 const part = (root: Element, name: string) =>
   root.querySelector<HTMLElement>(`[data-part="${name}"]`);
 
+const PRIVATE_NOTE =
+  'This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.';
+
 describe('Notice', () => {
-  it('attn: announces a stale project politely with a clock, the title in --attn', () => {
-    const { getByRole } = render(
+  it('stale project: attn with a clock and a title in the tone ink', () => {
+    const { container } = render(
       <Notice
         tone="attn"
-        title="RouteServe hasn't reported in 12 days"
+        icon="clock"
+        title="RouteServe hasn’t reported in 12 days"
         body="Everything below is from the last report, Sep 12."
       />,
     );
-    const notice = getByRole('status');
+    const notice = container.firstElementChild as HTMLElement;
 
     expect(notice.dataset.tone).toBe('attn');
-    expect(part(notice, 'title')?.textContent).toBe("RouteServe hasn't reported in 12 days");
+    expect(part(notice, 'title')?.textContent).toBe('RouteServe hasn’t reported in 12 days');
     expect(part(notice, 'body')?.textContent).toBe(
       'Everything below is from the last report, Sep 12.',
     );
@@ -37,15 +41,16 @@ describe('Notice', () => {
     expect(icon?.querySelector('path')?.getAttribute('d')).toBe('M12 7v5l3 2');
   });
 
-  it('fail: is an alert with the failed icon, the title in --fail', () => {
-    const { getByRole } = render(
+  it('failed-run summary: fail with the x-circle and a title', () => {
+    const { container } = render(
       <Notice
         tone="fail"
+        icon="x-circle"
         title="1 test failed: HomeViewModelTest › rendersToday"
         body="It failed on ios-sim and passed on jvm in the same run."
       />,
     );
-    const notice = getByRole('alert');
+    const notice = container.firstElementChild as HTMLElement;
 
     expect(notice.dataset.tone).toBe('fail');
     expect(notice.textContent).toBe(
@@ -57,19 +62,62 @@ describe('Notice', () => {
     expect(icon?.querySelector('path')?.getAttribute('d')).toBe('m15 9-6 6M9 9l6 6');
   });
 
-  it('neutral: a lock and one line of body text, no title, not announced', () => {
-    const body =
-      'This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.';
-    const { container } = render(<Notice tone="neutral" body={body} />);
+  it('private repository note: neutral with a lock and no title', () => {
+    const { container } = render(<Notice tone="neutral" icon="lock" body={PRIVATE_NOTE} />);
     const notice = container.firstElementChild as HTMLElement;
 
     expect(notice.dataset.tone).toBe('neutral');
-    expect(notice.hasAttribute('role')).toBe(false);
     expect(part(notice, 'title')).toBeNull();
-    expect(part(notice, 'body')?.textContent).toBe(body);
+    expect(part(notice, 'body')?.textContent).toBe(PRIVATE_NOTE);
     const lock = notice.querySelector('svg');
     expect(lock?.getAttribute('stroke-width')).toBe('2.2');
     expect(lock?.querySelector('rect')).not.toBeNull();
+  });
+
+  // Design v4 item 1: the title is optional on every tone, the neutral one included.
+  it('takes a title on the neutral tone and leaves it out on attn and fail', () => {
+    const { container } = render(
+      <>
+        <Notice tone="neutral" icon="lock" title="Private repository" body={PRIVATE_NOTE} />
+        <Notice tone="attn" icon="clock" body="Everything below is from the last report." />
+        <Notice tone="fail" icon="x-circle" body="1 test failed." />
+      </>,
+    );
+    const neutral = container.children.item(0) as Element;
+    const attn = container.children.item(1) as Element;
+    const fail = container.children.item(2) as Element;
+
+    expect(part(neutral, 'title')?.textContent).toBe('Private repository');
+    expect(part(attn, 'title')).toBeNull();
+    expect(part(attn, 'body')?.textContent).toBe('Everything below is from the last report.');
+    expect(part(fail, 'title')).toBeNull();
+  });
+
+  // Design v4 item 2: the icon is chosen per use, not per tone.
+  it('draws the icon it is given whatever the tone', () => {
+    const { container } = render(<Notice tone="attn" icon="lock" body="Locked." />);
+    const icon = container.querySelector('svg');
+    expect(icon?.querySelector('rect')).not.toBeNull();
+    expect(icon?.getAttribute('stroke-width')).toBe('2.2');
+  });
+
+  // Design v4 item 1: no live-region role on a Notice rendered with the page.
+  it('has no role when rendered with the page, on every tone', () => {
+    const { container } = render(
+      <>
+        <Notice tone="attn" icon="clock" title="Stale" body="Body." />
+        <Notice tone="fail" icon="x-circle" title="Failed" body="Body." />
+        <Notice tone="neutral" icon="lock" body="Body." />
+      </>,
+    );
+    for (const notice of container.children) expect(notice.hasAttribute('role')).toBe(false);
+  });
+
+  it('is a status when inserted after load, such as a project going stale while open', () => {
+    const { getByRole } = render(
+      <Notice tone="attn" icon="clock" title="Stale" body="Body." live />,
+    );
+    expect(getByRole('status').dataset.tone).toBe('attn');
   });
 
   it('is a 14 by 16 banner with the row radius and a 1px border in its tone', () => {
@@ -94,22 +142,18 @@ describe('Notice', () => {
     });
   });
 
-  it('sets the title 14.5/600 in the tone ink and the body 13.5 in --ink-2', () => {
+  it('sets the title 14.5/600 in the tone ink and the body 14/1.5 --ink-2 on every tone', () => {
     // jsdom serializes flex: none as its longhand values.
     expect(ruleFor(CSS, '.icon')).toEqual({ flex: '0 0 auto', 'margin-top': '1px' });
     expect(ruleFor(CSS, '.attn .icon, .attn .title')).toEqual({ color: 'var(--attn)' });
     expect(ruleFor(CSS, '.fail .icon, .fail .title')).toEqual({ color: 'var(--fail)' });
-    expect(ruleFor(CSS, '.neutral .icon')).toEqual({ color: 'var(--ink-2)' });
+    expect(ruleFor(CSS, '.neutral .icon, .neutral .title')).toEqual({ color: 'var(--ink-2)' });
     expect(ruleFor(CSS, '.title')).toEqual({ 'font-weight': '600', 'font-size': '14.5px' });
     expect(ruleFor(CSS, '.body')).toEqual({
-      'font-size': '13.5px',
-      color: 'var(--ink-2)',
-      'margin-top': '2px',
-    });
-    expect(ruleFor(CSS, '.neutral .body')).toEqual({
       'font-size': '14px',
       'line-height': '1.5',
-      'margin-top': '0px',
+      color: 'var(--ink-2)',
     });
+    expect(ruleFor(CSS, '.title + .body')).toEqual({ 'margin-top': '2px' });
   });
 });

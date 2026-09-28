@@ -31,7 +31,7 @@ describe('SiteHeader', () => {
 
     const nav = within(banner).getByRole('navigation', { name: 'Site' });
     expect(within(nav).getByRole('button', { name: 'Projects' })).toBeTruthy();
-    expect(within(nav).getByRole('link', { name: "How it's tested" }).getAttribute('href')).toBe(
+    expect(within(nav).getByRole('link', { name: 'How it’s tested' }).getAttribute('href')).toBe(
       '/how-its-tested',
     );
     expect(within(nav).getByText('Live')).toBeTruthy();
@@ -48,11 +48,11 @@ describe('SiteHeader', () => {
       <SiteHeader projects={PROJECTS} connected current="home" />,
     );
     expect(getByRole('link', { name: 'testpulse' }).getAttribute('aria-current')).toBe('page');
-    expect(getByRole('link', { name: "How it's tested" }).hasAttribute('aria-current')).toBe(false);
+    expect(getByRole('link', { name: 'How it’s tested' }).hasAttribute('aria-current')).toBe(false);
 
     rerender(<SiteHeader projects={PROJECTS} connected current="how-its-tested" />);
     expect(getByRole('link', { name: 'testpulse' }).hasAttribute('aria-current')).toBe(false);
-    expect(getByRole('link', { name: "How it's tested" }).getAttribute('aria-current')).toBe(
+    expect(getByRole('link', { name: 'How it’s tested' }).getAttribute('aria-current')).toBe(
       'page',
     );
   });

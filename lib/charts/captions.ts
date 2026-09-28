@@ -1,3 +1,4 @@
+import { qty } from '../copy/count';
 import { formatTrendValue } from './format';
 
 // The line under each chart title naming which runs it reads (spec section 11).
@@ -10,9 +11,8 @@ export const TREND_SCOPE = {
 } as const;
 
 // Captions follow the templates in design/components.md, oldest point first in every input. With
-// fewer than two points there is no caption: the chart's one-run text says it instead.
-
-const runs = (n: number) => `${n} ${n === 1 ? 'run' : 'runs'}`;
+// fewer than two points there is no caption: the chart's one-run text says it instead. Point
+// counts are always two or more, so only the runs-per-day total can be singular.
 
 export function passRateCaption(rates: readonly number[], failedRuns: number): string | null {
   const latest = rates.at(-1);
@@ -73,5 +73,5 @@ export function durationCaption(
 export function runsPerDayCaption(perDay: readonly number[]): string | null {
   if (perDay.length < 2) return null;
   const total = perDay.reduce((sum, n) => sum + n, 0);
-  return `${runs(total)} in the last ${perDay.length} days, ${Math.max(...perDay)} on the busiest day.`;
+  return `${qty(total, 'run')} in the last ${perDay.length} days, ${Math.max(...perDay)} on the busiest day.`;
 }

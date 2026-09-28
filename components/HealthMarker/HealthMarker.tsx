@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 
+import { qty } from '../../lib/copy/count';
 import {
   ArrowDownIcon,
   CheckIcon,
@@ -15,8 +16,8 @@ export type Health = 'healthy' | 'stale' | 'empty' | 'below_floor' | 'not_report
 // `days` is required for stale, the only state whose words include it.
 export type HealthState = { health: 'stale'; days: number } | { health: Exclude<Health, 'stale'> };
 
-// kiosk: the kiosk ProjectCard footer, 24px.
-export type HealthMarkerProps = HealthState & { variant?: 'web' | 'kiosk' };
+// kiosk: the kiosk ProjectCard footer, 24px. components.md names this prop `size`.
+export type HealthMarkerProps = HealthState & { size?: 'web' | 'kiosk' };
 
 interface Look {
   label: string;
@@ -29,7 +30,7 @@ function lookOf(props: HealthState): Look {
     case 'healthy':
       return { label: 'Reporting healthy', tone: 'pass', Icon: CheckIcon };
     case 'stale':
-      return { label: `No report in ${props.days} days`, tone: 'attn', Icon: ClockIcon };
+      return { label: `No report in ${qty(props.days, 'day')}`, tone: 'attn', Icon: ClockIcon };
     case 'empty':
       return { label: 'Last run empty', tone: 'attn', Icon: EmptyIcon };
     case 'below_floor':
@@ -41,15 +42,15 @@ function lookOf(props: HealthState): Look {
 
 export function HealthMarker(props: HealthMarkerProps) {
   const { label, tone, Icon } = lookOf(props);
-  const variant = props.variant ?? 'web';
+  const size = props.size ?? 'web';
   return (
     <span
-      className={`${styles.marker} ${styles[variant]} ${styles[tone]}`}
+      className={`${styles.marker} ${styles[size]} ${styles[tone]}`}
       data-health={props.health}
       data-tone={tone}
-      data-variant={variant}
+      data-size={size}
     >
-      <Icon size={variant === 'kiosk' ? 24 : 13} strokeWidth={2.8} />
+      <Icon size={size === 'kiosk' ? 24 : 13} strokeWidth={2.8} />
       {label}
     </span>
   );

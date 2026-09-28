@@ -1,35 +1,68 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ComponentType,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react';
 
+import { qty } from '../../lib/copy/count';
 import type { RunStatus } from '../../lib/ingest/normalize';
 import type { TestStatus } from '../../lib/parsers/types';
+import {
+  AlertCircleIcon,
+  CheckCircleIcon,
+  DashedCircleIcon,
+  FlakyIcon,
+  MinusCircleIcon,
+  XCircleIcon,
+  type IconProps,
+} from '../icons/icons';
 import styles from './StatusTimeline.module.css';
 
-// A result cell: the test's status on that platform in that run, flaky per spec section 11, or
-// not run when the run has no result for the test on that platform.
-export type ResultCellStatus = TestStatus | 'flaky' | 'not_run';
+// A result a platform reported for the test, flaky per spec section 11.
+export type ResultStatus = TestStatus | 'flaky';
+// A cell also shows "not run" when the run has no result for the test on that platform.
+export type ResultCellStatus = ResultStatus | 'not_run';
 
-export interface TimelineCell<S extends string> {
-  status: S;
-  // Names the run in the cell's accessible name, after its status.
-  label: string;
+export interface TimelineRunBase {
+  // From runTitle (lib/runs/title).
+  title: string;
+  branch: string;
   sha: string;
   // Already relative, such as "yesterday": components do not read the clock.
   when: string;
-  branch: string;
+  // The run page.
+  href: string;
 }
 
-export interface TimelineStrip<S extends string> {
-  platform?: string;
-  // Oldest first, so the latest run is drawn on the right.
-  cells: readonly TimelineCell<S>[];
+export interface PlatformResult {
+  platform: string;
+  status: ResultStatus;
+  // Already formatted, such as "0.41 s".
+  duration?: string;
 }
 
-// results: one test's history (Test History). runs: the project's "Last 40 runs" strip.
+export type ResultsTimelineRun = TimelineRunBase & { results: readonly PlatformResult[] };
+export type RunsTimelineRun = TimelineRunBase & { status: RunStatus };
+
+// results: one test's history (Test History), oldest run first. runs: the project page's "Last
+// 40 runs" strip of default-branch runs, oldest first; never interactive.
 export type StatusTimelineProps =
-  | { kind: 'results'; strips: readonly TimelineStrip<ResultCellStatus>[] }
-  | { kind: 'runs'; strips: readonly TimelineStrip<RunStatus>[] };
+  | {
+      kind: 'results';
+      testName: string;
+      runs: readonly ResultsTimelineRun[];
+      // The run selected on first render, as an index into runs; the latest by default. Test
+      // History passes the latest failing run.
+      initialRun?: number;
+    }
+  | { kind: 'runs'; runs: readonly RunsTimelineRun[] };
 
 type CellStatus = ResultCellStatus | RunStatus;
 
@@ -42,14 +75,42 @@ export function timelineCapacity(width: number): number {
   return Math.min(MAX_CELLS, Math.max(1, Math.floor((width + GAP) / (MIN_CELL + GAP))));
 }
 
-const LOOK: Record<CellStatus, { word: string; className: string; glyph: string }> = {
-  passed: { word: 'Passed', className: 'passed', glyph: '' },
-  failed: { word: 'Failed', className: 'failed', glyph: '✕' },
-  error: { word: 'Error', className: 'error', glyph: '!' },
-  flaky: { word: 'Flaky', className: 'flaky', glyph: '' },
-  skipped: { word: 'Skipped', className: 'skipped', glyph: '' },
-  not_run: { word: 'Not run', className: 'notRun', glyph: '' },
-  empty: { word: 'Empty', className: 'empty', glyph: '' },
+type Tone = 'tonePass' | 'toneFail' | 'toneAttn' | 'toneNeutral' | 'toneMuted';
+
+interface Look {
+  word: string;
+  className: string;
+  glyph: string;
+  tone: Tone;
+  Icon: ComponentType<IconProps>;
+}
+
+const LOOK: Record<CellStatus, Look> = {
+  passed: {
+    word: 'Passed',
+    className: 'passed',
+    glyph: '',
+    tone: 'tonePass',
+    Icon: CheckCircleIcon,
+  },
+  failed: { word: 'Failed', className: 'failed', glyph: '✕', tone: 'toneFail', Icon: XCircleIcon },
+  error: { word: 'Error', className: 'error', glyph: '!', tone: 'toneFail', Icon: AlertCircleIcon },
+  flaky: { word: 'Flaky', className: 'flaky', glyph: '', tone: 'toneAttn', Icon: FlakyIcon },
+  skipped: {
+    word: 'Skipped',
+    className: 'skipped',
+    glyph: '',
+    tone: 'toneNeutral',
+    Icon: MinusCircleIcon,
+  },
+  not_run: {
+    word: 'Not run',
+    className: 'notRun',
+    glyph: '',
+    tone: 'toneMuted',
+    Icon: DashedCircleIcon,
+  },
+  empty: { word: 'Empty', className: 'empty', glyph: '', tone: 'toneAttn', Icon: DashedCircleIcon },
 };
 
 const LEGEND_ORDER: Record<StatusTimelineProps['kind'], readonly CellStatus[]> = {
@@ -57,98 +118,301 @@ const LEGEND_ORDER: Record<StatusTimelineProps['kind'], readonly CellStatus[]> =
   runs: ['passed', 'failed', 'empty'],
 };
 
-const plural = (n: number) => (n === 1 ? 'run' : 'runs');
+const sha7 = (sha: string) => sha.slice(0, 7);
+const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
-export function StatusTimeline({ kind, strips }: StatusTimelineProps) {
+// Measures the first strip's cell area and returns how many cells fit, or null before the first measurement
+// (and without JS), when up to 40 are drawn and the strip's overflow clips the oldest.
+function useCapacity() {
   const measured = useRef<HTMLDivElement>(null);
-  // Before the first measurement (and without JS) all 40 are drawn and the strip's overflow clips
-  // the oldest, which sit on the left.
-  const [capacity, setCapacity] = useState(MAX_CELLS);
+  const [capacity, setCapacity] = useState<number | null>(null);
 
   useEffect(() => {
-    const strip = measured.current;
-    if (!strip) return;
-    const measure = () => setCapacity(timelineCapacity(strip.clientWidth));
+    const cells = measured.current;
+    if (!cells) return;
+    const measure = () => setCapacity(timelineCapacity(cells.clientWidth));
     measure();
     const observer = new ResizeObserver(measure);
-    observer.observe(strip);
+    observer.observe(cells);
     return () => observer.disconnect();
   }, []);
 
-  const withPlatforms = strips.length > 1;
-  const shown = strips.map((strip) => ({
-    platform: strip.platform,
-    cells: (strip.cells as readonly TimelineCell<CellStatus>[]).slice(-capacity),
+  return [measured, capacity] as const;
+}
+
+// The label under the oldest cell: none before measurement or with one cell shown.
+function oldestLabel(capacity: number | null, shown: number, total: number): string {
+  if (capacity === null || shown <= 1) return '';
+  return shown < total ? `Last ${qty(shown, 'run')}` : `${qty(shown, 'run')} ago`;
+}
+
+function Ends({ oldest }: { oldest: string }) {
+  return (
+    <div className={styles.ends}>
+      <span data-part="oldest">{oldest}</span>
+      <span data-part="latest">Latest</span>
+    </div>
+  );
+}
+
+function Legend({
+  kind,
+  present,
+}: {
+  kind: StatusTimelineProps['kind'];
+  present: Set<CellStatus>;
+}) {
+  return (
+    <ul className={styles.legend} data-part="legend">
+      {LEGEND_ORDER[kind]
+        .filter((status) => present.has(status))
+        .map((status) => (
+          <li key={status} className={styles.legendItem}>
+            <span
+              className={`${styles.swatch} ${styles[LOOK[status].className]}`}
+              data-part="swatch"
+              data-status={status}
+              aria-hidden="true"
+            />
+            {LOOK[status].word}
+          </li>
+        ))}
+    </ul>
+  );
+}
+
+export function StatusTimeline(props: StatusTimelineProps) {
+  return props.kind === 'runs' ? <RunsTimeline {...props} /> : <ResultsTimeline {...props} />;
+}
+
+function RunsTimeline({ runs }: { runs: readonly RunsTimelineRun[] }) {
+  const [measured, capacity] = useCapacity();
+  const shown = runs.slice(-(capacity ?? MAX_CELLS));
+  const count = (status: RunStatus) => shown.filter((run) => run.status === status).length;
+  const counts = (['passed', 'failed', 'empty'] as const)
+    .map((status) => [count(status), status] as const)
+    .filter(([n]) => n > 0)
+    .map(([n, status]) => `${n} ${status}`);
+  const branch = runs.at(-1)?.branch ?? '';
+  const name = `Last ${qty(shown.length, 'run')} on ${branch}: ${counts.join(', ')}.`;
+
+  return (
+    <div data-kind="runs" data-platforms="false">
+      <div className={styles.strips}>
+        <div className={styles.strip} data-part="strip">
+          <div ref={measured} className={styles.cells} role="img" aria-label={name}>
+            {shown.map((run, i) => (
+              <span
+                key={i}
+                className={`${styles.cell} ${styles[LOOK[run.status].className]}`}
+                data-part="cell"
+                data-status={run.status}
+              >
+                {LOOK[run.status].glyph}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <Ends oldest={oldestLabel(capacity, shown.length, runs.length)} />
+      <Legend kind="runs" present={new Set(shown.map((run) => run.status))} />
+    </div>
+  );
+}
+
+interface Strip {
+  platform: string;
+  // One per shown run, oldest first.
+  cells: ResultCellStatus[];
+}
+
+function ResultsTimeline({
+  testName,
+  runs,
+  initialRun,
+}: Extract<StatusTimelineProps, { kind: 'results' }>) {
+  const id = useId();
+  const [measured, capacity] = useCapacity();
+  const [selected, setSelected] = useState(initialRun ?? runs.length - 1);
+  const boxes = useRef<(HTMLDivElement | null)[]>([]);
+
+  const shownRuns = runs.slice(-(capacity ?? MAX_CELLS));
+  // Selection is an index into all runs; it stays within the runs shown.
+  const first = runs.length - shownRuns.length;
+  const current = Math.min(Math.max(selected, first), runs.length - 1);
+  const select = (index: number) => setSelected(Math.min(Math.max(index, first), runs.length - 1));
+
+  const platforms = [
+    ...new Set(runs.flatMap((run) => run.results.map((result) => result.platform))),
+  ];
+  const statusOn = (run: ResultsTimelineRun, platform: string): ResultCellStatus =>
+    run.results.find((result) => result.platform === platform)?.status ?? 'not_run';
+  const strips: Strip[] = platforms.map((platform) => ({
+    platform,
+    cells: shownRuns.map((run) => statusOn(run, platform)),
   }));
-  const longest = Math.max(0, ...strips.map((strip) => strip.cells.length));
-  const n = Math.min(capacity, longest);
-  const present = new Set(shown.flatMap((strip) => strip.cells.map((cell) => cell.status)));
+  const withPlatforms = strips.length > 1;
+  const cellId = (strip: number, index: number) => `${id}-${strip}-${index}`;
+
+  const onKeyDown = (strip: number) => (event: KeyboardEvent<HTMLDivElement>) => {
+    const moves: Record<string, number> = {
+      ArrowLeft: current - 1,
+      ArrowRight: current + 1,
+      Home: first,
+      End: runs.length - 1,
+    };
+    const move = moves[event.key];
+    if (move !== undefined) {
+      event.preventDefault();
+      select(move);
+      return;
+    }
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      const other = boxes.current[strip + (event.key === 'ArrowDown' ? 1 : -1)];
+      if (other) {
+        event.preventDefault();
+        other.focus();
+      }
+    }
+  };
+
+  // Press, mouse hover, or a drag selects the cell nearest the pointer's x. A touch passing over
+  // without pressing is a scroll, which touch-action: pan-y leaves to the browser.
+  const onPointer = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.type === 'pointermove' && event.pointerType !== 'mouse' && event.buttons === 0) {
+      return;
+    }
+    let nearest = 0;
+    let distance = Infinity;
+    [...event.currentTarget.children].forEach((cell, index) => {
+      const box = cell.getBoundingClientRect();
+      const d = Math.abs(box.left + box.width / 2 - event.clientX);
+      if (d < distance) {
+        distance = d;
+        nearest = index;
+      }
+    });
+    select(first + nearest);
+  };
+
+  const run = runs[current];
+  const present = new Set(strips.flatMap((strip) => strip.cells));
 
   return (
     <div
       className={withPlatforms ? styles.withPlatforms : undefined}
-      data-kind={kind}
+      data-kind="results"
       data-platforms={withPlatforms}
     >
       <div className={styles.strips}>
-        {shown.map((strip, index) => {
-          const cells = (
+        {strips.map((strip, s) => (
+          <div key={strip.platform} className={styles.strip} data-part="strip">
+            {withPlatforms && (
+              <span className={styles.platform} data-part="platform">
+                {strip.platform}
+              </span>
+            )}
             <div
-              ref={index === 0 ? measured : undefined}
-              className={styles.cells}
-              role={withPlatforms ? 'group' : undefined}
-              aria-label={withPlatforms ? `${strip.platform ?? ''} timeline` : undefined}
+              ref={(node) => {
+                boxes.current[s] = node;
+                if (s === 0) measured.current = node;
+              }}
+              className={cx(styles.cells, styles.listbox)}
+              role="listbox"
+              aria-orientation="horizontal"
+              tabIndex={0}
+              aria-label={`${testName}${withPlatforms ? ` on ${strip.platform}` : ''}, last ${qty(strip.cells.length, 'run')}`}
+              aria-activedescendant={cellId(s, current - first)}
+              onKeyDown={onKeyDown(s)}
+              onPointerDown={onPointer}
+              onPointerMove={onPointer}
             >
-              {strip.cells.map((cell, i) => {
-                const look = LOOK[cell.status];
+              {strip.cells.map((status, i) => {
+                const look = LOOK[status];
+                const cellRun = shownRuns[i];
+                const isSelected = first + i === current;
                 return (
                   <span
                     key={i}
-                    role="img"
-                    aria-label={`${look.word}, ${cell.label}`}
-                    className={`${styles.cell} ${styles[look.className]}`}
+                    id={cellId(s, i)}
+                    role="option"
+                    aria-selected={isSelected}
+                    aria-label={
+                      cellRun &&
+                      `${look.word}, ${cellRun.when}, ${cellRun.title}, ${sha7(cellRun.sha)}`
+                    }
+                    className={cx(
+                      styles.cell,
+                      styles[look.className],
+                      isSelected && styles.selected,
+                    )}
                     data-part="cell"
-                    data-status={cell.status}
+                    data-status={status}
                   >
                     {look.glyph}
                   </span>
                 );
               })}
             </div>
-          );
-          return (
-            <div key={strip.platform ?? index} className={styles.strip} data-part="strip">
-              {withPlatforms && (
-                <span className={styles.platform} data-part="platform">
-                  {strip.platform}
-                </span>
-              )}
-              {cells}
+          </div>
+        ))}
+      </div>
+      <Ends oldest={oldestLabel(capacity, shownRuns.length, runs.length)} />
+      <Legend kind="results" present={present} />
+      {run && (
+        <div className={styles.panel} aria-live="polite" data-part="panel">
+          <div>
+            <div className={styles.fieldLabel}>Run</div>
+            <div className={styles.runValue}>
+              <span data-part="run-title">{run.title}</span>
+              <span>·</span>
+              <span className={styles.sha} data-part="run-sha">
+                {sha7(run.sha)}
+              </span>
             </div>
-          );
-        })}
-      </div>
-      <div className={styles.ends}>
-        <span data-part="oldest">
-          {longest > n ? `Last ${n} ${plural(n)}` : `${n} ${plural(n)} ago`}
-        </span>
-        <span data-part="latest">Latest</span>
-      </div>
-      <ul className={styles.legend} data-part="legend">
-        {LEGEND_ORDER[kind]
-          .filter((status) => present.has(status))
-          .map((status) => (
-            <li key={status} className={styles.legendItem}>
-              <span
-                className={`${styles.swatch} ${styles[LOOK[status].className]}`}
-                data-part="swatch"
-                data-status={status}
-                aria-hidden="true"
-              />
-              {LOOK[status].word}
-            </li>
-          ))}
-      </ul>
+          </div>
+          <div>
+            <div className={styles.fieldLabel}>When</div>
+            <div className={styles.whenValue} data-part="when">
+              {run.when}
+            </div>
+          </div>
+          {platforms.map((platform) => {
+            const status = statusOn(run, platform);
+            const look = LOOK[status];
+            const duration =
+              status === 'skipped' || status === 'not_run'
+                ? undefined
+                : run.results.find((result) => result.platform === platform)?.duration;
+            return (
+              <div key={platform} data-part="field">
+                <div className={styles.fieldLabel} data-part="field-label">
+                  {withPlatforms ? platform : 'Result'}
+                </div>
+                <div className={styles.resultValue} data-part="field-value">
+                  <span
+                    className={cx(styles.status, styles[look.tone])}
+                    data-part="field-status"
+                    data-status={status}
+                  >
+                    <look.Icon size={14} strokeWidth={2.6} />
+                    <span>{look.word}</span>
+                  </span>
+                  {duration !== undefined && (
+                    <>
+                      <span className={styles.duration}>·</span>
+                      <span className={styles.duration}>{duration}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <Link href={run.href} className={styles.openRun} data-part="open-run">
+            Open run →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

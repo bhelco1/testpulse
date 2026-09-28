@@ -901,6 +901,8 @@ describe('TrendChart empty, loading and error', () => {
       <TrendChart title="Run duration" scope={TREND_SCOPE.duration} loading />,
     );
     expect(getByRole('figure').getAttribute('aria-busy')).toBe('true');
+    // Design v4 item 51: the loading container's hidden name.
+    expect(getByRole('figure', { name: 'Loading chart' })).toBeTruthy();
     expect(getByRole('heading', { level: 3 }).textContent).toBe('Run duration');
     const block = container.querySelector<HTMLElement>('[data-part="loading"]');
     expect(block?.textContent).toBe('Loading chart…');
@@ -922,7 +924,7 @@ describe('TrendChart empty, loading and error', () => {
     );
     const alert = getByRole('alert');
     expect(alert.getAttribute('data-variant')).toBe('inline');
-    expect(alert.textContent).toContain("Chart couldn't be loaded");
+    expect(alert.textContent).toContain('Chart couldn’t be loaded');
     expect(alert.textContent).toContain('The rest of the page is still current.');
     expect(container.querySelector('.recharts-wrapper')).toBeNull();
     expect(container.querySelector('[data-part="caption"]')).toBeNull();

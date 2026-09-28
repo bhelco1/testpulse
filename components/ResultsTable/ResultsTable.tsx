@@ -3,12 +3,15 @@
 import Link from 'next/link';
 import { useId, useState } from 'react';
 
+import { formatCount, qty } from '../../lib/copy/count';
 import { LAYER_LABEL } from '../../lib/design/layers';
+import type { TestStatus } from '../../lib/parsers/types';
 import type { Visibility } from '../../lib/projects/schema';
 import {
   filterResults,
   isFailing,
   layersPresent,
+  mismatchSentence,
   orderResults,
   platformMismatch,
   statusCounts,
@@ -57,7 +60,6 @@ export type ResultsTableProps =
       onLoadMore: () => void;
     };
 
-const formatCount = new Intl.NumberFormat('en-US');
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
 export function ResultsTable(props: ResultsTableProps) {
@@ -191,9 +193,9 @@ function Table({
           <div className={styles.footer}>
             <span className={styles.showing} data-part="showing">
               <span>Showing</span>
-              <span>{formatCount.format(shown.length)}</span>
+              <span>{formatCount(shown.length)}</span>
               <span>of</span>
-              <span>{formatCount.format(matching.length)}</span>
+              <span>{formatCount(matching.length)}</span>
             </span>
             {shown.length < matching.length && (
               <Button variant="secondary" onClick={onLoadMore}>
@@ -207,8 +209,22 @@ function Table({
   );
 }
 
+// Each platform's mark in a mismatch, a glyph for the eye and a word for assistive technology.
+const MARK: Readonly<Record<TestStatus, { glyph: string; word: string }>> = {
+  failed: { glyph: '✕', word: 'failed' },
+  error: { glyph: '✕', word: 'errored' },
+  passed: { glyph: '✓', word: 'passed' },
+  skipped: { glyph: '–', word: 'skipped' },
+};
+
 function Platforms({ platforms, layer }: { platforms: readonly PlatformResult[]; layer: string }) {
   const mismatch = platformMismatch(platforms);
+  // In a mismatch the list follows the sentence: failing platforms first.
+  const listed: readonly PlatformResult[] = mismatch
+    ? mismatch.flatMap(({ status, platforms: names }) =>
+        names.map((platform) => ({ platform, status })),
+      )
+    : platforms;
   return (
     <td role="cell" className={cx(styles.cell, styles.platformCell)}>
       {/* The narrow layout drops the layer column and reads "{layer} · {platforms}" here. */}
@@ -216,18 +232,15 @@ function Platforms({ platforms, layer }: { platforms: readonly PlatformResult[];
       <span className={styles.narrowLayer} aria-hidden="true">
         ·
       </span>
-      {platforms.map(({ platform, status }) => {
-        const mark = !mismatch
-          ? null
-          : isFailing(status)
-            ? { glyph: '✕', word: 'failed' }
-            : status === 'passed'
-              ? { glyph: '✓', word: 'passed' }
-              : null;
+      {listed.map(({ platform, status }) => {
+        const mark = mismatch ? MARK[status] : null;
         return (
           <span
             key={platform}
-            className={cx(styles.platform, mark?.word === 'failed' && styles.platformFail)}
+            className={cx(
+              styles.platform,
+              mismatch !== null && isFailing(status) && styles.platformFail,
+            )}
             data-part="platform"
           >
             {platform}
@@ -265,7 +278,7 @@ function TestRows({
   return (
     <tbody
       role="rowgroup"
-      className={cx(styles.test, expandable && styles.failing)}
+      className={cx(styles.test, expandable ? styles.failing : styles.linked)}
       data-part="test"
     >
       <tr role="row" className={styles.row} data-part="row">
@@ -300,9 +313,13 @@ function TestRows({
                 {result.name}
               </button>
             ) : (
-              <span className={styles.name} data-part="name">
+              <Link
+                href={result.historyHref}
+                className={cx(styles.name, styles.rowLink)}
+                data-part="name"
+              >
                 {result.name}
-              </span>
+              </Link>
             )}
             <span className={styles.suite} data-part="suite">
               {result.suite}
@@ -336,10 +353,7 @@ function TestRows({
                   {mismatch && (
                     <div className={styles.mismatch} data-part="mismatch">
                       <span className={styles.mismatchTitle}>Platform mismatch</span>
-                      <span className={styles.mismatchText}>
-                        Passed on {mismatch.passed.join(', ')}, failed on{' '}
-                        {mismatch.failed.join(', ')} in the same run.
-                      </span>
+                      <span className={styles.mismatchText}>{mismatchSentence(mismatch)}</span>
                     </div>
                   )}
                   {/* RLS already withholds failure text for private projects; the table never
@@ -397,8 +411,8 @@ function PrunedNote({ total, passed, failed }: PrunedTotals) {
         </div>
         <p className={styles.prunedText} data-part="pruned-text">
           This run is older than that, so its individual results were removed to keep the database
-          small. Summary totals are permanent: {formatCount.format(total)} tests,{' '}
-          {formatCount.format(passed)} passed, {formatCount.format(failed)} failed.
+          small. Summary totals are permanent: {qty(total, 'test')}, {formatCount(passed)} passed,{' '}
+          {formatCount(failed)} failed.
         </p>
       </div>
     </div>

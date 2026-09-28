@@ -118,6 +118,12 @@ describe('runsPerDayCaption', () => {
     expect(runsPerDayCaption([0, 1])).toBe('1 run in the last 2 days, 1 on the busiest day.');
   });
 
+  it('counts runs with the site-wide count copy, thousands grouped (design v4 item 50)', () => {
+    expect(runsPerDayCaption([600, 600])).toBe(
+      '1,200 runs in the last 2 days, 600 on the busiest day.',
+    );
+  });
+
   it('is omitted with fewer than two days', () => {
     expect(runsPerDayCaption([4])).toBeNull();
   });

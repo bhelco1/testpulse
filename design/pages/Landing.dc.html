@@ -29,7 +29,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <a href="#" aria-current="page" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
 <nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
-<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it's tested</a>
+<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
 <span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}<span>{{ liveLabel }}</span></span>
 <button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
 </nav>
@@ -44,9 +44,9 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
 <section role="alert" style="max-width:640px;padding:40px 0 80px">
 <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600;font-size:14px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Error</span>
-<h1 style="margin:16px 0 0;font:500 clamp(34px,4.5vw,48px)/1.1 'Source Serif 4',serif;letter-spacing:-.02em;text-wrap:balance">Results couldn't be loaded</h1>
-<p style="margin:14px 0 0;font:400 19px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">The database didn't respond. Nothing is shown rather than numbers that might be out of date. Test runs are still being received and will appear when it recovers.</p>
-<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:24px"><button style="height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer">Try again</button><a href="#" style="min-height:44px;display:flex;align-items:center;padding:0 6px;font-size:15px">How it's tested</a></div>
+<h1 style="margin:16px 0 0;font:500 clamp(34px,4.5vw,48px)/1.1 'Source Serif 4',serif;letter-spacing:-.02em;text-wrap:balance">Results couldn’t be loaded</h1>
+<p style="margin:14px 0 0;font:400 19px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">The database didn’t respond. Nothing is shown rather than numbers that might be out of date. Test runs are still being received and will appear when it recovers.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:20px"><button style="height:44px;padding:0 16px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer">Try again</button><a href="#" style="min-height:44px;display:flex;align-items:center;padding:0 8px;font-size:15px">How it’s tested</a></div>
 </section>
 </sc-if>
 
@@ -105,19 +105,19 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <article data-kit="card" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(20px,2.4vw,30px) 0;display:flex;flex-direction:column;min-width:0;box-shadow:var(--shadow-card)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px">
 <span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:{{ c.st.tint }};color:{{ c.st.ink }};font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ c.st.r }}" stroke-dasharray="{{ c.st.dash }}"></circle><path d="{{ c.st.d }}"></path></svg><span>{{ c.st.w }}</span></span>
-<sc-if value="{{ c.hasRun }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3)"><span style="color:{{ c.whenInk }}">{{ c.when }}</span><span>·</span><span>{{ c.branch }}</span><span>·</span><sc-if value="{{ c.shaLink }}" hint-placeholder-val="{{ true }}"><a href="#" style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.sha }}</a></sc-if><sc-if value="{{ c.shaPlain }}" hint-placeholder-val="{{ false }}"><span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.sha }}</span></sc-if></span></sc-if>
+<sc-if value="{{ c.hasRun }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3)"><span style="color:{{ c.whenInk }}">{{ c.when }}</span><span>·</span><span>{{ c.branch }}</span><span>·</span><sc-if value="{{ c.shaLink }}" hint-placeholder-val="{{ true }}"><a href="#" style="display:inline-flex;align-items:center;min-height:44px;font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.sha }}</a></sc-if><sc-if value="{{ c.shaPlain }}" hint-placeholder-val="{{ false }}"><span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.sha }}</span></sc-if></span></sc-if>
 </div>
-<h3 style="margin:18px 0 6px;font:500 clamp(32px,3.4vw,42px)/1.05 'Source Serif 4',serif;letter-spacing:-.02em;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px"><a href="#" style="text-decoration:none">{{ c.name }}</a><sc-if value="{{ c.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font:500 13px 'Public Sans',sans-serif;color:var(--ink-2);background:var(--neutral-tint);padding:5px 10px;border-radius:99px;letter-spacing:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if></h3>
+<h3 style="margin:18px 0 6px;font:500 clamp(32px,3.4vw,42px)/1.05 'Source Serif 4',serif;letter-spacing:-.02em;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px"><a href="#" style="display:inline-flex;align-items:center;min-height:44px;text-decoration:none">{{ c.name }}</a><sc-if value="{{ c.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font:500 13px 'Public Sans',sans-serif;color:var(--ink-2);background:var(--neutral-tint);padding:5px 10px;border-radius:99px;letter-spacing:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if></h3>
 <p style="margin:0 0 20px;font-size:15.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ c.tagline }}</p>
 <sc-if value="{{ c.hasRun }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:18px"><span style="font:500 clamp(44px,4.4vw,56px)/1 'Source Serif 4',serif;color:{{ c.totalInk }}">{{ c.total }}</span><span style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:15px;color:var(--ink-2)"><sc-for list="{{ c.subParts }}" as="sp" hint-placeholder-count="5"><span style="color:{{ sp.ink }};font-weight:{{ sp.w }}">{{ sp.t }}</span></sc-for></span></div></sc-if>
 <sc-if value="{{ c.notReporting }}" hint-placeholder-val="{{ false }}"><p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:var(--ink-2)">Registered. Results appear here after its CI posts the first report.</p></sc-if>
-<sc-if value="{{ c.hasFailing }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ c.failName }}</span><span style="display:flex;gap:10px;font-size:13px;color:var(--ink-3)"><span>{{ c.failPlat }}</span><sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}"><span>{{ c.more }}</span></sc-if></span></a></sc-if>
+<sc-if value="{{ c.hasFailing }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 12px;min-height:44px;box-sizing:border-box;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span title="{{ c.failFull }}" style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ c.failName }}</span><span style="display:flex;gap:10px;font-size:13px;color:var(--ink-3)"><span>{{ c.failPlat }}</span><sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}"><span>{{ c.more }}</span></sc-if></span></a></sc-if>
 <sc-if value="{{ c.hasLayers }}" hint-placeholder-val="{{ true }}"><div style="display:flex;height:8px;gap:3px;border-radius:99px;overflow:hidden;margin-bottom:8px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:3px;background:{{ l.bg }}"></div></sc-for></div><div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--ink-2);margin-bottom:22px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><span style="display:flex;gap:5px"><span>{{ l.label }}</span><span>{{ l.countText }}</span></span></sc-for></div></sc-if>
 <sc-if value="{{ c.emptyNote }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin-bottom:22px;border-radius:12px;background:var(--attn-tint);font-size:14.5px;line-height:1.55;color:var(--ink)"><svg style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle><path d="M8 12h8"></path></svg><span>{{ c.emptyNote }}</span></div></sc-if>
 <sc-if value="{{ c.hasCov }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:14px">
 <sc-for list="{{ c.cov }}" as="v" hint-placeholder-count="2">
 <div style="display:grid;grid-template-columns:128px minmax(40px,1fr) auto;align-items:center;column-gap:14px;font-size:14px">
-<span style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
+<span title="{{ v.m }}" style="min-width:0;font:13px 'JetBrains Mono',monospace;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
 <div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
 <span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
 </div>
@@ -134,7 +134,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-top:16px;align-items:start">
-<section style="grid-column:span 1;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;min-width:0">
+<section style="grid-column:span 1;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;min-width:0;box-shadow:var(--shadow-card)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;padding:16px 16px 10px"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">Recent runs</h2><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:{{ feedNoteInk }}">{{ liveDot }}<span>{{ feedNote }}</span></span></div>
 <div role="log" aria-live="polite" style="display:flex;flex-direction:column">
 <sc-for list="{{ feed }}" as="r" hint-placeholder-count="3">
@@ -152,7 +152,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </section>
 <section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px clamp(20px,2.4vw,30px)">
 <h2 style="margin:0 0 14px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">About this site</h2>
-<p style="margin:0 0 20px;font:400 19px/1.5 'Source Serif 4',serif;text-wrap:pretty">I'm Bobby Helco, a quality engineering leader. Every project here reports its test results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard is tested the same way, and reports on itself.</p>
+<p style="margin:0 0 20px;font:400 19px/1.5 'Source Serif 4',serif;text-wrap:pretty">I’m Bobby Helco, a quality engineering leader. Every project here reports its test results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard is tested the same way, and reports on itself.</p>
 <a href="#" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;background:var(--ink);color:var(--on-ink);font-size:14.5px;font-weight:600;text-decoration:none">How testpulse is tested →</a>
 </section>
 </div>
@@ -181,13 +181,13 @@ class Component extends DCLogic {
     const osto = { name: 'Ostomate2', tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
       run: { status: 'passed', when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', total: 142, failed: 0, skipped: 0, dur: '27 s' },
       layers: { unit: 103, integration: 29, visual: 10 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
-      reports: [['android/shared/jvm', 82], ['ios/shared/ios-sim', 82], ['android/composeApp/jvm', 60], ['ios/composeApp/ios-sim', 50]], repSide: 'jvm 142 · ios-sim 132',
-      declared: 'Not counted: 12 Maestro E2E flows, run in CI, not yet reported' };
+      reports: [['android/shared/jvm', 82], ['ios/shared/ios-sim', 82], ['android/composeApp/jvm', 60], ['ios/composeApp/ios-sim', 50]], 
+      declared: [{ name: 'Maestro E2E (Android)', layer: 'e2e', count: 7, status: 'runs_in_ci_not_reported' }, { name: 'Maestro E2E (iOS)', layer: 'e2e', count: 5, status: 'runs_in_ci_not_reported' }] };
     const route = { name: 'RouteServe', private: true, tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
       run: { status: 'passed', when: '2 hours ago', branch: 'main', sha: 'c238574', total: 1048, failed: 0, skipped: 0, dur: '29 s' },
       layers: { unit: 608, component: 165, integration: 3, api: 269 }, cov: [['apps/backend', 96.1, 80], ['apps/mobile', 96.1, 80], ['packages/shared', 100, 80]],
-      reports: [['test/apps/backend/node', 498], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], repSide: 'node',
-      declared: 'Not counted: 13 Maestro E2E flows, authored, not yet executed' };
+      reports: [['test/apps/backend/node', 498], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], 
+      declared: [{ name: 'Maestro E2E · iOS', layer: 'e2e', count: 13, status: 'authored_not_executed' }] };
     let rows = [
       { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 142, dur: '27 s', when: '4 minutes ago' },
       { status: 'passed', private: true, project: 'RouteServe', branch: 'main', sha: 'c238574', total: 1048, dur: '29 s', when: '2 hours ago' },
@@ -206,7 +206,7 @@ class Component extends DCLogic {
     if (sc === 'failed run') {
       sampleNote = 'Ostomate2’s latest default-branch run shown failing 1 of 142 to illustrate the state.';
       osto.run = Object.assign({}, osto.run, { status: 'failed', sha: 'a41f9c2', failed: 1 });
-      osto.failing = [{ name: 'HomeViewModelTest › rendersToday', plat: 'ios-sim' }];
+      osto.failing = [{ suite: 'com.ostomate.app.ui.home.HomeViewModelTest', name: 'rendersToday', platform: 'ios-sim' }];
       heroNote = 'automated tests across two projects. 1 failing on Ostomate2’s latest run, 0 skipped or disabled.';
       tiles[0] = tile('Pass rate', '99.9%', '1,189 of 1,190 · 0 skipped, excluded');
       tiles[4] = tile('Green streak', '0 runs', 'Broken by Ostomate2 a41f9c2');

@@ -81,6 +81,8 @@ describe('StatTile', () => {
     const tile = container.firstElementChild as HTMLElement;
 
     expect(tile.getAttribute('aria-busy')).toBe('true');
+    // Design v4 item 51: loading containers carry a hidden name.
+    expect(tile.getAttribute('aria-label')).toBe('Loading stats');
     const blocks = [...tile.querySelectorAll<HTMLElement>('[data-part="skeleton"]')];
     expect(blocks.map((b) => [b.style.width, b.style.height, b.style.borderRadius])).toEqual([
       ['60%', '12px', '4px'],
@@ -118,9 +120,71 @@ describe('StatTile', () => {
       });
       expect(ruleFor(CSS, '.kiosk .label')).toEqual({ 'font-size': '24px' });
       expect(ruleFor(CSS, '.kiosk .value')).toEqual({
+        flex: '0 0 auto',
         font: '500 52px/1 var(--font-serif)',
         'margin-top': '0px',
       });
+      expect(ruleFor(CSS, '.kioskText')).toEqual({
+        display: 'flex',
+        'flex-direction': 'column',
+        gap: '4px',
+        'min-width': '0px',
+      });
+    });
+
+    // Design v4 item 33.
+    it('puts a sub-line 20px --ink-3 under the label', () => {
+      const { container } = render(
+        <StatTile
+          variant="kiosk"
+          label="Runs in last 30 days"
+          value="46"
+          sub="Ostomate2 31 · RouteServe 15"
+        />,
+      );
+      const tile = container.firstElementChild as HTMLElement;
+
+      expect(part(tile, 'label')?.textContent).toBe('Runs in last 30 days');
+      expect(part(tile, 'sub')?.textContent).toBe('Ostomate2 31 · RouteServe 15');
+      expect(ruleFor(CSS, '.kiosk .sub')).toEqual({
+        'font-size': '20px',
+        color: 'var(--ink-3)',
+        'margin-top': '0px',
+      });
+    });
+
+    for (const icon of ['stale', 'empty', 'below_floor'] as const) {
+      it(`draws the ${icon} attention with the HealthMarker glyph at 22px, stroke 2.6`, () => {
+        const { container } = render(
+          <StatTile
+            variant="kiosk"
+            label="Projects reporting"
+            value="1 of 2"
+            attention={{ icon, text: 'Needs attention' }}
+          />,
+        );
+        const svg = part(container, 'attention')?.querySelector('svg');
+        expect(svg?.getAttribute('width')).toBe('22');
+        expect(svg?.getAttribute('stroke-width')).toBe('2.6');
+        expect(svg?.querySelector('path')?.getAttribute('d')).toBe(ICON_PATH[icon]);
+      });
+    }
+
+    it('while loading shows a label bar and a value bar, named for screen readers', () => {
+      const { container } = render(
+        <StatTile variant="kiosk" label="Pass rate" value="100%" loading />,
+      );
+      const tile = container.firstElementChild as HTMLElement;
+
+      expect(tile.dataset.variant).toBe('kiosk');
+      expect(tile.getAttribute('aria-busy')).toBe('true');
+      expect(tile.getAttribute('aria-label')).toBe('Loading stats');
+      const blocks = [...tile.querySelectorAll<HTMLElement>('[data-part="skeleton"]')];
+      expect(blocks.map((b) => [b.style.width, b.style.height, b.style.borderRadius])).toEqual([
+        ['45%', '22px', '4px'],
+        ['120px', '52px', '6px'],
+      ]);
+      expect(tile.textContent).toBe('');
     });
 
     it('on attention replaces the label with the reason in amber and a 22px icon', () => {

@@ -39,12 +39,12 @@ const EXPECTED: Record<
 };
 
 const STATUSES = Object.keys(EXPECTED) as BadgeStatus[];
-const VARIANTS: BadgeVariant[] = ['pill', 'inline', 'kiosk', 'kioskInline'];
+const VARIANTS: BadgeVariant[] = ['pill', 'inline', 'kiosk', 'inline-kiosk'];
 const ICON_SIZE: Record<BadgeVariant, string> = {
   pill: '14',
   inline: '15',
   kiosk: '26',
-  kioskInline: '22',
+  'inline-kiosk': '22',
 };
 
 describe('StatusBadge', () => {
@@ -121,11 +121,11 @@ describe('StatusBadge', () => {
     });
   });
 
-  it('kioskInline is the kiosk feed tile status: no fill, 24px, gap 8, icon 22', () => {
-    const { getByText } = render(<StatusBadge status="passed" variant="kioskInline" />);
+  it('inline-kiosk (components.md name) is the kiosk feed tile status: no fill, 24px, gap 8, icon 22', () => {
+    const { getByText } = render(<StatusBadge status="passed" variant="inline-kiosk" />);
     const badge = getByText('Passed');
 
     expect(badge.className).not.toContain('pill');
-    expect(ruleFor(CSS, '.kioskInline')).toEqual({ gap: '8px', 'font-size': '24px' });
+    expect(ruleFor(CSS, '.inline-kiosk')).toEqual({ gap: '8px', 'font-size': '24px' });
   });
 });

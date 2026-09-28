@@ -35,7 +35,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-for list="{{ menuItems }}" as="m" hint-placeholder-count="3"><a href="#" onClick="{{ m.pick }}" aria-current="{{ m.cur }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:0 12px;border-radius:6px;background:{{ m.bg }};text-decoration:none" style-hover="background:var(--surface)"><span style="display:flex;align-items:center;gap:8px"><span style="font-weight:600">{{ m.name }}</span><span style="font-size:13px;color:var(--ink-3)">{{ m.note }}</span></span><span style="display:flex;align-items:center;gap:6px;color:{{ m.st.ink }};font-weight:600;font-size:13px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ m.st.r }}" stroke-dasharray="{{ m.st.dash }}"></circle><path d="{{ m.st.d }}"></path></svg><span>{{ m.st.w }}</span></span></a></sc-for>
 </div>
 </sc-if></div>
-<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it's tested</a>
+<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
 <span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}Live</span>
 <button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
 </nav>
@@ -45,7 +45,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <main id="main">
 <sc-if value="{{ isStale }}" hint-placeholder-val="{{ false }}">
-<div role="status" style="display:flex;gap:12px;align-items:flex-start;margin-top:24px;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div style="flex:1"><div style="font-weight:600;font-size:14.5px;color:var(--attn)">{{ p.name }} hasn't reported in 12 days</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">The weekly scheduled run should have posted by Sep 20. Its CI may be failing silently. Everything below is from the last report, Sep 12.</div></div><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span></div>
+<div style="display:flex;gap:12px;align-items:flex-start;margin-top:24px;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div style="flex:1"><div style="font-weight:600;font-size:14.5px;color:var(--attn)">{{ p.name }} hasn’t reported in 12 days</div><div style="font-size:14px;line-height:1.5;color:var(--ink-2);margin-top:2px">The weekly scheduled run should have posted by Sep 20. Its CI may be failing silently. Everything below is from the last report, Sep 12.</div></div><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span></div>
 </sc-if>
 
 <!-- HERO -->
@@ -55,8 +55,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <p style="margin:0;max-width:640px;font:400 24px/1.35 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">{{ p.tagline }}</p>
 <p style="margin:0;max-width:620px;font-size:16px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">{{ p.description }}</p>
 <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 24px;font-size:14px">
-<sc-if value="{{ isHealthy }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:7px;color:var(--pass);font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Reporting healthy<span style="font-weight:400;color:var(--ink-3)">· last report {{ p.lastReport }}</span></span></sc-if>
-<sc-if value="{{ isStale }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:7px;color:var(--attn);font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg>No report in 12 days<span style="font-weight:400;color:var(--ink-3)">· expected every 8</span></span></sc-if>
+<sc-if value="{{ isHealthy }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:8px"><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg><span>Reporting healthy</span></span><span style="display:flex;gap:6px;color:var(--ink-3)"><span>Last report</span><span>{{ p.lastReport }}</span></span></span></sc-if>
+<sc-if value="{{ isStale }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:8px"><span style="display:flex;align-items:center;gap:6px;color:var(--attn);font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><span>No report in 12 days</span></span><span style="color:var(--ink-3)">Expected every 8 days</span></span></sc-if>
 <sc-if value="{{ isPublic }}" hint-placeholder-val="{{ true }}"><a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;color:var(--ink-2)">Source on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a></sc-if>
 </div>
 <sc-if value="{{ p.private }}" hint-placeholder-val="{{ false }}">
@@ -86,13 +86,13 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <!-- 01 STACK -->
 <section style="padding:48px 0;border-top:1px solid var(--line)">
-<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">01</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">What it's built with</h2></div>
+<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">01</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">What it’s built with</h2></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:32px 56px">
-<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px">Built with</div>
+<div><h3 style="margin:0 0 14px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Built with</h3>
 <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px 16px;align-items:start;font-size:13.5px">
 <sc-for list="{{ p.built }}" as="g" hint-placeholder-count="4"><span style="color:var(--ink-3);padding-top:5px">{{ g.g }}</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ g.t }}" as="t" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line)">{{ t }}</span></sc-for></div></sc-for>
 </div></div>
-<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px">Tested with</div>
+<div><h3 style="margin:0 0 14px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Tested with</h3>
 <div style="display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px 16px;align-items:start;font-size:13.5px">
 <sc-for list="{{ p.tested }}" as="g" hint-placeholder-count="4"><span style="color:var(--ink-3);padding-top:5px">{{ g.g }}</span><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ g.t }}" as="t" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:6px;border:1px {{ t.border }} var(--line-strong);color:{{ t.ink }}">{{ t.n }}</span></sc-for></div></sc-for>
 </div></div>
@@ -101,7 +101,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <!-- 02 PYRAMID -->
 <section style="padding:48px 0;border-top:1px solid var(--line)">
-<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">How it's tested</h2></div>
+<div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">How it’s tested</h2></div>
 <figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 16px;margin-bottom:24px"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px"><span style="font:500 clamp(44px,4.4vw,56px)/1 'Source Serif 4',serif">{{ p.total }}</span><span style="font-size:15px;color:var(--ink-2)">tests executed in the latest run</span></div><span style="font-size:13.5px;color:var(--ink-3)">{{ p.pyrNote }}</span></div>
 <div style="display:flex;flex-direction:column;gap:8px">
@@ -118,7 +118,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </figure>
 
 <div style="margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
-<div style="padding:16px 20px"><div style="font:500 20px 'Source Serif 4',serif">Declared suites</div><p style="margin:4px 0 0;font-size:13.5px;color:var(--ink-3)">These tests exist but don't report here yet. They aren't counted in any total.</p></div>
+<div style="padding:16px 20px"><div style="font:500 20px 'Source Serif 4',serif">Declared suites</div><p style="margin:4px 0 0;font-size:13.5px;color:var(--ink-3)">These tests exist but don’t report here yet. They aren’t counted in any total.</p></div>
 <sc-for list="{{ p.declared }}" as="d" hint-placeholder-count="2">
 <div style="display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:14px 20px;border-top:1px solid var(--line);font-size:14px"><span style="flex:1 1 220px;font-weight:600">{{ d.name }}</span><span style="width:110px;color:var(--ink-3)">{{ d.layer }}</span><span style="width:90px">{{ d.countText }}</span><span style="flex:0 1 260px;display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg style="flex:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="{{ d.dash }}" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle></svg><span>{{ d.status }}</span></span></div>
 </sc-for>
@@ -171,7 +171,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </div>
 <div style="margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
 <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div><div style="font:500 20px 'Source Serif 4',serif">Last 40 runs</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3)">Default branch · run status</div></div><span style="font-size:14px;color:var(--ink-2)">{{ stripNote }}</span></div>
-<div role="img" aria-label="{{ stripNote }}" style="display:flex;justify-content:flex-end;align-items:flex-end;gap:3px;height:48px;overflow:hidden">
+<div role="img" aria-label="{{ stripAria }}" style="display:flex;justify-content:flex-end;align-items:flex-end;gap:3px;height:48px;overflow:hidden">
 <sc-for list="{{ strip }}" as="c" hint-placeholder-count="40"><span style="flex:0 1 16px;min-width:6px;height:{{ c.h }};box-sizing:border-box;border-radius:2px;background:{{ c.bg }};border:{{ c.bd }};display:flex;justify-content:center;align-items:flex-start;font:700 10px/14px 'Public Sans',sans-serif;color:var(--on-ink)">{{ c.g }}</span></sc-for>
 </div>
 <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><span>40 runs ago</span><span>Latest</span></div>
@@ -186,6 +186,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;box-shadow:var(--shadow-card);min-width:0">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 12px;padding:12px 12px 8px 16px"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">Runs</h2>
 <div role="radiogroup" aria-label="Branches" style="display:flex;padding:3px;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px"><sc-for list="{{ branchTabs }}" as="b" hint-placeholder-count="2"><button role="radio" aria-checked="{{ b.on }}" onClick="{{ b.pick }}" style="min-height:44px;padding:0 14px;border-radius:6px;border:none;cursor:pointer;background:{{ b.bg }};color:{{ b.ink }};font:{{ b.weight }} 14px 'Public Sans',sans-serif">{{ b.label }}</button></sc-for></div></div>
+<div style="display:flex;align-items:center;gap:8px;padding:0 16px 10px;font-size:13.5px;color:var(--ink-3)"><span style="width:8px;height:8px;border-radius:50%;background:var(--pass)"></span><span>Updates as reports arrive</span></div>
 <div role="log" aria-live="polite" style="display:flex;flex-direction:column">
 <sc-for list="{{ runs }}" as="r" hint-placeholder-count="4">
 <a href="#" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:14px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:{{ r.bg }};text-decoration:none" style-hover="background:var(--raised)">
@@ -247,7 +248,7 @@ class Component extends DCLogic {
         tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
         description: 'Logs bag and flange changes with a tap or a QR deep link, predicts days of supply, and sends reorder reminders. Data stays on the device. Crash reporting is opt-in and off by default, and there is no analytics.',
         run: { when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', figure: '142', line: 'tests · 142 passed · 0 failed · 0 skipped · 27 s' },
-        failRun: { when: 'yesterday', branch: 'PR #52', sha: 'a41f9c2', figure: '1', line: 'failed · 141 of 142 passed · 31 s', failName: 'HomeViewModelTest › rendersToday', failPlat: 'ios-sim' },
+        failRun: { when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', figure: '1', line: 'failed · 141 of 142 passed · 31 s', failName: 'HomeViewModelTest › rendersToday', failPlat: 'ios-sim' },
         pass: Array.from({ length: 30 }, () => 100),
         platforms: 'Same suites on JVM (142) and iOS simulator (132)',
         built: [
@@ -284,7 +285,7 @@ class Component extends DCLogic {
         durCap: 'Between 24 s and 31 s over the last 30 runs. Median 27 s.',
         runs: [
           { pass: true, title: 'Push to main', branch: 'main', sha: '0e2d0b4', counts: '142 tests · 27 s', when: '4 min ago' },
-          { fail: true, pr: true, title: 'Pull request #52', branch: 'PR #52', sha: 'a41f9c2', counts: '141 of 142 · 31 s', when: 'yesterday' },
+          { fail: true, pr: true, title: 'Pull request from fix-today-count', branch: 'fix-today-count', sha: 'a41f9c2', counts: '141 of 142 · 31 s', when: 'yesterday' },
           { pass: true, title: 'Scheduled run', branch: 'main', sha: '7c1e5a0', counts: '142 tests · 26 s', when: '2 days ago', sample: true },
           { pass: true, title: 'Push to main', branch: 'main', sha: 'b93d17e', counts: '142 tests · 28 s', when: '3 days ago', sample: true },
         ],
@@ -365,7 +366,7 @@ class Component extends DCLogic {
 
     const L = K.layers(p.layers), tot = L.reduce((s, l) => s + l.count, 0), mx = Math.max(...L.map(l => l.count));
     const pyramid = [{ label: 'E2E', labelInk: 'var(--ink-3)', isBar: false, isText: true, text: p.e2e.flows + ' flows declared · not counted', countText: '', pct: '', w: '0', bg: 'transparent' }]
-      .concat(L.slice().reverse().map(l => ({ label: l.label, labelInk: 'var(--ink-2)', isBar: true, isText: false, text: '', w: (l.count / mx * 100) + '%', bg: l.tone, countText: l.countText, pct: Math.max(1, Math.round(l.count / tot * 100)) + '%' })));
+      .concat(L.slice().reverse().map(l => ({ label: l.label, labelInk: 'var(--ink-2)', isBar: true, isText: false, text: '', w: (l.count / mx * 100) + '%', bg: l.tone, countText: l.countText, pct: (l.count / tot < 0.01 ? '<1' : Math.round(l.count / tot * 100)) + '%' })));
 
     const coverage = p.cov.map(([m, v, f], i) => K.cov(m, below && p.below[0] === i ? p.below[1] : v, f));
     const dates = Component.DATES;
@@ -396,7 +397,7 @@ class Component extends DCLogic {
       themeVars: K.themeVars(dark), liveDot, menuItems,
       p: Object.assign({}, p, { lastReport: stale ? '12 days ago' : p.lastReport }),
       isPublic: !p.private, isStale: stale, isHealthy: !stale, isPass: !failed, isFail: failed, isBelow: below,
-      run, pyramid, pyrCols: '110px minmax(0,1fr) 120px', coverage, charts, runs, branchTabs, strip, stripNote: 'All 40 passed.',
+      run, pyramid, pyrCols: '110px minmax(0,1fr) 120px', coverage, charts, runs, branchTabs, strip, stripNote: 'All 40 passed.', stripAria: 'Last 40 runs on main: 40 passed.',
       hasFlaky: p.flaky.length > 0, noFlaky: p.flaky.length === 0,
     });
   }

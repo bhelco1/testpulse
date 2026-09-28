@@ -19,7 +19,7 @@
 .header.projectHeader {
   align-items: center;
   gap: 10px 12px;
-  padding: 12px 12px 8px 16px;
+  padding: 12px 12px 4px 16px;
 }
 
 .heading {
@@ -37,6 +37,11 @@
 
 .note.offline {
   color: var(--ink-2);
+}
+
+/* The project page's live note, on its own line under the header row. */
+.note.projectNote {
+  padding: 0 16px 10px;
 }
 
 .list {
@@ -83,6 +88,10 @@
   margin-top: 4px;
 }
 
+.projectEmpty {
+  padding: 14px 16px 16px;
+}
+
 /* The design's grid is 200px and three equal tiles; the tiles sit in their own grid so the
    log holds only the runs. */
 .kiosk {
@@ -111,6 +120,68 @@
 }
 
 .kioskNote {
+  font-size: 22px;
+  color: var(--ink-3);
+}
+
+.kioskNote.kioskOffline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-2);
+}
+
+.kioskRing {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-3);
+  box-sizing: border-box;
+}
+
+.kioskTile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 24px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+
+.kioskSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 24px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.kioskSkeletonTop {
+  display: flex;
+  justify-content: space-between;
+}
+
+.kioskStateTitle {
+  font: 500 28px var(--font-serif);
+}
+
+.kioskErrorTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kioskErrorIcon {
+  flex: none;
+  color: var(--fail);
+}
+
+.kioskStateText {
   font-size: 22px;
   color: var(--ink-3);
 }

@@ -33,7 +33,7 @@ export function SiteHeader({ projects, currentProject, connected, current }: Sit
             className={styles.link}
             aria-current={currentIf(current === 'how-its-tested')}
           >
-            How it&apos;s tested
+            How it’s tested
           </Link>
           <LiveIndicator connected={connected} />
           <ThemeToggle />

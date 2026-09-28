@@ -18,13 +18,13 @@ const ATTENTION_ICON: Record<StatTileAttention['icon'], ComponentType<IconProps>
 interface Common {
   label: string;
   value: string;
+  sub?: string;
   // Attention never colours the value; it replaces the sub-line (web) or the label (kiosk).
   attention?: StatTileAttention;
+  loading?: boolean;
 }
 
-// The kiosk tile is drawn with no sub-line and no loading state.
-export type StatTileProps =
-  (Common & { variant?: 'web'; sub?: string; loading?: boolean }) | (Common & { variant: 'kiosk' });
+export type StatTileProps = Common & { variant?: 'web' | 'kiosk' };
 
 function Attention({ attention, kiosk }: { attention: StatTileAttention; kiosk: boolean }) {
   const Icon = ATTENTION_ICON[attention.icon];
@@ -36,25 +36,53 @@ function Attention({ attention, kiosk }: { attention: StatTileAttention; kiosk: 
   );
 }
 
-export function StatTile(props: StatTileProps) {
-  const { label, value, attention } = props;
-  const variant = props.variant ?? 'web';
+// Design v4 item 51: loading containers carry a hidden name.
+const LOADING_LABEL = 'Loading stats';
+
+export function StatTile({
+  label,
+  value,
+  sub,
+  attention,
+  loading = false,
+  variant = 'web',
+}: StatTileProps) {
   const hasAttention = attention !== undefined;
 
-  if (props.variant === 'kiosk') {
+  if (variant === 'kiosk') {
+    if (loading) {
+      return (
+        <div
+          className={`${styles.tile} ${styles.kiosk}`}
+          data-variant={variant}
+          aria-busy="true"
+          aria-label={LOADING_LABEL}
+        >
+          <Skeleton width="45%" height={22} />
+          <Skeleton width="120px" height={52} radius={6} />
+        </div>
+      );
+    }
     return (
       <div
         className={`${styles.tile} ${styles.kiosk}`}
         data-variant={variant}
         data-attention={hasAttention}
       >
-        {attention ? (
-          <Attention attention={attention} kiosk />
-        ) : (
-          <span className={styles.label} data-part="label">
-            {label}
-          </span>
-        )}
+        <span className={styles.kioskText}>
+          {attention ? (
+            <Attention attention={attention} kiosk />
+          ) : (
+            <span className={styles.label} data-part="label">
+              {label}
+            </span>
+          )}
+          {sub && (
+            <span className={styles.sub} data-part="sub">
+              {sub}
+            </span>
+          )}
+        </span>
         <span className={styles.value} data-part="value">
           {value}
         </span>
@@ -62,9 +90,14 @@ export function StatTile(props: StatTileProps) {
     );
   }
 
-  if (props.loading) {
+  if (loading) {
     return (
-      <div className={`${styles.tile} ${styles.web}`} data-variant={variant} aria-busy="true">
+      <div
+        className={`${styles.tile} ${styles.web}`}
+        data-variant={variant}
+        aria-busy="true"
+        aria-label={LOADING_LABEL}
+      >
         <Skeleton width="60%" height={12} />
         <Skeleton width="45%" height={34} radius={6} className={styles.second} />
         <Skeleton width="75%" height={10} className={styles.third} />
@@ -87,9 +120,9 @@ export function StatTile(props: StatTileProps) {
       {attention ? (
         <Attention attention={attention} kiosk={false} />
       ) : (
-        props.sub && (
+        sub && (
           <div className={styles.sub} data-part="sub">
-            {props.sub}
+            {sub}
           </div>
         )
       )}

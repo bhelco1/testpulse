@@ -40,7 +40,7 @@ a{color:inherit}a:hover{color:inherit}
 <div style="font:400 30px/1.35 'Source Serif 4',serif;color:var(--ink-2);margin-top:20px;text-wrap:pretty">{{ heroNote }}</div>
 <div style="display:flex;flex-direction:column;gap:14px;margin-top:auto">
 <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="3">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 26px;background:var(--surface);border:1px solid var(--line);border-radius:18px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 26px;background:var(--surface);border:1px solid var(--line);border-radius:16px">
 <span style="display:flex;align-items:center;gap:10px;font-size:24px;color:{{ t.labelInk }};font-weight:{{ t.labelW }}"><sc-if value="{{ t.attn }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg></sc-if><span>{{ t.label }}</span></span>
 <span style="font:500 52px/1 'Source Serif 4',serif">{{ t.value }}</span>
 </div>
@@ -63,7 +63,7 @@ a{color:inherit}a:hover{color:inherit}
 </sc-if>
 <sc-if value="{{ c.showLayers }}" hint-placeholder-val="{{ true }}">
 <div style="margin-top:28px">
-<div style="display:flex;height:14px;gap:4px;border-radius:99px;overflow:hidden"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:5px;background:{{ l.bg }}"></div></sc-for></div>
+<div style="display:flex;height:14px;gap:3px;border-radius:99px;overflow:hidden"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:5px;background:{{ l.bg }}"></div></sc-for></div>
 <div style="display:flex;flex-wrap:wrap;gap:6px 24px;margin-top:12px;font-size:24px;color:var(--ink-2)"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><span style="display:flex;gap:8px"><span>{{ l.name }}</span><span style="color:var(--ink)">{{ l.label }}</span></span></sc-for></div>
 </div>
 </sc-if>
@@ -79,7 +79,7 @@ a{color:inherit}a:hover{color:inherit}
 </sc-for>
 </div>
 
-<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:auto;padding:20px 0 24px;border-top:1px solid var(--line);font-size:24px">
+<div style="display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:auto;padding:20px 0 24px;border-top:1px solid var(--line);font-size:24px">
 <span style="display:flex;align-items:center;gap:10px;color:{{ c.health.ink }};font-weight:600"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.health.d }}"></path></svg><span>{{ c.health.label }}</span></span>
 </div>
 </article>
@@ -89,9 +89,9 @@ a{color:inherit}a:hover{color:inherit}
 <section style="display:grid;grid-template-columns:200px repeat(3,minmax(0,1fr));gap:16px;align-items:stretch">
 <div style="display:flex;flex-direction:column;justify-content:center;gap:6px"><span style="font:500 32px/1.1 'Source Serif 4',serif">Recent runs</span><span style="font-size:22px;color:var(--ink-3)">{{ feedNote }}</span></div>
 <sc-for list="{{ feed }}" as="r" hint-placeholder-count="3">
-<div style="display:flex;flex-direction:column;justify-content:center;gap:8px;padding:18px 24px;border-radius:18px;background:{{ r.bg }};border:1px solid var(--line);min-width:0">
+<div style="display:flex;flex-direction:column;justify-content:center;gap:8px;padding:18px 24px;border-radius:16px;background:{{ r.bg }};border:1px solid var(--line);min-width:0">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span style="display:flex;align-items:center;gap:8px;color:{{ r.st.ink }};font-weight:600;font-size:24px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.label }}</span></span><span style="font-size:22px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span></div>
-<div style="display:flex;gap:10px;font-size:24px;white-space:nowrap;overflow:hidden"><span style="font-weight:600">{{ r.project }}</span><span style="color:var(--ink-3)">{{ r.branch }}</span><span style="color:{{ r.countInk }};margin-left:auto">{{ r.count }}</span></div>
+<div style="display:flex;gap:10px;font-size:24px;white-space:nowrap;overflow:hidden"><span style="font-weight:600">{{ r.project }}</span><span style="color:var(--ink-3)">{{ r.branch }}</span><span style="color:{{ r.countInk }};font-weight:{{ r.countW }};margin-left:auto">{{ r.count }}</span></div>
 </div>
 </sc-for>
 </section>
@@ -134,11 +134,11 @@ class Component extends DCLogic {
       layers: L([['Unit', 608, 'var(--layer-1)'], ['Component', 165, 'var(--layer-2)'], ['Integration', 3, 'var(--layer-3)'], ['API', 269, 'var(--layer-4)']]),
       cov: [cov('apps/backend', 96.1, 80), cov('apps/mobile', 96.1, 80), cov('packages/shared', 100, 80)], health: healthy };
 
-    const row = (st, project, branch, count, when, x = {}) => ({ st, project, branch, count, when, countInk: 'var(--ink-2)', bg: 'var(--surface)', ...x });
+    const row = (st, project, branch, count, when, x = {}) => ({ st, project, branch, count, when, countInk: 'var(--ink-2)', countW: x.countInk ? 600 : 400, bg: 'var(--surface)', ...x });
     let feed = [
       row(ST.pass, 'Ostomate2', 'main', '142 tests', '4 min ago'),
       row(ST.pass, 'RouteServe', 'main', '1,048 tests', '2 h ago'),
-      row(ST.fail, 'Ostomate2', 'PR #52', '1 failed', 'yesterday', { countInk: 'var(--fail)' }),
+      row(ST.fail, 'Ostomate2', 'fix-today-count', '1 failed', 'yesterday', { countInk: 'var(--fail)' }),
     ];
     let overall = { label: 'All projects passing', ink: 'var(--pass)', tint: 'var(--pass-tint)', d: 'm8 12 3 3 5-6' };
     let heroTotal = '1,190', heroInk = 'inherit', heroNote = '100% passing across two projects. 0 skipped or disabled.';
@@ -151,12 +151,12 @@ class Component extends DCLogic {
 
     if (sc === 'failed run') {
       Object.assign(osto, { st: ST.fail, frame: 'var(--fail)', sha: 'a41f9c2', subParts: [part('1 failed', 'var(--fail)', 600), part('· 0 skipped ·'), part('27 s')], showLayers: false,
-        failLine: 'HomeViewModelTest › rendersToday', failSub: 'Failed on iOS simulator, passed on JVM' });
+        failLine: 'HomeViewModelTest › rendersToday', failSub: 'ios-sim' });
       overall = { label: '1 project failing', ink: 'var(--fail)', tint: 'var(--fail-tint)', d: 'm15 9-6 6M9 9l6 6' };
       heroNote = '1 failing on Ostomate2’s latest run. 0 skipped or disabled.';
       tiles[0] = { label: 'Pass rate', value: '99.9%' };
       tiles[2] = { label: 'Green streak', value: '0' };
-      feed = [row(ST.fail, 'Ostomate2', 'main', '1 failed', '4 min ago', { countInk: 'var(--fail)', bg: 'var(--fail-tint)' }), feed[1], row(ST.pass, 'Ostomate2', 'main', '142 tests', '6 h ago')];
+      feed = [row(ST.fail, 'Ostomate2', 'main', '1 failed', '4 min ago', { countInk: 'var(--fail)' }), feed[1], row(ST.pass, 'Ostomate2', 'main', '142 tests', '6 h ago')];
     } else if (sc === 'stale project') {
       Object.assign(route, { when: '12 days ago', whenInk: 'var(--attn)', frame: 'var(--attn)', health: { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0' } });
       overall = { label: '1 project silent', ink: 'var(--attn)', tint: 'var(--attn-tint)', d: 'M12 7v5l3 2' };

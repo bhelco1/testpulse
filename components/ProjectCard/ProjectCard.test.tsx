@@ -48,13 +48,23 @@ const OSTOMATE2: WebProjectCardProps = {
     { key: 'android/composeApp/jvm', total: 60 },
     { key: 'ios/composeApp/ios-sim', total: 50 },
   ],
+  declared: [
+    { name: 'Maestro E2E (Android)', layer: 'e2e', count: 7, status: 'runs_in_ci_not_reported' },
+    { name: 'Maestro E2E (iOS)', layer: 'e2e', count: 5, status: 'runs_in_ci_not_reported' },
+  ],
   health: { health: 'healthy' },
 };
 
 const FAILED: WebProjectCardProps = {
   ...OSTOMATE2,
   latestRun: { ...PASSED_RUN, status: 'failed', sha: 'a41f9c2', failed: 1 },
-  failing: [{ suite: 'HomeViewModelTest', name: 'rendersToday', platform: 'ios-sim' }],
+  failing: [
+    {
+      suite: 'com.ostomate.app.ui.home.HomeViewModelTest',
+      name: 'rendersToday',
+      platform: 'ios-sim',
+    },
+  ],
 };
 
 const ROUTESERVE_RUN: ProjectCardRun = {
@@ -80,6 +90,9 @@ const ROUTESERVE: WebProjectCardProps = {
   layers: layerSegments({ unit: 608, component: 165, integration: 3, api: 269 }),
   coverage: [{ module: 'apps/backend', pct: 96.1, floor: 80 }],
   reports: [{ key: 'test/apps/backend/node', total: 498 }],
+  declared: [
+    { name: 'Maestro E2E · iOS', layer: 'e2e', count: 13, status: 'authored_not_executed' },
+  ],
   health: { health: 'healthy' },
 };
 
@@ -109,7 +122,7 @@ describe('ProjectCard (web)', () => {
     expect(part(card, 'sub')?.textContent).toBe('tests ·0 failed·0 skipped ·27 s');
     expect(part(card, 'failed-count')?.className).not.toContain('failedCount');
     expect(part(card, 'failing')).toBeNull();
-    expect(card.querySelector('[data-variant="web"][data-health]')?.textContent).toBe(
+    expect(card.querySelector('[data-size="web"][data-health]')?.textContent).toBe(
       'Reporting healthy',
     );
   });
@@ -124,6 +137,7 @@ describe('ProjectCard (web)', () => {
     ).toEqual(['above', 'above']);
     expect(part(card, 'no-coverage')).toBeNull();
     expect(part(card, 'reports-head')?.textContent).toBe('4 reports in this run');
+    expect(part(card, 'reports-side')?.textContent).toBe('jvm 142 · ios-sim 132');
     expect(parts(card, 'report').map((r) => r.textContent)).toEqual([
       'android/shared/jvm82',
       'ios/shared/ios-sim82',
@@ -150,6 +164,16 @@ describe('ProjectCard (web)', () => {
     expect(failing?.tagName).toBe('A');
     expect(failing?.getAttribute('href')).toBe(PASSED_RUN.href);
     expect(failing?.textContent).toBe('HomeViewModelTest › rendersToday' + 'ios-sim');
+  });
+
+  it('failed: shortens a dotted suite to its class name and keeps the full name in title (v4 item 20)', () => {
+    const { container } = render(<ProjectCard {...FAILED} />);
+    const name = part(cardOf(container), 'failing-name');
+
+    expect(name?.textContent).toBe('HomeViewModelTest › rendersToday');
+    expect(name?.getAttribute('title')).toBe(
+      'com.ostomate.app.ui.home.HomeViewModelTest › rendersToday',
+    );
   });
 
   it('failed with several failing tests says how many more', () => {
@@ -199,7 +223,10 @@ describe('ProjectCard (web)', () => {
     expect(part(card, 'sha')?.tagName).toBe('SPAN');
     expect(part(card, 'failing')?.getAttribute('href')).toBe('/p/routeserve/runs/1');
     expect(part(card, 'failing')?.textContent).toBe(
-      'apps/backend/src/routes/jobs.test.ts › returns 409 when job overlaps' + 'node' + '+1 more',
+      'jobs.test.ts › returns 409 when job overlaps' + 'node' + '+1 more',
+    );
+    expect(part(card, 'failing-name')?.getAttribute('title')).toBe(
+      'apps/backend/src/routes/jobs.test.ts › returns 409 when job overlaps',
     );
   });
 
@@ -222,7 +249,7 @@ describe('ProjectCard (web)', () => {
     expect(card.querySelector('[data-state]')).toBeNull();
     expect(part(card, 'no-coverage')).toBeNull();
     expect(part(card, 'empty-note')?.textContent).toBe(
-      "Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn't counted in any total.",
+      'Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn’t counted in any total.',
     );
     expect(
       part(card, 'empty-note')?.querySelector('svg circle')?.getAttribute('stroke-dasharray'),
@@ -231,6 +258,40 @@ describe('ProjectCard (web)', () => {
       true,
     );
     expect(card.querySelector('[data-health]')?.textContent).toBe('Last run empty');
+    expect(part(card, 'reports-side')?.textContent).toBe('jvm 0 · ios-sim 0');
+  });
+
+  it('empty: shows every report count as 0, whatever totals arrive (components.md)', () => {
+    const { container } = render(
+      <ProjectCard
+        {...OSTOMATE2}
+        latestRun={{ ...PASSED_RUN, status: 'empty', total: 0 }}
+        health={{ health: 'empty' }}
+      />,
+    );
+    const card = cardOf(container);
+    expect(parts(card, 'report-count').map((c) => c.textContent)).toEqual(['0', '0', '0', '0']);
+    expect(part(card, 'reports-side')?.textContent).toBe('jvm 0 · ios-sim 0');
+  });
+
+  it('is singular at one: "test", "1 report received", "1 report in this run" (v4 item 50)', () => {
+    const one = [{ key: 'test/app/node', total: 1 }];
+    const { container } = render(
+      <ProjectCard {...OSTOMATE2} latestRun={{ ...PASSED_RUN, total: 1 }} reports={one} />,
+    );
+    expect(part(cardOf(container), 'sub')?.textContent).toBe('test ·0 failed·0 skipped ·27 s');
+    expect(part(cardOf(container), 'reports-head')?.textContent).toBe('1 report in this run');
+    cleanup();
+
+    const { container: empty } = render(
+      <ProjectCard
+        {...OSTOMATE2}
+        latestRun={{ ...PASSED_RUN, status: 'empty', total: 0 }}
+        reports={[{ key: 'test/app/node', total: 0 }]}
+        health={{ health: 'empty' }}
+      />,
+    );
+    expect(part(cardOf(empty), 'sub')?.textContent).toBe('tests executed ·1 report received');
   });
 
   it('stale: the meta time turns amber and the footer says so, with no banner in the card', () => {
@@ -292,6 +353,7 @@ describe('ProjectCard (web)', () => {
         layers={[]}
         coverage={[]}
         reports={[]}
+        declared={[]}
         health={{ health: 'not_reporting' }}
       />,
     );
@@ -309,8 +371,40 @@ describe('ProjectCard (web)', () => {
     expect(card.querySelector('[data-health]')?.textContent).toBe('Not reporting yet');
   });
 
-  it('with no declared suites leaves the footer left side empty, the marker right', () => {
+  it('summarises declared suites on the footer left (v4 item 17)', () => {
     const { container } = render(<ProjectCard {...OSTOMATE2} />);
+    expect(part(cardOf(container), 'declared')?.textContent).toBe(
+      'Not counted: 12 flows in 2 suites, run in CI, not yet reported',
+    );
+    cleanup();
+    const { container: route } = render(<ProjectCard {...ROUTESERVE} />);
+    expect(part(cardOf(route), 'declared')?.textContent).toBe(
+      'Not counted: Maestro E2E · iOS (13 flows), authored, not yet executed',
+    );
+  });
+
+  it('takes its heading level from the page, h3 by default (v4 item 25e)', () => {
+    const { getByRole } = render(<ProjectCard {...OSTOMATE2} headingLevel={2} />);
+    expect(getByRole('heading', { level: 2 }).textContent).toBe('Ostomate2');
+  });
+
+  it('makes the SHA and name links 44px targets (v4 item 22)', () => {
+    const target = {
+      display: 'inline-flex',
+      'align-items': 'center',
+      'min-height': 'var(--target-min)',
+    };
+    expect(ruleFor(CSS, '.shaLink')).toEqual(target);
+    expect(ruleFor(CSS, '.nameLink')).toEqual({ ...target, 'text-decoration': 'none' });
+    const { container } = render(<ProjectCard {...OSTOMATE2} />);
+    expect(part(cardOf(container), 'sha')?.className).toContain('shaLink');
+    cleanup();
+    const { container: route } = render(<ProjectCard {...ROUTESERVE} />);
+    expect(part(cardOf(route), 'sha')?.className).not.toContain('shaLink');
+  });
+
+  it('with no declared suites leaves the footer left side empty, the marker right', () => {
+    const { container } = render(<ProjectCard {...OSTOMATE2} declared={[]} />);
     const footer = part(cardOf(container), 'footer');
 
     expect(footer?.firstElementChild?.textContent).toBe('');
@@ -340,6 +434,11 @@ describe('ProjectCard (web)', () => {
       ['60%', '14px', '4px'],
     ]);
     expect(parts(card, 'skeleton')[8]?.className).toContain('inset');
+    // v4 item 26: the frame stays still; each block shimmers on its own.
+    expect(card.style.animation).toBe('');
+    expect(parts(card, 'skeleton').every((b) => b.style.animation.includes('tp-shimmer'))).toBe(
+      true,
+    );
   });
 
   it('sets the card: surface, 1px --line, radius 20, padding 24 --pad-card-x 0', () => {
@@ -389,7 +488,6 @@ describe('ProjectCard (web)', () => {
       'align-items': 'center',
       gap: 'var(--space-2) 14px',
     });
-    expect(ruleFor(CSS, '.nameLink')).toEqual({ 'text-decoration': 'none' });
     expect(ruleFor(CSS, '.tagline')).toEqual({
       margin: '0 0 var(--space-5)',
       'font-size': '15.5px',
@@ -543,8 +641,37 @@ const KIOSK_FAILED: KioskProjectCardProps = {
   latestRun: { ...PASSED_RUN, status: 'failed', when: '4 min ago', sha: 'a41f9c2', failed: 1 },
   layers: OSTOMATE2.layers,
   coverage: [{ module: 'shared', pct: 92, floor: 91 }],
+  reports: OSTOMATE2.reports,
   health: { health: 'healthy' },
-  failing: [{ suite: 'HomeViewModelTest', name: 'rendersToday', platform: 'ios-sim' }],
+  failing: [
+    {
+      suite: 'com.ostomate.app.ui.home.HomeViewModelTest',
+      name: 'rendersToday',
+      platform: 'ios-sim',
+    },
+  ],
+};
+
+const KIOSK_EMPTY: KioskProjectCardProps = {
+  ...KIOSK_FAILED,
+  latestRun: { ...PASSED_RUN, status: 'empty', when: '4 min ago', total: 0 },
+  health: { health: 'empty' },
+  failing: [],
+};
+
+const KIOSK_NOT_REPORTING: KioskProjectCardProps = {
+  variant: 'kiosk',
+  project: {
+    name: 'testpulse',
+    tagline: 'This dashboard, reporting on itself.',
+    visibility: 'public',
+    href: '/p/testpulse',
+  },
+  latestRun: null,
+  layers: [],
+  coverage: [],
+  reports: [],
+  health: { health: 'not_reporting' },
 };
 
 const KIOSK_PASSED: KioskProjectCardProps = {
@@ -566,7 +693,7 @@ describe('ProjectCard (kiosk)', () => {
     expect(queryAllByRole('link')).toEqual([]);
     expect(part(card, 'tagline')).toBeNull();
     expect(part(card, 'totals')?.textContent).toBe('142tests');
-    expect(part(card, 'sub')?.textContent).toBe('1 failed· 0 skipped · 27 s');
+    expect(part(card, 'sub')?.textContent).toBe('1 failed·0 skipped ·27 s');
     expect(part(card, 'failed-count')?.className).toContain('failedCount');
   });
 
@@ -580,6 +707,92 @@ describe('ProjectCard (kiosk)', () => {
     expect(part(card, 'layers')).toBeNull();
   });
 
+  it('failed with several failing tests: the platform key and "+{n} more" (v4 item 25g)', () => {
+    const { container } = render(
+      <ProjectCard
+        {...KIOSK_FAILED}
+        failing={[
+          ...(KIOSK_FAILED.failing ?? []),
+          { suite: 'BackupSerializerTest', name: 'restoresBackup', platform: 'jvm' },
+        ]}
+      />,
+    );
+    expect(part(cardOf(container), 'failing')?.textContent).toBe(
+      'HomeViewModelTest › rendersToday' + 'ios-sim' + '+1 more',
+    );
+  });
+
+  it('says "test" beside a total of one', () => {
+    const { container } = render(
+      <ProjectCard {...KIOSK_PASSED} latestRun={{ ...PASSED_RUN, status: 'passed', total: 1 }} />,
+    );
+    expect(part(cardOf(container), 'totals')?.textContent).toBe('1test');
+  });
+
+  it('below floor: the kiosk coverage row shows its below state', () => {
+    const { container } = render(
+      <ProjectCard
+        {...KIOSK_PASSED}
+        coverage={[{ module: 'composeApp', pct: 92.6, floor: 93 }]}
+        health={{ health: 'below_floor' }}
+      />,
+    );
+    const row = cardOf(container).querySelector<HTMLElement>('[data-state]');
+    expect(row?.dataset.state).toBe('below');
+    expect(row?.querySelector('svg')?.getAttribute('width')).toBe('22');
+  });
+
+  it('empty: an amber frame, "0" in amber, reports received, the empty note, no layers or coverage (v4 item 25i)', () => {
+    const { container } = render(<ProjectCard {...KIOSK_EMPTY} />);
+    const card = cardOf(container);
+
+    expect(card.dataset.frame).toBe('attn');
+    expect(card.querySelector('[data-status]')?.getAttribute('data-status')).toBe('empty');
+    expect(part(card, 'total')?.textContent).toBe('0');
+    expect(part(card, 'total')?.className).toContain('totalEmpty');
+    expect(part(card, 'totals')?.textContent).toBe('0tests executed');
+    expect(part(card, 'sub')?.textContent).toBe('4 reports received');
+    expect(part(card, 'empty-note')?.textContent).toBe(
+      'Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn’t counted in any total.',
+    );
+    expect(part(card, 'empty-note')?.querySelector('svg')?.getAttribute('width')).toBe('24');
+    expect(part(card, 'layers')).toBeNull();
+    expect(part(card, 'coverage-legend')).toBeNull();
+    expect(card.querySelector('[data-state]')).toBeNull();
+    expect(card.querySelector('[data-health]')?.textContent).toBe('Last run empty');
+  });
+
+  it('empty: says "1 report received" for one report', () => {
+    const { container } = render(
+      <ProjectCard {...KIOSK_EMPTY} reports={[{ key: 'test/app/node', total: 0 }]} />,
+    );
+    expect(part(cardOf(container), 'sub')?.textContent).toBe('1 report received');
+  });
+
+  it('not reporting: a --line frame, the badge, the registered note and the footer only (v4 item 25i)', () => {
+    const { container } = render(<ProjectCard {...KIOSK_NOT_REPORTING} />);
+    const card = cardOf(container);
+
+    expect(card.dataset.frame).toBe('line');
+    const badge = card.querySelector('[data-status]');
+    expect(badge?.getAttribute('data-status')).toBe('not_reporting');
+    expect(badge?.getAttribute('data-variant')).toBe('kiosk');
+    expect(part(card, 'meta')).toBeNull();
+    expect(part(card, 'totals')).toBeNull();
+    expect(part(card, 'sub')).toBeNull();
+    expect(part(card, 'not-reporting')?.textContent).toBe(
+      'Registered. Results appear here after its CI posts the first report.',
+    );
+    expect(part(card, 'layers')).toBeNull();
+    expect(part(card, 'coverage-legend')).toBeNull();
+    expect(card.querySelector('[data-health]')?.textContent).toBe('Not reporting yet');
+  });
+
+  it('takes its heading level from the page (the Kiosk page passes 2)', () => {
+    const { getByRole } = render(<ProjectCard {...KIOSK_PASSED} headingLevel={2} />);
+    expect(getByRole('heading', { level: 2 }).textContent).toBe('Ostomate2');
+  });
+
   it('draws the coverage legend and kiosk coverage rows, no per-report block', () => {
     const { container } = render(<ProjectCard {...KIOSK_FAILED} />);
     const card = cardOf(container);
@@ -588,7 +801,7 @@ describe('ProjectCard (kiosk)', () => {
     expect(card.querySelector('[data-state]')?.getAttribute('data-variant')).toBe('kiosk');
     expect(part(card, 'reports')).toBeNull();
     const health = card.querySelector('[data-health]');
-    expect(health?.getAttribute('data-variant')).toBe('kiosk');
+    expect(health?.getAttribute('data-size')).toBe('kiosk');
     expect(health?.textContent).toBe('Reporting healthy');
   });
 
@@ -597,7 +810,7 @@ describe('ProjectCard (kiosk)', () => {
     const card = cardOf(container);
 
     expect(card.dataset.frame).toBe('line');
-    expect(part(card, 'sub')?.textContent).toBe('0 failed· 0 skipped · 27 s');
+    expect(part(card, 'sub')?.textContent).toBe('0 failed·0 skipped ·27 s');
     expect(part(card, 'failed-count')?.className).not.toContain('failedCount');
     expect(part(card, 'failing')).toBeNull();
     expect(part(card, 'layers')?.firstElementChild?.getAttribute('data-variant')).toBe('kiosk');
@@ -634,7 +847,7 @@ describe('ProjectCard (kiosk)', () => {
   it('sets the kiosk frame: 3px border by state, radius 24, padding 30 34 0', () => {
     expect(ruleFor(CSS, '.kiosk')).toEqual({
       border: '3px solid var(--line)',
-      'border-radius': '24px',
+      'border-radius': 'var(--radius-kiosk)',
       padding: '30px 34px 0px',
       'box-sizing': 'border-box',
     });
@@ -649,7 +862,7 @@ describe('ProjectCard (kiosk)', () => {
     expect(ruleFor(CSS, '.kiosk .name')).toEqual({
       margin: '22px 0px 0px',
       font: '500 64px/1 var(--font-serif)',
-      gap: '18px',
+      gap: 'var(--space-2) 18px',
     });
     expect(ruleFor(CSS, '.kiosk .totals')).toEqual({
       gap: 'var(--space-4)',
@@ -676,12 +889,36 @@ describe('ProjectCard (kiosk)', () => {
       'margin-top': '22px',
       'margin-bottom': '0px',
       padding: 'var(--space-4) var(--space-5)',
-      'border-radius': '14px',
+      'border-radius': 'var(--radius-kiosk-inset)',
+      'min-width': '0px',
     });
-    expect(ruleFor(CSS, '.kiosk .failingName')).toEqual({ font: '500 22px var(--font-mono)' });
+    // v4 item 25g: one line with an ellipsis.
+    expect(ruleFor(CSS, '.kiosk .failingName')).toEqual({
+      font: '500 22px var(--font-mono)',
+      'white-space': 'nowrap',
+      overflow: 'hidden',
+      'text-overflow': 'ellipsis',
+    });
     expect(ruleFor(CSS, '.kiosk .failingSide')).toEqual({
+      gap: 'var(--space-3)',
       'font-size': '22px',
       color: 'var(--ink-2)',
+    });
+    expect(ruleFor(CSS, '.kiosk .emptyNote')).toEqual({
+      gap: '14px',
+      'margin-top': 'var(--space-6)',
+      'margin-bottom': '0px',
+      padding: 'var(--space-4) var(--space-5)',
+      'border-radius': 'var(--radius-kiosk-inset)',
+      'font-size': '22px',
+      'line-height': '1.45',
+    });
+    expect(ruleFor(CSS, '.kiosk .emptyIcon')).toEqual({ 'margin-top': '3px' });
+    expect(ruleFor(CSS, '.kiosk .notReporting')).toEqual({
+      margin: '26px 0px 0px',
+      'font-size': '26px',
+      'line-height': '1.45',
+      'text-wrap': 'pretty',
     });
     expect(ruleFor(CSS, '.kiosk .layers')).toEqual({
       'margin-top': '28px',

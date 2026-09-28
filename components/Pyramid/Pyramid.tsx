@@ -1,9 +1,11 @@
+import { formatCount, qty } from '../../lib/copy/count';
 import { LAYER_LABEL, type LayerSegment } from '../../lib/design/layers';
 import { LAYER_ORDER, type Layer } from '../../lib/ingest/layer-rules';
 import type { DeclaredSuite } from '../../lib/projects/schema';
+import { Skeleton } from '../Skeleton/Skeleton';
 import styles from './Pyramid.module.css';
 
-export interface PyramidProps {
+export interface PyramidData {
   // From layerSegments: section 8 order, unit first, each layer in its fixed tone.
   layers: readonly LayerSegment[];
   declared: readonly DeclaredSuite[];
@@ -13,11 +15,12 @@ export interface PyramidProps {
   note?: string;
 }
 
-const formatCount = new Intl.NumberFormat('en-US');
+export type PyramidProps = (PyramidData & { loading?: false }) | { loading: true };
 
-// A present layer never reads 0%, as the design draws it.
+// Design v4 item 6: the nearest whole percent, except that a share under 1% reads "<1%" rather
+// than rounding to 0% or up to 1%.
 const shareOf = (count: number, total: number) =>
-  `${Math.max(1, Math.round((count / total) * 100))}%`;
+  count / total < 0.01 ? '<1%' : `${Math.round((count / total) * 100)}%`;
 
 // Declared suites add up per layer and sit above the bars, tip first like the bars.
 function declaredRows(declared: readonly DeclaredSuite[]): { layer: Layer; count: number }[] {
@@ -31,7 +34,36 @@ function declaredRows(declared: readonly DeclaredSuite[]): { layer: Layer; count
   });
 }
 
-export function Pyramid({ layers, declared, total, note }: PyramidProps) {
+// The bar widths the design draws for the loading rows, top to bottom.
+const SKELETON_BARS = ['25%', '45%', '70%', '100%'];
+
+export function Pyramid(props: PyramidProps) {
+  return <div className={styles.root}>{props.loading ? <Loading /> : <Figure {...props} />}</div>;
+}
+
+function Loading() {
+  return (
+    <figure className={styles.pyramid} aria-busy="true" aria-label="Loading test layers">
+      <div className={styles.rows}>
+        <div className={styles.skeletonHead} data-part="skeleton-head">
+          <Skeleton width="96px" height={44} radius={6} />
+          <Skeleton width="45%" height={14} />
+        </div>
+        {SKELETON_BARS.map((width) => (
+          <div key={width} className={styles.row} data-part="skeleton-row">
+            <Skeleton width="64px" height={12} className={styles.skeletonLabel} />
+            <div className={styles.barCell}>
+              <Skeleton width={width} height={30} />
+            </div>
+            <Skeleton width="56px" height={12} />
+          </div>
+        ))}
+      </div>
+    </figure>
+  );
+}
+
+function Figure({ layers, declared, total, note }: PyramidData) {
   if (layers.length === 0) {
     return (
       <figure className={styles.pyramid}>
@@ -46,10 +78,14 @@ export function Pyramid({ layers, declared, total, note }: PyramidProps) {
     <figure className={styles.pyramid}>
       <div className={styles.head} data-part="head">
         <div className={styles.totalGroup}>
-          <span className={styles.total}>{formatCount.format(total)}</span>
+          <span className={styles.total}>{formatCount(total)}</span>
           <span className={styles.caption}>tests executed in the latest run</span>
         </div>
-        {note && <span className={styles.note}>{note}</span>}
+        {note && (
+          <span className={styles.note} data-part="note">
+            {note}
+          </span>
+        )}
       </div>
       <ul className={styles.rows}>
         {declaredRows(declared).map(({ layer, count }) => (
@@ -61,7 +97,7 @@ export function Pyramid({ layers, declared, total, note }: PyramidProps) {
           >
             <span className={styles.label}>{LAYER_LABEL[layer]}</span>
             <span className={styles.declaredText}>
-              {count} {layer === 'e2e' ? 'flows' : 'tests'} declared · not counted
+              {qty(count, layer === 'e2e' ? 'flow' : 'test')} declared · not counted
             </span>
             <span />
           </li>
@@ -79,7 +115,7 @@ export function Pyramid({ layers, declared, total, note }: PyramidProps) {
               />
             </div>
             <span className={styles.count}>
-              <b className={styles.figure}>{formatCount.format(layer.count)}</b>
+              <b className={styles.figure}>{formatCount(layer.count)}</b>
               <span className={styles.pct} data-part="pct">
                 {shareOf(layer.count, total)}
               </span>

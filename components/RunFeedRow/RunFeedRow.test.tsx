@@ -42,9 +42,9 @@ const FAILED: FeedRun = {
   href: '/p/ostomate2/runs/35600000001',
   status: 'failed',
   visibility: 'public',
-  title: 'Pull request #52',
+  title: 'Pull request from fix-today-count',
   project: 'Ostomate2',
-  branch: 'PR #52',
+  branch: 'fix-today-count',
   sha: 'a41f9c2',
   when: 'yesterday',
   failed: 1,
@@ -123,10 +123,16 @@ describe('RunFeedRow (web)', () => {
     expect(has(row, 'new')).toBe(false);
   });
 
-  it('pull request: the branch slot shows the text it is given, such as "PR #52"', () => {
+  it('pull request: the branch slot is runs.branch, as for every event (v4 item 28)', () => {
     const row = renderRow(FAILED);
-    expect(part(row, 'meta')?.textContent).toBe('Ostomate2·PR #52·a41f9c2');
-    expect(part(row, 'title')?.textContent).toBe('Pull request #52');
+    expect(part(row, 'meta')?.textContent).toBe('Ostomate2·fix-today-count·a41f9c2');
+    expect(part(row, 'title')?.textContent).toBe('Pull request from fix-today-count');
+  });
+
+  it('is singular at one: "1 test" and "· 1 report" (v4 item 50)', () => {
+    expect(part(renderRow({ ...PASSED, total: 1 }), 'count-lead')?.textContent).toBe('1 test');
+    cleanup();
+    expect(part(renderRow({ ...EMPTY, reports: 1 }), 'count-rest')?.textContent).toBe('· 1 report');
   });
 
   it('empty: "0 tests" in --attn 600, then "· {n} reports"', () => {
@@ -295,6 +301,7 @@ describe('RunFeedRow (web)', () => {
 const KIOSK_PASSED: KioskFeedRun = {
   id: '35642780279',
   status: 'passed',
+  visibility: 'public',
   project: 'Ostomate2',
   branch: 'main',
   when: '4 min ago',
@@ -304,11 +311,34 @@ const KIOSK_PASSED: KioskFeedRun = {
 const KIOSK_FAILED: KioskFeedRun = {
   id: '35600000001',
   status: 'failed',
+  visibility: 'public',
   project: 'Ostomate2',
-  branch: 'PR #52',
+  branch: 'fix-today-count',
   when: 'yesterday',
   failed: 1,
 };
+
+const KIOSK_EMPTY: KioskFeedRun = {
+  id: '35600000002',
+  status: 'empty',
+  visibility: 'public',
+  project: 'Ostomate2',
+  branch: 'main',
+  when: '4 min ago',
+};
+
+const KIOSK_PRIVATE: KioskFeedRun = {
+  id: '1',
+  status: 'passed',
+  visibility: 'private',
+  project: 'RouteServe',
+  branch: 'main',
+  when: '2 hr ago',
+  total: 1048,
+};
+
+const renderTile = (run: KioskFeedRun) =>
+  render(<RunFeedRow variant="kiosk" run={run} />).container.firstElementChild as HTMLElement;
 
 describe('RunFeedRow (kiosk)', () => {
   it('passed: a tile, not a link, with status, time, project, branch and test count', () => {
@@ -319,7 +349,7 @@ describe('RunFeedRow (kiosk)', () => {
     expect(tile.dataset.variant).toBe('kiosk');
     const badge = part(tile, 'status')?.querySelector<HTMLElement>('[data-status]');
     expect(badge?.dataset.status).toBe('passed');
-    expect(badge?.dataset.variant).toBe('kioskInline');
+    expect(badge?.dataset.variant).toBe('inline-kiosk');
     expect(part(tile, 'when')?.textContent).toBe('4 min ago');
     expect(part(tile, 'project')?.textContent).toBe('Ostomate2');
     expect(part(tile, 'branch')?.textContent).toBe('main');
@@ -332,9 +362,46 @@ describe('RunFeedRow (kiosk)', () => {
     const tile = container.firstElementChild as HTMLElement;
 
     expect(part(tile, 'status')?.textContent).toBe('Failed');
-    expect(part(tile, 'branch')?.textContent).toBe('PR #52');
+    expect(part(tile, 'branch')?.textContent).toBe('fix-today-count');
     expect(part(tile, 'count')?.textContent).toBe('1 failed');
     expect(has(part(tile, 'count'), 'tileCountFailed')).toBe(true);
+  });
+
+  it('empty: "0 tests" in --attn (v4 item 41)', () => {
+    const tile = renderTile(KIOSK_EMPTY);
+
+    expect(part(tile, 'status')?.textContent).toBe('Empty');
+    expect(part(tile, 'count')?.textContent).toBe('0 tests');
+    expect(has(part(tile, 'count'), 'tileCountEmpty')).toBe(true);
+  });
+
+  it('private: a 22px lock labelled "Private repository" right after the name (v4 item 41)', () => {
+    const tile = renderTile(KIOSK_PRIVATE);
+
+    const lock = part(tile, 'private');
+    expect(lock?.getAttribute('role')).toBe('img');
+    expect(lock?.getAttribute('aria-label')).toBe('Private repository');
+    expect(lock?.previousElementSibling).toBe(part(tile, 'project'));
+    expect(lock?.nextElementSibling).toBe(part(tile, 'branch'));
+    const svg = lock?.querySelector('svg');
+    expect(svg?.getAttribute('width')).toBe('22');
+    expect(svg?.getAttribute('stroke-width')).toBe('2.2');
+    expect(ruleFor(CSS, '.tileLock')).toEqual({ display: 'flex', color: 'var(--ink-3)' });
+  });
+
+  it('public: no lock', () => {
+    expect(part(renderTile(KIOSK_PASSED), 'private')).toBeNull();
+  });
+
+  it('is singular at one: "1 test" (v4 item 50)', () => {
+    expect(part(renderTile({ ...KIOSK_PASSED, total: 1 }), 'count')?.textContent).toBe('1 test');
+  });
+
+  it('is --surface for every status: no fail tint (v4 item 40)', () => {
+    for (const run of [KIOSK_PASSED, KIOSK_FAILED, KIOSK_EMPTY, KIOSK_PRIVATE]) {
+      expect(renderTile(run).className).toBe(styles.tile);
+      cleanup();
+    }
   });
 
   it('groups thousands in the count', () => {
@@ -344,14 +411,14 @@ describe('RunFeedRow (kiosk)', () => {
     expect(part(container, 'count')?.textContent).toBe('1,048 tests');
   });
 
-  it('draws the tile: padding 18 24, radius 18, --surface, 1px --line, gap 8', () => {
+  it('draws the tile: padding 18 24, --radius-lg, --surface, 1px --line, gap 8', () => {
     expect(ruleFor(CSS, '.tile')).toEqual({
       display: 'flex',
       'flex-direction': 'column',
       'justify-content': 'center',
       gap: '8px',
       padding: '18px 24px',
-      'border-radius': '18px',
+      'border-radius': 'var(--radius-lg)',
       background: 'var(--surface)',
       border: '1px solid var(--line)',
       'min-width': '0px',
@@ -369,17 +436,31 @@ describe('RunFeedRow (kiosk)', () => {
     });
   });
 
-  it('sets project 24/600, branch 24 --ink-3, and the count right in --ink-2', () => {
+  it('sets project 24/600, branch 24 --ink-3 with ellipsis, and the count right by status', () => {
     expect(ruleFor(CSS, '.tileBottom')).toEqual({
       display: 'flex',
+      'align-items': 'center',
       gap: '10px',
       'font-size': '24px',
       'white-space': 'nowrap',
       overflow: 'hidden',
+      'min-width': '0px',
     });
     expect(ruleFor(CSS, '.tileProject')).toEqual({ 'font-weight': '600' });
-    expect(ruleFor(CSS, '.tileBranch')).toEqual({ color: 'var(--ink-3)' });
-    expect(ruleFor(CSS, '.tileCount')).toEqual({ color: 'var(--ink-2)', 'margin-left': 'auto' });
-    expect(ruleFor(CSS, '.tileCountFailed')).toEqual({ color: 'var(--fail)' });
+    expect(ruleFor(CSS, '.tileBranch')).toEqual({
+      color: 'var(--ink-3)',
+      overflow: 'hidden',
+      'text-overflow': 'ellipsis',
+    });
+    expect(ruleFor(CSS, '.tileCount')).toEqual({
+      color: 'var(--ink-2)',
+      'font-weight': '400',
+      'margin-left': 'auto',
+    });
+    expect(ruleFor(CSS, '.tileCountFailed')).toEqual({
+      color: 'var(--fail)',
+      'font-weight': '600',
+    });
+    expect(ruleFor(CSS, '.tileCountEmpty')).toEqual({ color: 'var(--attn)', 'font-weight': '600' });
   });
 });

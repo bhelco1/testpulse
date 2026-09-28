@@ -5,7 +5,8 @@ export interface CoverageBarProps {
   module: string;
   pct: number;
   floor: number;
-  // kiosk: the kiosk ProjectCard row, which the design draws with the figure only.
+  // kiosk: the kiosk ProjectCard row, drawn with the figure only; its legend row explains the
+  // floor marker.
   variant?: 'web' | 'kiosk';
 }
 
@@ -19,7 +20,7 @@ const clamp = (n: number) => Math.min(100, Math.max(0, n));
 export function CoverageBar({ module, pct, floor, variant = 'web' }: CoverageBarProps) {
   const state = pct < floor ? 'below' : pct === floor ? 'at' : 'above';
   const kiosk = variant === 'kiosk';
-  const below = state === 'below' && !kiosk;
+  const below = state === 'below';
   return (
     <div
       className={[styles.row, kiosk && styles.kiosk, below && styles.below]
@@ -28,13 +29,17 @@ export function CoverageBar({ module, pct, floor, variant = 'web' }: CoverageBar
       data-state={state}
       data-variant={variant}
     >
-      <span className={styles.module}>{module}</span>
+      <span className={styles.module} title={module}>
+        {module}
+      </span>
       <div className={styles.track} data-part="track" aria-hidden="true">
         <div className={styles.fill} data-part="fill" style={{ width: `${clamp(pct)}%` }} />
         <div className={styles.floor} data-part="floor" style={{ left: `${clamp(floor)}%` }} />
       </div>
       <span className={styles.value} data-part="value">
-        {below && <ArrowDownIcon size={13} strokeWidth={2.8} className={styles.arrow} />}
+        {below && (
+          <ArrowDownIcon size={kiosk ? 22 : 13} strokeWidth={2.8} className={styles.arrow} />
+        )}
         <b className={styles.figure}>{formatPct(pct)}</b>
         {!kiosk && (
           <span className={styles.floorLabel}>

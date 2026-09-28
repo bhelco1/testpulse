@@ -57,11 +57,25 @@
   padding: 20px 26px;
 }
 
+.kioskText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .kiosk .label {
   font-size: 24px;
 }
 
+.kiosk .sub {
+  font-size: 20px;
+  color: var(--ink-3);
+  margin-top: 0;
+}
+
 .kiosk .value {
+  flex: none;
   font: 500 52px/1 var(--font-serif);
   margin-top: 0;
 }

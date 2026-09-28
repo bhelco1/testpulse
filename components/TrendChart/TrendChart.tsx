@@ -125,7 +125,11 @@ export function TrendChart(props: TrendChartProps) {
   const caption = data && points >= 2 ? data.caption : null;
 
   return (
-    <figure className={styles.figure} aria-busy={loading || undefined}>
+    <figure
+      className={styles.figure}
+      aria-busy={loading || undefined}
+      aria-label={loading ? 'Loading chart' : undefined}
+    >
       <figcaption>
         <h3 className={styles.title}>{props.title}</h3>
         <p className={styles.scope} data-part="scope">
@@ -141,7 +145,7 @@ export function TrendChart(props: TrendChartProps) {
         <div className={styles.body}>
           <ErrorState
             variant="inline"
-            title="Chart couldn't be loaded"
+            title="Chart couldn’t be loaded"
             message="The rest of the page is still current."
             onRetry={props.onRetry}
           />

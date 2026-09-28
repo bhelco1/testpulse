@@ -12,12 +12,12 @@ afterEach(cleanup);
 const CSS = join(import.meta.dirname, 'ErrorState.module.css');
 
 const PAGE = {
-  title: "Results couldn't be loaded",
+  title: 'Results couldn’t be loaded',
   message:
-    "The database didn't respond. Nothing is shown rather than numbers that might be out of date.",
+    'The database didn’t respond. Nothing is shown rather than numbers that might be out of date.',
 };
 const INLINE = {
-  title: "Chart couldn't be loaded",
+  title: 'Chart couldn’t be loaded',
   message: 'The rest of the page is still current.',
 };
 
@@ -41,7 +41,7 @@ describe('ErrorState, page variant', () => {
     expect(within(alert).getByText(PAGE.message).tagName).toBe('P');
   });
 
-  it('retries from a primary "Try again" and offers the how it\'s tested page', () => {
+  it('retries from a primary "Try again" and offers the how it’s tested page (curly, v4 item 23)', () => {
     const onRetry = vi.fn();
     const { getByRole } = render(<ErrorState variant="page" {...PAGE} onRetry={onRetry} />);
     const button = getByRole('button', { name: 'Try again' });
@@ -49,7 +49,7 @@ describe('ErrorState, page variant', () => {
     expect(button.dataset.variant).toBe('primary');
     fireEvent.click(button);
     expect(onRetry).toHaveBeenCalledTimes(1);
-    expect(getByRole('link', { name: "How it's tested" }).getAttribute('href')).toBe(
+    expect(getByRole('link', { name: 'How it’s tested' }).getAttribute('href')).toBe(
       '/how-its-tested',
     );
   });

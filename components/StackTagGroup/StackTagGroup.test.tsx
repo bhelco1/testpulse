@@ -32,6 +32,32 @@ const tagsOf = (container: HTMLElement) => [
 ];
 
 describe('StackTagGroup', () => {
+  // Design v4 item 27: the title is part of the component, fixed by variant, and a heading.
+  it('titles each variant with a level 3 heading by default', () => {
+    const { getByRole, unmount } = render(<StackTagGroup variant="built" groups={BUILT} />);
+    expect(getByRole('heading', { level: 3 }).textContent).toBe('Built with');
+    unmount();
+    const tested = render(<StackTagGroup variant="tested" groups={TESTED} />);
+    expect(tested.getByRole('heading', { level: 3 }).textContent).toBe('Tested with');
+  });
+
+  it('takes the heading level the page sets', () => {
+    const { getByRole } = render(
+      <StackTagGroup variant="tested" groups={TESTED} headingLevel={4} />,
+    );
+    expect(getByRole('heading', { level: 4 }).textContent).toBe('Tested with');
+  });
+
+  it('sets the title as a mono 12/600 uppercase label in --ink-3, 14 above the tags', () => {
+    expect(ruleFor(CSS, '.title')).toEqual({
+      margin: '0px 0px 14px',
+      font: 'var(--text-label)',
+      'letter-spacing': '0.08em',
+      'text-transform': 'uppercase',
+      color: 'var(--ink-3)',
+    });
+  });
+
   it('pairs each category with its tags as a description list, in the given order', () => {
     const { container } = render(<StackTagGroup variant="built" groups={BUILT} />);
     const list = container.querySelector('dl');

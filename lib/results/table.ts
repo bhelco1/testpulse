@@ -68,12 +68,36 @@ export function layersPresent(rows: readonly TableResult[]): Layer[] {
   return LAYER_ORDER.filter((layer) => present.has(layer));
 }
 
-// Section 11 cross-platform parity, as the table draws it: passing on some platforms and failing
-// on others in the same run.
-export function platformMismatch(
-  platforms: readonly PlatformResult[],
-): { passed: string[]; failed: string[] } | null {
-  const passed = platforms.filter((p) => p.status === 'passed').map((p) => p.platform);
-  const failed = platforms.filter((p) => isFailing(p.status)).map((p) => p.platform);
-  return passed.length > 0 && failed.length > 0 ? { passed, failed } : null;
+export interface MismatchGroup {
+  status: TestStatus;
+  platforms: string[];
+}
+
+// Failing platforms lead, both in the sentence and in the platform list (design v4 item 45).
+const MISMATCH_ORDER: readonly TestStatus[] = ['failed', 'error', 'passed', 'skipped'];
+
+// Section 11 cross-platform parity, as the table draws it (design v4 items 45 and 46): any
+// difference in status across the run's platforms, including failed on one and skipped on
+// another. Groups follow MISMATCH_ORDER; platforms keep data order inside a group.
+export function platformMismatch(platforms: readonly PlatformResult[]): MismatchGroup[] | null {
+  const groups = MISMATCH_ORDER.map((status) => ({
+    status,
+    platforms: platforms.filter((p) => p.status === status).map((p) => p.platform),
+  })).filter((group) => group.platforms.length > 0);
+  return groups.length > 1 ? groups : null;
+}
+
+const VERB: Readonly<Record<TestStatus, string>> = {
+  failed: 'failed',
+  error: 'errored',
+  passed: 'passed',
+  skipped: 'skipped',
+};
+
+// "Failed on ios-sim, passed on jvm in the same run."
+export function mismatchSentence(groups: readonly MismatchGroup[]): string {
+  const clauses = groups
+    .map(({ status, platforms }) => `${VERB[status]} on ${platforms.join(', ')}`)
+    .join(', ');
+  return `${clauses.charAt(0).toUpperCase()}${clauses.slice(1)} in the same run.`;
 }

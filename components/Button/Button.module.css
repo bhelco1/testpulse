@@ -9,6 +9,9 @@
   border-radius: var(--radius-sm);
   border: none;
   font: 600 15px var(--font-sans);
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease;
 }
 
 .live {
@@ -66,10 +69,15 @@
   padding: 0 15px;
 }
 
+.button[aria-busy='true'] {
+  cursor: progress;
+}
+
 .button[aria-disabled='true'] {
   background: var(--raised);
   color: var(--ink-3);
   border: 0;
+  cursor: not-allowed;
 }
 
 .spinner {

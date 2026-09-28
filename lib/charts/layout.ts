@@ -1,3 +1,4 @@
+import { qty } from '../copy/count';
 import type { YScale } from './scale';
 
 export type TrendKind = 'line' | 'bar';
@@ -99,7 +100,7 @@ export function nextIndex(current: number | null, key: string, count: number): n
   return Math.max(0, Math.min(count - 1, from + (key === 'ArrowRight' ? 1 : -1)));
 }
 
-const ago = (n: number, unit: TrendUnit) => `${n} ${unit}${n === 1 ? '' : 's'} ago`;
+const ago = (n: number, unit: TrendUnit) => `${qty(n, unit)} ago`;
 
 // A point's name in the tooltip and the table.
 export function pointLabel(

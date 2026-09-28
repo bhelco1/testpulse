@@ -1,3 +1,8 @@
+/* The narrow grid follows the pyramid's own width, wherever it is placed (design v4 item 8). */
+.root {
+  container-type: inline-size;
+}
+
 .pyramid {
   margin: 0;
   background: var(--surface);
@@ -55,10 +60,21 @@
   font-size: 14px;
 }
 
-@media (max-width: 640px) {
+@container (width < 480px) {
   .row {
     grid-template-columns: 80px minmax(0, 1fr) 88px;
   }
+}
+
+.skeletonHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.skeletonLabel {
+  justify-self: end;
 }
 
 .label {

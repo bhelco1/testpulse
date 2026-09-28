@@ -1,4 +1,4 @@
-# testpulse handoff v3
+# testpulse handoff v4
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -183,3 +183,101 @@ Ground rules: A — Design System page is canonical; pages were changed to match
 72. Runs per day counts default-branch runs including imported history, like the other trends (spec §11). Scope line is "Default branch · CI and imported history" on the Design System and in components.md; data-map.md matches.
 73. tokens.css: the `html[data-theme-switching] *` rule outranked the reduced-motion rule (higher specificity, both `!important`). It is now wrapped in `@media (prefers-reduced-motion: no-preference)`, so reduced-motion users get no theme fade.
 74. Commit messages are not stored. Run titles everywhere use the fallback titles from `runs.event`: "Push to {branch}", "Pull request #{n}", "Scheduled run" (Landing, Project page, Run detail, Design System, components.md, data-map.md). The open question is closed.
+
+## Changes in v4
+Same rules as v3: the Design System page is canonical, components.md matches it, every target is 44 px (links in running prose excepted), tokens or a literal stated once. Where an answer changes a v3 item, v4 wins (notably v3 items 23 and 74 on PR titles, 37 on the private "Test history" link).
+
+**Notice**
+1. Changed. `title` is optional on every tone, including neutral. Body is 14/1.5 `--ink-2` on every tone (attn and fail were 13.5). ARIA: no live-region role on a Notice rendered with the page; `role="status"` only when one is inserted after load (project turns stale while open). Design System, Project page and Run detail updated.
+2. Changed. New `icon` prop: `clock` (stale project, attn), `x-circle` (failed-run summary, fail), `lock` (private repository note, neutral). The icon is chosen per use, not per tone.
+
+**Pyramid**
+3. Answered. Loading: header skeleton (96×44 + 45%×14), then 4 rows in the row grid: label 64×12, bar 30 tall at 25%, 45%, 70%, 100% of the bar column, count 56×12. Drawn.
+4. Confirmed. `note?` added to the Props line; omitted when absent.
+5. Confirmed. Declared suites are summed per layer (12 = 7 + 5), all declared rows above all bars, §8 order.
+6. Changed. Rounded to the nearest whole percent; a share under 1% reads "<1%" (RouteServe integration 3 of 1,045 → "<1%"). Design System and Project page updated.
+7. Confirmed. No bars → "No tests executed yet." and declared rows hidden (the DeclaredSuiteNote lists them).
+8. Answered. Container width: the narrow grid applies when the pyramid's own container is under 480 px (container query or ResizeObserver).
+
+**StatusTimeline**
+9. Answered. Selection is a run shared by all strips. Each strip is one Tab stop (`role="listbox"`, horizontal, `aria-activedescendant`; cells `role="option"`); ← → move a run, Home/End oldest/latest, ↑ ↓ move focus to the other strip. Focus stays on the strip. Touch and mouse: the whole 48 px strip is the target; press, hover or drag selects the nearest cell by x (`touch-action: pan-y`). Selected: 2 px `--ink` outline, offset 2, on that run's cell in every strip; strip focus-visible ring 2 px `--ink`, offset 4. Drawn on the Design System page; Test History rebuilt this way (cells are no longer buttons).
+10. Answered. One layout: the Design System wrapping flex row (gap 12×28, padding 14×16). Shows Run "{title} · {sha7}", When, then per platform icon + status word + " · {duration}" (omitted for skipped / not run). Single platform: one field labelled "Result". Two platforms: one field per platform key. Props now carry per-run results with durations. Test History matches.
+11. Confirmed. 76 + 12 gap; components.md corrected.
+12. Answered. Results strip: "{test} on {platform}, last {n} runs" (one strip: "{test}, last {n} runs"). Cell: "{Status word}, {when}, {title}, {sha7}". Runs kind: one `role="img"` named "Last {n} runs on {branch}: {p} passed, {f} failed, {e} empty." (zeros omitted); cells unnamed. The cell `label` prop is removed. Project page updated.
+13. Confirmed. Strip gap 14, legend gap 8×18, margin 14, padding 12. Test History now matches.
+14. Changed. Legend swatch height = min(cell height, 20): Empty (and Flaky) 20. Project page already 20; Design System updated.
+15. Answered. Neither: when one cell is shown there is no oldest label, only "Latest". Test History's "1 run ago" removed.
+16. Accepted, with one change: before measurement the oldest label is empty (not "{n} runs ago"); cells clip from the left. No separate pre-measure state.
+
+**ProjectCard**
+17. Answered. Template in components.md and `TPKit.declaredSummary`: one suite "Not counted: Maestro E2E · iOS (13 flows), authored, not yet executed"; several with one status "Not counted: 12 flows in 2 suites, run in CI, not yet reported"; mixed "Not counted: 7 flows run in CI, not yet reported; 5 flows authored, not yet executed". Drawn (including a mixed sample).
+18. Answered. Counts always shown. Platform = last segment of the report key; totals summed per platform in first-seen order ("node 284 · chromium 38"). Intended. `TPKit.platformSplit`.
+19. Confirmed. `project.href`, `latestRun {status, when, branch, sha, href, total, failed, skipped, duration}`, `health {health, days}` written into components.md (plus `headingLevel`).
+20. Answered. Shorten: path-style → last path segment ("jobs.test.ts"); dotted → last segment ("HomeViewModelTest"). Full "suite › name" in `title`. The block wraps, no ellipsis.
+21. Confirmed. SHA unlinked on private cards; failing block links to testpulse's run page.
+22. Changed. SHA link and project-name link are inline-flex with min-height 44 (row 1 becomes 44 tall). Failing block min-height 44 confirmed. Not exempt.
+23. Answered. Curly (’) everywhere. Converted in every page, components.md and data-map.md.
+24. Confirmed. Empty card shows neither coverage rows nor "No coverage reported".
+
+**ProjectCard kiosk**
+25a. Confirmed as named variants: StatusBadge `kiosk` (26/600, icon 26) and `inline-kiosk` (24/600, icon 22); HealthMarker `size: 'kiosk'` (24, icon 24); LayerBar `kiosk`; CoverageBar `kiosk`.
+25b. Confirmed with one correction: 3 px gap (Kiosk page's 4 fixed), 14 tall, min 5, labels 24 gap 6×24, hidden when failed (and empty).
+25c. Drawn: PrivateTag kiosk in the heading, gap 18, 400 24 sans.
+25d. Confirmed: whole meta line `--attn` when stale.
+25e. The page sets the level (`headingLevel`, default 3). The Design System draws h3; the Kiosk page keeps h2 (no heading above its cards).
+25f. Right. Kiosk page fixed.
+25g. Design System: platform key only ("ios-sim"), name one line with ellipsis. Kiosk page fixed.
+25h. Drawn: 22 px arrow-down + value in `--attn`; value column 130 px.
+25i. Drawn: empty (3 px `--attn` border, "0" in `--attn`, "tests executed", "4 reports received", empty note 22 px) and not reporting (`--line` border, not-reporting badge, "Registered…" 26 px, footer only).
+25j. Confirmed.
+25k. Tokens added: `--radius-kiosk` 24, `--radius-kiosk-inset` 14.
+25l. Confirmed. The Design System now draws kiosk cards in a grid; width comes from the kiosk grid.
+
+**Loading and titles**
+26. Confirmed as built: the card frame stays still, one skeleton block per part shimmers. Design System corrected.
+27. Part of the component: title text fixed by variant ("Built with" / "Tested with"), rendered as a heading (`headingLevel`, default 3). Project page uses h3.
+
+**Earlier builds**
+28. Answered. push "Push to {branch}"; pull_request "Pull request from {branch}"; schedule "Scheduled run"; workflow_dispatch "Manual run"; other "Run on {branch}". Branch slot is `runs.branch` for every event (no "PR #n"). `TPKit.runTitle`. All mocks updated (sample PR branch "fix-today-count").
+29. 14/600, icon 15 (inline StatusBadge). Design System switcher corrected.
+30. Separate text: a 14 px `--ink-3` span after the marker, gap 8 ("Last report 4 minutes ago" / "Expected every 8 days"). No new prop. Drawn; Project page updated.
+31. Confirmed: button padding 16, actions 20 below, link padding 0 8. Landing fixed.
+32. Busy ring: stroke 3 in a 24 viewBox (1.75 px at 14). Danger pressed: padding 0 15 so the label doesn't move. Cursors: busy `progress`, disabled `not-allowed`. Hover/pressed transition: background-color and border-color over `--motion-fast` (120 ms, ease); none under reduced motion. Drawn in the live row.
+33. Drawn: sub (20 px `--ink-3` under the label), loading (45%×22 + 120×52), attention icons 22 px stroke 2.6 for stale, empty, below floor.
+34. Truncate: nowrap + ellipsis, full key in `title`. Long-key sample added.
+
+**RunFeed**
+35. Confirmed. The feed header uses a live note (8 px dot + "Updates as reports arrive" 13.5, no "Live" word), not the LiveIndicator. components.md updated.
+36. Answered. Project page: the live note sits on its own line under the header row (padding 0 16 10), same online and offline copy. Drawn; Project page updated.
+37. Confirmed with project copy: "No runs yet" + "Runs appear here when {project}’s CI reports." Drawn.
+38. Confirmed. Landing now has `--shadow-card`.
+
+**RunFeedRow kiosk**
+39. Drawn. Radius tokenised as `--radius-lg` (16) rather than a new token; Kiosk page run tiles and stat tiles changed from 18 to 16. `inline-kiosk` StatusBadge confirmed.
+40. `--surface` for all tiles (no fail tint). Kiosk page fixed.
+41. Drawn: empty tile, private tile (22 px lock after the name), feed loading (3 skeleton tiles), empty ("No runs yet"), error ("Runs couldn’t be loaded" + "Retrying every minute.", no button) and offline note ("Offline. As of 10:42").
+
+**ResultsTable**
+42. Confirmed. Real table; failed/error rows use a stretched toggle button, other rows a stretched link (see 48). Nothing visible changes.
+43. Confirmed: Failed and Error in `--fail` while their count is above 0. Run detail fixed.
+44. Confirmed: M = rows matching the current filters (the total when unfiltered). Run detail fixed.
+45. Changed. Failing platforms first, both layouts: "Failed on ios-sim, passed on jvm in the same run." Groups failed, passed, skipped; data order inside a group; joined ", ".
+46. Yes, a mismatch: any difference across platforms. "Failed on ios-sim, skipped on jvm in the same run." Drawn.
+47. Confirmed. Run detail: platform 13, icon 15, no pruned max width, "No tests match" is a standalone card replacing the table box.
+48. Every row links to its test history. Failed/error rows: "Test history" in the expanded detail (after the private notice, as drawn). Other rows: the whole row is a stretched link to the test history (hover `--raised`).
+49. Confirmed. Labels typed "Status" etc., uppercased by CSS. Design System and Run detail updated.
+
+**Copy**
+50. Singular at 1 for every count noun: "1 test", "1 report", "1 flow", "1 run", "1 suite", "1 day", "1 report in this run", "1 report received". "1 failed", "1 skipped", "1 passed" stay. `TPKit.qty` applies it.
+51. Confirmed, plus the other loading names: "Loading runs", "Loading results", "Loading project", "Loading chart", "Loading test layers", "Loading stats".
+
+**Not found**
+52. Designed: one NotFound page (`NotFound.dc.html`, tweaks kind and theme) for an unknown project, run or test, served with HTTP 404. Header, footer, "404 · Not found" eyebrow, headline, the requested path in a mono chip, a one-sentence reason, and a way forward: the project list + "Go to overview" (project), or breadcrumbs + "{project} runs" / "Latest {project} results" + "Overview" (run, test). Drawn on the Design System page (section 14) at 1280 and 390 for each kind; light and dark follow the page theme. Also in Review (R7b) as dark and light, desktop and phone. Spec in components.md "NotFound (page)".
+
+**Files changed in v4**
+- Design System.dc.html, tp-kit.js
+- NotFound.dc.html (new), Review.dc.html
+- Landing.dc.html, Kiosk.dc.html, Project Page.dc.html, Run Detail.dc.html, Test History.dc.html
+- How Its Tested.dc.html, Admin.dc.html, Privacy.dc.html, Phone Views.dc.html (apostrophes only, item 23)
+- design/components.md, design/data-map.md, design/tokens.css, design/README.md
+- design/pages/ (re-copied)

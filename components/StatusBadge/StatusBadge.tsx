@@ -27,8 +27,8 @@ export const BADGE_STATUSES = [
 export type BadgeStatus = (typeof BADGE_STATUSES)[number];
 
 // pill: headers and cards. inline: rows, tables and the project switcher. kiosk: the pill on the
-// kiosk ProjectCard. kioskInline: the unfilled status on a kiosk RunFeedRow tile.
-export const BADGE_VARIANTS = ['pill', 'inline', 'kiosk', 'kioskInline'] as const;
+// kiosk ProjectCard. inline-kiosk: the unfilled status on a kiosk RunFeedRow tile.
+export const BADGE_VARIANTS = ['pill', 'inline', 'kiosk', 'inline-kiosk'] as const;
 export type BadgeVariant = (typeof BADGE_VARIANTS)[number];
 
 type Tone = 'pass' | 'fail' | 'attn' | 'neutral';
@@ -48,7 +48,7 @@ const ICON_SIZE: Record<BadgeVariant, number> = {
   pill: 14,
   inline: 15,
   kiosk: 26,
-  kioskInline: 22,
+  'inline-kiosk': 22,
 };
 
 export interface StatusBadgeProps {

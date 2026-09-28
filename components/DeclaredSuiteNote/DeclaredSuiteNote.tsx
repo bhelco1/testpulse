@@ -1,5 +1,6 @@
 import { useId } from 'react';
 
+import { qty } from '../../lib/copy/count';
 import { LAYER_LABEL } from '../../lib/design/layers';
 import type { DeclaredSuite, DeclaredSuiteStatus } from '../../lib/projects/schema';
 import { DashedCircleIcon } from '../icons/icons';
@@ -25,7 +26,7 @@ export function DeclaredSuiteNote({ suites }: DeclaredSuiteNoteProps) {
           Declared suites
         </h3>
         <p className={styles.intro}>
-          These tests exist but don&apos;t report here yet. They aren&apos;t counted in any total.
+          These tests exist but don’t report here yet. They aren’t counted in any total.
         </p>
       </div>
       <ul className={styles.list}>
@@ -34,7 +35,7 @@ export function DeclaredSuiteNote({ suites }: DeclaredSuiteNoteProps) {
             <span className={styles.name}>{suite.name}</span>
             <span className={styles.layer}>{LAYER_LABEL[suite.layer]}</span>
             <span className={styles.count}>
-              {suite.count} {suite.layer === 'e2e' ? 'flows' : 'tests'}
+              {qty(suite.count, suite.layer === 'e2e' ? 'flow' : 'test')}
             </span>
             <span className={styles.status} data-status={suite.status}>
               <DashedCircleIcon

@@ -27,7 +27,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <a href="#" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
 <nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
-<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it's tested</a>
+<a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
 <span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}Live</span>
 <button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
 </nav>
@@ -36,7 +36,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <main id="main" style="max-width:720px;padding:56px 0 72px">
 <div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Privacy</div>
 <h1 style="margin:14px 0 0;font:500 clamp(38px,5vw,58px)/1.06 'Source Serif 4',serif;letter-spacing:-.03em;text-wrap:balance">What this site records about you</h1>
-<p style="margin:22px 0 0;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">Which pages you view and for how long. That's it. There are no accounts, no raw IP addresses, and no third-party analytics.</p>
+<p style="margin:22px 0 0;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">Which pages you view and for how long. That’s it. There are no accounts, no raw IP addresses, and no third-party analytics.</p>
 
 <sc-if value="{{ showSummary }}" hint-placeholder-val="{{ true }}">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:36px">
@@ -67,21 +67,21 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
 <p style="margin:0">After a page finishes loading, a small script on the page sends one record back to this site. Link previews and mail scanners usually fetch a page without running it, so most of them are never counted.</p>
 <p style="margin:0">Each record is labelled as a browser, a bot, or a link preview. Known bots and previews are kept under that label and left out of every visit count.</p>
-<p style="margin:0">Your IP address is combined with a secret value and hashed before it is stored. The hash can't be turned back into an address; it is used only to count how many different visitors opened a link.</p>
+<p style="margin:0">Your IP address is combined with a secret value and hashed before it is stored. The hash can’t be turned back into an address; it is used only to count how many different visitors opened a link.</p>
 </div>
 </section>
 
 <section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
 <h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">The cookie</h2>
 <div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
-<p style="margin:0">One cookie, set by this site only, holding the session identifier. It is marked httpOnly, so scripts on the page can't read it, and it is never shared with another site.</p>
+<p style="margin:0">One cookie, set by this site only, holding the session identifier. It is marked httpOnly, so scripts on the page can’t read it, and it is never shared with another site.</p>
 </div>
 </section>
 
 <section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
 <h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">If someone sent you a link</h2>
 <div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
-<p style="margin:0">Some links to this site, for example ones included in a job application, carry a short code tied to the company and role they were sent to. Opening one sets the cookie and redirects you straight away, so the code doesn't stay in your address bar.</p>
+<p style="margin:0">Some links to this site, for example ones included in a job application, carry a short code tied to the company and role they were sent to. Opening one sets the cookie and redirects you straight away, so the code doesn’t stay in your address bar.</p>
 <p style="margin:0">Page views in that session are then attributed to the company and role, not to a person. If you arrived any other way, your visit is recorded anonymously.</p>
 <p style="margin:0">For each of these links, the site owner can see:</p>
 <ul style="margin:0;padding:0 0 0 20px;display:flex;flex-direction:column;gap:6px">

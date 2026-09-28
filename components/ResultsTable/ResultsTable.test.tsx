@@ -68,9 +68,10 @@ const RESULTS: ResultRow[] = [
     suite: 'com.ostomate.app.ui.home.HomeViewModelTest',
     name: 'rendersToday',
     status: 'failed',
+    // Passing platform first in the data, so the table has to put the failing one first.
     platforms: [
-      { platform: 'ios-sim', status: 'failed' },
       { platform: 'jvm', status: 'passed' },
+      { platform: 'ios-sim', status: 'failed' },
     ],
     time: '0.41 s',
     failure: {
@@ -284,12 +285,45 @@ describe('ResultsTable rows', () => {
     expect(has(test?.body, 'failing')).toBe(false);
   });
 
-  it('skipped: Skipped badge, not expandable', () => {
+  it('draws the status icon at 15, as the design’s rows do', () => {
+    const { container } = renderTable();
+    for (const { row: tr } of testRows(container)) {
+      expect(tr.querySelector('[data-status] svg')?.getAttribute('width')).toBe('15');
+    }
+  });
+
+  // Design v4 item 48: every row links to its test history.
+  it('passed: the name is a link to the test’s history, stretched over the row', () => {
+    const { container } = renderTable();
+    const test = testRows(container).find((t) => t.name === 'showsDaysOfSupply');
+    const link = within(test?.row as HTMLElement).getByRole('link', { name: 'showsDaysOfSupply' });
+
+    expect(link.getAttribute('href')).toBe('/p/ostomate2/tests/shows-days');
+    expect(link.dataset.part).toBe('name');
+    expect(has(link, 'rowLink')).toBe(true);
+    expect(has(test?.body, 'linked')).toBe(true);
+  });
+
+  it('skipped: Skipped badge, not expandable, a link to the test’s history', () => {
     const { container } = renderTable();
     const test = testRows(container).find((t) => t.name === 'rendersDarkMode');
     expect(test?.row.querySelector('[data-status]')?.textContent).toBe('Skipped');
     expect(within(test?.body as HTMLElement).queryByRole('button')).toBeNull();
+    expect(
+      within(test?.row as HTMLElement)
+        .getByRole('link', { name: 'rendersDarkMode' })
+        .getAttribute('href'),
+    ).toBe('/p/ostomate2/tests/dark-mode');
     expect(test?.row.textContent).toContain('—');
+  });
+
+  it('failed and error rows are toggles, not row links: their history link is in the detail', () => {
+    const { container } = renderTable();
+    for (const name of ['rendersToday', 'restoresBackup']) {
+      const test = testRows(container).find((t) => t.name === name);
+      expect(within(test?.row as HTMLElement).queryByRole('link')).toBeNull();
+      expect(has(test?.body, 'linked')).toBe(false);
+    }
   });
 
   it('failed: --fail-tint row, open by default, message, stack trace and Test history', () => {
@@ -401,7 +435,54 @@ describe('ResultsTable rows', () => {
 
     const mismatch = test?.body.querySelector('[data-part="mismatch"]');
     expect(mismatch?.textContent).toBe(
-      'Platform mismatchPassed on jvm, failed on ios-sim in the same run.',
+      'Platform mismatchFailed on ios-sim, passed on jvm in the same run.',
+    );
+  });
+
+  // Design v4 item 46: failed on one platform and skipped on another is a mismatch too.
+  it('platform mismatch: a skipped platform reads "–", failing platforms still first', () => {
+    const exports = row('exports', {
+      suite: 'com.ostomate.app.data.ExportTest',
+      name: 'exportsCsv',
+      status: 'failed',
+      platforms: [
+        { platform: 'jvm', status: 'skipped' },
+        { platform: 'ios-sim', status: 'failed' },
+      ],
+      failure: { message: 'AssertionError: expected 3 rows but was 2', detail: 'at ExportTest' },
+    });
+    const { container } = renderTable({ results: [exports] });
+    const [test] = testRows(container);
+    const platforms = [
+      ...(test?.row.querySelectorAll<HTMLElement>('[data-part="platform"]') ?? []),
+    ];
+
+    expect(platforms.map((p) => p.textContent)).toEqual(['ios-sim ✕ failed', 'jvm – skipped']);
+    expect(has(platforms[0], 'platformFail')).toBe(true);
+    expect(has(platforms[1], 'platformFail')).toBe(false);
+    expect(test?.body.querySelector('[data-part="mismatch"]')?.textContent).toBe(
+      'Platform mismatchFailed on ios-sim, skipped on jvm in the same run.',
+    );
+  });
+
+  it('platform mismatch: an errored platform is marked ✕ and reads "errored on"', () => {
+    const backup = row('backup', {
+      suite: 'com.ostomate.app.domain.BackupSerializerTest',
+      name: 'restoresBackup',
+      status: 'error',
+      platforms: [
+        { platform: 'jvm', status: 'passed' },
+        { platform: 'ios-sim', status: 'error' },
+      ],
+    });
+    const { container } = renderTable({ results: [backup] });
+    const [test] = testRows(container);
+
+    expect(
+      [...(test?.row.querySelectorAll('[data-part="platform"]') ?? [])].map((p) => p.textContent),
+    ).toEqual(['ios-sim ✕ errored', 'jvm ✓ passed']);
+    expect(test?.body.querySelector('[data-part="mismatch"]')?.textContent).toBe(
+      'Platform mismatchErrored on ios-sim, passed on jvm in the same run.',
     );
   });
 
@@ -427,7 +508,11 @@ describe('ResultsTable rows', () => {
     expect(body.querySelector('[data-part="mismatch"]')?.textContent).toContain(
       'Platform mismatch',
     );
-    expect(within(body).getByRole('link', { name: 'Test history' })).toBeTruthy();
+    // Design v4 item 48: "Test history" follows the notice rather than sitting inside it.
+    const history = within(body).getByRole('link', { name: 'Test history' });
+    const notice = history.previousElementSibling;
+    expect(notice?.textContent).toContain('Details hidden: private repository');
+    expect(notice?.contains(history)).toBe(false);
     // Names and statuses are public (spec section 9).
     expect(within(body).getByRole('button', { name: 'rendersToday' })).toBeTruthy();
   });
@@ -506,6 +591,13 @@ describe('ResultsTable states', () => {
     expect(clock?.querySelector('path')?.getAttribute('d')).toBe('M12 7v5l3 2');
     expect(queryByRole('table')).toBeNull();
     expect(queryByRole('radiogroup')).toBeNull();
+  });
+
+  it('pruned: "1 test" at one (design v4 item 50)', () => {
+    const { container } = render(<ResultsTable pruned={{ total: 1, passed: 0, failed: 1 }} />);
+    expect(container.querySelector('[data-part="pruned-text"]')?.textContent).toContain(
+      'Summary totals are permanent: 1 test, 0 passed, 1 failed.',
+    );
   });
 });
 
@@ -596,6 +688,20 @@ describe('ResultsTable styles', () => {
       inset: '0px',
     });
     expect(ruleFor(CSS, '.chevron.open')).toEqual({ transform: 'rotate(90deg)' });
+  });
+
+  // Design v4 items 42 and 48: nothing visible differs from the drawing, so the link reads as the
+  // plain name; hover and focus give the row --raised.
+  it('stretches a row link over the whole row, drawn as plain text, --raised on hover and focus', () => {
+    expect(ruleFor(CSS, '.rowLink')).toEqual({ color: 'inherit', 'text-decoration': 'none' });
+    expect(ruleFor(CSS, '.rowLink::after')).toEqual({
+      content: '""',
+      position: 'absolute',
+      inset: '0px',
+    });
+    expect(ruleFor(CSS, '.linked:hover, .linked:focus-within')).toEqual({
+      background: 'var(--raised)',
+    });
   });
 
   it('sets the test cell: name mono 13.5 and suite mono 12 --ink-3, both with ellipsis', () => {

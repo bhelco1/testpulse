@@ -7,8 +7,10 @@
 }
 
 .module {
+  min-width: 0;
   font: 13px var(--font-mono);
   color: var(--ink-2);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -56,7 +58,7 @@
 }
 
 .kiosk {
-  grid-template-columns: 220px minmax(40px, 1fr) 100px;
+  grid-template-columns: 220px minmax(40px, 1fr) 130px;
   column-gap: 18px;
   font-size: 24px;
 }
@@ -77,4 +79,5 @@
 
 .kiosk .value {
   justify-content: flex-end;
+  gap: var(--space-2);
 }

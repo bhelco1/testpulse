@@ -1,37 +1,47 @@
-import { ClockIcon, LockIcon, XCircleIcon } from '../icons/icons';
+import type { ComponentType } from 'react';
+
+import { ClockIcon, type IconProps, LockIcon, XCircleIcon } from '../icons/icons';
 import styles from './Notice.module.css';
 
-// The neutral notice is drawn as one line of body text with no title.
-export type NoticeProps =
-  { tone: 'attn' | 'fail'; title: string; body: string } | { tone: 'neutral'; body: string };
+export type NoticeIcon = 'clock' | 'x-circle' | 'lock';
+
+export interface NoticeProps {
+  tone: 'attn' | 'fail' | 'neutral';
+  // Chosen per use, not per tone (design v4 item 2): clock for a stale project, x-circle for a
+  // failed-run summary, lock for the private repository note.
+  icon: NoticeIcon;
+  title?: string;
+  body: string;
+  // Only for a Notice inserted after the page loaded, such as a project going stale while it is
+  // open; one rendered with the page is not announced (design v4 item 1).
+  live?: boolean;
+}
+
+// Stroke widths as the design system draws each icon.
+const ICONS: Record<NoticeIcon, { Icon: ComponentType<IconProps>; strokeWidth: number }> = {
+  clock: { Icon: ClockIcon, strokeWidth: 2.4 },
+  'x-circle': { Icon: XCircleIcon, strokeWidth: 2.6 },
+  lock: { Icon: LockIcon, strokeWidth: 2.2 },
+};
 
 // A page-level banner: stale project, private repository, failed-run summary. Never inside a card.
-export function Notice(props: NoticeProps) {
-  if (props.tone === 'neutral') {
-    return (
-      <div className={`${styles.notice} ${styles.neutral}`} data-tone="neutral">
-        <LockIcon size={18} strokeWidth={2.2} className={styles.icon} />
-        <div className={styles.body} data-part="body">
-          {props.body}
-        </div>
-      </div>
-    );
-  }
-  const attn = props.tone === 'attn';
-  const Icon = attn ? ClockIcon : XCircleIcon;
+export function Notice({ tone, icon, title, body, live = false }: NoticeProps) {
+  const { Icon, strokeWidth } = ICONS[icon];
   return (
     <div
-      role={attn ? 'status' : 'alert'}
-      className={`${styles.notice} ${styles[props.tone]}`}
-      data-tone={props.tone}
+      role={live ? 'status' : undefined}
+      className={`${styles.notice} ${styles[tone]}`}
+      data-tone={tone}
     >
-      <Icon size={18} strokeWidth={attn ? 2.4 : 2.6} className={styles.icon} />
+      <Icon size={18} strokeWidth={strokeWidth} className={styles.icon} />
       <div>
-        <div className={styles.title} data-part="title">
-          {props.title}
-        </div>
+        {title !== undefined && (
+          <div className={styles.title} data-part="title">
+            {title}
+          </div>
+        )}
         <div className={styles.body} data-part="body">
-          {props.body}
+          {body}
         </div>
       </div>
     </div>

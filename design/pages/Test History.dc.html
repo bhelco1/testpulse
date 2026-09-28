@@ -10,6 +10,7 @@
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="./tp-charts.js"></script>
 <style>
 body{margin:0;background:#121110}
 a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
@@ -33,7 +34,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </nav>
 </header>
 
-<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0 0;font-size:14.5px;color:var(--ink-3)"><a href="#">Overview</a><span aria-hidden="true">/</span><a href="#">Ostomate2</a><span aria-hidden="true">/</span><span aria-current="page" style="color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13.5px">{{ t.short }} › {{ t.name }}</span></nav>
+<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;color:var(--ink-3)"><a href="#" style="min-height:44px;display:flex;align-items:center">Overview</a><span aria-hidden="true">/</span><a href="#" style="min-height:44px;display:flex;align-items:center">Ostomate2</a><span aria-hidden="true">/</span><span aria-current="page" style="min-height:44px;display:flex;align-items:center;gap:6px;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13.5px"><span>{{ t.short }}</span><span>›</span><span>{{ t.name }}</span></span></nav>
 
 <main id="main">
 <section style="padding:36px 0 40px">
@@ -60,27 +61,25 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
 <div style="display:flex;flex-direction:column;gap:18px">
 <sc-for list="{{ strips }}" as="st" hint-placeholder-count="2">
-<div style="display:grid;grid-template-columns:84px minmax(0,1fr);gap:16px;align-items:end">
-<span style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2);padding-bottom:2px">{{ st.plat }}</span>
-<div role="group" aria-label="{{ st.aria }}" style="display:flex;align-items:flex-end;gap:3px;height:48px">
-<sc-for list="{{ st.cells }}" as="c" hint-placeholder-count="40"><button onClick="{{ c.pick }}" onMouseEnter="{{ c.pick }}" onFocus="{{ c.pick }}" aria-label="{{ c.aria }}" style="all:unset;flex:1;max-width:{{ c.maxW }};height:{{ c.h }};border-radius:2px;background:{{ c.bg }};outline:{{ c.ol }};outline-offset:2px;cursor:pointer;display:flex;justify-content:center;align-items:flex-start;font-size:10px;line-height:14px;font-weight:700;color:var(--on-ink)">{{ c.g }}</button></sc-for>
+<div style="display:flex;gap:12px;align-items:flex-end">
+<span style="width:76px;flex:none;font:13px 'JetBrains Mono',monospace;color:var(--ink-2);padding-bottom:2px">{{ st.plat }}</span>
+<div role="group" aria-label="{{ st.aria }}" style="flex:1;min-width:0;display:flex;justify-content:flex-end;align-items:flex-end;gap:3px;height:48px;overflow:hidden">
+<sc-for list="{{ st.cells }}" as="c" hint-placeholder-count="40"><button onClick="{{ c.pick }}" onMouseEnter="{{ c.pick }}" onFocus="{{ c.pick }}" aria-label="{{ c.aria }}" style="all:unset;flex:0 1 16px;min-width:6px;box-sizing:border-box;height:{{ c.h }};border-radius:2px;background:{{ c.bg }};border:{{ c.bd }};outline:{{ c.ol }};outline-offset:2px;cursor:pointer;display:flex;justify-content:center;align-items:flex-start;font-size:10px;line-height:14px;font-weight:700;color:var(--on-ink)">{{ c.g }}</button></sc-for>
 </div>
 </div>
 </sc-for>
 </div>
-<div style="display:grid;grid-template-columns:84px minmax(0,1fr);gap:16px;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><span></span><div style="display:flex;justify-content:space-between"><span>{{ t.oldest }}</span><span>Latest</span></div></div>
+<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;padding-left:88px;font-size:12.5px;color:var(--ink-3)"><span>{{ t.oldest }}</span><span>Latest</span></div>
 
 <div style="display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)">
-<span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:14px;border-radius:2px;background:var(--pass)"></span>Passed · short</span>
-<span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:14px;border-radius:2px;background:var(--attn)"></span>Flaky · half height, failed then passed on the same commit</span>
-<span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:14px;border-radius:2px;background:var(--fail)"></span>Failed · full height with ✕</span>
+<sc-for list="{{ legend }}" as="lg" hint-placeholder-count="3"><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:{{ lg.h }};box-sizing:border-box;border-radius:2px;background:{{ lg.bg }};border:{{ lg.bd }}"></span><span>{{ lg.w }}</span></span></sc-for>
 </div>
 
 <div aria-live="polite" style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:12px 24px;padding:16px 18px;border-radius:12px;background:var(--inset);border:1px solid var(--line);font-size:14px">
 <div><div style="font-size:12.5px;color:var(--ink-3)">Run</div><div style="margin-top:3px;font-weight:600">{{ sel.branch }} · <span style="font-family:'JetBrains Mono',monospace;font-weight:500">{{ sel.sha }}</span></div></div>
 <div><div style="font-size:12.5px;color:var(--ink-3)">When</div><div style="margin-top:3px">{{ sel.when }}</div></div>
 <sc-for list="{{ sel.plats }}" as="sp" hint-placeholder-count="2"><div><div style="font-size:12.5px;color:var(--ink-3)">{{ sp.plat }}</div><div style="margin-top:3px;font-weight:600;color:{{ sp.ink }}">{{ sp.label }} <span style="font-weight:400;color:var(--ink-3)">· {{ sp.dur }}</span></div></div></sc-for>
-<div style="display:flex;align-items:center"><a href="#" style="min-height:40px;display:flex;align-items:center;font-weight:600">Open run →</a></div>
+<div style="display:flex;align-items:center"><a href="#" style="min-height:44px;display:flex;align-items:center;font-weight:600">Open run →</a></div>
 </div>
 </div>
 </section>
@@ -90,7 +89,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
 <div style="font:500 24px 'Source Serif 4',serif">Duration</div>
 <figcaption style="margin-top:6px;max-width:720px;font-size:14.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ t.durCaption }}</figcaption>
-<div style="margin-top:18px">{{ durChart }}</div>
+<div style="margin-top:2px;font-size:13px;color:var(--ink-3)">Default branch · CI runs only (imported history has no durations)</div>
+<div style="margin-top:14px"><x-import component-from-global-scope="TPCharts.Trend" from="./tp-charts.js" dc-props="{{ durProps }}" hint-size="100%,250px"></x-import></div>
 </figure>
 </section>
 
@@ -107,7 +107,6 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <span style="text-align:right;font-size:13px;color:var(--ink-3)">{{ rr.when }}</span>
 </a>
 </sc-for>
-<a href="#" style="display:flex;align-items:center;min-height:44px;padding:0 18px;font-size:14px;font-weight:600;gap:4px"><span>All</span><span>{{ t.runCount }}</span><span>runs →</span></a>
 </div></div>
 </section>
 </main>
@@ -142,7 +141,7 @@ class Component extends DCLogic {
       return {
         t: { name: 'insertsAndQueriesByDay', short: 'ChangeEventDaoTest', suite: 'com.ostomate.app.data.ChangeEventDaoTest', layer: 'Integration', isFlaky: true, isMismatch: false, isNew: false, sampleTag: 'SAMPLE HISTORY', runCount: 40,
           stripNote: 'Last 40 runs, oldest on the left', oldest: '40 runs ago',
-          caption: 'Failed and then passed on a retry of the same commit twice in 40 runs, both times on JVM. The iOS simulator has never failed it. Flaky tests are listed on the project page until they go 40 runs clean.',
+          caption: 'Failed and then passed on a retry of the same commit twice in 40 runs, both times on JVM. The iOS simulator has never failed it. It is listed as flaky on the project page while a pass and a fail on the same commit and platform fall within the last 30 days.',
           durCaption: 'JVM runs take 1.0 to 1.3 s; both flaky failures were among the slowest runs, which suggests a timing dependency in the database setup.' },
         runs, plats: ['jvm', 'ios-sim'],
         status: (p, i) => (p === 'jvm' && (i === 14 || i === 29)) ? 'flaky' : 'pass',
@@ -154,7 +153,7 @@ class Component extends DCLogic {
     return {
       t: isNew
         ? { name: 'showsReorderBanner', short: 'HomeViewModelTest', suite: 'com.ostomate.app.ui.home.HomeViewModelTest', layer: 'Unit', isFlaky: false, isMismatch: false, isNew: true, sampleTag: 'SAMPLE STATE', runCount: 1,
-            stripNote: 'One run so far', oldest: 'First run', caption: 'Added in the latest run. The timeline and duration trend fill in as more runs report.', durCaption: 'One measurement per platform so far. A trend appears after the second run.' }
+            stripNote: 'One run so far', oldest: '1 run ago', caption: 'Added in the latest run. The timeline and duration trend fill in as more runs report.', durCaption: '' }
         : { name: 'rendersToday', short: 'HomeViewModelTest', suite: 'com.ostomate.app.ui.home.HomeViewModelTest', layer: 'Unit', isFlaky: false, isMismatch: true, isNew: false, sampleTag: 'SAMPLE HISTORY', runCount: 40,
             stripNote: 'Last 40 runs, oldest on the left', oldest: '40 runs ago',
             caption: 'Passed on both platforms for 38 runs. On PR #52 it failed on the iOS simulator while passing on JVM in the same run, then passed on both once the fix landed on main.',
@@ -197,12 +196,12 @@ class Component extends DCLogic {
     const last = runs.length - 1;
     const failIdx = runs.findIndex(r => plats.some(p => M.status(p, r.i) !== 'pass'));
     const selK = this.state.sel ?? (failIdx >= 0 ? failIdx : last);
-    const look = { pass: ['14px', 'var(--pass)', '', 'Passed', 'var(--pass)'], flaky: ['24px', 'var(--attn)', '', 'Flaky · passed on retry', 'var(--attn)'], fail: ['44px', 'var(--fail)', '✕', 'Failed', 'var(--fail)'] };
+    const look = { pass: ['14px', 'var(--pass)', '', 'Passed', 'var(--pass)', 'none'], flaky: ['24px', 'var(--attn)', '', 'Flaky', 'var(--attn)', 'none'], fail: ['44px', 'var(--fail)', '✕', 'Failed', 'var(--fail)', 'none'], error: ['44px', 'var(--fail)', '!', 'Error', 'var(--fail)', 'none'], skip: ['14px', 'transparent', '', 'Skipped', 'var(--neutral)', '1.5px solid var(--ink-3)'], notrun: ['4px', 'var(--line-strong)', '', 'Not run', 'var(--ink-3)', 'none'] };
 
     const strips = plats.map(p => ({
       plat: p, aria: `${p}: ${runs.length} runs`,
       cells: runs.map((r, k) => { const s = M.status(p, r.i), L2 = look[s];
-        return { h: L2[0], bg: L2[1], g: L2[2], maxW: runs.length === 1 ? '14px' : 'none', ol: k === selK ? '2px solid var(--ink)' : 'none',
+        return { h: L2[0], bg: L2[1], g: L2[2], bd: L2[5], ol: k === selK ? '2px solid var(--ink)' : 'none',
           aria: `${p}, ${r.branch} ${r.sha}, ${r.when}: ${L2[3]}`, pick: () => { if (this.state.sel !== k) this.setState({ sel: k }); } }; }),
     }));
     const sr = runs[selK];
@@ -220,7 +219,9 @@ class Component extends DCLogic {
 
     const series = plats.map((p, si) => ({ label: p, stroke: si ? 'var(--ink-3)' : 'var(--ink)', dash: si ? '6 4' : 'none', ys: runs.map(r => M.dur(p, r)),
       marks: runs.map((r, i) => [i, M.status(p, r.i)]).filter(([, s]) => s !== 'pass').map(([i, s]) => [i, look[s][1]]) }));
-    const durChart = this.chart({ series, min: M.min, max: M.max, ticks: M.ticks, fmt: v => M.fmt(v).replace('.00', ''), aria: 'Duration by run. ' + t.durCaption });
+    const durProps = { series: series.map((s, si) => ({ name: s.label, values: s.ys, dashed: si > 0 })), format: 'sec', unit: 'run', marks: series[0].marks.map(([i, c]) => ({ index: i, status: c === 'var(--fail)' ? 'fail' : 'empty' })).concat(series[1] ? series[1].marks.map(([i, c]) => ({ index: i, status: 'fail' })) : []).filter((m, i, a) => a.findIndex(x => x.index === m.index) === i), ariaLabel: 'Duration by run. ' + t.durCaption };
+    const present = Array.from(new Set(plats.flatMap(p => runs.map(r => M.status(p, r.i)))));
+    const legend = ['pass', 'fail', 'error', 'flaky', 'skip', 'notrun'].filter(k => present.includes(k)).map(k => ({ w: look[k][3], h: look[k][0] === '44px' ? '20px' : look[k][0], bg: look[k][1], bd: look[k][5] }));
 
     const recent = runs.slice(-8).reverse().map(r => {
       const bad = plats.some(p => M.status(p, r.i) === 'fail');
@@ -231,7 +232,7 @@ class Component extends DCLogic {
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
 
     return {
-      themeVars: tv, liveDot, t, stats, strips, sel, durChart, recent, platHeads: plats.map(p => p.toUpperCase()),
+      themeVars: tv, liveDot, t, stats, strips, sel, durProps, legend, recent, platHeads: plats.map(p => p.toUpperCase()),
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
     };

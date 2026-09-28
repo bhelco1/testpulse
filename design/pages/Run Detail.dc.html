@@ -33,7 +33,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 </nav>
 </header>
 
-<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 0 0;font-size:14.5px;color:var(--ink-3)"><a href="#">Overview</a><span aria-hidden="true">/</span><a href="#">{{ r.project }}</a><span aria-hidden="true">/</span><span aria-current="page" style="color:var(--ink)">Run {{ r.id }}</span></nav>
+<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;color:var(--ink-3)"><a href="#" style="min-height:44px;display:flex;align-items:center">Overview</a><span aria-hidden="true">/</span><a href="#" style="min-height:44px;display:flex;align-items:center">{{ r.project }}</a><span aria-hidden="true">/</span><span aria-current="page" style="min-height:44px;display:flex;align-items:center;gap:6px;color:var(--ink)"><span>Run</span><span>{{ r.id }}</span></span></nav>
 
 <main id="main">
 <!-- SUMMARY -->
@@ -67,7 +67,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 </div>
 
 <sc-if value="{{ r.isFail }}" hint-placeholder-val="{{ true }}">
-<div role="alert" style="display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14.5px;color:var(--fail)">{{ r.failHead }}</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px;text-wrap:pretty">{{ r.failSub }}</div></div><a href="#results" onClick="{{ jumpFailed }}" style="flex:none;align-self:center;min-height:36px;display:flex;align-items:center;padding:0 12px;border-radius:10px;border:1px solid var(--fail);color:var(--fail);font-size:13.5px;font-weight:600;text-decoration:none">Show failure</a></div>
+<div role="alert" style="display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14.5px;color:var(--fail)">{{ r.failHead }}</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px;text-wrap:pretty">{{ r.failSub }}</div></div><a href="#results" onClick="{{ jumpFailed }}" style="flex:none;align-self:center;min-height:44px;display:flex;align-items:center;padding:0 16px;border-radius:10px;border:1px solid var(--fail);color:var(--fail);font-size:15px;font-weight:600;text-decoration:none">Show failure</a></div>
 </sc-if>
 </section>
 
@@ -93,7 +93,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 </section>
 
 <!-- RESULTS -->
-<section id="results" style="padding:40px 0 64px;border-top:1px solid var(--line)">
+<section id="results" ref="{{ boxRef }}" style="padding:40px 0 64px;border-top:1px solid var(--line)">
 <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px"><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Results</h2><span style="font-size:14px;color:var(--ink-3)">Failures first, then by suite</span></div>
 
 <sc-if value="{{ pruned }}" hint-placeholder-val="{{ false }}">
@@ -103,43 +103,62 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <sc-if value="{{ notPruned }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px">
 <div role="radiogroup" aria-label="Status" style="display:flex;flex-wrap:wrap;padding:3px;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
-<sc-for list="{{ statusTabs }}" as="s" hint-placeholder-count="4"><button role="radio" aria-checked="{{ s.on }}" onClick="{{ s.pick }}" style="min-height:38px;padding:0 12px;border-radius:8px;border:none;cursor:pointer;background:{{ s.bg }};color:{{ s.ink }};font:{{ s.weight }} 13.5px 'Public Sans',sans-serif">{{ s.label }} {{ s.n }}</button></sc-for>
+<sc-for list="{{ statusTabs }}" as="s" hint-placeholder-count="4"><button role="radio" aria-checked="{{ s.on }}" onClick="{{ s.pick }}" style="min-height:44px;padding:0 14px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;background:{{ s.bg }};color:{{ s.ink }};font:{{ s.weight }} 14px 'Public Sans',sans-serif"><span>{{ s.label }}</span><span>{{ s.n }}</span></button></sc-for>
 </div>
-<label style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px 0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);font-size:13.5px;color:var(--ink-3)">Layer<select onChange="{{ onLayer }}" value="{{ layer }}" style="min-height:40px;border:none;background:transparent;color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer;padding-right:8px"><sc-for list="{{ layerOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></label>
-<label style="flex:1;min-width:220px;min-height:44px;display:flex;align-items:center;gap:8px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink-3);font-size:13.5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input aria-label="Search tests" value="{{ query }}" onChange="{{ onQuery }}" placeholder="Search test or suite name" style="flex:1;min-width:0;min-height:40px;border:none;background:none;outline:none;color:var(--ink);font:inherit"></label>
+<label style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px 0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);font-size:14px;color:var(--ink-3);box-sizing:border-box">Layer<select onChange="{{ onLayer }}" value="{{ layer }}" style="min-height:42px;border:none;background:transparent;color:var(--ink);font:500 14px 'Public Sans',sans-serif;cursor:pointer;padding-right:8px"><sc-for list="{{ layerOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></label>
+
 </div>
 
-<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
-<div style="min-width:820px">
+<sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<sc-for list="{{ rows }}" as="t" hint-placeholder-count="4">
+<div style="border-bottom:1px solid var(--line);background:{{ t.bg }}">
+<button onClick="{{ t.toggle }}" aria-expanded="{{ t.open }}" disabled="{{ t.noExpand }}" style="all:unset;box-sizing:border-box;width:100%;cursor:{{ t.cursor }};display:flex;flex-direction:column;gap:4px;padding:12px 16px;min-height:44px">
+<span style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="display:grid;place-items:center;width:20px;transform:{{ t.rot }};opacity:{{ t.chev }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"></path></svg></span><span style="display:flex;align-items:center;gap:6px;color:{{ t.stInk }};font-weight:600">{{ t.stWord }}</span><sc-if value="{{ t.flaky }}"><span style="padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600">Flaky</span></sc-if><span style="margin-left:auto;font-size:13px;color:var(--ink-2)">{{ t.time }}</span></span>
+<span style="font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere;padding-left:30px">{{ t.name }}</span>
+<span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);overflow-wrap:anywhere;padding-left:30px">{{ t.suite }}</span>
+<span style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:13px;color:var(--ink-3);padding-left:30px"><span>{{ t.layer }}</span><span>·</span><sc-for list="{{ t.plats }}" as="pl" hint-placeholder-count="1"><span style="color:{{ pl.ink }}">{{ pl.label }}</span></sc-for></span>
+</button>
+<sc-if value="{{ t.showDetail }}"><div style="padding:4px 16px 16px 16px"><sc-if value="{{ t.mismatch }}"><div style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-bottom:8px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">Passed on jvm, failed on ios-sim.</span></div></sc-if><div style="font:600 13.5px/1.5 'JetBrains Mono',monospace;margin-bottom:8px;overflow-wrap:anywhere">{{ t.message }}</div><pre style="margin:0;padding:12px 14px;border-radius:10px;background:var(--inset);border:1px solid var(--line);font:12.5px/1.65 'JetBrains Mono',monospace;color:var(--ink-2);overflow-x:auto;white-space:pre">{{ t.trace }}</pre><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div></sc-if>
+<sc-if value="{{ t.showHidden }}"><div style="padding:4px 16px 16px 16px"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px">Details hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">This repository is private, so failure messages and stack traces are hidden. Test names and counts are real.</p></div></div><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div></sc-if>
+</div>
+</sc-for>
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 16px;font-size:13.5px;color:var(--ink-3)"><span style="display:flex;gap:6px"><span>Showing</span><span>{{ shown }}</span><span>of</span><span>{{ r.total }}</span></span><button style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer">Load 50 more</button></div>
+</div>
+</sc-if>
+<sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px">
+<div>
 <div style="display:grid;grid-template-columns:36px 130px minmax(0,1fr) 110px 130px 80px;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span></span><span>STATUS</span><span>TEST</span><span>LAYER</span><span>PLATFORM</span><span style="text-align:right">TIME</span></div>
 <sc-for list="{{ rows }}" as="t" hint-placeholder-count="8">
 <div style="border-bottom:1px solid var(--line);background:{{ t.bg }}">
 <button onClick="{{ t.toggle }}" aria-expanded="{{ t.open }}" disabled="{{ t.noExpand }}" style="all:unset;box-sizing:border-box;width:100%;cursor:{{ t.cursor }};display:grid;grid-template-columns:36px 130px minmax(0,1fr) 110px 130px 80px;gap:12px;align-items:center;padding:12px 16px;font-size:14px;color:var(--ink)">
 <span style="display:grid;place-items:center;transform:{{ t.rot }};opacity:{{ t.chev }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"></path></svg></span>
-<span><sc-if value="{{ t.pass }}"><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if><sc-if value="{{ t.fail }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if><sc-if value="{{ t.skip }}"><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg>Skipped</span></sc-if></span>
+<span><sc-if value="{{ t.pass }}"><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if><sc-if value="{{ t.fail }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if><sc-if value="{{ t.err }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Error</span></sc-if><sc-if value="{{ t.skip }}"><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg>Skipped</span></sc-if></span>
 <span style="min-width:0;display:flex;align-items:center;gap:10px"><span style="min-width:0"><span style="display:block;font:13.5px 'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span><span style="display:block;font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.suite }}</span></span><sc-if value="{{ t.flaky }}"><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></sc-if></span>
 <span style="color:var(--ink-2)">{{ t.layer }}</span>
 <span style="display:flex;flex-direction:column;gap:2px;font-size:12.5px"><sc-for list="{{ t.plats }}" as="pl" hint-placeholder-count="1"><span style="color:{{ pl.ink }}">{{ pl.label }}</span></sc-for></span>
 <span style="text-align:right;color:var(--ink-2)">{{ t.time }}</span>
 </button>
 <sc-if value="{{ t.showDetail }}">
-<div style="padding:2px 16px 18px 64px">
-<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:10px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">Passed on JVM, failed on the iOS simulator in the same run.</span><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE TEXT</span></div>
+<div style="padding:{{ detailPad }}">
+<sc-if value="{{ t.mismatch }}"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:10px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">Passed on jvm, failed on ios-sim in the same run.</span></div></sc-if>
 <div style="font:600 13.5px/1.5 'JetBrains Mono',monospace;color:var(--ink);margin-bottom:8px;overflow-wrap:anywhere">{{ t.message }}</div>
 <pre style="margin:0;padding:12px 14px;border-radius:10px;background:var(--inset);border:1px solid var(--line);font:12.5px/1.65 'JetBrains Mono',monospace;color:var(--ink-2);overflow-x:auto;white-space:pre">{{ t.trace }}</pre>
-<div style="display:flex;gap:16px;margin-top:10px;font-size:13.5px"><a href="#" style="min-height:36px;display:flex;align-items:center">Test history</a><a href="#" style="min-height:36px;display:flex;align-items:center;gap:5px"><span>View source at</span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></a></div>
+<a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a>
 </div>
 </sc-if>
 <sc-if value="{{ t.showHidden }}">
-<div style="padding:2px 16px 18px 64px"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:10px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px">Details hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);max-width:620px">This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.</p><a href="#" style="display:inline-flex;align-items:center;min-height:36px;margin-top:4px;font-size:13.5px">Test history</a></div></div></div>
+<div style="padding:{{ detailPad }}"><sc-if value="{{ t.mismatch }}"><div style="display:flex;flex-wrap:wrap;gap:6px 10px;margin-bottom:10px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">Passed on jvm, failed on ios-sim in the same run.</span></div></sc-if><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px">Details hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);max-width:620px">This repository is private, so failure messages and stack traces are hidden. Test names and counts are real.</p></div></div><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div>
 </sc-if>
 </div>
 </sc-for>
 <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
 <div style="padding:36px 20px;text-align:left;display:flex;flex-direction:column;gap:6px;align-items:flex-start"><div style="font:500 20px 'Source Serif 4',serif">No tests match</div><div style="font-size:14px;color:var(--ink-2)">Nothing in this run matches the current filters.</div><button onClick="{{ clearFilters }}" style="margin-top:6px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px 'Public Sans',sans-serif;cursor:pointer">Clear filters</button></div>
 </sc-if>
-<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 16px;font-size:13px;color:var(--ink-3)"><span style="display:flex;align-items:center;gap:8px">Showing {{ shown }} of {{ r.total }}<span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE ROWS</span></span><button style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer">Load 50 more</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 16px;font-size:13px;color:var(--ink-3)"><span style="display:flex;align-items:center;gap:6px"><span>Showing</span><span>{{ shown }}</span><span>of</span><span>{{ r.total }}</span><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE ROWS</span></span><button style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer" style-hover="background:var(--raised)">Load 50 more</button></div>
 </div></div>
+</sc-if>
 </sc-if>
 </section>
 </main>
@@ -149,11 +168,14 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;run&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ostomate2 · passed&quot;,&quot;Ostomate2 · failed&quot;,&quot;RouteServe · failed (private)&quot;],&quot;default&quot;:&quot;Ostomate2 · failed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pruned&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
-  state = { theme: null, status: 'all', layer: 'all', query: '', open: {} };
+  state = { theme: null, status: 'all', layer: 'all', open: {}, narrow: false };
+  box = React.createRef();
+  componentDidMount() { const el = this.box.current; if (!el) return; this.ro = new ResizeObserver(() => { const n = el.getBoundingClientRect().width < 720; if (n !== this.state.narrow) this.setState({ narrow: n }); }); this.ro.observe(el); }
+  componentWillUnmount() { this.ro && this.ro.disconnect(); }
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
 
   componentDidUpdate(prev) {
-    if (prev.run !== this.props.run) this.setState({ status: 'all', layer: 'all', query: '', open: {} });
+    if (prev.run !== this.props.run) this.setState({ status: 'all', layer: 'all', open: {} });
     if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null });
   }
 
@@ -190,7 +212,7 @@ class Component extends DCLogic {
     ];
     const common = { project: 'Ostomate2', reportsIn: '4 of 4', reportsNote: 'Each CI job posts its own report when it finishes. JVM and iOS simulator run the same shared suites, so a test that exists on both platforms is counted once in the totals.', reportsFoot: 'Totals count each test once; the iOS simulator re-runs 132 of the 142.' };
     return {
-      'Ostomate2 · passed': Object.assign({}, common, { id: '35642780279', status: 'pass', title: 'docs: BUG-10 verified on device', when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', event: 'push', started: 'Sep 24, 14:02', total: '142', passed: '142', failed: '0', skipped: '0', duration: '27 s', reports: ostoReports(false), rows: ostoRows(false) }),
+      'Ostomate2 · passed': Object.assign({}, common, { id: '35642780279', status: 'pass', title: 'Push to main', when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', event: 'push', started: 'Sep 24, 14:02', total: '142', passed: '142', failed: '0', skipped: '0', duration: '27 s', reports: ostoReports(false), rows: ostoRows(false) }),
       'Ostomate2 · failed': Object.assign({}, common, { id: '35611904417', status: 'fail', title: 'Pull request #52', when: 'yesterday', branch: 'PR #52', sha: 'a41f9c2', event: 'pull_request', started: 'Sep 23, 17:40', total: '142', passed: '141', failed: '1', skipped: '0', duration: '31 s', sample: true, reports: ostoReports(true), rows: ostoRows(true),
         failHead: '1 test failed: HomeViewModelTest › rendersToday', failSub: 'It failed on the iOS simulator and passed on JVM in the same run, which points at platform-specific behaviour rather than shared logic.' }),
       'RouteServe · failed (private)': { project: 'RouteServe', private: true, id: '35598127760', status: 'fail', title: '', when: 'yesterday', branch: 'main', sha: '5f0a2c9', event: 'push', started: 'Sep 23, 09:15', total: '1,048', passed: '1,047', failed: '1', skipped: '0', duration: '30 s', sample: true, reportsIn: '3 of 3', reportsSample: true,
@@ -223,28 +245,27 @@ class Component extends DCLogic {
     });
 
     const base = src.rows.map((t, i) => Object.assign({ id: i, status: 'pass', plats: [['jvm', 'dim'], ['ios-sim', 'dim']] }, t));
-    const cnt = { all: src.total, pass: src.passed, fail: src.failed, skip: src.skipped };
-    const statusTabs = [['all', 'All'], ['pass', 'Passed'], ['fail', 'Failed'], ['skip', 'Skipped']].map(([k, label]) => {
+    const cnt = { all: src.total, pass: src.passed, fail: src.failed, error: '0', skip: src.skipped };
+    const statusTabs = [['all', 'All'], ['pass', 'Passed'], ['fail', 'Failed'], ['error', 'Error'], ['skip', 'Skipped']].map(([k, label]) => {
       const on = this.state.status === k;
       return { label, n: cnt[k], on, bg: on ? 'var(--raised)' : 'transparent', weight: on ? 600 : 500,
         ink: k === 'fail' && cnt.fail !== '0' ? 'var(--fail)' : (on ? 'var(--ink)' : 'var(--ink-2)'), pick: () => this.setState({ status: k }) };
     });
     const layers = Array.from(new Set(base.map(t => t.layer)));
     const layerOpts = [{ v: 'all', label: 'All layers' }].concat(layers.map(l => ({ v: l, label: l })));
-    const q = this.state.query.trim().toLowerCase();
     const openState = this.state.open;
     const rows = base
       .filter(t => this.state.status === 'all' || t.status === this.state.status)
       .filter(t => this.state.layer === 'all' || t.layer === this.state.layer)
-      .filter(t => !q || (t.name + ' ' + t.suite).toLowerCase().includes(q))
-      .sort((a, b) => (a.status === 'fail' ? 0 : 1) - (b.status === 'fail' ? 0 : 1))
+      .sort((a, b) => ((a.status === 'fail' || a.status === 'error') ? 0 : 1) - ((b.status === 'fail' || b.status === 'error') ? 0 : 1) || a.suite.localeCompare(b.suite) || a.name.localeCompare(b.name))
       .map(t => {
-        const failed = t.status === 'fail';
+        const failed = t.status === 'fail' || t.status === 'error';
         const open = failed && (openState[t.id] ?? true);
         return {
           name: t.name, suite: t.suite, layer: t.layer, time: t.time, flaky: !!t.flaky,
-          pass: t.status === 'pass', fail: failed, skip: t.status === 'skip',
+          pass: t.status === 'pass', fail: t.status === 'fail', err: t.status === 'error', skip: t.status === 'skip', mismatch: t.plats.some(p => p[1] === 'fail') && t.plats.length > 1,
           plats: t.plats.map(([label, k]) => ({ label, ink: k === 'fail' ? 'var(--fail)' : 'var(--ink-3)' })),
+          stWord: { pass: 'Passed', fail: 'Failed', error: 'Error', skip: 'Skipped' }[t.status], stInk: { pass: 'var(--pass)', fail: 'var(--fail)', error: 'var(--fail)', skip: 'var(--neutral)' }[t.status],
           bg: failed ? 'var(--fail-tint)' : 'transparent', open, noExpand: !failed, cursor: failed ? 'pointer' : 'default',
           chev: failed ? 1 : 0, rot: open ? 'rotate(90deg)' : 'none',
           showDetail: open && !priv, showHidden: open && priv, message: t.message || '', trace: t.trace || '',
@@ -258,12 +279,11 @@ class Component extends DCLogic {
       themeVars: tv, liveDot, r, pruned, notPruned: !pruned,
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
-      statusTabs, layerOpts, layer: this.state.layer, query: this.state.query,
+      statusTabs, layerOpts, layer: this.state.layer, boxRef: this.box, detailPad: this.state.narrow ? '4px 16px 16px 16px' : '4px 16px 18px 64px',
       onLayer: e => this.setState({ layer: e.target.value }),
-      onQuery: e => this.setState({ query: e.target.value }),
-      clearFilters: () => this.setState({ status: 'all', layer: 'all', query: '' }),
-      jumpFailed: () => this.setState({ status: 'fail', layer: 'all', query: '' }),
-      rows, noRows: rows.length === 0, shown: rows.length,
+      clearFilters: () => this.setState({ status: 'all', layer: 'all' }),
+      jumpFailed: () => this.setState({ status: 'fail', layer: 'all' }),
+      rows, noRows: rows.length === 0, shown: rows.length, narrow: this.state.narrow, wide: !this.state.narrow,
     };
   }
 }

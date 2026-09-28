@@ -41,8 +41,8 @@ a{color:inherit}a:hover{color:inherit}
 <div style="display:flex;flex-direction:column;gap:14px;margin-top:auto">
 <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="3">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 26px;background:var(--surface);border:1px solid var(--line);border-radius:18px">
-<span style="display:flex;align-items:center;gap:10px;font-size:24px;color:var(--ink-3)"><span>{{ t.label }}</span><sc-if value="{{ t.sample }}" hint-placeholder-val="{{ false }}"><span style="font:500 14px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:2px 6px;border-radius:5px">SAMPLE</span></sc-if></span>
-<span style="font:500 52px/1 'Source Serif 4',serif;color:{{ t.ink }}">{{ t.value }}</span>
+<span style="display:flex;align-items:center;gap:10px;font-size:24px;color:{{ t.labelInk }};font-weight:{{ t.labelW }}"><sc-if value="{{ t.attn }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg></sc-if><span>{{ t.label }}</span></span>
+<span style="font:500 52px/1 'Source Serif 4',serif">{{ t.value }}</span>
 </div>
 </sc-for>
 </div>
@@ -54,7 +54,7 @@ a{color:inherit}a:hover{color:inherit}
 <span style="display:flex;align-items:center;gap:10px;padding:8px 18px;border-radius:99px;background:{{ c.st.tint }};color:{{ c.st.ink }};font-size:26px;font-weight:600"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="{{ c.st.d }}"></path></svg><span>{{ c.st.label }}</span></span>
 <span style="display:flex;align-items:center;gap:10px;font-size:24px;color:{{ c.whenInk }}"><span>{{ c.when }}</span><span>·</span><span style="font-family:'JetBrains Mono',monospace;font-size:22px">{{ c.sha }}</span></span>
 </div>
-<h2 style="margin:22px 0 0;display:flex;align-items:center;gap:18px;font:500 64px/1 'Source Serif 4',serif;letter-spacing:-.02em"><span>{{ c.name }}</span><sc-if value="{{ c.private }}" hint-placeholder-val="{{ false }}"><svg aria-label="Private repository" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if></h2>
+<h2 style="margin:22px 0 0;display:flex;align-items:center;gap:18px;font:500 64px/1 'Source Serif 4',serif;letter-spacing:-.02em"><span>{{ c.name }}</span><sc-if value="{{ c.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:10px;font:400 24px 'Public Sans',sans-serif;letter-spacing:0;color:var(--ink-3)"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private</span></sc-if></h2>
 <div style="display:flex;align-items:baseline;gap:16px;margin-top:26px"><span style="font:500 104px/1 'Source Serif 4',serif;letter-spacing:-.03em">{{ c.total }}</span><span style="font-size:26px;color:var(--ink-2)">tests</span></div>
 <div style="display:flex;gap:10px;margin-top:10px;font-size:26px;color:var(--ink-2)"><sc-for list="{{ c.subParts }}" as="sp" hint-placeholder-count="3"><span style="color:{{ sp.ink }};font-weight:{{ sp.w }}">{{ sp.t }}</span></sc-for></div>
 
@@ -71,8 +71,8 @@ a{color:inherit}a:hover{color:inherit}
 <div style="display:flex;flex-direction:column;gap:16px;margin-top:28px;font-size:24px">
 <span style="display:flex;align-items:center;gap:10px;font-size:22px;color:var(--ink-3)"><span>Line coverage</span><span style="width:3px;height:18px;background:var(--attn)"></span><span>floor</span></span>
 <sc-for list="{{ c.cov }}" as="v" hint-placeholder-count="2">
-<div style="display:grid;grid-template-columns:150px minmax(40px,1fr) 100px;align-items:center;column-gap:18px">
-<span style="color:var(--ink-3)">{{ v.m }}</span>
+<div style="display:grid;grid-template-columns:220px minmax(40px,1fr) 100px;align-items:center;column-gap:18px">
+<span style="font:22px 'JetBrains Mono',monospace;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
 <div style="position:relative;height:10px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};top:-6px;width:3px;height:22px;background:var(--attn)"></div></div>
 <b style="font-weight:600;text-align:right">{{ v.v }}</b>
 </div>
@@ -127,12 +127,12 @@ class Component extends DCLogic {
 
     const osto = { name: 'Ostomate2', private: false, st: ST.pass, frame: 'var(--line)', when: '4 min ago', whenInk: 'var(--ink-3)', sha: '0e2d0b4', total: '142',
       subParts: [part('0 failed ·'), part('0 skipped ·'), part('27 s')], failLine: '', failSub: '', showLayers: true,
-      layers: L([['Unit', 103, 'var(--layer-1)'], ['Integration', 29, 'var(--layer-2)'], ['Visual', 10, 'var(--layer-4)']]),
+      layers: L([['Unit', 103, 'var(--layer-1)'], ['Integration', 29, 'var(--layer-3)'], ['Visual', 10, 'var(--layer-2)']]),
       cov: [cov('shared', 92.0, 91), cov('composeApp', 94.3, 93)], health: healthy };
     const route = { name: 'RouteServe', private: true, st: ST.pass, frame: 'var(--line)', when: '2 h ago', whenInk: 'var(--ink-3)', sha: 'c238574', total: '1,048',
       subParts: [part('0 failed ·'), part('0 skipped ·'), part('29 s')], failLine: '', failSub: '', showLayers: true,
       layers: L([['Unit', 608, 'var(--layer-1)'], ['Component', 165, 'var(--layer-2)'], ['Integration', 3, 'var(--layer-3)'], ['API', 269, 'var(--layer-4)']]),
-      cov: [cov('backend', 96.1, 80), cov('mobile', 96.1, 80), cov('shared', 100, 80)], health: healthy };
+      cov: [cov('apps/backend', 96.1, 80), cov('apps/mobile', 96.1, 80), cov('packages/shared', 100, 80)], health: healthy };
 
     const row = (st, project, branch, count, when, x = {}) => ({ st, project, branch, count, when, countInk: 'var(--ink-2)', bg: 'var(--surface)', ...x });
     let feed = [
@@ -143,9 +143,9 @@ class Component extends DCLogic {
     let overall = { label: 'All projects passing', ink: 'var(--pass)', tint: 'var(--pass-tint)', d: 'm8 12 3 3 5-6' };
     let heroTotal = '1,190', heroInk = 'inherit', heroNote = '100% passing across two projects. 0 skipped or disabled.';
     let tiles = [
-      { label: 'Pass rate', value: '100%', sample: false, ink: 'inherit' },
-      { label: 'Projects reporting', value: '2', sample: false, ink: 'inherit' },
-      { label: 'Green streak', value: '41', sample: false, ink: 'inherit' },
+      { label: 'Pass rate', value: '100%' },
+      { label: 'Projects reporting', value: '2' },
+      { label: 'Green streak', value: '41' },
     ];
     let lastReport = 'Last report 4 min ago';
 
@@ -154,16 +154,17 @@ class Component extends DCLogic {
         failLine: 'HomeViewModelTest › rendersToday', failSub: 'Failed on iOS simulator, passed on JVM' });
       overall = { label: '1 project failing', ink: 'var(--fail)', tint: 'var(--fail-tint)', d: 'm15 9-6 6M9 9l6 6' };
       heroNote = '1 failing on Ostomate2’s latest run. 0 skipped or disabled.';
-      tiles[0] = { label: 'Pass rate', value: '99.9%', sample: false, ink: 'inherit' };
-      tiles[2] = { label: 'Green streak', value: '0', sample: false, ink: 'var(--fail)' };
+      tiles[0] = { label: 'Pass rate', value: '99.9%' };
+      tiles[2] = { label: 'Green streak', value: '0' };
       feed = [row(ST.fail, 'Ostomate2', 'main', '1 failed', '4 min ago', { countInk: 'var(--fail)', bg: 'var(--fail-tint)' }), feed[1], row(ST.pass, 'Ostomate2', 'main', '142 tests', '6 h ago')];
     } else if (sc === 'stale project') {
       Object.assign(route, { when: '12 days ago', whenInk: 'var(--attn)', frame: 'var(--attn)', health: { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0' } });
       overall = { label: '1 project silent', ink: 'var(--attn)', tint: 'var(--attn-tint)', d: 'M12 7v5l3 2' };
-      tiles[1] = { label: 'Projects reporting', value: '1 of 2', sample: false, ink: 'var(--attn)' };
+      tiles[1] = { label: '1 silent 12 days', value: '1 of 2', attn: true, sample: false, labelInk: 'var(--attn)', labelW: 600 };
       feed[1] = { ...feed[1], when: '12 days ago' };
     }
 
+    tiles = tiles.map(t => Object.assign({ attn: false, sample: false }, t, { labelInk: t.attn ? 'var(--attn)' : 'var(--ink-3)', labelW: t.attn ? 600 : 400 }));
     const p2 = n => String(n).padStart(2, '0');
     const d = this.state.now;
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 14, height: 14, borderRadius: '50%', flex: 'none', boxSizing: 'border-box', background: live ? 'var(--pass)' : 'transparent', border: live ? 'none' : '2px solid var(--ink-3)', color: 'var(--pass)', animation: live ? 'tpPulse 2.4s ease-out infinite' : 'none' } });

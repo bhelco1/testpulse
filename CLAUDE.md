@@ -73,7 +73,7 @@ npm run format:check   Prettier, check only
 npm run typecheck      tsc --noEmit
 npm run test           Vitest unit tests with coverage (90% lines floor)
 npm run check:secrets  fail if any tracked path looks like a secret
-npm run check:contrast fail if a design token text pair is under WCAG AA 4.5:1
+npm run check:contrast fail if a design token pair is under WCAG AA (4.5:1 text, 3:1 graphics)
 npm run test:e2e       Playwright
 npm run db:reset       reset local database and apply migrations (requires `supabase start`)
 npm run test:int       Vitest integration tests (requires `supabase start`)

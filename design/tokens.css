@@ -30,8 +30,8 @@
   --font-mono: 'JetBrains Mono', ui-monospace, monospace; /* SHAs, test names, report keys, eyebrow labels */
   /* size / line-height · desktop → phone (≤640px) */
   --text-hero: 500 clamp(88px, 11vw, 152px)/.92 var(--font-serif);  /* letter-spacing -.04em; kiosk 200px */
-  --text-count: 500 56px/1 var(--font-serif);    /* phone 44 */
-  --text-title: 500 42px/1.05 var(--font-serif); /* phone 32; -.02em */
+  --text-count: 500 clamp(44px, 4.4vw, 56px)/1 var(--font-serif); /* 56 at 1280, 44 at 390; kiosk 104 */
+  --text-title: 500 clamp(32px, 3.4vw, 42px)/1.05 var(--font-serif); /* 42 at 1280, 32 at 390; -.02em; kiosk 64 */
   --text-stat: 500 40px/1.1 var(--font-serif);   /* phone 32 */
   --text-h1: 500 clamp(38px, 5vw, 58px)/1.06 var(--font-serif); /* -.03em */
   --text-h2: 500 30px/1.2 var(--font-serif);     /* phone 26 */
@@ -46,7 +46,8 @@
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
   --space-7: 32px; --space-8: 40px; --space-9: 52px; --space-10: 64px; --space-11: 80px;
   /* radius */
-  --radius-xs: 4px;   /* tags, markers */
+  --radius-xs: 4px;   /* markers, pyramid bars, SAMPLE tags */
+  --radius-tag: 6px;  /* stack tags, filter tabs, switcher items */
   --radius-sm: 10px;  /* buttons, inputs */
   --radius-md: 12px;  /* inset panels, rows */
   --radius-lg: 16px;  /* tiles */
@@ -60,6 +61,9 @@
   /* layout */
   --page-max: 1280px;
   --page-gutter: clamp(20px, 4vw, 56px);
+  --pad-card-x: clamp(20px, 2.4vw, 30px); /* ProjectCard horizontal padding */
+  --chart-axis: 12px;  /* fixed at every width */
+  --chart-value: 13px; /* 600 */
   --target-min: 44px;
 }
 
@@ -75,6 +79,11 @@
   --shadow-menu: 0 16px 40px -12px rgba(28,26,23,.22);
 }
 
+/* Theme change: only these properties, only while html[data-theme-switching] is set (200 ms after the toggle), and never for reduced-motion users. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme-switching] * { transition: background-color var(--motion-base) ease, border-color var(--motion-base) ease, color var(--motion-base) ease, fill var(--motion-base) ease, stroke var(--motion-base) ease !important; }
+}
+@keyframes tp-shimmer { 0% { opacity: .55 } 50% { opacity: 1 } 100% { opacity: .55 } }
 @keyframes tp-pulse { 0% { box-shadow: 0 0 0 0 currentColor } 70% { box-shadow: 0 0 0 7px transparent } 100% { box-shadow: 0 0 0 0 transparent } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
 

@@ -123,11 +123,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span><span style="display:flex;align-items:center;gap:8px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>12 minutes ago · main · <span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">8d3e1a2</span></span></div>
 <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px"><span style="font:500 64px/1 'Source Serif 4',serif">{{ selfTotal }}</span><span style="font-size:15px;color:var(--ink-2)">tests · 0 failed · 0 skipped · 1m 48s</span></div>
 <div style="display:flex;flex-direction:column;gap:6px;margin-top:24px">
-<sc-for list="{{ selfPyramid }}" as="l" hint-placeholder-count="4">
-<div style="display:grid;grid-template-columns:100px minmax(0,1fr) 56px;align-items:center;gap:12px;font-size:14px"><span style="text-align:right;color:var(--ink-2)">{{ l.name }}</span><div style="display:flex;justify-content:center"><div style="width:{{ l.w }};min-width:8px;height:30px;border-radius:4px;background:{{ l.bg }}"></div></div><b style="font-weight:600">{{ l.count }}</b></div>
+<sc-for list="{{ selfPyramid }}" as="l" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr) 120px;align-items:center;gap:16px;font-size:14px"><span style="text-align:right;color:var(--ink-2)">{{ l.name }}</span><div style="display:flex;justify-content:center"><div style="width:{{ l.w }};min-width:6px;height:30px;border-radius:4px;background:{{ l.bg }}"></div></div><span style="display:flex;align-items:baseline;gap:8px;white-space:nowrap"><b style="font-weight:600">{{ l.count }}</b><span style="font-size:13px;color:var(--ink-3)">{{ l.pct }}</span></span></div>
 </sc-for>
 </div>
-<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Accessibility checks run inside the Playwright suite, one per public page, and are counted with E2E.</p>
+<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Only spec §8 layers are counted. Accessibility checks run inside the Playwright suite and count as E2E; the reporter contract tests count as Integration.</p>
 <a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:6px;font-size:14.5px;font-weight:600">Full project page →</a>
 </article>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
@@ -172,10 +172,10 @@ class Component extends DCLogic {
 
     const layers = [
       ['Unit', ['Vitest'], 'Parsers against real fixtures, layer resolution, stat calculations, alert rules, token and key utilities, bot classification.', 'var(--layer-1)'],
-      ['Integration', ['Vitest', 'local Supabase'], 'The ingestion endpoint end to end against real Postgres: idempotent retries, transactions, rollups, and row-level security checked with an anonymous client. The prune job is checked against a seeded database.', 'var(--layer-2)'],
+      ['Integration', ['Vitest', 'local Supabase'], 'The ingestion endpoint end to end against real Postgres: idempotent retries, transactions, rollups, and row-level security checked with an anonymous client. The prune job is checked against a seeded database.', 'var(--layer-3)'],
       ['E2E', ['Playwright'], 'A seeded database behind the landing, project, run and test-history pages; visibility rules in the rendered UI; the tracked-link flow; admin sign-in.', 'var(--layer-3)'],
-      ['Accessibility', ['axe', 'Playwright'], 'Every public page, on every pull request.', 'var(--layer-4)'],
-      ['Contract', ['Vitest'], 'The reporter script that projects copy into their CI, run against a local server.', 'transparent'],
+      ['Accessibility', ['axe', 'Playwright'], 'Every public page, on every pull request. Counted with E2E.', 'transparent'],
+      ['Contract', ['Vitest'], 'The reporter script that projects copy into their CI, run against a local server. Counted as Integration.', 'transparent'],
     ].map(([name, tools, scope, swatch]) => ({ name, tools, scope, swatch, swBorder: swatch === 'transparent' ? '1.5px solid var(--line-strong)' : 'none' }));
 
     const phases = [
@@ -185,9 +185,9 @@ class Component extends DCLogic {
       ['Phase 7', 'Self-reporting and launch', 'Planned', 'var(--ink-3)'],
     ].map(([n, label, status, ink]) => ({ n, label, status, ink }));
 
-    const sp = [['E2E', 38, 'var(--layer-3)'], ['Contract', 6, 'var(--layer-4)'], ['Integration', 64, 'var(--layer-2)'], ['Unit', 214, 'var(--layer-1)']];
+    const sp = [['E2E', 38, 'var(--layer-3)'], ['Integration', 70, 'var(--layer-3)'], ['Unit', 214, 'var(--layer-1)']];
     const mx = 214;
-    const selfPyramid = sp.map(([name, c, bg]) => ({ name, count: String(c), w: (c / mx * 100) + '%', bg }));
+    const selfPyramid = sp.map(([name, c, bg]) => ({ name, count: String(c), pct: Math.round(c / 322 * 100) + '%', w: (c / mx * 100) + '%', bg }));
     const selfCov = [['app', 93.4], ['ingest', 96.8], ['parsers', 98.1]].map(([m, v]) => ({ m, v: v.toFixed(1) + '%', w: v + '%' }));
 
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });

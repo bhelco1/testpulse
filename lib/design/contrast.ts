@@ -1,11 +1,15 @@
 export type Theme = 'dark' | 'light';
 
+export type PairKind = 'text' | 'graphic';
+
 export interface TokenPair {
   readonly foreground: string;
   readonly background: string;
+  readonly kind: PairKind;
 }
 
 export interface PairResult extends TokenPair {
+  readonly required: number;
   readonly ratio: number | null;
   readonly passes: boolean;
   readonly problem?: string;
@@ -15,23 +19,47 @@ export interface ThemeReport {
   readonly theme: Theme;
   readonly results: readonly PairResult[];
   readonly failures: readonly PairResult[];
-  readonly lowest: PairResult | undefined;
+  readonly lowest: Readonly<Record<PairKind, PairResult | undefined>>;
 }
 
 // WCAG 2.x SC 1.4.3 minimum for normal-size text.
 export const CONTRAST_AA_TEXT = 4.5;
+// WCAG 2.x SC 1.4.11 minimum for graphical objects and UI component boundaries.
+export const CONTRAST_AA_GRAPHIC = 3;
+
+const REQUIRED_RATIO: Record<PairKind, number> = {
+  text: CONTRAST_AA_TEXT,
+  graphic: CONTRAST_AA_GRAPHIC,
+};
 
 const SURFACES = ['--bg', '--surface', '--inset', '--raised'] as const;
 const INKS = ['--ink', '--ink-2', '--ink-3'] as const;
 const STATUSES = ['--pass', '--fail', '--attn', '--neutral'] as const;
 
+const text = (foreground: string, background: string): TokenPair => ({
+  foreground,
+  background,
+  kind: 'text',
+});
+const graphic = (foreground: string, background: string): TokenPair => ({
+  foreground,
+  background,
+  kind: 'graphic',
+});
+
 export const REQUIRED_PAIRS: readonly TokenPair[] = [
-  ...INKS.flatMap((foreground) => SURFACES.map((background) => ({ foreground, background }))),
+  ...INKS.flatMap((foreground) => SURFACES.map((background) => text(foreground, background))),
   ...STATUSES.flatMap((foreground) =>
-    [...SURFACES, `${foreground}-tint`].map((background) => ({ foreground, background })),
+    [...SURFACES, `${foreground}-tint`].map((background) => text(foreground, background)),
   ),
-  { foreground: '--on-ink', background: '--ink' },
-  { foreground: '--ink-2', background: '--fail-tint' },
+  text('--ink-3', '--pass-tint'),
+  text('--ink-3', '--fail-tint'),
+  text('--ink-2', '--fail-tint'),
+  text('--on-ink', '--fail'),
+  text('--on-ink', '--ink'),
+  graphic('--attn', '--surface'),
+  graphic('--layer-4', '--surface'),
+  graphic('--pass', '--surface'),
 ];
 
 const THEME_SELECTORS: Record<Theme, string> = {
@@ -133,33 +161,42 @@ function tokenProblem(tokens: ReadonlyMap<string, string>, name: string): string
 export function evaluatePairs(
   tokens: ReadonlyMap<string, string>,
   pairs: readonly TokenPair[] = REQUIRED_PAIRS,
-  threshold: number = CONTRAST_AA_TEXT,
 ): PairResult[] {
-  return pairs.map(({ foreground, background }) => {
+  return pairs.map((pair) => {
+    const { foreground, background } = pair;
+    const required = REQUIRED_RATIO[pair.kind];
     const problems = [tokenProblem(tokens, foreground), tokenProblem(tokens, background)].filter(
       (problem) => problem !== undefined,
     );
     if (problems.length > 0) {
-      return { foreground, background, ratio: null, passes: false, problem: problems.join('; ') };
+      return { ...pair, required, ratio: null, passes: false, problem: problems.join('; ') };
     }
     // Both values were just checked to be present and valid hex.
     const ratio = contrastRatio(tokens.get(foreground) as string, tokens.get(background) as string);
-    return { foreground, background, ratio, passes: ratio >= threshold };
+    return { ...pair, required, ratio, passes: ratio >= required };
   });
+}
+
+function lowestOf(results: readonly PairResult[], kind: PairKind): PairResult | undefined {
+  return results
+    .filter((result) => result.kind === kind && result.ratio !== null)
+    .reduce<PairResult | undefined>(
+      (low, result) =>
+        low === undefined || (result.ratio ?? Infinity) < (low.ratio ?? Infinity) ? result : low,
+      undefined,
+    );
 }
 
 export function checkContrast(css: string): ThemeReport[] {
   const tokens = parseThemeTokens(css);
   return (['dark', 'light'] as const).map((theme) => {
     const results = evaluatePairs(tokens[theme]);
-    const lowest = results
-      .filter((result) => result.ratio !== null)
-      .reduce<PairResult | undefined>(
-        (low, result) =>
-          low === undefined || (result.ratio ?? Infinity) < (low.ratio ?? Infinity) ? result : low,
-        undefined,
-      );
-    return { theme, results, failures: results.filter((result) => !result.passes), lowest };
+    return {
+      theme,
+      results,
+      failures: results.filter((result) => !result.passes),
+      lowest: { text: lowestOf(results, 'text'), graphic: lowestOf(results, 'graphic') },
+    };
   });
 }
 

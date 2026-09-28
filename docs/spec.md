@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.20, 2026-09-25. Status: Phases 0 to 4 complete; design track in progress.
+Version 0.21, 2026-09-26. Status: Phases 0 to 4 complete; design track in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -422,7 +422,7 @@ All trend stats use default-branch runs with `source = ci` unless stated. Backfi
 | Pass rate | passed / (passed + failed + error), latest run and 30/90-day trend. Skipped excluded and shown separately |
 | Test pyramid | Count of distinct tests per layer in the latest default-branch run |
 | Coverage | Latest lines % per module, plotted against that module's `coverage_floors` value. Lines % is `lines_covered / lines_total` when the counts are present, else `lines_pct` |
-| Suite duration | Sum of report durations per run, trended; slowest 10 tests listed |
+| Suite duration | Sum of report durations per run, trended over CI runs only, since backfilled runs have `duration_ms` 0; slowest 10 tests listed |
 | Test growth | Distinct tests per week since first report |
 | Flaky test | A test with both a passing and a failing result on the same `commit_sha` and platform (across attempts or re-runs) within 30 days. Flake rate = flaky tests / total tests |
 | Flip rate | Secondary signal: tests that changed status between consecutive default-branch runs more than twice in 30 days |
@@ -668,8 +668,9 @@ Evidence recorded 2026-09-25:
 - Design brief as the opening prompt (manual): Bobby confirmed on 2026-09-25 that `docs/design-brief.md` was added to the Claude Design project as a reference file, and that the opening prompt he used there was written from that brief.
 - Design system and all screens reviewed (manual): Bobby reviewed the design system and every screen on desktop and phone, in light and dark, on 2026-09-25, after the v2 corrections below.
 - v2 corrections to the first export: the landing tiles were brought in line with section 11, with Skipped or disabled replaced by Runs in last 30 days and the skipped count moved to the Pass rate sub-line; light `--pass` was darkened from `#1b7a3d` to `#197339` because `--pass` on `--raised` was 4.41:1; the data map was corrected to read runs through `runs_public`, to fall back to `lines_pct` for coverage, and to leave the live-update transport to Phase 5; admin tracked links are shown as `<site origin>/v/<token>`.
-- Token contrast: `npm run check:contrast` reads `design/tokens.css` and checks 34 text pairs per theme at 4.5:1: each of `--ink`, `--ink-2`, `--ink-3` on each of `--bg`, `--surface`, `--inset`, `--raised`; each status colour on those four surfaces and on its own tint; `--on-ink` on `--ink`; and `--ink-2` on `--fail-tint`. A missing or malformed token fails the check. Lowest ratios: dark `--fail` on `--fail-tint` 6.39:1, light `--pass` on `--raised` 4.84:1. It runs as the `Check design token contrast` step of the CI `checks` job. `lib/design/contrast.test.ts` proves every pair passes in both themes, that the v1 light `--pass` is caught at 4.41:1 on `--raised`, and that `design/contrast.md` lists exactly the required pairs with the computed ratios.
-- Handoff bundle: the approved v2 export is committed under `design/` as exported. Tokens as CSS variables and the core components are still to do.
+- v3 handoff (2026-09-26): v2 contradicted itself across the Design System page, `components.md` and the pages. This was found while building the foundation components, then confirmed by a full audit of the data components. v3 makes the Design System page canonical, answers 74 numbered items in the README's "Changes in v3", and every page matches it.
+- Token contrast: `npm run check:contrast` reads `design/tokens.css` and checks, per theme, 37 text pairs at 4.5:1 (WCAG 1.4.3) and 3 graphic pairs at 3:1 (WCAG 1.4.11). Text: each of `--ink`, `--ink-2`, `--ink-3` on each of `--bg`, `--surface`, `--inset`, `--raised`; each status colour on those four surfaces and on its own tint; `--ink-3` on `--pass-tint` and `--fail-tint`; `--ink-2` on `--fail-tint`; `--on-ink` on `--fail` and on `--ink`. Graphics: `--attn`, `--layer-4` and `--pass` on `--surface`. A missing or malformed token fails the check. Lowest text pairs: dark `--ink-3` on `--pass-tint` 5.90:1, light `--pass` on `--raised` 4.84:1. Lowest graphic pairs: `--layer-4` on `--surface`, dark 3.27:1, light 3.47:1. It runs as the `Check design token contrast` step of the CI `checks` job. `lib/design/contrast.test.ts` proves every pair passes in both themes, that a graphic pair is judged at 3:1 and the same colours as text at 4.5:1, that the v1 light `--pass` is caught at 4.41:1 on `--raised`, and that `design/contrast.md` lists exactly the required pairs with the computed ratios and thresholds.
+- Handoff bundle: the approved v3 export, which replaced v2, is committed under `design/` as exported. Tokens as CSS variables and the core components are still to do.
 
 ### Phase 5: Public site
 
@@ -706,6 +707,7 @@ Evidence recorded 2026-09-25:
 - A third reporting project built on an open source codebase with a Playwright framework written from scratch.
 - A `gate_events` result type for agent-behavior gating data (Dev Agent/Gatekeeper), which does not fit pass/fail test cases.
 - Public README badge endpoint (`/api/v1/badge/[slug].svg`).
+- Commit subject on run titles (optional `runs.commit_subject` from the reporter).
 
 ## 18. Open questions
 
@@ -714,7 +716,6 @@ Evidence recorded 2026-09-25:
 | 1 | Domain name | Decide before Phase 7; `testpulse` plus an available TLD |
 | 2 | Should routeserve test names be public, or only counts? | Names shown, failures hidden (section 9) |
 | 3 | Email notifications for alerts | Off; admin page only |
-| 4 | Show PR runs publicly, or default branch only? | All runs stored; public pages show default branch, with PR runs on the run list behind a filter |
 | 5 | Personalized greeting on tracked links | Off at launch; `lead_project_slug` ordering only |
 
 ## 19. Decision log
@@ -776,6 +777,9 @@ Evidence recorded 2026-09-25:
 | 2026-09-24 | Flakiness is measured on default-branch runs only | Section 11 applies default-branch runs to every stat unless it states otherwise, and the flaky-test definition states no exception |
 | 2026-09-24 | A test passing on one platform and failing on another is not flaky. Flakiness compares results for the same test on the same platform and commit, across runs and attempts | That disagreement is what the cross-platform parity stat reports. Ostomate2 reports the same test from the JVM and the iOS simulator, and a deterministic iOS-only failure would otherwise read as flakiness |
 | 2026-09-24 | The "count" trend that backfill feeds is run count per day, not test count | Backfilled runs have no per-test rows, so a test-count trend would mean different things for the two sources |
+| 2026-09-26 | Run titles are fallback titles chosen by `runs.event` (the design shows "Push to {branch}", "Pull request #{n}", "Scheduled run"). Commit messages are not stored. The pull request number is not stored either and `workflow_dispatch` has no designed title; both go back to design before the run components are built | Storing a commit subject would change the schema, the API contract, and both reporting projects' reporters, and adds another untrusted free-text field. Listed as a later candidate (section 17) |
+| 2026-09-26 | Suite duration trends read CI runs only; pass-rate, run-count and coverage trends include imported history | Imported history has no durations: backfill stores `duration_ms` 0, which would plot as runs taking no time |
+| 2026-09-26 | The public landing feed shows default-branch runs only; pull request runs appear on the project page run list under an "All branches" filter | Settles open question 4 on its stated default, which is removed from section 18 |
 
 ---
 

@@ -10,6 +10,7 @@
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="./tp-kit.js"></script>
 <style>
 body{margin:0;background:#121110}
 a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
@@ -55,7 +56,28 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="width:min(100%,300px);height:120px;border-radius:14px;background:var(--raised);margin:4px 0 20px"></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px"><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div></div>
 <div style="width:140px;height:28px;border-radius:8px;background:var(--raised);margin-top:36px"></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px"><div style="height:460px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:460px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"></div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px"><article aria-busy="true" aria-label="Loading project" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(20px,2.4vw,30px) 18px;display:flex;flex-direction:column;animation:tpShimmer 1.6s ease-in-out infinite">
+<div style="display:flex;justify-content:space-between"><div style="width:92px;height:26px;border-radius:99px;background:var(--raised)"></div><div style="width:180px;height:14px;border-radius:4px;background:var(--raised);align-self:center"></div></div>
+<div style="width:55%;height:38px;border-radius:6px;background:var(--raised);margin-top:18px"></div>
+<div style="width:85%;height:14px;border-radius:4px;background:var(--raised);margin-top:12px"></div>
+<div style="width:40%;height:48px;border-radius:6px;background:var(--raised);margin-top:22px"></div>
+<div style="height:8px;border-radius:99px;background:var(--raised);margin-top:20px"></div>
+<div style="height:6px;border-radius:99px;background:var(--raised);margin-top:30px"></div>
+<div style="height:6px;border-radius:99px;background:var(--raised);margin-top:18px"></div>
+<div style="height:78px;border-radius:12px;background:var(--inset);margin-top:22px"></div>
+<div style="height:14px;width:60%;border-radius:4px;background:var(--raised);margin-top:30px"></div>
+</article><article aria-busy="true" aria-label="Loading project" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(20px,2.4vw,30px) 18px;display:flex;flex-direction:column;animation:tpShimmer 1.6s ease-in-out infinite">
+<div style="display:flex;justify-content:space-between"><div style="width:92px;height:26px;border-radius:99px;background:var(--raised)"></div><div style="width:180px;height:14px;border-radius:4px;background:var(--raised);align-self:center"></div></div>
+<div style="width:55%;height:38px;border-radius:6px;background:var(--raised);margin-top:18px"></div>
+<div style="width:85%;height:14px;border-radius:4px;background:var(--raised);margin-top:12px"></div>
+<div style="width:40%;height:48px;border-radius:6px;background:var(--raised);margin-top:22px"></div>
+<div style="height:8px;border-radius:99px;background:var(--raised);margin-top:20px"></div>
+<div style="height:6px;border-radius:99px;background:var(--raised);margin-top:30px"></div>
+<div style="height:6px;border-radius:99px;background:var(--raised);margin-top:18px"></div>
+<div style="height:78px;border-radius:12px;background:var(--inset);margin-top:22px"></div>
+<div style="height:14px;width:60%;border-radius:4px;background:var(--raised);margin-top:30px"></div>
+</article></div>
+<div style="max-width:720px;margin-top:4px"><div aria-busy="true" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;animation:tpShimmer 1.6s ease-in-out infinite"><sc-for list="{{ three }}" as="k" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:16px;padding:14px 16px"><div style="width:104px;height:14px;border-radius:4px;background:var(--raised)"></div><div style="flex:1"><div style="width:70%;height:14px;border-radius:4px;background:var(--raised)"></div><div style="width:45%;height:10px;border-radius:4px;background:var(--raised);margin-top:8px"></div></div><div style="width:90px;height:14px;border-radius:4px;background:var(--raised)"></div></div></sc-for></div></div>
 <span style="font-size:14px;color:var(--ink-3);margin-top:8px">Loading results…</span>
 </div>
 </sc-if>
@@ -69,10 +91,10 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
 <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="5">
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px">
-<div style="display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--ink-3)"><span>{{ t.label }}</span><sc-if value="{{ t.sample }}" hint-placeholder-val="{{ false }}"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px;align-self:flex-start">SAMPLE</span></sc-if></div>
-<div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px;color:{{ t.ink }}">{{ t.value }}</div>
-<div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ t.sub }}</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)">
+<div style="font-size:14px;color:var(--ink-3)">{{ t.label }}</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px">{{ t.value }}</div>
+<sc-if value="{{ t.attn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--attn);margin-top:2px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><span>{{ t.sub }}</span></div></sc-if>
+<sc-if value="{{ t.plain }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ t.sub }}</div></sc-if>
 </div>
 </sc-for>
 </div>
@@ -80,39 +102,33 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin:48px 0 16px"><h2 style="margin:0;font:500 30px 'Source Serif 4',serif;letter-spacing:-.01em">Projects</h2><span style="font-size:14px;color:var(--ink-3)">Latest default-branch run</span></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px">
 <sc-for list="{{ cards }}" as="c" hint-placeholder-count="2">
-<article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(20px,2.4vw,30px) 0;display:flex;flex-direction:column;min-width:0">
+<article data-kit="card" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(20px,2.4vw,30px) 0;display:flex;flex-direction:column;min-width:0;box-shadow:var(--shadow-card)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px">
-<span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:{{ c.st.tint }};color:{{ c.st.ink }};font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ c.st.dash }}"></circle><path d="{{ c.st.d }}"></path></svg>{{ c.st.label }}</span>
-<span style="display:flex;align-items:center;gap:6px;color:var(--ink-3)"><span>{{ c.when }}</span><span>·</span><span>main</span><span>·</span><a href="#" style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.sha }}</a></span>
+<span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:{{ c.st.tint }};color:{{ c.st.ink }};font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ c.st.r }}" stroke-dasharray="{{ c.st.dash }}"></circle><path d="{{ c.st.d }}"></path></svg><span>{{ c.st.w }}</span></span>
+<sc-if value="{{ c.hasRun }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3)"><span style="color:{{ c.whenInk }}">{{ c.when }}</span><span>·</span><span>{{ c.branch }}</span><span>·</span><sc-if value="{{ c.shaLink }}" hint-placeholder-val="{{ true }}"><a href="#" style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.sha }}</a></sc-if><sc-if value="{{ c.shaPlain }}" hint-placeholder-val="{{ false }}"><span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ c.sha }}</span></sc-if></span></sc-if>
 </div>
-<h3 style="margin:18px 0 6px;font:500 clamp(34px,3.4vw,42px)/1.05 'Source Serif 4',serif;letter-spacing:-.02em;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px"><a href="#" style="text-decoration:none">{{ c.name }}</a><sc-if value="{{ c.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font:500 13px 'Public Sans',sans-serif;color:var(--ink-2);background:var(--neutral-tint);padding:5px 10px;border-radius:99px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if></h3>
-<p style="margin:0 0 20px;font-size:15.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ c.desc }}</p>
-<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:18px"><span style="font:500 56px/1 'Source Serif 4',serif;color:{{ c.totalInk }}">{{ c.total }}</span><span style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:15px;color:var(--ink-2)"><sc-for list="{{ c.subParts }}" as="sp" hint-placeholder-count="4"><span style="color:{{ sp.ink }};font-weight:{{ sp.w }}">{{ sp.t }}</span></sc-for></span></div>
-
-<sc-if value="{{ c.hasLayers }}" hint-placeholder-val="{{ true }}">
-<div style="display:flex;height:8px;gap:3px;border-radius:99px;overflow:hidden;margin-bottom:8px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:3px;background:{{ l.bg }}"></div></sc-for></div>
-<div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--ink-2);margin-bottom:22px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><span style="display:flex;gap:5px"><span>{{ l.name }}</span><span>{{ l.label }}</span></span></sc-for></div>
-</sc-if>
-<sc-if value="{{ c.emptyNote }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin-bottom:22px;border-radius:12px;background:var(--attn-tint);font-size:14.5px;line-height:1.55;color:var(--ink)"><svg style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle><path d="M8 12h8"></path></svg><span>{{ c.emptyNote }}</span></div>
-</sc-if>
-
-<div style="display:flex;flex-direction:column;gap:14px;font-size:14px">
+<h3 style="margin:18px 0 6px;font:500 clamp(32px,3.4vw,42px)/1.05 'Source Serif 4',serif;letter-spacing:-.02em;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px"><a href="#" style="text-decoration:none">{{ c.name }}</a><sc-if value="{{ c.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font:500 13px 'Public Sans',sans-serif;color:var(--ink-2);background:var(--neutral-tint);padding:5px 10px;border-radius:99px;letter-spacing:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if></h3>
+<p style="margin:0 0 20px;font-size:15.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ c.tagline }}</p>
+<sc-if value="{{ c.hasRun }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:18px"><span style="font:500 clamp(44px,4.4vw,56px)/1 'Source Serif 4',serif;color:{{ c.totalInk }}">{{ c.total }}</span><span style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:15px;color:var(--ink-2)"><sc-for list="{{ c.subParts }}" as="sp" hint-placeholder-count="5"><span style="color:{{ sp.ink }};font-weight:{{ sp.w }}">{{ sp.t }}</span></sc-for></span></div></sc-if>
+<sc-if value="{{ c.notReporting }}" hint-placeholder-val="{{ false }}"><p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:var(--ink-2)">Registered. Results appear here after its CI posts the first report.</p></sc-if>
+<sc-if value="{{ c.hasFailing }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ c.failName }}</span><span style="display:flex;gap:10px;font-size:13px;color:var(--ink-3)"><span>{{ c.failPlat }}</span><sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}"><span>{{ c.more }}</span></sc-if></span></a></sc-if>
+<sc-if value="{{ c.hasLayers }}" hint-placeholder-val="{{ true }}"><div style="display:flex;height:8px;gap:3px;border-radius:99px;overflow:hidden;margin-bottom:8px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:3px;background:{{ l.bg }}"></div></sc-for></div><div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--ink-2);margin-bottom:22px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><span style="display:flex;gap:5px"><span>{{ l.label }}</span><span>{{ l.countText }}</span></span></sc-for></div></sc-if>
+<sc-if value="{{ c.emptyNote }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin-bottom:22px;border-radius:12px;background:var(--attn-tint);font-size:14.5px;line-height:1.55;color:var(--ink)"><svg style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle><path d="M8 12h8"></path></svg><span>{{ c.emptyNote }}</span></div></sc-if>
+<sc-if value="{{ c.hasCov }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:14px">
 <sc-for list="{{ c.cov }}" as="v" hint-placeholder-count="2">
-<div style="display:grid;grid-template-columns:96px minmax(40px,1fr) auto;align-items:center;column-gap:14px">
-<span style="color:var(--ink-3)">{{ v.m }}</span>
-<div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:{{ v.fill }}"></div><div style="position:absolute;left:{{ v.fl }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
-<span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
+<div style="display:grid;grid-template-columns:128px minmax(40px,1fr) auto;align-items:center;column-gap:14px;font-size:14px">
+<span style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
+<div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
+<span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
 </div>
 </sc-for>
-</div>
-
-<div style="margin-top:22px;padding:14px 16px;border-radius:12px;background:var(--inset);font:13px/1.8 'JetBrains Mono',monospace;color:var(--ink-2)">
+</div></sc-if>
+<sc-if value="{{ c.noCov }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:var(--ink-3)">No coverage reported</div></sc-if>
+<sc-if value="{{ c.hasReports }}" hint-placeholder-val="{{ true }}"><div style="margin-top:22px;padding:14px 16px;border-radius:12px;background:var(--inset);font:13px/1.8 'JetBrains Mono',monospace;color:var(--ink-2)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-family:'Public Sans',sans-serif;font-size:13px;color:var(--ink-3);margin-bottom:4px"><span>{{ c.repHead }}</span><span>{{ c.repSide }}</span></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));column-gap:24px"><sc-for list="{{ c.reports }}" as="r" hint-placeholder-count="3"><span style="display:flex;justify-content:space-between;gap:12px;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis">{{ r.k }}</span><span style="color:{{ r.ink }}">{{ r.n }}</span></span></sc-for></div>
-</div>
-
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin-top:auto;padding:16px 0 18px;margin-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-3)"><span>{{ c.declared }}</span><span style="display:flex;align-items:center;gap:6px;color:{{ c.health.ink }};font-weight:{{ c.health.w }};flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.health.d }}"></path></svg>{{ c.health.label }}</span></div>
+</div></sc-if>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin-top:auto;padding:16px 0 18px;margin-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-3)"><span>{{ c.declared }}</span><span style="display:flex;align-items:center;gap:6px;margin-left:auto;color:{{ c.health.ink }};font-weight:600;font-size:14px;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ c.health.r }}" stroke-dasharray="{{ c.health.dash }}"></circle><path d="{{ c.health.d }}"></path></svg><span>{{ c.health.label }}</span></span></div>
 </article>
 </sc-for>
 </div>
@@ -122,18 +138,17 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;padding:16px 16px 10px"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">Recent runs</h2><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:{{ feedNoteInk }}">{{ liveDot }}<span>{{ feedNote }}</span></span></div>
 <div role="log" aria-live="polite" style="display:flex;flex-direction:column">
 <sc-for list="{{ feed }}" as="r" hint-placeholder-count="3">
-<a href="#" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:14px 16px;min-height:44px;border-radius:12px;background:{{ r.bg }};text-decoration:none">
-<span style="display:flex;align-items:center;gap:6px;width:92px;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg>{{ r.st.label }}</span>
+<a href="#" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:14px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:{{ r.bg }};text-decoration:none" style-hover="background:var(--raised)">
+<span style="display:flex;align-items:center;gap:6px;width:104px;flex:none;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ r.st.r }}" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.w }}</span></span>
 <div style="flex:1 1 220px;min-width:0">
-<div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;min-width:0"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3);font-weight:400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></div>
-<div style="display:flex;gap:6px;font-size:13px;color:var(--ink-3);margin-top:2px"><span>{{ r.project }}</span><span>·</span><span>{{ r.branch }}</span><span>·</span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;min-width:0"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3);font-weight:400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><sc-if value="{{ r.hasTitle }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></sc-if></div>
+<div style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:13px;color:var(--ink-3);margin-top:2px"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }}</span><span>·</span></sc-if><span>{{ r.branch }}</span><span>·</span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></div>
 </div>
-<span style="display:flex;gap:6px;font-size:14px;white-space:nowrap"><span style="color:{{ r.countInk }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
+<span style="display:flex;gap:6px;font-size:14px;white-space:nowrap"><span style="color:{{ r.countInk }};font-weight:{{ r.countW }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
 <span style="margin-left:auto;font-size:13px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span>
 </a>
 </sc-for>
 </div>
-<a href="#" style="display:flex;align-items:center;min-height:44px;padding:0 16px;font-size:14px;font-weight:600">All runs →</a>
 </section>
 <section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px clamp(20px,2.4vw,30px)">
 <h2 style="margin:0 0 14px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">About this site</h2>
@@ -150,59 +165,36 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;failed run&quot;,&quot;empty run&quot;,&quot;stale project&quot;,&quot;coverage below floor&quot;,&quot;live update&quot;,&quot;realtime disconnected&quot;,&quot;loading&quot;,&quot;error&quot;],&quot;default&quot;:&quot;healthy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null };
-  static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0', 'layer-1':'#1c1a17', 'layer-2':'#57524b', 'layer-3':'#7a746b', 'layer-4':'#8f897f' };
-  static ST = {
-    pass: { label: 'Passed', ink: 'var(--pass)', tint: 'var(--pass-tint)', d: 'm8 12 3 3 5-6', dash: 'none' },
-    fail: { label: 'Failed', ink: 'var(--fail)', tint: 'var(--fail-tint)', d: 'm15 9-6 6M9 9l6 6', dash: 'none' },
-    empty: { label: 'Empty', ink: 'var(--attn)', tint: 'var(--attn-tint)', d: 'M8 12h8', dash: '3.5 3' },
-  };
+  componentDidMount() { if (!window.TPKit) this.wait = setInterval(() => { if (window.TPKit) { clearInterval(this.wait); this.forceUpdate(); } }, 30); }
+  componentWillUnmount() { clearInterval(this.wait); }
   componentDidUpdate(prev) { if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null }); }
 
   renderVals() {
-    const L = Component.LIGHT, ST = Component.ST;
+    const K = window.TPKit;
     const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
-    const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
-    if (!dark) Object.keys(L).forEach(k => tv['--' + k] = L[k]);
     const sc = this.props.scenario ?? 'healthy';
     const live = sc !== 'realtime disconnected';
+    const base = { isLoading: sc === 'loading', isError: sc === 'error', isReady: sc !== 'loading' && sc !== 'error', six: [1, 2, 3], three: [1, 2, 3],
+      toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }), themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme' };
+    if (!K) return base;
 
-    const part = (t, ink, w) => ({ t, ink: ink || 'inherit', w: w || 400 });
-    const healthy = { label: 'Reporting healthy', ink: 'var(--pass)', d: 'M20 6 9 17l-5-5', w: 400 };
-    const cov = (m, v, f) => { const below = v < f; return { m, v: (v === 100 ? '100' : v.toFixed(1)) + '%', w: v + '%', fl: f + '%', below, fill: 'var(--ink)', ink: below ? 'var(--attn)' : 'inherit', floorInk: below ? 'var(--attn)' : 'var(--ink-3)', floorLabel: below ? `below floor ${f}%` : `floor ${f}%` }; };
-
-    const osto = {
-      name: 'Ostomate2', private: false, sha: '0e2d0b4', when: '4 minutes ago', st: ST.pass,
-      desc: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
-      total: '142', totalInk: 'inherit', subParts: [part('tests ·'), part('0 failed ·'), part('0 skipped ·'), part('27 s')],
-      hasLayers: true, emptyNote: '',
-      layers: [['Unit', 103, 'var(--layer-1)'], ['Integration', 29, 'var(--layer-2)'], ['Visual', 10, 'var(--layer-4)']].map(([name, n, bg]) => ({ name, n, label: String(n), bg })),
-      cov: [cov('shared', 92.0, 91), cov('composeApp', 94.3, 93)],
-      repHead: '4 reports in this run', repSide: 'JVM 142 · iOS simulator 132',
-      reports: [['android/shared/jvm', 82], ['ios/shared/ios-sim', 82], ['android/composeApp/jvm', 60], ['ios/composeApp/ios-sim', 50]].map(([k, n]) => ({ k, n: String(n), ink: 'var(--ink)' })),
-      declared: 'Not counted: 12 Maestro E2E flows, run in CI, not yet reported', health: healthy,
-    };
-    const route = {
-      name: 'RouteServe', private: true, sha: 'c238574', when: '2 hours ago', st: ST.pass,
-      desc: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
-      total: '1,048', totalInk: 'inherit', subParts: [part('tests ·'), part('0 failed ·'), part('0 skipped ·'), part('29 s')],
-      hasLayers: true, emptyNote: '',
-      layers: [['Unit', 608, 'var(--layer-1)'], ['Component', 165, 'var(--layer-2)'], ['Integration', 3, 'var(--layer-3)'], ['API', 269, 'var(--layer-4)']].map(([name, n, bg]) => ({ name, n, label: String(n), bg })),
-      cov: [cov('backend', 96.1, 80), cov('mobile', 96.1, 80), cov('shared', 100, 80)],
-      repHead: '3 reports in this run', repSide: 'node',
-      reports: [['test/apps/backend/node', 498], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]].map(([k, n]) => ({ k, n: String(n), ink: 'var(--ink)' })),
-      declared: 'Not counted: 13 Maestro E2E flows, authored, not yet executed', health: healthy,
-    };
-
-    const row = (st, title, project, branch, sha, count, count2, when, extra = {}) => ({ st, title, project, branch, sha, count, count2, when, countInk: 'inherit', bg: 'transparent', isNew: false, private: false, ...extra });
-    let feed = [
-      row(ST.pass, 'docs: BUG-10 verified on device', 'Ostomate2', 'main', '0e2d0b4', '142 tests', '· 27 s', '4 minutes ago', { bg: 'var(--raised)' }),
-      row(ST.pass, '', 'RouteServe', 'main', 'c238574', '1,048 tests', '· 29 s', '2 hours ago', { private: true }),
-      row(ST.fail, 'Pull request #52', 'Ostomate2', 'PR', 'a41f9c2', '1 failed', '· 141 of 142', 'yesterday', { countInk: 'var(--fail)' }),
+    const osto = { name: 'Ostomate2', tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
+      run: { status: 'passed', when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', total: 142, failed: 0, skipped: 0, dur: '27 s' },
+      layers: { unit: 103, integration: 29, visual: 10 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
+      reports: [['android/shared/jvm', 82], ['ios/shared/ios-sim', 82], ['android/composeApp/jvm', 60], ['ios/composeApp/ios-sim', 50]], repSide: 'jvm 142 · ios-sim 132',
+      declared: 'Not counted: 12 Maestro E2E flows, run in CI, not yet reported' };
+    const route = { name: 'RouteServe', private: true, tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
+      run: { status: 'passed', when: '2 hours ago', branch: 'main', sha: 'c238574', total: 1048, failed: 0, skipped: 0, dur: '29 s' },
+      layers: { unit: 608, component: 165, integration: 3, api: 269 }, cov: [['apps/backend', 96.1, 80], ['apps/mobile', 96.1, 80], ['packages/shared', 100, 80]],
+      reports: [['test/apps/backend/node', 498], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], repSide: 'node',
+      declared: 'Not counted: 13 Maestro E2E flows, authored, not yet executed' };
+    let rows = [
+      { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 142, dur: '27 s', when: '4 minutes ago' },
+      { status: 'passed', private: true, project: 'RouteServe', branch: 'main', sha: 'c238574', total: 1048, dur: '29 s', when: '2 hours ago' },
     ];
-
     let heroTotal = '1,190', heroNote = 'automated tests across two projects. 100% passing on the latest runs, 0 skipped or disabled.';
-    const tile = (label, value, sub, sample, ink) => ({ label, value, sub, sample: !!sample, ink: ink || 'inherit' });
-    let tiles = [
+    const tile = (label, value, sub, attn) => ({ label, value, sub, attn: !!attn, plain: !attn });
+    const tiles = [
       tile('Pass rate', '100%', 'Latest runs · 0 skipped, excluded'),
       tile('Projects reporting', '2', '3 once testpulse reports on itself'),
       tile('Runs in last 30 days', '24', 'Ostomate2 18 · RouteServe 6'),
@@ -213,54 +205,42 @@ class Component extends DCLogic {
 
     if (sc === 'failed run') {
       sampleNote = 'Ostomate2’s latest default-branch run shown failing 1 of 142 to illustrate the state.';
-      osto.st = ST.fail; osto.sha = 'a41f9c2';
-      osto.subParts = [part('tests ·'), part('1 failed', 'var(--fail)', 600), part('· 0 skipped ·'), part('27 s')];
+      osto.run = Object.assign({}, osto.run, { status: 'failed', sha: 'a41f9c2', failed: 1 });
+      osto.failing = [{ name: 'HomeViewModelTest › rendersToday', plat: 'ios-sim' }];
       heroNote = 'automated tests across two projects. 1 failing on Ostomate2’s latest run, 0 skipped or disabled.';
       tiles[0] = tile('Pass rate', '99.9%', '1,189 of 1,190 · 0 skipped, excluded');
       tiles[4] = tile('Green streak', '0 runs', 'Broken by Ostomate2 a41f9c2');
-      feed[0] = row(ST.fail, 'fix: supply count rounding', 'Ostomate2', 'main', 'a41f9c2', '1 failed', '· 141 of 142', '4 minutes ago', { bg: 'var(--raised)', countInk: 'var(--fail)' });
+      rows[0] = { status: 'failed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: 'a41f9c2', total: 142, passed: 141, failed: 1, when: '4 minutes ago' };
     } else if (sc === 'empty run') {
       sampleNote = 'Ostomate2’s latest run shown with zero tests executed to illustrate the state.';
-      osto.st = ST.empty; osto.total = '0'; osto.totalInk = 'var(--attn)';
-      osto.subParts = [part('tests executed ·'), part('4 reports received')];
-      osto.hasLayers = false;
-      osto.emptyNote = 'Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn’t counted in any total.';
-      osto.reports = osto.reports.map(r => ({ ...r, n: '0', ink: 'var(--attn)' }));
-      osto.repSide = 'expected 142';
-      osto.health = { label: 'Empty run', ink: 'var(--attn)', d: 'M12 7v6M12 17h.01', w: 600 };
+      osto.run = Object.assign({}, osto.run, { status: 'empty' });
       heroTotal = '1,048';
       heroNote = 'tests executed on the latest runs. Ostomate2’s latest run executed none, so it isn’t counted.';
       tiles[0] = tile('Pass rate', '100%', 'RouteServe only · 0 skipped, excluded');
-      feed[0] = row(ST.empty, 'docs: BUG-10 verified on device', 'Ostomate2', 'main', '0e2d0b4', '0 tests', '· 4 reports', '4 minutes ago', { bg: 'var(--raised)', countInk: 'var(--attn)' });
+      rows[0] = { status: 'empty', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', reports: 4, when: '4 minutes ago' };
     } else if (sc === 'stale project') {
       sampleNote = 'RouteServe shown with no report for 12 days to illustrate the state.';
-      route.when = '12 days ago';
-      route.health = { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', w: 600 };
-      tiles[1] = tile('Projects reporting', '1 of 2', 'RouteServe silent for 12 days', false, 'var(--attn)');
-      feed[1] = { ...feed[1], when: '12 days ago' };
+      route.stale = true; route.run = Object.assign({}, route.run, { when: '12 days ago' });
+      tiles[1] = tile('Projects reporting', '1 of 2', 'RouteServe silent 12 days', true);
+      rows[1] = Object.assign({}, rows[1], { when: '12 days ago' });
     } else if (sc === 'coverage below floor') {
       sampleNote = 'Ostomate2 composeApp coverage shown under its floor to illustrate the state.';
-      osto.cov = [cov('shared', 92.0, 91), cov('composeApp', 92.6, 93)];
-      osto.health = { label: 'Coverage below floor', ink: 'var(--attn)', d: 'M12 5v14M6 13l6 6 6-6', w: 600 };
+      osto.cov = [['shared', 92.0, 91], ['composeApp', 92.6, 93]]; osto.health = 'below_floor';
     } else if (sc === 'live update') {
       sampleNote = 'A new Ostomate2 run arriving at the top of the feed.';
-      osto.when = 'Just now'; osto.sha = '7c1e05b';
-      feed = [row(ST.pass, 'test: cover reorder warnings', 'Ostomate2', 'main', '7c1e05b', '142 tests', '· 26 s', 'Just now', { bg: 'var(--pass-tint)', isNew: true }), { ...feed[0], bg: 'transparent' }, feed[1]];
+      osto.run = Object.assign({}, osto.run, { when: 'Just now', sha: '7c1e05b', dur: '26 s' });
+      rows = [{ status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e05b', total: 142, dur: '26 s', when: 'Just now', isNew: true }].concat(rows);
       footerNote = 'Last report received just now';
     } else if (!live) {
       feedNote = 'Offline. Showing runs as of 10:42; reconnecting'; feedNoteInk = 'var(--ink-2)';
     }
 
-    const dotOn = live;
-    const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', boxSizing: 'border-box', background: dotOn ? 'var(--pass)' : 'transparent', border: dotOn ? 'none' : '1.5px solid var(--ink-3)', color: 'var(--pass)', animation: dotOn ? 'tpPulse 2.4s ease-out infinite' : 'none' } });
+    const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', boxSizing: 'border-box', background: live ? 'var(--pass)' : 'transparent', border: live ? 'none' : '1.5px solid var(--ink-3)', color: 'var(--pass)', animation: live ? 'tpPulse 2.4s ease-out infinite' : 'none' } });
 
-    return {
-      themeVars: tv, liveDot, liveLabel: live ? 'Live' : 'Offline · reconnecting',
-      isLoading: sc === 'loading', isError: sc === 'error', isReady: sc !== 'loading' && sc !== 'error',
-      sampleNote, heroTotal, heroNote, tiles, cards: [osto, route], feed, feedNote, feedNoteInk, footerNote,
-      toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
-      themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
-    };
+    return Object.assign(base, {
+      themeVars: K.themeVars(dark), liveDot, liveLabel: live ? 'Live' : 'Offline · reconnecting',
+      sampleNote, heroTotal, heroNote, tiles, cards: [K.card(osto), K.card(route)], feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
+    });
   }
 }
 </script>

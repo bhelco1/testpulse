@@ -59,7 +59,9 @@ design/              Claude Design handoff bundle (do not edit by hand)
 docs/                spec, inventory, design brief
 ```
 
-Unit tests sit next to the code as `*.test.ts`; component tests are `components/<Name>/<Name>.test.tsx` and opt into jsdom with a `// @vitest-environment jsdom` docblock. Integration tests are `*.int.test.ts` and need local Supabase running.
+Unit tests sit next to the code as `*.test.ts`; component tests are `components/<Name>/<Name>.test.tsx` and opt into jsdom with a `// @vitest-environment jsdom` docblock. Integration tests are `*.int.test.ts` and need local Supabase running. E2E specs are `tests/e2e/*.spec.ts`, one per page, tagged `@js`, `@no-js` or `@visual` to choose their Playwright projects (see `playwright.config.ts`); tests of the harness itself are in `tests/e2e/harness/`. Every page spec runs `expectNoSeriousAxeViolations` from `tests/e2e/support/axe.ts`.
+
+Playwright never reuses a server: it builds and starts its own on 127.0.0.1:3000 with `TESTPULSE_FIXED_NOW` set to `SEED_NOW`, so stop anything on :3000 first. Visual snapshots are generated and compared only in the pinned Playwright image (`npm run test:e2e:docker`, `npm run test:e2e:update`); bump that image in `scripts/e2e-docker.sh` together with `@playwright/test` and regenerate.
 
 ## Commands
 
@@ -76,7 +78,9 @@ npm run typecheck      tsc --noEmit
 npm run test           Vitest unit tests with coverage (90% lines floor)
 npm run check:secrets  fail if any tracked path looks like a secret
 npm run check:contrast fail if a design token pair is under WCAG AA (4.5:1 text, 3:1 graphics)
-npm run test:e2e       Playwright
+npm run test:e2e       Playwright on this machine; leaves out @visual snapshot tests, refuses to run with CI set
+npm run test:e2e:docker  full Playwright suite in the pinned Playwright image, as CI runs it (needs Docker, supabase start and db:seed)
+npm run test:e2e:update  regenerate the visual snapshot PNGs in the pinned image; commit them
 npm run db:reset       reset local database and apply migrations (requires `supabase start`)
 npm run db:seed        seed local Supabase for e2e from committed fixtures (after db:reset; refuses non-local URLs)
 npm run test:int       Vitest integration tests (requires `supabase start`)
@@ -89,7 +93,7 @@ npm run backfill <slug> <file>     import a project's dashboard history as sourc
 ## Conventions
 
 - TypeScript strict, no `any`, no non-null assertions without a comment explaining why.
-- Parsers and stat functions are pure: no I/O, no clock reads. Pass time in as an argument.
+- Parsers and stat functions are pure: no I/O, no clock reads. Pass time in as an argument. Pages read it from `now()` in `lib/clock.ts`, never `new Date()` or `Date.now()`.
 - Zod schemas are the single definition for API input; derive types from them.
 - Database access goes through `lib/`; route handlers and components do not build queries inline.
 - Accessibility is part of done: semantic HTML, labelled controls, visible focus, status never by color alone.

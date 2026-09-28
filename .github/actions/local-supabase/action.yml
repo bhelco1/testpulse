@@ -1,0 +1,39 @@
+name: Local Supabase
+description: >
+  Starts local Supabase with the pinned CLI, applies the migrations, and exports its URL and keys
+  to later steps as NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY and
+  SUPABASE_SECRET_KEY. Shared by the integration and e2e jobs so both run the same stack.
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Supabase CLI
+      uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
+      with:
+        version: 2.117.0
+
+    - name: Start local Supabase and apply migrations
+      shell: bash
+      run: supabase start
+
+    # The local keys are public constants (supabase start prints them), so masking is habit
+    # for when this step runs against anything real: mask before use, then drop the file.
+    - name: Export Supabase connection details
+      shell: bash
+      run: |
+        set -euo pipefail
+        supabase status -o env > "$RUNNER_TEMP/supabase.env"
+        while IFS='=' read -r name value; do
+          value="${value%\"}"
+          value="${value#\"}"
+          case "$name" in
+            API_URL) echo "NEXT_PUBLIC_SUPABASE_URL=$value" >> "$GITHUB_ENV" ;;
+            PUBLISHABLE_KEY)
+              echo "::add-mask::$value"
+              echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$value" >> "$GITHUB_ENV" ;;
+            SECRET_KEY)
+              echo "::add-mask::$value"
+              echo "SUPABASE_SECRET_KEY=$value" >> "$GITHUB_ENV" ;;
+          esac
+        done < "$RUNNER_TEMP/supabase.env"
+        rm -f "$RUNNER_TEMP/supabase.env"

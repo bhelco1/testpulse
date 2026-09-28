@@ -67,34 +67,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Set up Supabase CLI
-        uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
-        with:
-          version: 2.117.0
-
-      - name: Start local Supabase and apply migrations
-        run: supabase start
-
-      # The local keys are public constants (supabase start prints them), so masking is habit
-      # for when this step runs against anything real: mask before use, then drop the file.
-      - name: Export Supabase connection details
-        run: |
-          set -euo pipefail
-          supabase status -o env > "$RUNNER_TEMP/supabase.env"
-          while IFS='=' read -r name value; do
-            value="${value%\"}"
-            value="${value#\"}"
-            case "$name" in
-              API_URL) echo "NEXT_PUBLIC_SUPABASE_URL=$value" >> "$GITHUB_ENV" ;;
-              PUBLISHABLE_KEY)
-                echo "::add-mask::$value"
-                echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$value" >> "$GITHUB_ENV" ;;
-              SECRET_KEY)
-                echo "::add-mask::$value"
-                echo "SUPABASE_SECRET_KEY=$value" >> "$GITHUB_ENV" ;;
-            esac
-          done < "$RUNNER_TEMP/supabase.env"
-          rm -f "$RUNNER_TEMP/supabase.env"
+      - name: Start local Supabase
+        uses: ./.github/actions/local-supabase
 
       - name: Integration tests against local Supabase
         run: npm run test:int
@@ -116,11 +90,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Start local Supabase
+        uses: ./.github/actions/local-supabase
 
-      - name: End-to-end tests against the production build
-        run: npm run test:e2e
+      # supabase start has just applied the migrations to an empty database, so no reset first.
+      - name: Seed local Supabase from the committed fixtures
+        run: npm run db:seed
+
+      # Supabase runs on the runner; Playwright, the build and the server run in the pinned
+      # Playwright image on the host network, the one place snapshots are compared (spec 16).
+      - name: End-to-end tests in the Playwright image against the production build
+        run: npm run test:e2e:docker
 
       - name: Upload Playwright results on failure
         if: failure()

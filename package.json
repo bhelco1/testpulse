@@ -16,6 +16,8 @@
     "check:secrets": "node scripts/check-tracked-secrets.ts",
     "check:contrast": "node scripts/check-contrast.ts",
     "test:e2e": "playwright test",
+    "test:e2e:docker": "bash scripts/e2e-docker.sh",
+    "test:e2e:update": "bash scripts/e2e-docker.sh --update-snapshots=all",
     "db:reset": "supabase db reset",
     "db:seed": "node --env-file-if-exists=.env.local scripts/seed.ts",
     "project:add": "node --env-file-if-exists=.env.local scripts/project-add.ts",
@@ -35,7 +37,8 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0",
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",
     "@types/node": "^24",

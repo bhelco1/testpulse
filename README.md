@@ -20,7 +20,9 @@ stats, phases, and acceptance criteria.
 - `npm run typecheck` runs `tsc --noEmit`
 - `npm run test` runs Vitest unit tests with coverage (90% lines floor)
 - `npm run check:secrets` fails if any tracked path looks like a secret
-- `npm run test:e2e` runs the Playwright end-to-end test in Chromium against the production build
+- `npm run test:e2e` runs the Playwright end-to-end tests in Chromium against the production build, leaving out the visual snapshot tests
+- `npm run test:e2e:docker` runs the full end-to-end suite, visual snapshots included, in the pinned Playwright Docker image, as CI does (needs `supabase start` and `npm run db:seed`)
+- `npm run test:e2e:update` regenerates the visual snapshot PNGs in that image
 - `npm run db:reset` resets the local database and applies migrations (needs `supabase start`)
 - `npm run db:seed` seeds the local database for end-to-end tests from committed fixtures; it refuses any non-local Supabase URL
 - `npm run test:int` runs the Vitest integration tests against the local database
@@ -33,7 +35,10 @@ stats, phases, and acceptance criteria.
 CI runs on every pull request and on every push to `main`. It checks formatting, lints,
 typechecks, checks for tracked secrets, runs the unit tests with coverage, builds the site, and
 then runs two jobs in parallel: the integration tests against a local Supabase started on the
-runner, and the end-to-end test in Chromium against the production build.
+runner, and the end-to-end tests: local Supabase on the runner, seeded from the committed fixtures,
+and Playwright in the pinned Playwright Docker image against the production build, with the clock
+fixed to the seed's instant, desktop and phone widths in light and dark, a no-JavaScript pass,
+axe accessibility checks and visual snapshot comparisons.
 
 ## Reporting
 

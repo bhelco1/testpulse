@@ -1,0 +1,58 @@
+.notice {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+.attn {
+  background: var(--attn-tint);
+  border: 1px solid var(--attn);
+}
+
+.fail {
+  background: var(--fail-tint);
+  border: 1px solid var(--fail);
+}
+
+.neutral {
+  background: var(--neutral-tint);
+  border: 1px solid var(--line-strong);
+}
+
+.icon {
+  flex: none;
+  margin-top: 1px;
+}
+
+.attn .icon,
+.attn .title {
+  color: var(--attn);
+}
+
+.fail .icon,
+.fail .title {
+  color: var(--fail);
+}
+
+.neutral .icon {
+  color: var(--ink-2);
+}
+
+.title {
+  font-weight: 600;
+  font-size: 14.5px;
+}
+
+.body {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+.neutral .body {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-top: 0;
+}

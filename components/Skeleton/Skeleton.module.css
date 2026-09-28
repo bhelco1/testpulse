@@ -2,3 +2,7 @@
   display: block;
   background: var(--raised);
 }
+
+.inset {
+  background: var(--inset);
+}

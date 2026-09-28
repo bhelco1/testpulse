@@ -55,4 +55,22 @@ describe('LayerBar', () => {
       color: 'var(--ink-2)',
     });
   });
+
+  it('kiosk: a 14px bar, still with 3px gaps, and 24px labels with the count in ink', () => {
+    const { container, getAllByRole } = render(<LayerBar layers={OSTOMATE2} variant="kiosk" />);
+
+    expect((container.firstElementChild as HTMLElement).dataset.variant).toBe('kiosk');
+    expect(getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'Unit103',
+      'Integration29',
+      'Visual10',
+    ]);
+    expect(ruleFor(CSS, '.kiosk .bar')).toEqual({ height: '14px', 'margin-bottom': '12px' });
+    expect(ruleFor(CSS, '.kiosk .labels')).toEqual({
+      gap: '6px var(--space-6)',
+      'font-size': '24px',
+    });
+    expect(ruleFor(CSS, '.kiosk .label')).toEqual({ gap: 'var(--space-2)' });
+    expect(ruleFor(CSS, '.kiosk .count')).toEqual({ color: 'var(--ink)' });
+  });
 });

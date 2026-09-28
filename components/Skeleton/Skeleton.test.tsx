@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { keyframesIn } from '../testing/stylesheet';
+import { keyframesIn, ruleFor } from '../testing/stylesheet';
 import { Skeleton } from './Skeleton';
 
 afterEach(cleanup);
@@ -30,5 +30,15 @@ describe('Skeleton', () => {
 
   it('keeps no keyframes of its own; the shimmer is the one in tokens.css', () => {
     expect(keyframesIn(join(import.meta.dirname, 'Skeleton.module.css'))).toEqual([]);
+  });
+
+  it('can stand in for an inset panel on the inset tone', () => {
+    const { container } = render(<Skeleton width="100%" height={78} radius={12} tone="inset" />);
+    const block = container.firstElementChild as HTMLElement;
+
+    expect(block.className).toContain('inset');
+    expect(ruleFor(join(import.meta.dirname, 'Skeleton.module.css'), '.inset')).toEqual({
+      background: 'var(--inset)',
+    });
   });
 });

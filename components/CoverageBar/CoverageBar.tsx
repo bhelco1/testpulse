@@ -5,6 +5,8 @@ export interface CoverageBarProps {
   module: string;
   pct: number;
   floor: number;
+  // kiosk: the kiosk ProjectCard row, which the design draws with the figure only.
+  variant?: 'web' | 'kiosk';
 }
 
 function formatPct(pct: number): string {
@@ -14,13 +16,17 @@ function formatPct(pct: number): string {
 const clamp = (n: number) => Math.min(100, Math.max(0, n));
 
 // The scale always runs 0 to 100, so small headroom looks small.
-export function CoverageBar({ module, pct, floor }: CoverageBarProps) {
+export function CoverageBar({ module, pct, floor, variant = 'web' }: CoverageBarProps) {
   const state = pct < floor ? 'below' : pct === floor ? 'at' : 'above';
-  const below = state === 'below';
+  const kiosk = variant === 'kiosk';
+  const below = state === 'below' && !kiosk;
   return (
     <div
-      className={[styles.row, below && styles.below].filter(Boolean).join(' ')}
+      className={[styles.row, kiosk && styles.kiosk, below && styles.below]
+        .filter(Boolean)
+        .join(' ')}
       data-state={state}
+      data-variant={variant}
     >
       <span className={styles.module}>{module}</span>
       <div className={styles.track} data-part="track" aria-hidden="true">
@@ -30,9 +36,11 @@ export function CoverageBar({ module, pct, floor }: CoverageBarProps) {
       <span className={styles.value} data-part="value">
         {below && <ArrowDownIcon size={13} strokeWidth={2.8} className={styles.arrow} />}
         <b className={styles.figure}>{formatPct(pct)}</b>
-        <span className={styles.floorLabel}>
-          {below ? `below floor ${floor}%` : `floor ${floor}%`}
-        </span>
+        {!kiosk && (
+          <span className={styles.floorLabel}>
+            {below ? `below floor ${floor}%` : `floor ${floor}%`}
+          </span>
+        )}
       </span>
     </div>
   );

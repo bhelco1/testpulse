@@ -1,0 +1,53 @@
+.group {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: var(--space-3) var(--space-4);
+  align-items: start;
+  margin: 0;
+  font-size: 13.5px;
+}
+
+/* Each dt/dd pair is wrapped for valid markup; the wrapper takes no box of its own. */
+.pair {
+  display: contents;
+}
+
+.category {
+  color: var(--ink-3);
+  padding-top: 5px;
+}
+
+.cell {
+  margin: 0;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  padding: var(--space-1) 10px;
+  border-radius: var(--radius-tag);
+  border: 1px solid;
+  color: var(--ink);
+}
+
+.built .tag {
+  background: var(--inset);
+  border-color: var(--line);
+}
+
+.tested .tag {
+  background: transparent;
+  border-color: var(--line-strong);
+}
+
+.declared {
+  border-style: dashed;
+  color: var(--ink-2);
+}

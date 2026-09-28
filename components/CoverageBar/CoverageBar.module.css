@@ -54,3 +54,27 @@
 .arrow {
   color: var(--attn);
 }
+
+.kiosk {
+  grid-template-columns: 220px minmax(40px, 1fr) 100px;
+  column-gap: 18px;
+  font-size: 24px;
+}
+
+.kiosk .module {
+  font-size: 22px;
+}
+
+.kiosk .track {
+  height: 10px;
+}
+
+.kiosk .floor {
+  top: -6px;
+  width: 3px;
+  height: 22px;
+}
+
+.kiosk .value {
+  justify-content: flex-end;
+}

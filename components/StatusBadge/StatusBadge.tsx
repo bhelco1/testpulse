@@ -26,8 +26,9 @@ export const BADGE_STATUSES = [
 ] as const;
 export type BadgeStatus = (typeof BADGE_STATUSES)[number];
 
-// pill: headers and cards. inline: rows, tables and the project switcher.
-export const BADGE_VARIANTS = ['pill', 'inline'] as const;
+// pill: headers and cards. inline: rows, tables and the project switcher. kiosk: the pill on the
+// kiosk ProjectCard.
+export const BADGE_VARIANTS = ['pill', 'inline', 'kiosk'] as const;
 export type BadgeVariant = (typeof BADGE_VARIANTS)[number];
 
 type Tone = 'pass' | 'fail' | 'attn' | 'neutral';
@@ -43,7 +44,7 @@ const STATUS: Record<BadgeStatus, { word: string; tone: Tone; Icon: ComponentTyp
   not_reporting: { word: 'Not reporting yet', tone: 'neutral', Icon: DashedCircleIcon },
 };
 
-const ICON_SIZE: Record<BadgeVariant, number> = { pill: 14, inline: 15 };
+const ICON_SIZE: Record<BadgeVariant, number> = { pill: 14, inline: 15, kiosk: 26 };
 
 export interface StatusBadgeProps {
   status: BadgeStatus;
@@ -54,7 +55,9 @@ export function StatusBadge({ status, variant = 'pill' }: StatusBadgeProps) {
   const { word, tone, Icon } = STATUS[status];
   return (
     <span
-      className={`${styles.badge} ${styles[variant]} ${styles[tone]}`}
+      className={[styles.badge, variant === 'kiosk' && styles.pill, styles[variant], styles[tone]]
+        .filter(Boolean)
+        .join(' ')}
       data-status={status}
       data-variant={variant}
       data-tone={tone}

@@ -49,7 +49,16 @@ describe('PrivateTag', () => {
     expect(lock?.getAttribute('width')).toBe('30');
     expect(lock?.getAttribute('stroke-width')).toBe('2.2');
     const kiosk = ruleFor(CSS, '.kiosk');
-    expect(kiosk).toMatchObject({ gap: '10px', 'font-size': '24px', color: 'var(--ink-3)' });
+    // Set in full so a serif heading around the tag does not restyle it.
+    expect(kiosk).toMatchObject({
+      gap: '10px',
+      font: '400 24px var(--font-sans)',
+      color: 'var(--ink-3)',
+    });
     expect(kiosk.background).toBeUndefined();
+  });
+
+  it('keeps normal letter spacing inside a tightly spaced heading', () => {
+    expect(ruleFor(CSS, '.tag')).toMatchObject({ 'letter-spacing': '0px' });
   });
 });

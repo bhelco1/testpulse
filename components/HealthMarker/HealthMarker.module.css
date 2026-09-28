@@ -8,6 +8,11 @@
   font-weight: 600;
 }
 
+.kiosk {
+  gap: 10px;
+  font-size: 24px;
+}
+
 .pass {
   color: var(--pass);
 }

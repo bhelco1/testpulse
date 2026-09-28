@@ -90,4 +90,45 @@ describe('CoverageBar', () => {
       color: 'var(--attn)',
     });
   });
+
+  describe('kiosk variant', () => {
+    it('shows the module and the figure only, with no floor words', () => {
+      const { container } = render(
+        <CoverageBar module="shared" pct={92} floor={91} variant="kiosk" />,
+      );
+      const { row, value, floor } = parts(container);
+
+      expect(row.dataset.variant).toBe('kiosk');
+      expect(value?.textContent).toBe('92.0%');
+      expect(floor?.style.left).toBe('91%');
+    });
+
+    it('draws a below-floor row as the design draws the kiosk: no arrow, no amber', () => {
+      const { container } = render(
+        <CoverageBar module="composeApp" pct={92.6} floor={93} variant="kiosk" />,
+      );
+      const { row, value } = parts(container);
+
+      expect(row.dataset.state).toBe('below');
+      expect(row.className).not.toContain('below');
+      expect(value?.textContent).toBe('92.6%');
+      expect(value?.querySelector('svg')).toBeNull();
+    });
+
+    it('sets the kiosk row at 220 / fluid / 100 with a 10px track and a 3 by 22 floor tick', () => {
+      expect(ruleFor(CSS, '.kiosk')).toEqual({
+        'grid-template-columns': '220px minmax(40px, 1fr) 100px',
+        'column-gap': '18px',
+        'font-size': '24px',
+      });
+      expect(ruleFor(CSS, '.kiosk .module')).toEqual({ 'font-size': '22px' });
+      expect(ruleFor(CSS, '.kiosk .track')).toEqual({ height: '10px' });
+      expect(ruleFor(CSS, '.kiosk .floor')).toEqual({
+        top: '-6px',
+        width: '3px',
+        height: '22px',
+      });
+      expect(ruleFor(CSS, '.kiosk .value')).toEqual({ 'justify-content': 'flex-end' });
+    });
+  });
 });

@@ -1,0 +1,123 @@
+.pyramid {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) 26px;
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.totalGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+}
+
+.total {
+  font: var(--text-count);
+}
+
+.caption {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.note {
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 120px;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 80px minmax(0, 1fr) 88px;
+  }
+}
+
+.label {
+  text-align: right;
+  color: var(--ink-2);
+}
+
+.declared .label {
+  color: var(--ink-3);
+}
+
+.declaredText {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.barCell {
+  display: flex;
+  justify-content: center;
+}
+
+.bar {
+  min-width: 6px;
+  height: 30px;
+  border-radius: var(--radius-xs);
+}
+
+.tone1 {
+  background: var(--layer-1);
+}
+.tone2 {
+  background: var(--layer-2);
+}
+.tone3 {
+  background: var(--layer-3);
+}
+.tone4 {
+  background: var(--layer-4);
+}
+
+.count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.figure {
+  font-weight: 600;
+}
+
+.pct {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.none {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-2);
+}

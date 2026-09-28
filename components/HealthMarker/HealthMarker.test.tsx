@@ -83,7 +83,18 @@ describe('HealthMarker', () => {
     expect(container.querySelector('svg circle')?.getAttribute('stroke-dasharray')).toBe('3.5 3');
   });
 
-  it('is 14px/600 in every state and has no other variant', () => {
+  it('kiosk: the same words and icon at 24px, icon 24, gap 10', () => {
+    const { container } = render(<HealthMarker health="healthy" variant="kiosk" />);
+    const marker = container.firstElementChild as HTMLElement;
+
+    expect(marker.textContent).toBe('Reporting healthy');
+    expect(marker.dataset.variant).toBe('kiosk');
+    expect(marker.querySelector('svg')?.getAttribute('width')).toBe('24');
+    expect(marker.querySelector('svg')?.getAttribute('stroke-width')).toBe('2.8');
+    expect(ruleFor(CSS, '.kiosk')).toEqual({ gap: '10px', 'font-size': '24px' });
+  });
+
+  it('is 14px/600 in every state on the web, where it has no other variant', () => {
     expect(ruleFor(CSS, '.marker')).toMatchObject({
       gap: '6px',
       'font-size': '14px',

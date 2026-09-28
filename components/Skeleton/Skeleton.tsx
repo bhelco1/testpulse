@@ -5,6 +5,8 @@ export interface SkeletonProps {
   width: string;
   height: number;
   radius?: number;
+  // inset stands in for an inset panel, such as the ProjectCard per-report block.
+  tone?: 'raised' | 'inset';
   className?: string;
 }
 
@@ -13,10 +15,12 @@ export interface SkeletonProps {
 // tokens.css is !important, so it still stops the shimmer.
 const SHIMMER = 'tp-shimmer 1.6s ease-in-out infinite';
 
-export function Skeleton({ width, height, radius = 4, className }: SkeletonProps) {
+export function Skeleton({ width, height, radius = 4, tone = 'raised', className }: SkeletonProps) {
   return (
     <span
-      className={[styles.block, className].filter(Boolean).join(' ')}
+      className={[styles.block, tone === 'inset' && styles.inset, className]
+        .filter(Boolean)
+        .join(' ')}
       style={{ width, height, borderRadius: radius, animation: SHIMMER }}
       data-part="skeleton"
       aria-hidden="true"

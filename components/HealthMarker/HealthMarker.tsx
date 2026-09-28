@@ -13,8 +13,10 @@ import styles from './HealthMarker.module.css';
 export type Health = 'healthy' | 'stale' | 'empty' | 'below_floor' | 'not_reporting';
 
 // `days` is required for stale, the only state whose words include it.
-export type HealthMarkerProps =
-  { health: 'stale'; days: number } | { health: Exclude<Health, 'stale'> };
+export type HealthState = { health: 'stale'; days: number } | { health: Exclude<Health, 'stale'> };
+
+// kiosk: the kiosk ProjectCard footer, 24px.
+export type HealthMarkerProps = HealthState & { variant?: 'web' | 'kiosk' };
 
 interface Look {
   label: string;
@@ -22,7 +24,7 @@ interface Look {
   Icon: ComponentType<IconProps>;
 }
 
-function lookOf(props: HealthMarkerProps): Look {
+function lookOf(props: HealthState): Look {
   switch (props.health) {
     case 'healthy':
       return { label: 'Reporting healthy', tone: 'pass', Icon: CheckIcon };
@@ -39,13 +41,15 @@ function lookOf(props: HealthMarkerProps): Look {
 
 export function HealthMarker(props: HealthMarkerProps) {
   const { label, tone, Icon } = lookOf(props);
+  const variant = props.variant ?? 'web';
   return (
     <span
-      className={`${styles.marker} ${styles[tone]}`}
+      className={`${styles.marker} ${styles[variant]} ${styles[tone]}`}
       data-health={props.health}
       data-tone={tone}
+      data-variant={variant}
     >
-      <Icon size={13} strokeWidth={2.8} />
+      <Icon size={variant === 'kiosk' ? 24 : 13} strokeWidth={2.8} />
       {label}
     </span>
   );

@@ -1,0 +1,118 @@
+.strips {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.strip {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.platform {
+  width: 76px;
+  flex: none;
+  font: 13px var(--font-mono);
+  color: var(--ink-2);
+  padding-bottom: 2px;
+}
+
+/* Right-aligned and clipped on the left, so the latest runs are the ones that stay in view. */
+.cells {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 3px;
+  height: 48px;
+  overflow: hidden;
+}
+
+.cell {
+  flex: 0 1 16px;
+  min-width: 6px;
+  box-sizing: border-box;
+  border-radius: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font: 700 10px/14px var(--font-sans);
+  color: var(--on-ink);
+}
+
+/* Heights differ by status as well as colour, so no status is told by colour alone. */
+.passed {
+  height: 14px;
+  background: var(--pass);
+}
+
+.failed,
+.error {
+  height: 44px;
+  background: var(--fail);
+}
+
+.flaky {
+  height: 24px;
+  background: var(--attn);
+}
+
+.skipped {
+  height: 14px;
+  border: 1.5px solid var(--ink-3);
+}
+
+.notRun {
+  height: 4px;
+  background: var(--line-strong);
+}
+
+.empty {
+  height: 24px;
+  background: var(--attn-tint);
+  border: 1.5px dashed var(--attn);
+}
+
+.ends {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.withPlatforms .ends {
+  padding-left: 88px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) 18px;
+  margin: 14px 0 0;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.swatch {
+  width: 10px;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.swatch.failed,
+.swatch.error {
+  height: 20px;
+}

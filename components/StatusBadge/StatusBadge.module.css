@@ -11,6 +11,12 @@
   border-radius: var(--radius-pill);
 }
 
+.kiosk {
+  padding: 8px 18px;
+  gap: 10px;
+  font-size: 26px;
+}
+
 .pass {
   color: var(--pass);
 }

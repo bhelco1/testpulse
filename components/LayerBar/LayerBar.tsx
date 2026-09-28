@@ -4,13 +4,15 @@ import styles from './LayerBar.module.css';
 export interface LayerBarProps {
   // From layerSegments: section 8 order, each layer in its fixed tone.
   layers: readonly LayerSegment[];
+  // kiosk: the kiosk ProjectCard, 14px tall with 24px labels.
+  variant?: 'web' | 'kiosk';
 }
 
 const formatCount = new Intl.NumberFormat('en-US');
 
-export function LayerBar({ layers }: LayerBarProps) {
+export function LayerBar({ layers, variant = 'web' }: LayerBarProps) {
   return (
-    <div>
+    <div className={styles[variant]} data-variant={variant}>
       <div className={styles.bar} data-part="bar" aria-hidden="true">
         {layers.map((layer) => (
           <div
@@ -25,7 +27,7 @@ export function LayerBar({ layers }: LayerBarProps) {
         {layers.map((layer) => (
           <li key={layer.label} className={styles.label}>
             <span>{layer.label}</span>
-            <span>{formatCount.format(layer.count)}</span>
+            <span className={styles.count}>{formatCount.format(layer.count)}</span>
           </li>
         ))}
       </ul>

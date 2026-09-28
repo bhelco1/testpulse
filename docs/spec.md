@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.26, 2026-09-28. Status: Phases 0 to 4 complete; design track in progress.
+Version 0.27, 2026-09-28. Status: Phases 0 to 4 complete; design track in progress.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -61,7 +61,7 @@ The site is itself a portfolio piece. Its own code, tests, and CI will be read b
                                           │ Postgres (Supabase)          │
                                           │ RLS enforces visibility      │
                                           └──────────────┬──────────────┘
-                                 realtime (runs, reports)│  server reads
+                                 realtime (reports)      │  server reads
                                                          ▼
                                           ┌─────────────────────────────┐
                                           │ Next.js site                 │
@@ -76,7 +76,7 @@ The site is itself a portfolio piece. Its own code, tests, and CI will be read b
 |---|---|---|
 | Web framework | Next.js (App Router), TypeScript strict | Server components for data pages, route handlers for the API, one deployable |
 | Database | Postgres on Supabase | Already used in routeserve; realtime and auth included; free tier |
-| Realtime | Supabase Realtime on `reports` | Satisfies G2 without building a socket layer. Every `reports` column is public, so anon can subscribe; `runs` has hidden columns and is read through a view, so the browser refetches run rollups when a report event arrives |
+| Realtime | Supabase Realtime on `reports` | Satisfies G2 without building a socket layer. Every `reports` column is public, so anon can subscribe; `runs` has hidden columns and is read through a view, so the browser refetches run rollups when a report event arrives. A migration adds only `public.reports` to the `supabase_realtime` publication; `runs`, `result_failures` and `projects` are never published. On a report event the browser refreshes the server-rendered page (router refresh) rather than querying tables itself |
 | Admin auth | Supabase magic link, single allowlisted email | Real auth for the one private page |
 | Hosting | Vercel free tier | Zero-config Next.js deploys, preview URLs per PR |
 | Charts | Recharts | Sufficient for trends and pyramids; no licence cost |
@@ -100,7 +100,7 @@ All tables have `id uuid primary key default gen_random_uuid()` and `created_at 
 | slug | text unique | URL segment, e.g. `ostomate2` |
 | name | text | Display name |
 | tagline | text | One sentence |
-| description | text | Markdown, shown on project page |
+| description | text | Plain paragraphs separated by blank lines, shown on project page; rendered without a Markdown library |
 | visibility | text | `public` or `private` (see section 9) |
 | repo_url | text null | Shown only when visibility is `public` |
 | default_branch | text | Usually `main` |
@@ -398,7 +398,7 @@ Enforcement is in Postgres row-level security, so the publishable key used by th
 
 - `result_failures`: anon `select` allowed only where the owning project is `public`.
 - `projects`: anon reads go through a view that omits `api_key_hash` and nulls `repo_url` for private projects.
-- `runs`: anon reads go through a view that nulls `run_url` and truncates `commit_sha` for private projects.
+- `runs`: anon reads go through a view that nulls `run_url` and truncates `commit_sha` for private projects. It still exposes `ci_run_id` for private projects, deliberately: without `run_url` it is an identifier, not a link.
 - `tracked_links`, `visits`, `alerts`: no anon access.
 
 Initial settings: Ostomate2 `public`, routeserve `private`, testpulse `public`.
@@ -424,6 +424,7 @@ All trend stats use default-branch runs with `source = ci` unless stated. Backfi
 | Coverage | Latest lines % per module, plotted against that module's `coverage_floors` value. Lines % is `lines_covered / lines_total` when the counts are present, else `lines_pct` |
 | Suite duration | Sum of report durations per run, trended over CI runs only, since backfilled runs have `duration_ms` 0; slowest 10 tests listed |
 | Test growth | Distinct tests per week since first report |
+| Test count per run | The "Total tests" measure for each default-branch run with `source = ci`, trended per run. Imported history is left out: it has no per-test rows. Not `runs.total`, which counts executions |
 | Flaky test | A test with both a passing and a failing result on the same `commit_sha` and platform (across attempts or re-runs) within 30 days. Flake rate = flaky tests / total tests |
 | Flip rate | Secondary signal: tests that changed status between consecutive default-branch runs more than twice in 30 days |
 | Time to green | For each default-branch run that turned `failed` after a `passed` run, elapsed time until the next `passed` run. Report median and worst, 90 days |
@@ -431,7 +432,7 @@ All trend stats use default-branch runs with `source = ci` unless stated. Backfi
 | Cross-platform parity | Tests executed on more than one platform, and any whose status differs between platforms in the same run |
 | Days since last report | Per project; feeds staleness |
 
-Headline tiles on the landing page: total tests, overall pass rate, projects reporting, runs in last 30 days, median time to green, current green streaks.
+Headline tiles on the landing page: total tests, overall pass rate, projects reporting, runs in last 30 days, median time to green, current green streaks. Runs in last 30 days counts default-branch runs with `source = ci` only, as `design/data-map.md` defines it.
 
 How the trend, time-to-green and flakiness definitions are computed (`lib/stats`):
 
@@ -441,6 +442,7 @@ How the trend, time-to-green and flakiness definitions are computed (`lib/stats`
 - **Trend buckets.** Pass rate has a point per run and a bucket per UTC day. Run count has a bucket per UTC day, with empty days included. Coverage has a point per run per module. A day's pass rate adds up the day's counts, so a large run outweighs a small one; it is not the mean of the day's run rates. `runs.failed` already includes errors (5.2), so the pass rate is `passed / (passed + failed)`. A run or day with nothing passed or failed has no rate. A count-form coverage row with `lines_total` 0 has no percentage and is left out.
 - **Time to green.** Runs are ordered by `finished_at`; ties go by `started_at`, then run ID, then attempt. Elapsed time runs from the failing run's `finished_at` to the next passed run's. An episode belongs to the 90 days holding its failing run, and the passed run before it may be older. A branch still red at the present moment is reported on its own and left out of median and worst. With an even count, the median is the mean of the middle two.
 - **Flakiness.** A passing result is `passed`; a failing result is `failed` or `error`. Results come from default-branch CI runs that finished in the 30 days. A result is compared only with results for the same test on the same platform, the platform being its report's; a test that passes on one platform and fails on another is a cross-platform parity finding, not a flake. The denominator is "Total tests" for the latest default-branch CI run in that window; with no such run, or no results, there is no flake rate.
+- **Health on public pages.** The reporting-health marker and any other health state a public page shows are derived in `lib/` from public data, never from `alerts`: stale when the days since the project's last report exceed its `expected_cadence_days`; empty when the latest default-branch run is `empty`; below floor when a module's latest coverage is under its `coverage_floors` value. The Phase 6 alerts in section 12 are the admin-facing record of the same rules.
 
 ## 12. Integrity alerts
 
@@ -456,7 +458,7 @@ These exist because of real incidents recorded in Ostomate2's post-mortems: CI s
 
 Staleness only works if CI runs when no one is committing. Each reporting project adds a weekly `schedule:` trigger to its main workflow; `expected_cadence_days` defaults to 8 to match. A stale check runs daily as a scheduled function.
 
-Open alerts appear on the admin page and as a small status marker on the public project page ("reporting healthy" / "no report in 12 days"). Email notification to the admin is optional and only if a free-tier mail service is used.
+Open alerts appear on the admin page. The public project page shows a small status marker ("reporting healthy" / "no report in 12 days") derived from public data by the same rules (section 11), since anon has no access to `alerts` (section 9). Email notification to the admin is optional and only if a free-tier mail service is used.
 
 The scheduled function therefore does three things each day: write heartbeat, run stale check, run prune. It is triggered by Vercel cron. Its last-run timestamp is shown on the admin page; if it is more than 36 hours old, that is itself displayed as a warning.
 
@@ -508,6 +510,7 @@ The look of the site is a first-class requirement (G9). A hiring manager forms a
 - API keys: 32 random bytes, shown once, stored as SHA-256 hash, per project, rotatable.
 - Ingestion: size limit, rate limit, strict Zod validation, XML parser with DTD and entity expansion disabled, all text fields length-capped, all output HTML-escaped (failure messages are untrusted input).
 - The Supabase secret key (`sb_secret_…`, the successor to the service-role key) is used only in server code and never shipped to the browser. The browser uses the publishable key (`sb_publishable_…`, the successor to the anon key), which runs as the `anon` database role and is constrained by RLS (section 9).
+- Public pages read only through a publishable-key client (`lib/supabase/public.ts`) via `lib/queries/`, never the secret client, and a lint rule enforces it. Because pages render as `anon`, whatever reaches a public page is what RLS allowed.
 - Admin: magic link, single allowlisted email, checked server-side on every admin route and action.
 - Secrets live in Vercel and GitHub environment settings. `.env*` files are gitignored from the first commit, and a CI check fails the build if a file matching common secret patterns is tracked.
 
@@ -518,10 +521,16 @@ The look of the site is a first-class requirement (G9). A hiring manager forms a
 | Unit | Vitest | Parsers (against real fixtures), layer resolution, stat calculations, alert rules, token and key utilities, bot classification |
 | Integration | Vitest + local Supabase | Ingestion endpoint end to end against real Postgres: idempotency, transactions, rollups, RLS policies verified with an anon client. Prune job: verified against a seeded database that rows older than the window are removed, the latest 5 runs per project are always kept, run rows and rollups are untouched, and re-running deletes nothing further. |
 | E2E | Playwright | Seeded database; landing, project, run, test-history pages; visibility rules in the rendered UI; tracked-link flow; admin auth |
-| Accessibility | axe via Playwright | Every public page |
+| Visual regression | Playwright | Every public page in desktop and phone widths, light and dark (Phase 5) |
+| Accessibility | axe via Playwright (`@axe-core/playwright`) | Every public page |
 | Contract | Vitest | Appendix A reporter script against a local server |
 
 Rules: coverage floor 90% lines, enforced in CI via Vitest thresholds. CI runs lint, typecheck, unit, integration, and E2E on every PR. No failure masking. From Phase 7, CI posts its own JUnit and coverage output to the production testpulse instance as project `testpulse`.
+
+- **Fixed time.** Pages and stats read the current time through `lib/clock.ts`. When `TESTPULSE_FIXED_NOW` is set, it returns that instant, so e2e runs and visual snapshots see the same windows and relative times on every run. The app refuses to start with it set when `VERCEL_ENV` is `production`.
+- **Seed data.** E2E runs against a database seeded by a TypeScript script that sends committed fixtures through the real parsers, `ingest_report` and `backfill_run`; there is no hand-written SQL seed. `projects/testpulse.yaml` (public) is added for the seed and stays unregistered in production until Phase 7.
+- **Visual snapshots.** Snapshot PNGs are committed in the repo, without Git LFS, and generated only in the pinned Playwright Docker image, so local and CI render identically. The CI e2e job compares them with no retries.
+- **Lighthouse.** The Phase 5 score is checked manually against the Vercel preview of the phase's closing PR, mobile preset, on the landing page, a project page, a run page and a test page, and the scores are recorded in the Phase 5 evidence.
 
 ## 17. Phases and acceptance criteria
 
@@ -684,7 +693,7 @@ Evidence recorded 2026-09-25:
 - A new report appears in the landing page feed without reload. (Playwright, against local Supabase realtime)
 - For a private project, failure text, repo links, and full SHAs are absent from the rendered HTML and from every network response.
 - Declared suites display with their status and are excluded from totals.
-- Axe reports no serious or critical violations; Lighthouse ≥ 90 for performance and accessibility. (Lighthouse manual or CI job)
+- Axe reports no serious or critical violations; Lighthouse ≥ 90 for performance and accessibility. (Lighthouse manual, section 16)
 
 ### Phase 6: Alerts, tracked links, admin
 
@@ -787,6 +796,16 @@ Evidence recorded 2026-09-25:
 | 2026-09-26 | Suite duration trends read CI runs only; pass-rate, run-count and coverage trends include imported history | Imported history has no durations: backfill stores `duration_ms` 0, which would plot as runs taking no time |
 | 2026-09-26 | The public landing feed shows default-branch runs only; pull request runs appear on the project page run list under an "All branches" filter | Settles open question 4 on its stated default, which is removed from section 18 |
 | 2026-09-28 | `TrendChart` draws with Recharts but measures its own width and owns its tooltip and keyboard model; it does not use `ResponsiveContainer`, Recharts' `Tooltip` or its accessibility layer. The Recharts charting decision (section 4) is unchanged | The design lays the chart out by its measured width (the phone layout below 560 px) and gives it a keyboard model, focus on the latest point and Escape to close, that Recharts' accessibility layer does not have: it has no Escape and toggles with Enter. Recharts still draws every axis, grid line, line, bar, floor line and dot. Recharts 3.10.1 and the chart code add one 376 KB script to a page that draws a chart, 109 KB gzipped |
+| 2026-09-28 | The "test count per run" trend is the "Total tests" measure for each default-branch CI run; imported history is left out. Run count per day still includes imported history (2026-09-24 row): they are different trends | `runs.total` counts executions, and Ostomate2's imported history records JVM results only (`lib/backfill/ostomate2-history.ts`), so a total-based or history-inclusive line would jump when iOS results join at go-live. Imported history has no per-test rows to count distinct tests from |
+| 2026-09-28 | The "Runs in last 30 days" landing tile counts default-branch CI runs only | Matches `design/data-map.md`; the tile describes how often CI reports now, which imported history would inflate |
+| 2026-09-28 | Health on public pages (stale, empty, below floor) is derived in `lib/` from public data. anon never gets access to `alerts`; the Phase 6 alerts are the admin-facing record of the same rules | Section 9 keeps `alerts` private. Every input the rules need (last report time, `expected_cadence_days`, latest run status, latest coverage, `coverage_floors`) is already readable by anon |
+| 2026-09-28 | Public pages read only through a publishable-key client (`lib/supabase/public.ts`) via `lib/queries/`, never the secret client; a lint rule enforces it | Rendering as `anon` makes RLS the boundary for server-rendered pages too, so a query mistake cannot put private data on a page |
+| 2026-09-28 | A migration publishes only `public.reports` to `supabase_realtime`; `runs`, `result_failures` and `projects` are never published. The browser refreshes the server-rendered page on a report event instead of querying tables | Nothing is published today. Refreshing server-rendered data reuses the one read path and its RLS instead of adding browser queries |
+| 2026-09-28 | Tests fix the current time with `TESTPULSE_FIXED_NOW`, read by `lib/clock.ts`; the app refuses to start with it set when `VERCEL_ENV` is `production` | Windows and relative times move with the clock, so e2e and visual snapshots would differ between runs. Refusing it in production means a leaked setting cannot freeze the live site |
+| 2026-09-28 | E2E seed data is committed fixtures sent through the real parsers, `ingest_report` and `backfill_run` by a TypeScript script, not a SQL seed. `projects/testpulse.yaml` (public) is added for the seed and stays unregistered in production until Phase 7 | A hand-written seed could hold rows ingestion never produces; seeding through the real path keeps e2e data real. The only captured failure from a public project is `fixtures/testpulse/junit/playwright-one-failure.xml`, which needs a testpulse project to be ingested under; without it, e2e could not show failure detail that a public page must display |
+| 2026-09-28 | Visual snapshot PNGs are committed without Git LFS, generated only in the pinned Playwright Docker image, and compared in the CI e2e job with no retries. `@axe-core/playwright` is added as a dev dependency for accessibility checks | Font rendering differs between machines, so one pinned image is the only way local and CI snapshots agree. LFS adds a quota and setup for a small set of files. Retries would hide a flaky snapshot |
+| 2026-09-28 | The Phase 5 Lighthouse ≥ 90 criterion is checked manually on the Vercel preview of the closing PR (mobile preset) for landing, a project page, a run page and a test page, with scores recorded in the Phase 5 evidence | Lighthouse scores in CI vary enough between runs to become a flaky test |
+| 2026-09-28 | Project descriptions are plain paragraphs separated by blank lines, rendered without a Markdown library (section 5.1 said Markdown) | Neither project file uses Markdown syntax, and a Markdown renderer would be a new dependency and another path for untrusted HTML |
 
 ---
 

@@ -1,0 +1,126 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+  COVERAGE_10,
+  OSTOMATE2_RUN_SECONDS,
+  PASS_RATE_30,
+  RUNS_PER_DAY,
+  TESTS_30,
+} from './design-samples.test-support';
+import { niceScale, trendYScale } from './scale';
+
+const line = { zero: false, percent: false, integer: false, steps: 3 };
+
+describe('trendYScale', () => {
+  it('fits a percentage line to its data and floor, padded and snapped to nice steps', () => {
+    expect(
+      trendYScale({ ...line, values: COVERAGE_10, floor: 91, percent: true, integer: false }),
+    ).toEqual({ min: 40, max: 100, ticks: [40, 60, 80, 100] });
+  });
+
+  it('uses two steps at phone width', () => {
+    expect(
+      trendYScale({ ...line, values: COVERAGE_10, floor: 91, percent: true, steps: 2 }),
+    ).toEqual({ min: 25, max: 100, ticks: [25, 50, 75, 100] });
+  });
+
+  it('includes the floor even when every point is above it', () => {
+    const scale = trendYScale({ ...line, values: [96, 97], floor: 80, percent: true });
+    expect(scale.min).toBeLessThanOrEqual(80);
+  });
+
+  it('clamps percentages to 100 at the top', () => {
+    expect(trendYScale({ ...line, values: PASS_RATE_30, percent: true })).toEqual({
+      min: 98,
+      max: 100,
+      ticks: [98, 99, 100],
+    });
+    expect(trendYScale({ ...line, values: PASS_RATE_30, percent: true, steps: 2 })).toEqual({
+      min: 98,
+      max: 100,
+      ticks: [98, 100],
+    });
+  });
+
+  it('clamps percentages to 0 at the bottom', () => {
+    expect(trendYScale({ ...line, values: [0.5, 2], percent: true })).toEqual({
+      min: 0,
+      max: 4,
+      ticks: [0, 2, 4],
+    });
+  });
+
+  it('fits a count line without starting it at zero', () => {
+    expect(trendYScale({ ...line, values: TESTS_30, integer: true })).toEqual({
+      min: 110,
+      max: 150,
+      ticks: [110, 120, 130, 140, 150],
+    });
+  });
+
+  it('starts bars and counts that read as amounts at zero', () => {
+    expect(trendYScale({ ...line, values: RUNS_PER_DAY, zero: true, integer: true })).toEqual({
+      min: 0,
+      max: 3,
+      ticks: [0, 1, 2, 3],
+    });
+    expect(
+      trendYScale({ ...line, values: RUNS_PER_DAY, zero: true, integer: true, steps: 2 }),
+    ).toEqual({ min: 0, max: 4, ticks: [0, 2, 4] });
+  });
+
+  it('keeps a zero-based scale at zero when every value is zero', () => {
+    expect(trendYScale({ ...line, values: [0, 0, 0], zero: true, integer: true })).toEqual({
+      min: 0,
+      max: 1,
+      ticks: [0, 1],
+    });
+  });
+
+  it('never gives whole-number values a fractional tick, which would print twice', () => {
+    expect(trendYScale({ ...line, values: [0, 1, 0], zero: true, integer: true })).toEqual({
+      min: 0,
+      max: 1,
+      ticks: [0, 1],
+    });
+    expect(trendYScale({ ...line, values: OSTOMATE2_RUN_SECONDS, integer: true })).toEqual({
+      min: 20,
+      max: 35,
+      ticks: [20, 25, 30, 35],
+    });
+  });
+
+  it('snaps seconds to tenths without floating-point noise', () => {
+    expect(trendYScale({ ...line, values: [0.4, 0.6] })).toEqual({
+      min: 0.3,
+      max: 0.7,
+      ticks: [0.3, 0.4, 0.5, 0.6, 0.7],
+    });
+  });
+
+  it('gives a flat line room above and below', () => {
+    expect(trendYScale({ ...line, values: [5, 5, 5], integer: true })).toEqual({
+      min: 4,
+      max: 6,
+      ticks: [4, 5, 6],
+    });
+  });
+});
+
+describe('niceScale', () => {
+  it('falls back to 0 to 1 when given no finite range', () => {
+    expect(niceScale(Number.NaN, Number.NaN, 2, { percent: false, integer: false })).toEqual({
+      min: 0,
+      max: 1,
+      ticks: [0, 0.5, 1],
+    });
+  });
+
+  it('opens a range of one value around it', () => {
+    expect(niceScale(3, 3, 2, { percent: false, integer: true })).toEqual({
+      min: 2,
+      max: 4,
+      ticks: [2, 3, 4],
+    });
+  });
+});

@@ -1,0 +1,234 @@
+/* TrendChart, drawn to the Design System page and tp-charts.js (design/components.md). */
+
+.figure {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0;
+  font: 500 20px var(--font-serif);
+}
+
+.scope {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.caption {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.body {
+  margin-top: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.keySolid,
+.keyDashed {
+  width: 20px;
+  height: 0;
+}
+
+.keySolid {
+  border-top: 2.5px solid var(--ink);
+}
+
+.keyDashed {
+  border-top: 2px dashed var(--ink-3);
+}
+
+.frame {
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--line-strong);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.frame.loading {
+  background: var(--raised);
+  border: 0;
+}
+
+.single {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--line-strong);
+}
+
+.singleValue {
+  font: 600 var(--chart-value) var(--font-sans);
+  color: var(--ink);
+}
+
+.singleDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.singleText {
+  font-size: 14px;
+  color: var(--ink-2);
+  text-align: center;
+  padding: 0 16px;
+}
+
+.plot {
+  position: relative;
+}
+
+/* Fixed pixel text: the SVG is drawn at its real width and never scaled. */
+.surface {
+  touch-action: pan-y;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.axisText {
+  font-size: var(--chart-axis);
+  fill: var(--ink-3);
+}
+
+.valueText {
+  font-size: var(--chart-value);
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.floorText {
+  font-size: var(--chart-axis);
+  font-weight: 600;
+  fill: var(--attn);
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  width: 180px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-menu);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.tipLabel {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.tipRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tipName {
+  color: var(--ink-2);
+}
+
+.tipValue {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.tipMark {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.tipFail {
+  color: var(--fail);
+}
+
+.tipEmpty {
+  color: var(--attn);
+}
+
+.toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.tableWrap {
+  max-height: 320px;
+  overflow: auto;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  font: 600 12px var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.table tbody th,
+.table tbody td {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-align: left;
+  font-weight: 400;
+}
+
+.table .value {
+  text-align: right;
+  font-weight: 600;
+}

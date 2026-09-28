@@ -1,6 +1,6 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
-import { ParseError } from './types';
+import { ParseError } from './types.ts';
 
 export type XmlNode = Record<string, unknown>;
 

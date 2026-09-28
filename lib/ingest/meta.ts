@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { storabilityIssue } from '../parsers/limits';
+import { storabilityIssue } from '../parsers/limits.ts';
 
 // Spec section 6.2: the `meta` part of a report request, as the Appendix A script posts it.
 export const REPORT_EVENTS = ['push', 'pull_request', 'schedule', 'workflow_dispatch'] as const;

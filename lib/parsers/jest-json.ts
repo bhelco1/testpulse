@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { formatPath, parseJsonText, validateShape } from './json';
+import { formatPath, parseJsonText, validateShape } from './json.ts';
 import {
   assertDuration,
   assertName,
@@ -8,8 +8,13 @@ import {
   MAX_EPOCH_MS,
   stripAnsi,
   toFailure,
-} from './limits';
-import { ParseError, type NormalizedReport, type NormalizedTest, type TestStatus } from './types';
+} from './limits.ts';
+import {
+  ParseError,
+  type NormalizedReport,
+  type NormalizedTest,
+  type TestStatus,
+} from './types.ts';
 
 // Only the fields the parser reads; Jest's other fields are ignored (spec section 7).
 const assertionResultSchema = z.object({

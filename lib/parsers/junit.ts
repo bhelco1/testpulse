@@ -1,5 +1,10 @@
-import { assertDuration, assertName, firstNonEmptyLine, toFailure } from './limits';
-import { ParseError, type NormalizedReport, type NormalizedTest, type TestStatus } from './types';
+import { assertDuration, assertName, firstNonEmptyLine, toFailure } from './limits.ts';
+import {
+  ParseError,
+  type NormalizedReport,
+  type NormalizedTest,
+  type TestStatus,
+} from './types.ts';
 import {
   assertNoDoctype,
   asNode,
@@ -8,7 +13,7 @@ import {
   parseXml,
   textOf,
   type XmlNode,
-} from './xml';
+} from './xml.ts';
 
 const OUTCOME_CHILDREN: ReadonlyArray<{ tag: string; status: TestStatus }> = [
   { tag: 'failure', status: 'failed' },

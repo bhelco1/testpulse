@@ -81,7 +81,7 @@ describe('loadProjectFiles', () => {
     const { files, errors } = loadProjectFiles(repoProjectsDir);
 
     expect(errors).toEqual([]);
-    expect(files.map((file) => file.slug)).toEqual(['ostomate2', 'routeserve']);
+    expect(files.map((file) => file.slug)).toEqual(['ostomate2', 'routeserve', 'testpulse']);
   });
 
   it('collects every invalid file instead of stopping at the first, and ignores non-YAML', () => {

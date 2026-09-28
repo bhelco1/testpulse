@@ -1,0 +1,43 @@
+slug: testpulse
+name: testpulse
+tagline: Public dashboard of live test results from every project's CI, including its own.
+description: >-
+  Each project's CI posts its JUnit, Jest JSON, JaCoCo and istanbul output after every run, and
+  testpulse turns it into pass rates, trends, test pyramids, coverage against floors, flaky tests
+  and time to green. Visibility rules for private projects are enforced by row-level security in
+  Postgres, not by the UI. Built test-first; its own Vitest and Playwright results report here
+  like any other project's.
+visibility: public
+repo_url: https://github.com/bhelco1/testpulse
+default_branch: main
+expected_cadence_days: 8
+sort_order: 30
+
+dev_stack:
+  - category: Web
+    items: [Next.js 16 (App Router), React 19, TypeScript 5.9 (strict), Recharts 3]
+  - category: Data
+    items: ['Supabase (Postgres, Realtime, Auth)', 'Zod 4']
+  - category: Delivery
+    items: [GitHub Actions, Vercel]
+
+test_stack:
+  - category: Runners
+    items: [Vitest 5, Playwright 1.63]
+  - category: Component
+    items: [Testing Library, jsdom]
+  - category: Integration
+    items: [Supabase CLI (local Postgres with RLS)]
+  - category: Coverage
+    items: [V8 via Vitest]
+
+# Phase 7 posts Vitest unit and component results from the checks job, Vitest integration
+# results from the integration job, and Playwright results from the e2e job (spec section 16).
+layer_rules:
+  - match: { job: e2e }
+    layer: e2e
+  - match: { job: integration }
+    layer: integration
+  - match: { suite: 'components/**' }
+    layer: component
+  - default: unit

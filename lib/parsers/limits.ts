@@ -1,4 +1,4 @@
-import { ParseError, type ParseErrorOptions, type TestFailure } from './types';
+import { ParseError, type ParseErrorOptions, type TestFailure } from './types.ts';
 
 // Spec section 5.6 caps failure text; suite and name caps are the Phase 1 "oversized fields" rule.
 export const MAX_NAME_LENGTH = 1000;

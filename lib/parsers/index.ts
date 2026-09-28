@@ -1,5 +1,5 @@
-export { parseIstanbulSummary } from './istanbul';
-export { parseJacoco } from './jacoco';
+export { parseIstanbulSummary } from './istanbul.ts';
+export { parseJacoco } from './jacoco.ts';
 export {
   parseJestJson,
   SUITE_LOAD_FAILURE_NAME,
@@ -7,8 +7,8 @@ export {
   type JestJson,
   type JestJsonOptions,
   type JestTestResult,
-} from './jest-json';
-export { parseJunit } from './junit';
+} from './jest-json.ts';
+export { parseJunit } from './junit.ts';
 export {
   ParseError,
   type NormalizedCoverage,
@@ -17,4 +17,4 @@ export {
   type ParseErrorOptions,
   type TestFailure,
   type TestStatus,
-} from './types';
+} from './types.ts';

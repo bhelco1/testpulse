@@ -6,10 +6,10 @@ import {
   type NormalizedReport,
   type TestFailure,
   type TestStatus,
-} from '../parsers';
-import { compileLayerRules, type Layer } from './layer-rules';
-import type { ReportEvent, ReportMeta } from './meta';
-import { compileNameNormalization } from './name-normalization';
+} from '../parsers/index.ts';
+import { compileLayerRules, type Layer } from './layer-rules.ts';
+import type { ReportEvent, ReportMeta } from './meta.ts';
+import { compileNameNormalization } from './name-normalization.ts';
 
 export type RunStatus = 'passed' | 'failed' | 'empty';
 export type ReportFormat = 'junit' | 'jest-json';

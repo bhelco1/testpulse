@@ -17,6 +17,7 @@
     "check:contrast": "node scripts/check-contrast.ts",
     "test:e2e": "playwright test",
     "db:reset": "supabase db reset",
+    "db:seed": "node --env-file-if-exists=.env.local scripts/seed.ts",
     "project:add": "node --env-file-if-exists=.env.local scripts/project-add.ts",
     "projects:sync": "node --env-file-if-exists=.env.local scripts/projects-sync.ts",
     "project:rotate-key": "node --env-file-if-exists=.env.local scripts/project-rotate-key.ts",

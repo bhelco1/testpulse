@@ -22,6 +22,7 @@ stats, phases, and acceptance criteria.
 - `npm run check:secrets` fails if any tracked path looks like a secret
 - `npm run test:e2e` runs the Playwright end-to-end test in Chromium against the production build
 - `npm run db:reset` resets the local database and applies migrations (needs `supabase start`)
+- `npm run db:seed` seeds the local database for end-to-end tests from committed fixtures; it refuses any non-local Supabase URL
 - `npm run test:int` runs the Vitest integration tests against the local database
 - `npm run project:add <slug>` registers `projects/<slug>.yaml` and prints its API key once
 - `npm run projects:sync` updates database rows from `projects/*.yaml`; it never touches API keys

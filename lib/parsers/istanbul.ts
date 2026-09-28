@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { parseJsonText, validateShape } from './json';
-import type { NormalizedCoverage } from './types';
+import { parseJsonText, validateShape } from './json.ts';
+import type { NormalizedCoverage } from './types.ts';
 
 const metricSchema = z.object({
   covered: z.number().int().nonnegative(),

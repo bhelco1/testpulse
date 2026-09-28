@@ -78,6 +78,7 @@ npm run check:secrets  fail if any tracked path looks like a secret
 npm run check:contrast fail if a design token pair is under WCAG AA (4.5:1 text, 3:1 graphics)
 npm run test:e2e       Playwright
 npm run db:reset       reset local database and apply migrations (requires `supabase start`)
+npm run db:seed        seed local Supabase for e2e from committed fixtures (after db:reset; refuses non-local URLs)
 npm run test:int       Vitest integration tests (requires `supabase start`)
 npm run project:add <slug>         register projects/<slug>.yaml and print its API key once
 npm run projects:sync              update database rows from projects/*.yaml; never touches API keys

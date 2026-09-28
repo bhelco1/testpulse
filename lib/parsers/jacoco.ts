@@ -1,5 +1,5 @@
-import { ParseError, type NormalizedCoverage } from './types';
-import { assertNoDoctype, asNode, attribute, children, parseXml, type XmlNode } from './xml';
+import { ParseError, type NormalizedCoverage } from './types.ts';
+import { assertNoDoctype, asNode, attribute, children, parseXml, type XmlNode } from './xml.ts';
 
 // Every JaCoCo report opens with exactly this external-identifier DOCTYPE. It carries no internal
 // subset, so nothing can be declared in it; it is removed from the prolog only, and any other

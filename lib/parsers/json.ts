@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import { ParseError } from './types';
+import { ParseError } from './types.ts';
 
 export function parseJsonText(text: string): unknown {
   try {

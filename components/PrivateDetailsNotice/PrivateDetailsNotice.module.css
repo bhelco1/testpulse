@@ -1,0 +1,28 @@
+.notice {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px dashed var(--line-strong);
+  background: var(--inset);
+}
+
+.lock {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ink-2);
+}
+
+.title {
+  font-weight: 600;
+  font-size: 14.5px;
+}
+
+.text {
+  margin: var(--space-1) 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 620px;
+}

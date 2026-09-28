@@ -1,0 +1,21 @@
+.marker {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pass {
+  color: var(--pass);
+}
+
+.attn {
+  color: var(--attn);
+}
+
+.neutral {
+  color: var(--neutral);
+}

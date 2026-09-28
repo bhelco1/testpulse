@@ -57,7 +57,7 @@ design/              Claude Design handoff bundle (do not edit by hand)
 docs/                spec, inventory, design brief
 ```
 
-Unit tests sit next to the code as `*.test.ts`. Integration tests are `*.int.test.ts` and need local Supabase running.
+Unit tests sit next to the code as `*.test.ts`; component tests are `components/<Name>/<Name>.test.tsx` and opt into jsdom with a `// @vitest-environment jsdom` docblock. Integration tests are `*.int.test.ts` and need local Supabase running.
 
 ## Commands
 

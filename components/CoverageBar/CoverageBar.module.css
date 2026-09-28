@@ -1,0 +1,56 @@
+.row {
+  display: grid;
+  grid-template-columns: 128px minmax(40px, 1fr) auto;
+  align-items: center;
+  column-gap: 14px;
+  font-size: 14px;
+}
+
+.module {
+  font: 13px var(--font-mono);
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track {
+  position: relative;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--raised);
+}
+
+.fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+}
+
+.floor {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 14px;
+  background: var(--attn);
+}
+
+.value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.figure {
+  font-weight: 600;
+}
+
+.floorLabel {
+  color: var(--ink-3);
+}
+
+.below .figure,
+.below .floorLabel,
+.arrow {
+  color: var(--attn);
+}

@@ -1,0 +1,66 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* No border here: each row's top hairline is the one line under the header. */
+.head {
+  padding: 16px 20px;
+}
+
+.title {
+  margin: 0;
+  font: 500 20px var(--font-serif);
+}
+
+.intro {
+  margin: var(--space-1) 0 0;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Wraps at phone width: the name takes its own line, then layer, count and status. */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.name {
+  flex: 1 1 220px;
+  font-weight: 600;
+}
+
+.layer {
+  width: 110px;
+  color: var(--ink-3);
+}
+
+.count {
+  width: 90px;
+}
+
+.status {
+  flex: 0 1 260px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--neutral);
+  font-weight: 600;
+}
+
+.icon {
+  flex: none;
+}

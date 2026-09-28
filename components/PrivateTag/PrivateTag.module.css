@@ -1,0 +1,19 @@
+.tag {
+  display: inline-flex;
+  align-items: center;
+}
+
+.web {
+  gap: 6px;
+  font: 500 13px var(--font-sans);
+  color: var(--ink-2);
+  background: var(--neutral-tint);
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.kiosk {
+  gap: 10px;
+  font-size: 24px;
+  color: var(--ink-3);
+}

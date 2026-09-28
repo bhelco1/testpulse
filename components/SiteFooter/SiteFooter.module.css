@@ -1,0 +1,26 @@
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: 18px 0 var(--space-7);
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.links {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.link {
+  min-height: var(--target-min);
+  display: flex;
+  align-items: center;
+}
+
+.privacy {
+  padding-right: var(--space-4);
+}

@@ -1,0 +1,18 @@
+.toggle {
+  width: var(--target-min);
+  height: var(--target-min);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.glyph {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  background: linear-gradient(90deg, var(--ink) 50%, transparent 50%);
+}

@@ -1,0 +1,32 @@
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14.5px;
+  color: var(--ink-3);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.target {
+  min-height: var(--target-min);
+  display: flex;
+  align-items: center;
+}
+
+.current {
+  color: var(--ink);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+}

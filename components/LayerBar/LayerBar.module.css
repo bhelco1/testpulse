@@ -1,0 +1,41 @@
+.bar {
+  display: flex;
+  height: 8px;
+  gap: 3px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.segment {
+  min-width: 3px;
+}
+
+.tone1 {
+  background: var(--layer-1);
+}
+.tone2 {
+  background: var(--layer-2);
+}
+.tone3 {
+  background: var(--layer-3);
+}
+.tone4 {
+  background: var(--layer-4);
+}
+
+.labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.label {
+  display: flex;
+  gap: 5px;
+}

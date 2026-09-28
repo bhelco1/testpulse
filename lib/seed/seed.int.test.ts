@@ -4,8 +4,10 @@ import { fileURLToPath } from 'node:url';
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { loadLanding, type Landing } from '../queries/landing.ts';
 import { flakyTests } from '../stats/flaky.ts';
 import { loadStatsInput } from '../stats/load.ts';
+import { landingHeadline, type ProjectSummary } from '../stats/summary.ts';
 import { passRateTrend } from '../stats/trends.ts';
 import { timeToGreen } from '../stats/time-to-green.ts';
 import { createPublicClient } from '../supabase/public.ts';
@@ -21,7 +23,8 @@ import { seedDatabase } from './seed.ts';
 // Isolation: the seed owns three real slugs (ostomate2, routeserve, testpulse) and deletes and
 // re-creates only those. Every other integration file creates its own projects under random
 // slugs and reads only those, so they can run alongside this one; this is the only file that
-// touches the seed slugs.
+// touches the seed slugs. The landing-stats checks below live here for the same reason: they
+// read the seed slugs, and in another file they would race this one's delete and re-seed.
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const NOW = new Date(SEED_NOW);
@@ -346,5 +349,191 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
     });
     expect(passRate.runs.filter((point) => point.source === 'backfill')).toHaveLength(13);
     expect(passRate.runs.filter((point) => point.source === 'ci')).toHaveLength(8);
+  });
+
+  describe('landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13)', () => {
+    const MINUTE = 60_000;
+    let landing: Landing;
+    let seeded: ProjectSummary[];
+    const card = (slug: string): ProjectSummary => {
+      const found = seeded.find((summary) => summary.project.slug === slug);
+      if (found === undefined) throw new Error(`no summary for ${slug}`);
+      return found;
+    };
+
+    beforeAll(async () => {
+      landing = await loadLanding(anon, NOW);
+      // Other integration files add projects under random slugs while this runs, so the
+      // headline is recomputed over the seed's three alone; landing.headline is the same
+      // function over every project.
+      seeded = landing.projects.filter((summary) =>
+        (SLUGS as readonly string[]).includes(summary.project.slug),
+      );
+    });
+
+    it('loads the three seed projects in dashboard order', () => {
+      expect(seeded.map((summary) => summary.project.slug)).toEqual(SLUGS);
+    });
+
+    it('takes each latest run from the default branch and CI, with its pass rate', () => {
+      // Ostomate2 2026-10-05 09:26 push: 192 / (192 + 0) = 1.
+      expect(card('ostomate2').latestRun).toMatchObject({
+        status: 'passed',
+        finishedAt: new Date('2026-10-05T09:26:17.747Z'),
+        branch: 'main',
+        passed: 192,
+        failed: 0,
+        skipped: 0,
+        passRate: 1,
+      });
+      // routeserve 2026-10-05 08:12 push with the shared failure: 1044 / (1044 + 1).
+      expect(card('routeserve').latestRun).toMatchObject({
+        status: 'failed',
+        finishedAt: new Date('2026-10-05T08:13:55.412Z'),
+        passed: 1044,
+        failed: 1,
+        skipped: 0,
+        passRate: 1044 / 1045,
+      });
+      // testpulse's one run: 1 passed, 1 failed, 1 skipped; 1 / (1 + 1) = 0.5.
+      expect(card('testpulse').latestRun).toMatchObject({
+        status: 'failed',
+        passed: 1,
+        failed: 1,
+        skipped: 1,
+        passRate: 0.5,
+      });
+    });
+
+    it('shows a private project its counts, with the commit cut to 7 characters by runs_public', () => {
+      expect(card('routeserve').project.visibility).toBe('private');
+      expect(card('routeserve').latestRun?.commitSha).toMatch(/^[0-9a-f]{7}$/);
+      expect(card('ostomate2').latestRun?.commitSha).toMatch(/^[0-9a-f]{40}$/);
+    });
+
+    it('counts distinct tests per layer in the latest run, declared suites excluded', () => {
+      // Ostomate2: 82 shared + 60 composeApp on the JVM; the 50 iOS executions are composeApp
+      // tests already counted. 103 unit + 29 integration + 10 visual = 142. The 7 + 5 declared
+      // Maestro flows are not added.
+      expect(card('ostomate2')).toMatchObject({
+        totalTests: 142,
+        layers: { unit: 103, integration: 29, visual: 10 },
+      });
+      expect(card('ostomate2').project.declaredSuites.map((suite) => suite.count)).toEqual([7, 5]);
+      // routeserve: 1045 executions, 1041 tests (apps/mobile runs one name five times).
+      // 607 unit + 165 component + 269 api = 1041; the 13 declared flows are not added.
+      expect(card('routeserve')).toMatchObject({
+        totalTests: 1041,
+        layers: { unit: 607, component: 165, api: 269 },
+      });
+      // testpulse: 3 Playwright tests, the skipped one included.
+      expect(card('testpulse')).toMatchObject({ totalTests: 3, layers: { e2e: 3 } });
+    });
+
+    it('takes each module’s latest coverage, walking back past a report that had none', () => {
+      expect(card('ostomate2').coverage).toEqual([
+        // 497 / 527 = 94.307...% against 93; 457 / 490 = 93.265...% against 91.
+        expect.objectContaining({ module: 'composeApp', pct: (497 / 527) * 100, floor: 93 }),
+        expect.objectContaining({ module: 'shared', pct: (457 / 490) * 100, floor: 91 }),
+      ]);
+      // The latest routeserve run posted packages/shared without coverage, so its 102 / 102
+      // comes from the 2026-10-04 run.
+      const routeserve = card('routeserve').coverage;
+      expect(routeserve).toEqual([
+        expect.objectContaining({ module: 'apps/backend', pct: (1862 / 1968) * 100, floor: 80 }),
+        expect.objectContaining({ module: 'apps/mobile', pct: (1496 / 1551) * 100, floor: 80 }),
+        expect.objectContaining({ module: 'packages/shared', pct: 100, floor: 80 }),
+      ]);
+      expect(routeserve[2]?.runId).not.toBe(card('routeserve').latestRun?.id);
+      expect(seeded.flatMap((summary) => summary.coverage).some((c) => c.belowFloor)).toBe(false);
+      expect(card('testpulse').coverage).toEqual([]);
+    });
+
+    it('counts green streaks, runs in 30 days and time to green on default-branch CI runs', () => {
+      // Ostomate2: 8 main runs, all passed (the ninth is a pull request).
+      expect(card('ostomate2')).toMatchObject({
+        greenStreak: { current: 8, longest: 8 },
+        runsInLast30Days: 8,
+        timeToGreen: { medianMs: null, stillRed: null },
+      });
+      // routeserve main: P | F P P | F(1) P(2) | F P P | F. Longest 2, current 0. 10 main runs.
+      // Recoveries, finish to finish (every run lasts 1 min 55.412 s): 15:30 to 16:14 = 44 min,
+      // 13:05 to 13:31 = 26 min, 09:55 to 14:02 = 4 h 7 min. Median 44 min, worst 247 min.
+      // Red since 08:13:55.412 today: 3 h 46 min 4.588 s at 12:00.
+      expect(card('routeserve')).toMatchObject({
+        greenStreak: { current: 0, longest: 2 },
+        runsInLast30Days: 10,
+        timeToGreen: {
+          medianMs: 44 * MINUTE,
+          worstMs: 247 * MINUTE,
+          stillRed: { elapsedMs: 226 * MINUTE + 4_588 },
+        },
+      });
+      expect(card('routeserve').timeToGreen.recoveries.map((r) => r.elapsedMs)).toEqual([
+        44 * MINUTE,
+        26 * MINUTE,
+        247 * MINUTE,
+      ]);
+      // testpulse: one failed run, never green, and no passed run before it to turn red from.
+      expect(card('testpulse')).toMatchObject({
+        greenStreak: { current: 0, longest: 0 },
+        runsInLast30Days: 1,
+        timeToGreen: { recoveries: [], stillRed: null },
+      });
+    });
+
+    it('derives health from public data: testpulse stale 13 days, the others healthy', () => {
+      // 2026-09-22T04:37:00.242Z to 2026-10-05T12:00Z is 13 days 7 h 23 min: 13 > 8.
+      expect(card('testpulse').health).toEqual({
+        daysSinceLastReport: 13,
+        problems: ['stale'],
+        marker: { health: 'stale', days: 13 },
+      });
+      for (const slug of ['ostomate2', 'routeserve']) {
+        expect(card(slug).health, slug).toEqual({
+          daysSinceLastReport: 0,
+          problems: [],
+          marker: { health: 'healthy' },
+        });
+      }
+    });
+
+    it('combines the three into the headline tiles', () => {
+      expect(landingHeadline(seeded)).toEqual({
+        // 142 + 1041 + 3.
+        totalTests: 1186,
+        // (192 + 1044 + 1) / (192 + 1044 + 1 + 0 + 1 + 1) = 1237 / 1239; skipped 0 + 0 + 1.
+        passRate: {
+          passed: 1237,
+          failed: 2,
+          skipped: 1,
+          rate: 1237 / 1239,
+          counted: ['ostomate2', 'routeserve', 'testpulse'],
+        },
+        emptyLatestRuns: [],
+        projectsReporting: {
+          reporting: 2,
+          registered: 3,
+          silent: [{ slug: 'testpulse', days: 13 }],
+          notReporting: [],
+        },
+        // 8 + 10 + 1.
+        runsInLast30Days: {
+          total: 19,
+          byProject: [
+            { slug: 'ostomate2', runs: 8 },
+            { slug: 'routeserve', runs: 10 },
+            { slug: 'testpulse', runs: 1 },
+          ],
+        },
+        // Only routeserve recovered: 26, 44, 247 min; median 44 min.
+        medianTimeToGreenMs: 44 * MINUTE,
+        greenStreaks: [
+          { slug: 'ostomate2', current: 8 },
+          { slug: 'routeserve', current: 0 },
+          { slug: 'testpulse', current: 0 },
+        ],
+      });
+    });
   });
 });

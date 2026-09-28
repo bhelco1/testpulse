@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { at } from './records.test-support.ts';
+import { at, run } from './records.test-support.ts';
 import {
   CI_ONLY_SOURCES,
   countsTowardCiOnlyStats,
   countsTowardTrends,
   inWindow,
+  latestRun,
   TREND_SOURCES,
   utcDays,
   windowStart,
@@ -63,5 +64,36 @@ describe('windows', () => {
     const justAfter = at('2026-10-01T00:00:00.001Z');
     expect(windowStart(justAfter, 30)).toEqual(at('2026-09-02T00:00:00Z'));
     expect(utcDays(justAfter, 30).at(-1)).toBe('2026-10-01');
+  });
+});
+
+describe('latestRun', () => {
+  const now = at('2026-10-05T12:00:00Z');
+
+  it('is null with no runs', () => {
+    expect(latestRun([], 'main', now)).toBeNull();
+  });
+
+  it('is the only run when there is one', () => {
+    const only = run('only', '2026-10-01T00:00:00Z');
+    expect(latestRun([only], 'main', now)).toBe(only);
+  });
+
+  it('is the latest default-branch CI run by finish, passing over backfill and other branches', () => {
+    const ci = run('ci', '2026-10-01T00:00:00Z');
+    const runs = [
+      run('older', '2026-09-30T00:00:00Z'),
+      ci,
+      run('bf', '2026-10-02T00:00:00Z', { source: 'backfill' }),
+      run('pr', '2026-10-03T00:00:00Z', { branch: 'feature/x' }),
+      run('future', '2026-10-05T12:00:00.001Z'),
+    ];
+    expect(latestRun(runs, 'main', now)).toBe(ci);
+  });
+
+  it('breaks a finish-time tie by attempt', () => {
+    const second = run('a2', '2026-10-01T00:00:00Z', { ciRunId: '5', runAttempt: 2 });
+    const first = run('a1', '2026-10-01T00:00:00Z', { ciRunId: '5', runAttempt: 1 });
+    expect(latestRun([second, first], 'main', now)).toBe(second);
   });
 });

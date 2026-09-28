@@ -46,7 +46,7 @@ type Response = PromiseLike<{ data: unknown; error: PostgrestError | null }>;
 const failed = (what: string, error: PostgrestError): Error =>
   new Error(`${what}: ${error.code} ${error.message}`);
 
-async function readAll<S extends z.ZodType>(
+export async function readAll<S extends z.ZodType>(
   what: string,
   schema: S,
   page: (from: number, to: number) => Response,
@@ -62,7 +62,7 @@ async function readAll<S extends z.ZodType>(
   }
 }
 
-async function readByRunIds<S extends z.ZodType>(
+export async function readByRunIds<S extends z.ZodType>(
   what: string,
   schema: S,
   runIds: readonly string[],

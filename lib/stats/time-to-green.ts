@@ -44,7 +44,8 @@ export interface TimeToGreen {
 
 const TIME_TO_GREEN_DAYS = 90;
 
-function median(sorted: readonly number[]): number | null {
+/** The median of ascending values; with an even count, the mean of the middle two. */
+export function median(sorted: readonly number[]): number | null {
   if (sorted.length === 0) return null;
   const middle = Math.floor(sorted.length / 2);
   const upper = sorted[middle] ?? 0;

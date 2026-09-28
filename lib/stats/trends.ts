@@ -75,7 +75,7 @@ function trendRuns(runs: readonly StatsRun[], options: TrendOptions): StatsRun[]
 
 // Section 5.2 rolls JUnit errors into failed, so this is section 11's passed / (passed +
 // failed + error) with skipped excluded.
-const rate = (passed: number, failed: number): number | null =>
+export const passRate = (passed: number, failed: number): number | null =>
   passed + failed === 0 ? null : passed / (passed + failed);
 
 export function passRateTrend(runs: readonly StatsRun[], options: TrendOptions): PassRateTrend {
@@ -93,7 +93,7 @@ export function passRateTrend(runs: readonly StatsRun[], options: TrendOptions):
       passed: run.passed,
       failed: run.failed,
       skipped: run.skipped,
-      passRate: rate(run.passed, run.failed),
+      passRate: passRate(run.passed, run.failed),
     })),
     // A day's rate pools its counts, so a run of 500 tests outweighs a run of 5, as it would
     // if both had run as one.
@@ -109,7 +109,7 @@ export function passRateTrend(runs: readonly StatsRun[], options: TrendOptions):
         passed,
         failed,
         skipped: sum((run) => run.skipped),
-        passRate: rate(passed, failed),
+        passRate: passRate(passed, failed),
       };
     }),
   };
@@ -128,7 +128,7 @@ export function runCountTrend(
 }
 
 /** Section 11: lines_covered / lines_total when the counts are present, else lines_pct. */
-function linesPct(lines: StatsCoverage['lines']): number | null {
+export function linesPct(lines: StatsCoverage['lines']): number | null {
   if (lines.form === 'pct') return lines.pct;
   return lines.total === 0 ? null : (lines.covered / lines.total) * 100;
 }

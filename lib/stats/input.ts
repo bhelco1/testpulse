@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { LayerSchema } from '../ingest/layer-rules.ts';
+
 // Spec section 11: the rows the stats read, as the anon role sees them (section 9). Rows come
 // from PostgREST, which is a trust boundary like any other, so they are parsed rather than cast.
 
@@ -104,3 +106,16 @@ export const ResultRowSchema = z
   }));
 
 export type StatsResult = z.output<typeof ResultRowSchema>;
+
+// The results of one run with each test's layer, for Total tests and the pyramid (section 11).
+// Layer lives on the tests row (5.4), which anon may read.
+export const TEST_LAYER_COLUMNS = 'id, test_id, tests!inner(layer), reports!inner(run_id)';
+
+export const TestLayerRowSchema = z
+  .object({
+    id: z.string().min(1),
+    test_id: z.string().min(1),
+    tests: z.object({ layer: LayerSchema }),
+    reports: embeddedRun,
+  })
+  .transform((row) => ({ testId: row.test_id, layer: row.tests.layer }));

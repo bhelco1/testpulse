@@ -65,3 +65,22 @@ export function byFinish(a: StatsRun, b: StatsRun): number {
 
 // Code-unit order rather than localeCompare, so the result does not depend on the server locale.
 const compareText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * The latest default-branch CI run finished at or before now, or null. "Latest run" on the
+ * landing page and project card is always a CI run (design/data-map.md): backfilled history has
+ * no per-test rows to count.
+ */
+export function latestRun(
+  runs: readonly StatsRun[],
+  defaultBranch: string,
+  now: Date,
+): StatsRun | null {
+  let latest: StatsRun | null = null;
+  for (const run of runs) {
+    if (!countsTowardCiOnlyStats(run, defaultBranch)) continue;
+    if (run.finishedAt.getTime() > now.getTime()) continue;
+    if (latest === null || byFinish(run, latest) > 0) latest = run;
+  }
+  return latest;
+}

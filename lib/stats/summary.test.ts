@@ -10,10 +10,12 @@ import {
   type SummaryProject,
 } from './summary.ts';
 
-// Spec section 11 headline tiles and section 13 project cards: total tests, pass rate, projects
-// reporting, runs in last 30 days (default-branch CI runs only, decision 2026-09-28), median time
-// to green and current green streaks; per project the latest run, its tests per layer with
-// declared suites excluded, latest coverage against floors, green streak and reporting health.
+// Spec section 11 headline tiles and section 13 project cards. The headline carries only numbers
+// about the whole portfolio: total tests, pass rate, projects reporting and runs in last 30 days
+// (default-branch CI runs only). Per project: the latest run, its tests per layer with declared
+// suites excluded, latest coverage against floors, time to green (median and worst), current and
+// longest green streak, and reporting health. Time to green and green streak belong to one
+// project, so the headline does not combine them (decision 2026-09-28, second row).
 
 const HOUR = 3_600_000;
 const now = at('2026-10-05T12:00:00Z');
@@ -119,6 +121,45 @@ describe('projectSummary', () => {
     });
   });
 
+  it('gives each project its own time to green and green streaks, in calendar time', () => {
+    // Thursday 2026-10-01 to Monday 2026-10-05, CI main in order:
+    // r1 P | r2 F r3 P r4 P r5 P r6 P | r7 F r8 F r9 P | r10 F r11 P r12 P.
+    const runs = [
+      run('r1', '2026-10-01T00:00:00Z'),
+      run('r2', '2026-10-01T01:00:00Z', { status: 'failed', passed: 9, failed: 1 }),
+      run('r3', '2026-10-01T01:30:00Z'),
+      run('r4', '2026-10-01T02:00:00Z'),
+      run('r5', '2026-10-01T03:00:00Z'),
+      run('r6', '2026-10-01T04:00:00Z'),
+      run('r7', '2026-10-02T18:00:00Z', { status: 'failed', passed: 9, failed: 1 }),
+      run('r8', '2026-10-02T19:00:00Z', { status: 'failed', passed: 9, failed: 1 }),
+      run('r9', '2026-10-05T06:00:00Z'),
+      run('r10', '2026-10-05T07:00:00Z', { status: 'failed', passed: 9, failed: 1 }),
+      run('r11', '2026-10-05T07:10:00Z'),
+      run('r12', '2026-10-05T08:00:00Z'),
+    ];
+    const summary = projectSummary(
+      { ...input, runs, lastReportAt: at('2026-10-05T08:00:00Z'), coverage: [] },
+      now,
+    );
+
+    // Recoveries, failing finish to passing finish: r2 to r3 30 min; r7 (Friday 18:00) to r9
+    // (Monday 06:00) 60 h, the weekend counted, since time to green is calendar time; r10 to
+    // r11 10 min. Sorted 10 min, 30 min, 60 h: median 30 min, worst 60 h.
+    expect(summary.timeToGreen).toEqual({
+      recoveries: [
+        expect.objectContaining({ failedRunId: 'r2', greenRunId: 'r3', elapsedMs: 0.5 * HOUR }),
+        expect.objectContaining({ failedRunId: 'r7', greenRunId: 'r9', elapsedMs: 60 * HOUR }),
+        expect.objectContaining({ failedRunId: 'r10', greenRunId: 'r11', elapsedMs: HOUR / 6 }),
+      ],
+      medianMs: 0.5 * HOUR,
+      worstMs: 60 * HOUR,
+      stillRed: null,
+    });
+    // Current: r11, r12. Longest: r3 to r6.
+    expect(summary.greenStreak).toEqual({ current: 2, longest: 4 });
+  });
+
   it('has no latest run, no tests and is not reporting before its first report', () => {
     const summary = projectSummary(
       { ...input, runs: [], lastReportAt: null, latestRunTests: [], coverage: [] },
@@ -191,8 +232,8 @@ describe('landingHeadline', () => {
       } | null;
       totalTests?: number;
       runsInLast30Days?: number;
-      recoveriesMs?: number[];
-      current?: number;
+      timeToGreen?: ProjectSummary['timeToGreen'];
+      greenStreak?: ProjectSummary['greenStreak'];
       health?: ProjectSummary['health'];
     } = {},
   ): ProjectSummary => {
@@ -219,16 +260,10 @@ describe('landingHeadline', () => {
       totalTests: overrides.totalTests ?? 0,
       layers: {},
       coverage: [],
-      greenStreak: { current: overrides.current ?? 0, longest: overrides.current ?? 0 },
+      greenStreak: overrides.greenStreak ?? { current: 0, longest: 0 },
       runsInLast30Days: overrides.runsInLast30Days ?? 0,
-      timeToGreen: {
-        recoveries: (overrides.recoveriesMs ?? []).map((elapsedMs, index) => ({
-          failedRunId: `${slug}-f${index}`,
-          failedAt: at('2026-10-01T00:00:00Z'),
-          greenRunId: `${slug}-g${index}`,
-          greenAt: new Date(at('2026-10-01T00:00:00Z').getTime() + elapsedMs),
-          elapsedMs,
-        })),
+      timeToGreen: overrides.timeToGreen ?? {
+        recoveries: [],
         medianMs: null,
         worstMs: null,
         stillRed: null,
@@ -248,9 +283,22 @@ describe('landingHeadline', () => {
       emptyLatestRuns: [],
       projectsReporting: { reporting: 0, registered: 0, silent: [], notReporting: [] },
       runsInLast30Days: { total: 0, byProject: [] },
-      medianTimeToGreenMs: null,
-      greenStreaks: [],
     });
+  });
+
+  const recovered = (elapsedMs: number): ProjectSummary['timeToGreen'] => ({
+    recoveries: [
+      {
+        failedRunId: 'f',
+        failedAt: at('2026-10-01T00:00:00Z'),
+        greenRunId: 'g',
+        greenAt: new Date(at('2026-10-01T00:00:00Z').getTime() + elapsedMs),
+        elapsedMs,
+      },
+    ],
+    medianMs: elapsedMs,
+    worstMs: elapsedMs,
+    stillRed: null,
   });
 
   it('combines the latest runs of every project', () => {
@@ -259,15 +307,15 @@ describe('landingHeadline', () => {
         latestRun: { passed: 190, failed: 2, skipped: 3 },
         totalTests: 150,
         runsInLast30Days: 18,
-        recoveriesMs: [1 * HOUR, 3 * HOUR],
-        current: 0,
+        timeToGreen: recovered(3 * HOUR),
+        greenStreak: { current: 0, longest: 5 },
       }),
       summary('b', {
         latestRun: { passed: 10, failed: 0, skipped: 0 },
         totalTests: 10,
         runsInLast30Days: 6,
-        recoveriesMs: [2 * HOUR, 10 * HOUR],
-        current: 41,
+        timeToGreen: recovered(10 * HOUR),
+        greenStreak: { current: 41, longest: 41 },
         health: {
           daysSinceLastReport: 12,
           problems: ['stale'],
@@ -287,7 +335,7 @@ describe('landingHeadline', () => {
         latestRun: { passed: 0, failed: 0, skipped: 5 },
         totalTests: 5,
         runsInLast30Days: 2,
-        current: 2,
+        greenStreak: { current: 2, longest: 2 },
         health: {
           daysSinceLastReport: 0,
           problems: ['below_floor'],
@@ -328,15 +376,14 @@ describe('landingHeadline', () => {
         { slug: 'e', runs: 2 },
       ],
     });
-    // Every project's recoveries pooled: 1, 2, 3, 10 hours; even count, so (2 + 3) / 2 = 2.5 h.
-    // The median of each project's median would be (2 + 6) / 2 = 4 h.
-    expect(headline.medianTimeToGreenMs).toBe(2.5 * HOUR);
-    expect(headline.greenStreaks).toEqual([
-      { slug: 'a', current: 0 },
-      { slug: 'b', current: 41 },
-      { slug: 'c', current: 0 },
-      { slug: 'd', current: 0 },
-      { slug: 'e', current: 2 },
+    // a and b have recovered and have green streaks, but those stay on their cards: the
+    // headline has no time to green or green streak.
+    expect(Object.keys(headline)).toEqual([
+      'totalTests',
+      'passRate',
+      'emptyLatestRuns',
+      'projectsReporting',
+      'runsInLast30Days',
     ]);
   });
 
@@ -346,16 +393,17 @@ describe('landingHeadline', () => {
         latestRun: { passed: 1044, failed: 1, skipped: 0 },
         totalTests: 1041,
         runsInLast30Days: 10,
-        recoveriesMs: [44 * 60_000],
+        timeToGreen: recovered(44 * 60_000),
+        greenStreak: { current: 0, longest: 2 },
       }),
     ]);
-    // 1044 / 1045.
-    expect(headline).toMatchObject({
+    // 1044 / 1045. The one project's time to green and streaks are its card's, not the headline's.
+    expect(headline).toEqual({
       totalTests: 1041,
-      passRate: { passed: 1044, failed: 1, rate: 1044 / 1045, counted: ['only'] },
-      projectsReporting: { reporting: 1, registered: 1 },
-      runsInLast30Days: { total: 10 },
-      medianTimeToGreenMs: 44 * 60_000,
+      passRate: { passed: 1044, failed: 1, skipped: 0, rate: 1044 / 1045, counted: ['only'] },
+      emptyLatestRuns: [],
+      projectsReporting: { reporting: 1, registered: 1, silent: [], notReporting: [] },
+      runsInLast30Days: { total: 10, byProject: [{ slug: 'only', runs: 10 }] },
     });
   });
 

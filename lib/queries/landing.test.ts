@@ -224,6 +224,8 @@ describe('loadLanding', () => {
       layers: { unit: 1, visual: 1 },
       greenStreak: { current: 2, longest: 2 },
       runsInLast30Days: 2,
+      // Both runs passed: nothing to recover from.
+      timeToGreen: { recoveries: [], medianMs: null, worstMs: null, stillRed: null },
       health: { daysSinceLastReport: 0, marker: { health: 'healthy' } },
     });
     expect(summary?.coverage.map(({ module, runId }) => [module, runId])).toEqual([

@@ -6,18 +6,18 @@ import type { StatsCoverage, StatsRun } from './input.ts';
 import { countsTowardCiOnlyStats, inWindow, latestRun } from './rules.ts';
 import { greenStreak, type GreenStreak } from './streak.ts';
 import { testCounts, type TestLayerRow } from './test-counts.ts';
-import { median, timeToGreen, type TimeToGreen } from './time-to-green.ts';
+import { timeToGreen, type TimeToGreen } from './time-to-green.ts';
 import { passRate } from './trends.ts';
 
 // Spec section 11 headline tiles and the section 13 project card, for the landing page. Each
-// project's numbers come from its own runs; the headline combines them. Read as follows, and
-// pinned by the tests:
+// project's numbers come from its own runs; the headline combines only the ones that describe
+// the whole portfolio. Read as follows, and pinned by the tests:
 // - "Latest run" is the latest default-branch CI run (design/data-map.md).
 // - Overall pass rate adds up the latest runs' counts, passed / (passed + failed), as a day's
 //   pass rate does (section 11): a run of 1,000 tests outweighs a run of 3. A run that passed
 //   and failed nothing (empty, or all skipped) adds nothing and has no rate of its own.
-// - Median time to green pools every project's recoveries in the 90 days and takes the median
-//   of them all, which is section 11's per-run definition applied to every project's runs.
+// - Time to green and green streaks stay on each project's card and are never combined: each
+//   project is standalone, and one left red on purpose would skew a portfolio-wide number.
 // - Projects reporting counts projects that have reported and are not stale.
 // - Declared suites travel with the project and are never in a total or a layer (5.8).
 
@@ -85,8 +85,6 @@ export interface LandingHeadline {
     readonly total: number;
     readonly byProject: readonly { readonly slug: string; readonly runs: number }[];
   };
-  readonly medianTimeToGreenMs: number | null;
-  readonly greenStreaks: readonly { readonly slug: string; readonly current: number }[];
 }
 
 export function runsInLast30Days(
@@ -156,9 +154,6 @@ export function landingHeadline(summaries: readonly ProjectSummary[]): LandingHe
       ? [{ slug: summary.project.slug, days: summary.health.daysSinceLastReport ?? 0 }]
       : [],
   );
-  const recoveries = summaries
-    .flatMap((summary) => summary.timeToGreen.recoveries.map((recovery) => recovery.elapsedMs))
-    .sort((a, b) => a - b);
   return {
     totalTests: sum((summary) => summary.totalTests),
     passRate: {
@@ -184,10 +179,5 @@ export function landingHeadline(summaries: readonly ProjectSummary[]): LandingHe
         runs: summary.runsInLast30Days,
       })),
     },
-    medianTimeToGreenMs: median(recoveries),
-    greenStreaks: summaries.map((summary) => ({
-      slug: summary.project.slug,
-      current: summary.greenStreak.current,
-    })),
   };
 }

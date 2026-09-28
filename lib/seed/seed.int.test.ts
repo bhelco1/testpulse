@@ -449,12 +449,13 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       expect(card('testpulse').coverage).toEqual([]);
     });
 
-    it('counts green streaks, runs in 30 days and time to green on default-branch CI runs', () => {
-      // Ostomate2: 8 main runs, all passed (the ninth is a pull request).
+    it('gives each card its own green streaks, runs in 30 days and time to green', () => {
+      // Ostomate2: 8 main runs, all passed (the ninth is a pull request). Never red, so no
+      // recoveries: median and worst are null, not 0.
       expect(card('ostomate2')).toMatchObject({
         greenStreak: { current: 8, longest: 8 },
         runsInLast30Days: 8,
-        timeToGreen: { medianMs: null, stillRed: null },
+        timeToGreen: { recoveries: [], medianMs: null, worstMs: null, stillRed: null },
       });
       // routeserve main: P | F P P | F(1) P(2) | F P P | F. Longest 2, current 0. 10 main runs.
       // Recoveries, finish to finish (every run lasts 1 min 55.412 s): 15:30 to 16:14 = 44 min,
@@ -474,11 +475,12 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         26 * MINUTE,
         247 * MINUTE,
       ]);
-      // testpulse: one failed run, never green, and no passed run before it to turn red from.
+      // testpulse: one failed run, never green, and no passed run before it to turn red from,
+      // so no recoveries and nothing still red: median and worst are null.
       expect(card('testpulse')).toMatchObject({
         greenStreak: { current: 0, longest: 0 },
         runsInLast30Days: 1,
-        timeToGreen: { recoveries: [], stillRed: null },
+        timeToGreen: { recoveries: [], medianMs: null, worstMs: null, stillRed: null },
       });
     });
 
@@ -498,7 +500,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       }
     });
 
-    it('combines the three into the headline tiles', () => {
+    it('combines the three into the headline tiles, with no time to green or green streak', () => {
       expect(landingHeadline(seeded)).toEqual({
         // 142 + 1041 + 3.
         totalTests: 1186,
@@ -526,13 +528,6 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
             { slug: 'testpulse', runs: 1 },
           ],
         },
-        // Only routeserve recovered: 26, 44, 247 min; median 44 min.
-        medianTimeToGreenMs: 44 * MINUTE,
-        greenStreaks: [
-          { slug: 'ostomate2', current: 8 },
-          { slug: 'routeserve', current: 0 },
-          { slug: 'testpulse', current: 0 },
-        ],
       });
     });
   });

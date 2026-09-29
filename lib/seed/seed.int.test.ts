@@ -5,14 +5,15 @@ import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { testKey } from '../ingest/normalize.ts';
-import { loadLanding, type Landing } from '../queries/landing.ts';
+import { loadLanding, type Landing, type LandingProject } from '../queries/landing.ts';
+import { landingView } from '../pages/landing.ts';
 import { loadProjectPage, type ProjectPage } from '../queries/project.ts';
 import { loadRunDetail } from '../queries/run.ts';
 import { loadTestHistory } from '../queries/test-history.ts';
 import { projectsPassingTile } from '../copy/projects-passing.ts';
 import { flakyTests } from '../stats/flaky.ts';
 import { loadStatsInput } from '../stats/load.ts';
-import { landingHeadline, type ProjectSummary } from '../stats/summary.ts';
+import { landingHeadline } from '../stats/summary.ts';
 import { passRateTrend } from '../stats/trends.ts';
 import { timeToGreen } from '../stats/time-to-green.ts';
 import { createPublicClient } from '../supabase/public.ts';
@@ -359,8 +360,8 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
   describe('landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13)', () => {
     const MINUTE = 60_000;
     let landing: Landing;
-    let seeded: ProjectSummary[];
-    const card = (slug: string): ProjectSummary => {
+    let seeded: LandingProject[];
+    const card = (slug: string): LandingProject => {
       const found = seeded.find((summary) => summary.project.slug === slug);
       if (found === undefined) throw new Error(`no summary for ${slug}`);
       return found;
@@ -569,6 +570,107 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         sub: 'Red: testpulse 13d 7h · RouteServe 3h 46m',
         fail: true,
       });
+    });
+    it('gives each card its latest run’s reports, failing tests and duration', () => {
+      expect(card('ostomate2').latestRunDetail).toMatchObject({
+        reports: [
+          { job: 'android', module: 'composeApp', platform: 'jvm', total: 60 },
+          { job: 'android', module: 'shared', platform: 'jvm', total: 82 },
+          { job: 'ios', module: 'composeApp', platform: 'ios-sim', total: 50 },
+        ],
+        failing: [],
+        // The three JUnit files' testsuite times: 17,746 + 17,747 + 111.
+        durationMs: 35_604,
+      });
+      // A private project's failing test is named on its card (section 9: names are public).
+      expect(card('routeserve').latestRunDetail).toMatchObject({
+        reports: [
+          { module: 'apps/backend', total: 498 },
+          { module: 'apps/mobile', total: 428 },
+          { module: 'packages/shared', total: 119 },
+        ],
+        failing: [
+          {
+            suite: 'packages/shared/src/schemas/asset.test.ts',
+            name: 'assetCreateSchema accepts a minimal valid asset',
+            platform: 'node',
+            status: 'failed',
+          },
+        ],
+        durationMs: 115_412 + 68_719 + 19_989,
+      });
+      expect(card('testpulse').latestRunDetail?.failing).toHaveLength(1);
+    });
+
+    // Every other integration file dates its runs before 2026-10-04 or after SEED_NOW, so the
+    // three newest default-branch CI runs at SEED_NOW are the seed's.
+    it('feeds the 3 newest default-branch CI runs across projects, in distinct tests', () => {
+      expect(
+        landing.recentRuns.map((run) => ({
+          slug: run.project.slug,
+          title: run.title,
+          status: run.status,
+          finishedAt: run.finishedAt,
+          reports: run.reports,
+          tests: run.tests,
+        })),
+      ).toEqual([
+        {
+          slug: 'ostomate2',
+          title: 'Push to main',
+          status: 'passed',
+          finishedAt: new Date('2026-10-05T09:26:17.747Z'),
+          reports: 3,
+          tests: { total: 142, passed: 142, failed: 0, skipped: 0 },
+        },
+        {
+          slug: 'routeserve',
+          title: 'Push to main',
+          status: 'failed',
+          finishedAt: new Date('2026-10-05T08:13:55.412Z'),
+          reports: 3,
+          tests: { total: 1041, passed: 1040, failed: 1, skipped: 0 },
+        },
+        {
+          // The 2026-10-04 06:43 scheduled run: green, every report of the green fixtures.
+          slug: 'routeserve',
+          title: 'Scheduled run',
+          status: 'passed',
+          finishedAt: new Date('2026-10-04T06:44:55.412Z'),
+          reports: 3,
+          tests: { total: 1041, passed: 1041, failed: 0, skipped: 0 },
+        },
+      ]);
+      // runs_public cuts a private project's SHA to 7 characters.
+      expect(landing.recentRuns.map((run) => run.commitSha.length)).toEqual([40, 7, 7]);
+    });
+
+    it('maps to the landing page’s tiles as the seed’s hand-computed values read', () => {
+      const view = landingView(
+        { projects: seeded, headline: landingHeadline(seeded), recentRuns: landing.recentRuns },
+        NOW,
+      );
+      expect(view.heroTotal).toBe('1,186');
+      expect(view.tiles).toEqual([
+        // 1,183 / 1,185 = 99.83%, rounded down.
+        { label: 'Pass rate', value: '99.8%', sub: '1,183 of 1,185 · 1 skipped, excluded' },
+        {
+          label: 'Projects reporting',
+          value: '2 of 3',
+          attention: { icon: 'stale', text: 'testpulse silent 13 days' },
+        },
+        {
+          label: 'Runs in last 30 days',
+          value: '19',
+          sub: 'Ostomate 2.0 8 · RouteServe 10 · testpulse 1',
+        },
+        {
+          label: 'Projects passing',
+          value: '1 of 3',
+          sub: 'Red: testpulse 13d 7h · RouteServe 3h 46m',
+          fail: true,
+        },
+      ]);
     });
   });
 

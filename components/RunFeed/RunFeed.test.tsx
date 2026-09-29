@@ -96,6 +96,15 @@ describe('RunFeed (web, landing)', () => {
     expect(container.querySelectorAll('a')).toHaveLength(3);
   });
 
+  // Before realtime reaches the landing (Phase 5 PR 8) neither note would be true.
+  it('has no live note when no connection state is given', () => {
+    const { container, getByRole } = render(<RunFeed state="ready" list="recent" runs={RUNS} />);
+
+    expect(container.querySelector('[data-part="live-note"]')).toBeNull();
+    expect(getByRole('heading', { level: 2 }).textContent).toBe('Recent runs');
+    expect(within(getByRole('log')).getAllByRole('link')).toHaveLength(3);
+  });
+
   it('has no branch filter and no "Load more" on the landing feed', () => {
     const { queryByRole } = render(<RunFeed state="ready" list="recent" runs={RUNS} connected />);
     expect(queryByRole('radiogroup')).toBeNull();

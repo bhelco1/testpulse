@@ -12,7 +12,7 @@ import {
   type PublicRun,
   type StatsResult,
 } from '../stats/input.ts';
-import { readAll, readByRunIds } from '../stats/load.ts';
+import { readByRunIds } from '../stats/load.ts';
 import {
   countsTowardCiOnlyStats,
   countsTowardTrends,
@@ -40,13 +40,15 @@ import {
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
 import { loadProject, loadSummaryInput, type ProjectDetail } from './project-summary.ts';
 import {
+  loadLatestRunDetail,
   loadReportCounts,
   loadResults,
-  loadRunReports,
   toListedRun,
+  type LatestRunDetail,
   type ListedRun,
-  type RunReport,
 } from './run-rows.ts';
+
+export type { FailingTest } from './run-rows.ts';
 
 // The project page, /p/[slug] (spec section 13): the project's own fields, its latest run with
 // the pyramid and coverage against floors, the section 11 trends, time to green and green
@@ -61,14 +63,6 @@ export interface ProjectPageOptions {
   readonly branches?: BranchScope;
   /** How many runs the list shows; the page raises it by 20 for "Load 20 more". */
   readonly runLimit?: number;
-}
-
-export interface FailingTest {
-  readonly testKey: string;
-  readonly suite: string;
-  readonly name: string;
-  readonly platform: string;
-  readonly status: 'failed' | 'error';
 }
 
 export interface ProjectTrends {
@@ -100,11 +94,7 @@ export interface ProjectPage {
   /** When the project's latest CI run on any branch finished, as section 11 dates a report. */
   readonly lastReportAt: Date | null;
   /** The latest default-branch CI run's reports, failing tests and duration; null before the first. */
-  readonly latestRun: {
-    readonly reports: readonly RunReport[];
-    readonly failing: readonly FailingTest[];
-    readonly durationMs: number;
-  } | null;
+  readonly latestRun: LatestRunDetail | null;
   readonly trends: Readonly<Record<WindowDays, ProjectTrends>>;
   readonly flaky: {
     readonly tests: readonly FlakyListTest[];
@@ -129,41 +119,6 @@ export function runListLimit(requested: number | undefined): number {
   return Math.min(MAX_RUN_LIMIT, Math.max(1, Math.trunc(requested)));
 }
 const LONGEST_WINDOW: WindowDays = 90;
-
-const FailingRowSchema = z
-  .object({
-    id: z.string().min(1),
-    status: z.enum(['failed', 'error']),
-    tests: z.object({ test_key: z.string().min(1), suite: z.string(), name: z.string() }),
-    reports: z.object({ run_id: z.string().min(1), platform: z.string().min(1) }),
-  })
-  .transform((row): FailingTest => ({
-    testKey: row.tests.test_key,
-    suite: row.tests.suite,
-    name: row.tests.name,
-    platform: row.reports.platform,
-    status: row.status,
-  }));
-
-const collator = new Intl.Collator('en');
-
-async function loadFailing(client: PublicClient, runId: string): Promise<FailingTest[]> {
-  const rows = await readAll('load the failing tests', FailingRowSchema, (from, to) =>
-    client
-      .from('results')
-      .select('id, status, tests!inner(test_key, suite, name), reports!inner(run_id, platform)')
-      .eq('reports.run_id', runId)
-      .in('status', ['failed', 'error'])
-      .order('id')
-      .range(from, to),
-  );
-  return rows.sort(
-    (a, b) =>
-      collator.compare(a.suite, b.suite) ||
-      collator.compare(a.name, b.name) ||
-      collator.compare(a.platform, b.platform),
-  );
-}
 
 const TEST_COLUMNS = 'id, test_key, module, suite, name, layer';
 
@@ -306,14 +261,7 @@ export async function loadProjectPage(
     project,
     summary,
     lastReportAt: input.lastReportAt,
-    latestRun:
-      latest === null
-        ? null
-        : {
-            reports: await loadRunReports(client, latest.id),
-            failing: await loadFailing(client, latest.id),
-            durationMs: latest.durationMs,
-          },
+    latestRun: latest === null ? null : await loadLatestRunDetail(client, latest),
     trends: { 30: trends(30), 90: trends(90) },
     flaky: {
       tests: flakyByTest.flatMap(({ testId, platforms }) => {

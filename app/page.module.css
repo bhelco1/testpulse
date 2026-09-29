@@ -1,0 +1,88 @@
+/* Layout from design/pages/Landing.dc.html; every value there is literal. */
+.main {
+  padding: 28px 0 56px;
+}
+
+.lede {
+  margin: 0 0 4px;
+  font: 400 clamp(20px, 2.2vw, 24px) / 1.3 var(--font-serif);
+  color: var(--ink-2);
+}
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 36px;
+  margin-bottom: 32px;
+}
+
+.total {
+  font: var(--text-hero);
+  letter-spacing: -0.04em;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
+}
+
+.projectsHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 48px 0 16px;
+}
+
+.projectsTitle {
+  margin: 0;
+  font: 500 30px var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+.projectsNote {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  gap: 16px;
+}
+
+.lower {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  align-items: start;
+}
+
+.lower > * {
+  min-width: 0;
+}
+
+.about {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 26px var(--pad-card-x);
+}
+
+.aboutTitle {
+  margin: 0 0 14px;
+  font: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.aboutText {
+  margin: 0 0 20px;
+  font: 400 19px / 1.5 var(--font-serif);
+  text-wrap: pretty;
+}

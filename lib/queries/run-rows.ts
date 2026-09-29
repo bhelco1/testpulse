@@ -136,3 +136,65 @@ export async function loadReportCounts(
   for (const { run_id: runId } of rows) counts.set(runId, (counts.get(runId) ?? 0) + 1);
   return counts;
 }
+
+export interface FailingTest {
+  readonly testKey: string;
+  readonly suite: string;
+  readonly name: string;
+  readonly platform: string;
+  readonly status: 'failed' | 'error';
+}
+
+const FailingRowSchema = z
+  .object({
+    id: z.string().min(1),
+    status: z.enum(['failed', 'error']),
+    tests: z.object({ test_key: z.string().min(1), suite: z.string(), name: z.string() }),
+    reports: z.object({ run_id: z.string().min(1), platform: z.string().min(1) }),
+  })
+  .transform((row): FailingTest => ({
+    testKey: row.tests.test_key,
+    suite: row.tests.suite,
+    name: row.tests.name,
+    platform: row.reports.platform,
+    status: row.status,
+  }));
+
+const collator = new Intl.Collator('en');
+
+export async function loadFailing(client: PublicClient, runId: string): Promise<FailingTest[]> {
+  const rows = await readAll('load the failing tests', FailingRowSchema, (from, to) =>
+    client
+      .from('results')
+      .select('id, status, tests!inner(test_key, suite, name), reports!inner(run_id, platform)')
+      .eq('reports.run_id', runId)
+      .in('status', ['failed', 'error'])
+      .order('id')
+      .range(from, to),
+  );
+  return rows.sort(
+    (a, b) =>
+      collator.compare(a.suite, b.suite) ||
+      collator.compare(a.name, b.name) ||
+      collator.compare(a.platform, b.platform),
+  );
+}
+
+/** What the landing card and the project page's latest-run card show of the latest run. */
+export interface LatestRunDetail {
+  readonly reports: readonly RunReport[];
+  /** Failed and errored results, by suite, name and platform. */
+  readonly failing: readonly FailingTest[];
+  readonly durationMs: number;
+}
+
+export async function loadLatestRunDetail(
+  client: PublicClient,
+  run: Pick<PublicRun, 'id' | 'durationMs'>,
+): Promise<LatestRunDetail> {
+  return {
+    reports: await loadRunReports(client, run.id),
+    failing: await loadFailing(client, run.id),
+    durationMs: run.durationMs,
+  };
+}

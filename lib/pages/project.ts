@@ -5,13 +5,9 @@ import { formatCount, qty } from '../copy/count';
 import { formatRunDuration, relativeTime, shortDate } from '../copy/time';
 import { LAYER_LABEL, layerSegments, type LayerSegment } from '../design/layers';
 import type { DeclaredSuite } from '../projects/schema';
-import type {
-  BranchScope,
-  ProjectPage,
-  ProjectPageOptions,
-  ProjectRunItem,
-} from '../queries/project';
+import type { BranchScope, ProjectPage, ProjectPageOptions } from '../queries/project';
 import { shortSuite } from '../results/short-suite';
+import { feedRun, runHref } from './feed';
 import type { PublicHealth } from '../stats/health';
 import type { GreenStreak } from '../stats/streak';
 import type { TimeToGreen } from '../stats/time-to-green';
@@ -98,7 +94,6 @@ export interface ProjectPageView {
 }
 
 const projectHref = (slug: string) => `/p/${encodeURIComponent(slug)}`;
-const runHref = (slug: string, runId: string) => `${projectHref(slug)}/runs/${runId}`;
 const testHref = (slug: string, testKey: string) => `${projectHref(slug)}/tests/${testKey}`;
 const sha7 = (sha: string) => sha.slice(0, 7);
 
@@ -227,45 +222,6 @@ function latestRunView(page: ProjectPage, now: Date): LatestRunView | null {
   };
 }
 
-function feedRun(run: ProjectRunItem, page: ProjectPage, now: Date): FeedRun {
-  // Distinct tests, as the latest-run card counts them (decision 2026-09-29). A pruned run has
-  // none left to count and keeps its executions until the design defines its row (13.2).
-  const tests = run.tests ?? run;
-  const base = {
-    id: run.id,
-    href: runHref(page.project.slug, run.id),
-    project: page.project.name,
-    branch: run.branch,
-    sha: sha7(run.commitSha),
-    when: relativeTime(run.finishedAt, now),
-  };
-  const title =
-    page.project.visibility === 'private'
-      ? { visibility: 'private' as const }
-      : { visibility: 'public' as const, title: run.title };
-  switch (run.status) {
-    case 'passed':
-      return {
-        ...base,
-        ...title,
-        status: 'passed',
-        total: tests.total,
-        duration: formatRunDuration(run.durationMs),
-      };
-    case 'failed':
-      return {
-        ...base,
-        ...title,
-        status: 'failed',
-        failed: tests.failed,
-        passed: tests.passed,
-        total: tests.total,
-      };
-    case 'empty':
-      return { ...base, ...title, status: 'empty', reports: run.reports };
-  }
-}
-
 export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
   const { project, summary } = page;
   const stack = (groups: ProjectPage['project']['devStack']): StackGroup[] =>
@@ -294,7 +250,7 @@ export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
     })),
     runs: {
       branches: page.runs.branches,
-      items: page.runs.items.map((run) => feedRun(run, page, now)),
+      items: page.runs.items.map((run) => feedRun(run, project, now)),
       branchHrefs: {
         default: runListHref(project.slug, { branches: 'default', limit: DEFAULT_RUN_LIMIT }),
         all: runListHref(project.slug, { branches: 'all', limit: DEFAULT_RUN_LIMIT }),

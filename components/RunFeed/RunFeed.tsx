@@ -16,8 +16,8 @@ export type BranchScope = 'default' | 'all';
 // the clock.
 type Connection = { connected: true } | { connected: false; asOf: string };
 
-// The project page run list before realtime reaches it: with no connection there is no note.
-type ProjectConnection = Connection | { connected?: undefined };
+// A web feed before realtime reaches its page: with no connection there is no note.
+type WebConnection = Connection | { connected?: undefined };
 
 // The project page run list's header: its branch filter, and the project named in its empty copy.
 // The parent fetches; this only asks.
@@ -26,11 +26,11 @@ type ProjectList = {
   project: string;
   branches: BranchScope;
   onBranchesChange: (branches: BranchScope) => void;
-} & ProjectConnection;
+} & WebConnection;
 
 // recent: the landing feed. project: the project page run list, with paging.
 type ReadyFeed =
-  | ({ list: 'recent' } & Connection)
+  | ({ list: 'recent' } & WebConnection)
   | (ProjectList & {
       // Present while there are more runs to load.
       onLoadMore?: () => void;
@@ -103,7 +103,7 @@ function EmptyText({ text }: { text: string }) {
   );
 }
 
-function LiveNote({ connection, project }: { connection: ProjectConnection; project: boolean }) {
+function LiveNote({ connection, project }: { connection: WebConnection; project: boolean }) {
   if (connection.connected === undefined) return null;
   return (
     <span

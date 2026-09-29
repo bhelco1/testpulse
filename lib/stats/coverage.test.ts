@@ -31,6 +31,22 @@ describe('latestCoverage', () => {
     ]);
   });
 
+  // Design v6 item 9: rows are sorted by module key in code-point order, as the database keeps
+  // no YAML order. Code points put every capital before every small letter, so "Web" sorts
+  // before "apps/backend", which a locale-aware sort would not do.
+  it('sorts modules by key in code-point order', () => {
+    const runs = [run('r1', '2026-10-01T00:00:00Z')];
+    const coverage = ['packages/shared', 'apps/mobile', 'Web', 'apps/backend'].map((module, i) =>
+      countsCoverage(`c${i}`, 'r1', module, 1, 2),
+    );
+    expect(latestCoverage(runs, coverage, options).map((row) => row.module)).toEqual([
+      'Web',
+      'apps/backend',
+      'apps/mobile',
+      'packages/shared',
+    ]);
+  });
+
   it('falls back to the recorded lines_pct of a backfilled run', () => {
     const runs = [run('bf', '2026-09-22T20:14:18Z', { source: 'backfill' })];
     expect(latestCoverage(runs, [pctCoverage('c1', 'bf', 'shared', 93.3)], options)).toEqual([

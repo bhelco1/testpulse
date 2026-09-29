@@ -41,7 +41,7 @@ a{color:inherit}a:hover{color:inherit}
 <div style="display:flex;flex-direction:column;gap:14px;margin-top:auto">
 <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="3">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 26px;background:var(--surface);border:1px solid var(--line);border-radius:16px">
-<span style="display:flex;align-items:center;gap:10px;font-size:24px;color:{{ t.labelInk }};font-weight:{{ t.labelW }}"><sc-if value="{{ t.attn }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg></sc-if><span>{{ t.label }}</span></span>
+<span style="display:flex;align-items:center;gap:10px;font-size:24px;color:{{ t.labelInk }};font-weight:{{ t.labelW }}"><sc-if value="{{ t.attn }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg></sc-if><sc-if value="{{ t.fail }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg></sc-if><span>{{ t.label }}</span></span>
 <span style="font:500 52px/1 'Source Serif 4',serif">{{ t.value }}</span>
 </div>
 </sc-for>
@@ -128,7 +128,7 @@ class Component extends DCLogic {
     const osto = { name: 'Ostomate2', private: false, st: ST.pass, frame: 'var(--line)', when: '4 min ago', whenInk: 'var(--ink-3)', sha: '0e2d0b4', total: '142',
       subParts: [part('0 failed ·'), part('0 skipped ·'), part('27 s')], failLine: '', failSub: '', showLayers: true,
       layers: L([['Unit', 103, 'var(--layer-1)'], ['Integration', 29, 'var(--layer-3)'], ['Visual', 10, 'var(--layer-2)']]),
-      cov: [cov('shared', 92.0, 91), cov('composeApp', 94.3, 93)], health: healthy };
+      cov: [cov('composeApp', 94.3, 93), cov('shared', 92.0, 91)], health: healthy };
     const route = { name: 'RouteServe', private: true, st: ST.pass, frame: 'var(--line)', when: '2 h ago', whenInk: 'var(--ink-3)', sha: 'c238574', total: '1,048',
       subParts: [part('0 failed ·'), part('0 skipped ·'), part('29 s')], failLine: '', failSub: '', showLayers: true,
       layers: L([['Unit', 608, 'var(--layer-1)'], ['Component', 165, 'var(--layer-2)'], ['Integration', 3, 'var(--layer-3)'], ['API', 269, 'var(--layer-4)']]),
@@ -145,7 +145,7 @@ class Component extends DCLogic {
     let tiles = [
       { label: 'Pass rate', value: '100%' },
       { label: 'Projects reporting', value: '2' },
-      { label: 'Green streak', value: '41' },
+      { label: 'Projects passing', value: '2 of 2' },
     ];
     let lastReport = 'Last report 4 min ago';
 
@@ -155,7 +155,7 @@ class Component extends DCLogic {
       overall = { label: '1 project failing', ink: 'var(--fail)', tint: 'var(--fail-tint)', d: 'm15 9-6 6M9 9l6 6' };
       heroNote = '1 failing on Ostomate2’s latest run. 0 skipped or disabled.';
       tiles[0] = { label: 'Pass rate', value: '99.9%' };
-      tiles[2] = { label: 'Green streak', value: '0' };
+      tiles[2] = { label: 'Ostomate2 red for 4m', value: '1 of 2', fail: true };
       feed = [row(ST.fail, 'Ostomate2', 'main', '1 failed', '4 min ago', { countInk: 'var(--fail)' }), feed[1], row(ST.pass, 'Ostomate2', 'main', '142 tests', '6 h ago')];
     } else if (sc === 'stale project') {
       Object.assign(route, { when: '12 days ago', whenInk: 'var(--attn)', frame: 'var(--attn)', health: { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0' } });
@@ -164,7 +164,7 @@ class Component extends DCLogic {
       feed[1] = { ...feed[1], when: '12 days ago' };
     }
 
-    tiles = tiles.map(t => Object.assign({ attn: false, sample: false }, t, { labelInk: t.attn ? 'var(--attn)' : 'var(--ink-3)', labelW: t.attn ? 600 : 400 }));
+    tiles = tiles.map(t => Object.assign({ attn: false, fail: false, sample: false }, t, { labelInk: t.fail ? 'var(--fail)' : t.attn ? 'var(--attn)' : 'var(--ink-3)', labelW: t.attn || t.fail ? 600 : 400 }));
     const p2 = n => String(n).padStart(2, '0');
     const d = this.state.now;
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 14, height: 14, borderRadius: '50%', flex: 'none', boxSizing: 'border-box', background: live ? 'var(--pass)' : 'transparent', border: live ? 'none' : '2px solid var(--ink-3)', color: 'var(--pass)', animation: live ? 'tpPulse 2.4s ease-out infinite' : 'none' } });

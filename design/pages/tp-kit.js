@@ -85,7 +85,7 @@
       hasLayers: !!run && !empty && !!o.layers, kLayers: !!run && !empty && !failed && !!o.layers, layers: o.layers ? layers(o.layers) : [],
       kHead: empty ? 'tests executed' : 'tests', kRest: subK, metaInk: o.stale ? 'var(--attn)' : 'var(--ink-3)',
       emptyNote: empty ? 'Every report in this run arrived with no test results. An empty run is treated as a problem, not a pass, and isn’t counted in any total.' : '',
-      hasCov: !!run && !empty && (o.cov || []).length > 0, noCov: !!run && !empty && !(o.cov || []).length, cov: (o.cov || []).map(x => cov(...x)),
+      hasCov: !!run && !empty && (o.cov || []).length > 0, noCov: !!run && !empty && !(o.cov || []).length, cov: (o.cov || []).slice().sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0).map(x => cov(...x)), /* v6 item 9: by module key */
       hasReports: !!run && (o.reports || []).length > 0, repHead: `${qty((o.reports || []).length, 'report')} in this run`, repSide: platformSplit(empty ? (o.reports || []).map(([k]) => [k, 0]) : o.reports),
       reports: (o.reports || []).map(([k, v]) => ({ k, n: empty ? '0' : n(v), ink: empty ? 'var(--attn)' : 'var(--ink)' })),
       declared: Array.isArray(o.declared) ? declaredSummary(o.declared) : (o.declared || ''), health,

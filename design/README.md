@@ -1,4 +1,4 @@
-# testpulse handoff v5
+# testpulse handoff v6
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -310,4 +310,40 @@ Same rules: the Design System page is canonical, components.md matches it, every
 **Follow-up**
 17. StatusTimeline's oldest label now uses the TrendChart counting rule (item 2): "{n−1} runs ago", "1 run ago" at 2, so 40 cells read "39 runs ago" (Design System, Project page, Test History, components.md). "Last {n} runs" when more runs than fit is unchanged.
 
-Files changed in v5: Design System.dc.html, Test History.dc.html, Run Detail.dc.html, Project Page.dc.html, tp-charts.js, tp-kit.js, design/README.md, design/components.md, design/data-map.md, and their copies in design/pages/.
+Files changed in v5: Design System.dc.html, Test History.dc.html, Run Detail.dc.html, Project Page.dc.html, tp-charts.js, tp-kit.js, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v6
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Decision applied: the landing and kiosk show only portfolio-wide numbers; time to green and green streak are per project, never combined, and use calendar time. Nothing outside items 1–13 was changed.
+
+**Landing headline and recovery**
+1. "Median time to green" and "Green streak" tiles removed from Landing (desktop and the 390 embed in Phone Views), the Design System tile samples and components.md. One portfolio tile added, **Projects passing**, so the row is four tiles (4 across at 1440 and 1024, 1 per row at 390). "Currently red" is folded into its sub-line rather than a fifth tile. Copy:
+   - value "{p} of {n}" (n = projects with a default-branch run; p = latest default-branch run passed)
+   - all passed: sub "Latest default-branch runs"
+   - one red: sub in `--fail` 600 with x-circle, "Ostomate2 red for 4m"; several: "Red: RouteServe 2d 3h · Ostomate2 4m" (longest first)
+   - latest run empty, none red: plain sub "Ostomate2 last run empty"
+   - no runs yet: value "0", sub "No runs yet"; loading as every StatTile
+   - duration: calendar time since the first failed run of the episode; "{m}m" under 1 h, "{h}h {mm}m" under 24 h, "{d}d {h}h" after
+   data-map row "Tile · Projects passing" added (runs_public only). Overall pass rate unchanged: passed ÷ (passed + failed), where failed includes error, as built.
+2. Kiosk: Green streak replaced by Projects passing ("2 of 2"; while red, the label becomes "Ostomate2 red for 4m" in `--fail` 600 with a 22 px x-circle, value "1 of 2"). Kiosk.dc.html, data-map.md Kiosk section, components.md StatTile kiosk and the Design System kiosk tiles updated.
+3. The ProjectCard does not show them (per-project history belongs on the project page; a red project is already the failed card state). The project page's two cells are now **RecoveryStats** (components.md) and carry every field and state, drawn on the Design System (section 05) and live on the Project page (new scenario "no recoveries in 90 days"):
+   - Green streak: current + "Longest {n} runs"; "0" while red. A failed pull-request run doesn't break it.
+   - Time to green: median + "Median of {k}, 90 days · worst {w}".
+   - Red now: extra `--fail` line "Red now for {duration}"; the open episode isn't counted until it recovers.
+   - No recoveries in 90 days: value "None", sub "No recoveries in 90 days", never 0; with Red now when still red.
+   Project page previously kept a 41 streak in its failed RouteServe state; it now shows 0 and Red now. Longest, worst and red-now durations are tagged SAMPLE.
+4. data-map.md: "Tile · Median time to green" and "Tile · Green streak" removed; added "Tile · Projects passing", and project-page rows "Green streak" and "Time to green". All from `runs_public`; no `alerts`.
+
+**Small inconsistencies**
+5. data-map.md mismatch row now matches components.md: any differing status; groups failed, errored, passed, skipped.
+6. 12 px. tp-charts.js button margin is now 8 + the 4 gap = 12; components.md states the other gaps too.
+7. Failing = failed or error on any platform. Flaky, skipped and not run don't count. Test History's script and components.md updated.
+8. Confirmed: one marker, stale, then empty, then below floor. The detail text is only the chosen marker's own; the others are already visible on the card (amber "0" total, amber coverage row), so no list.
+9. Confirmed: sorted by module key, code-point order (composeApp before shared). Applied in tp-kit.js (every ProjectCard), the Project page and the Kiosk mock.
+10. data-map.md card rows now use distinct tests in the latest default-branch CI run, with passed/failed/skipped per distinct test from the same run (Ostomate2 142, not 192).
+
+**Bundle fixes**
+11. Phrase removed.
+12. Removed the unused `chart()` method from Test History.dc.html.
+13. components.md: bar kind is exempt from the right-margin rule (stays 60, phone 44).
+
+Files changed in v6: Landing.dc.html, Kiosk.dc.html, Project Page.dc.html, Test History.dc.html, Design System.dc.html, tp-charts.js, tp-kit.js, design/README.md, design/components.md, design/data-map.md. Phone Views changes through its Landing embed; the file itself is unchanged.

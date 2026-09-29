@@ -76,6 +76,50 @@ describe('StatTile', () => {
     expect(() => ruleFor(CSS, '.attention .value')).toThrow('found 0');
   });
 
+  // Design v6 item 1; components.md StatTile `fail?`: Projects passing while a project is red.
+  it('on fail puts the sub-line in --fail with a 12px x-circle, value unchanged', () => {
+    const { container } = render(
+      <StatTile label="Projects passing" value="1 of 2" sub="Ostomate2 red for 4m" fail />,
+    );
+    const tile = container.firstElementChild as HTMLElement;
+    const fail = part(tile, 'fail');
+
+    expect(tile.dataset.fail).toBe('true');
+    expect(part(tile, 'label')?.textContent).toBe('Projects passing');
+    expect(part(tile, 'value')?.textContent).toBe('1 of 2');
+    expect(part(tile, 'sub')).toBeNull();
+    expect(fail?.textContent).toBe('Ostomate2 red for 4m');
+    const svg = fail?.querySelector('svg');
+    expect(svg?.getAttribute('aria-hidden')).toBe('true');
+    expect(svg?.getAttribute('width')).toBe('12');
+    expect(svg?.getAttribute('stroke-width')).toBe('2.8');
+    expect(svg?.querySelector('circle')?.getAttribute('r')).toBe('10');
+    expect(svg?.querySelector('path')?.getAttribute('d')).toBe('m15 9-6 6M9 9l6 6');
+  });
+
+  it('colours only the fail line, 13/600 in --fail, its icon never shrinking', () => {
+    expect(ruleFor(CSS, '.fail')).toEqual({
+      display: 'flex',
+      'align-items': 'center',
+      gap: '6px',
+      'font-size': '13px',
+      'font-weight': '600',
+      color: 'var(--fail)',
+      'margin-top': '2px',
+    });
+    expect(ruleFor(CSS, '.web .fail svg')).toEqual({ flex: '0 0 auto' });
+  });
+
+  it('keeps the plain sub-line when not failing', () => {
+    const { container } = render(
+      <StatTile label="Projects passing" value="2 of 2" sub="Latest default-branch runs" />,
+    );
+    const tile = container.firstElementChild as HTMLElement;
+    expect(tile.dataset.fail).toBe('false');
+    expect(part(tile, 'fail')).toBeNull();
+    expect(part(tile, 'sub')?.textContent).toBe('Latest default-branch runs');
+  });
+
   it('shows three busy bars in the shape of the tile while loading, and no figure', () => {
     const { container } = render(<StatTile label="Pass rate" value="100%" loading />);
     const tile = container.firstElementChild as HTMLElement;
@@ -185,6 +229,30 @@ describe('StatTile', () => {
         ['120px', '52px', '6px'],
       ]);
       expect(tile.textContent).toBe('');
+    });
+
+    // Design v6 item 2: Projects passing while red. The caller passes the label the kiosk shows
+    // ("Ostomate2 red for 4m", or "{k} projects red"); the value stays ink.
+    it('on fail shows the label in --fail 600 with a 22px x-circle, stroke 2.6', () => {
+      const { container } = render(
+        <StatTile variant="kiosk" label="Ostomate2 red for 4m" value="1 of 2" fail />,
+      );
+      const tile = container.firstElementChild as HTMLElement;
+      const fail = part(tile, 'fail');
+
+      expect(tile.dataset.fail).toBe('true');
+      expect(part(tile, 'label')).toBeNull();
+      expect(fail?.textContent).toBe('Ostomate2 red for 4m');
+      const svg = fail?.querySelector('svg');
+      expect(svg?.getAttribute('width')).toBe('22');
+      expect(svg?.getAttribute('stroke-width')).toBe('2.6');
+      expect(svg?.querySelector('path')?.getAttribute('d')).toBe('m15 9-6 6M9 9l6 6');
+      expect(part(tile, 'value')?.textContent).toBe('1 of 2');
+      expect(ruleFor(CSS, '.kiosk .fail')).toEqual({
+        gap: '10px',
+        'font-size': '24px',
+        'margin-top': '0px',
+      });
     });
 
     it('on attention replaces the label with the reason in amber and a 22px icon', () => {

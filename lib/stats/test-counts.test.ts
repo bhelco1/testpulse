@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { at, run } from './records.test-support.ts';
-import { testCounts, testCountTrend, type TestCountRun, type TestLayerRow } from './test-counts.ts';
+import {
+  testCounts,
+  testCountTrend,
+  testOutcomes,
+  type TestCountRun,
+  type TestLayerRow,
+} from './test-counts.ts';
 import type { TrendOptions } from './trends.ts';
 
 // Spec section 11: "Total tests: Distinct tests rows seen in the latest default-branch run ...
@@ -9,6 +15,54 @@ import type { TrendOptions } from './trends.ts';
 // layer in the latest default-branch run." The rows are that run's results, one per execution.
 
 const row = (testId: string, layer: TestLayerRow['layer']): TestLayerRow => ({ testId, layer });
+
+// Decision 2026-09-28 (section 19): the latest run's pass rate on the headline tile and the
+// project card counts distinct tests, as Total tests does. A test fails if it failed or errored
+// on any platform; a test skipped everywhere is skipped and left out of the rate.
+describe('testOutcomes', () => {
+  const outcome = (testId: string, status: 'passed' | 'failed' | 'error' | 'skipped') => ({
+    testId,
+    status,
+  });
+
+  it('is all zeros for a run with no results', () => {
+    expect(testOutcomes([])).toEqual({ passed: 0, failed: 0, skipped: 0 });
+  });
+
+  it('counts each test once, failing if it failed or errored on any platform', () => {
+    // t1 passed on jvm and ios-sim: 1 passed. t2 passed on jvm, failed on ios-sim: 1 failed.
+    // t3 errored on jvm, passed on ios-sim: 1 failed. t4 skipped on jvm, passed on ios-sim:
+    // passed. t5 skipped on both: 1 skipped. t6 run five times in one report, all passed: 1
+    // passed. 10 + 1 executions, 6 tests: passed 3 (t1, t4, t6), failed 2 (t2, t3), skipped 1.
+    const rows = [
+      outcome('t1', 'passed'),
+      outcome('t1', 'passed'),
+      outcome('t2', 'passed'),
+      outcome('t2', 'failed'),
+      outcome('t3', 'error'),
+      outcome('t3', 'passed'),
+      outcome('t4', 'skipped'),
+      outcome('t4', 'passed'),
+      outcome('t5', 'skipped'),
+      outcome('t5', 'skipped'),
+      ...Array.from({ length: 5 }, () => outcome('t6', 'passed')),
+    ];
+    expect(testOutcomes(rows)).toEqual({ passed: 3, failed: 2, skipped: 1 });
+  });
+
+  it('adds up to Total tests for the same rows', () => {
+    const rows = [
+      { testId: 't1', layer: 'unit' as const, status: 'passed' as const },
+      { testId: 't1', layer: 'unit' as const, status: 'error' as const },
+      { testId: 't2', layer: 'api' as const, status: 'skipped' as const },
+      { testId: 't3', layer: 'api' as const, status: 'passed' as const },
+    ];
+    const { passed, failed, skipped } = testOutcomes(rows);
+    // 1 + 1 + 1 = 3 = t1, t2, t3.
+    expect([passed, failed, skipped]).toEqual([1, 1, 1]);
+    expect(passed + failed + skipped).toBe(testCounts(rows).totalTests);
+  });
+});
 
 describe('testCounts', () => {
   it('is 0 with no layers for a run with no results (an empty run, or none at all)', () => {

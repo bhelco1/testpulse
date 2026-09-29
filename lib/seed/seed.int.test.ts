@@ -9,6 +9,7 @@ import { loadLanding, type Landing } from '../queries/landing.ts';
 import { loadProjectPage, type ProjectPage } from '../queries/project.ts';
 import { loadRunDetail } from '../queries/run.ts';
 import { loadTestHistory } from '../queries/test-history.ts';
+import { projectsPassingTile } from '../copy/projects-passing.ts';
 import { flakyTests } from '../stats/flaky.ts';
 import { loadStatsInput } from '../stats/load.ts';
 import { landingHeadline, type ProjectSummary } from '../stats/summary.ts';
@@ -379,25 +380,28 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       expect(seeded.map((summary) => summary.project.slug)).toEqual(SLUGS);
     });
 
-    it('takes each latest run from the default branch and CI, with its pass rate', () => {
-      // Ostomate2 2026-10-05 09:26 push: 192 / (192 + 0) = 1.
+    it('takes each latest run from the default branch and CI, with its pass rate in distinct tests', () => {
+      // Ostomate2 2026-10-05 09:26 push: 192 executions, all passed, of 142 tests (the 50 iOS
+      // executions are composeApp tests also run on the JVM). 142 / (142 + 0) = 1.
       expect(card('ostomate2').latestRun).toMatchObject({
         status: 'passed',
         finishedAt: new Date('2026-10-05T09:26:17.747Z'),
         branch: 'main',
-        passed: 192,
+        passed: 142,
         failed: 0,
         skipped: 0,
         passRate: 1,
       });
-      // routeserve 2026-10-05 08:12 push with the shared failure: 1044 / (1044 + 1).
+      // routeserve 2026-10-05 08:12 push with the shared failure: 1045 executions of 1041 tests
+      // (backend 498, mobile 428 executions of 424 tests, one name run five times and passing
+      // each time, shared-one-failure 118 passed + 1 failed). 1040 / (1040 + 1).
       expect(card('routeserve').latestRun).toMatchObject({
         status: 'failed',
         finishedAt: new Date('2026-10-05T08:13:55.412Z'),
-        passed: 1044,
+        passed: 1040,
         failed: 1,
         skipped: 0,
-        passRate: 1044 / 1045,
+        passRate: 1040 / 1041,
       });
       // testpulse's one run: 1 passed, 1 failed, 1 skipped; 1 / (1 + 1) = 0.5.
       expect(card('testpulse').latestRun).toMatchObject({
@@ -479,12 +483,22 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         26 * MINUTE,
         247 * MINUTE,
       ]);
-      // testpulse: one failed run, never green, and no passed run before it to turn red from,
-      // so no recoveries and nothing still red: median and worst are null.
+      // testpulse: one failed run, never green. No passed run before it to turn red from, so
+      // no recoveries: median and worst are null. It has never passed, so it is red from that
+      // run (decision 2026-09-28): 2026-09-22T04:37:00.242Z to 2026-10-05T12:00Z is 13 days,
+      // 7 h, 22 min and 59.758 s.
       expect(card('testpulse')).toMatchObject({
         greenStreak: { current: 0, longest: 0 },
         runsInLast30Days: 1,
-        timeToGreen: { recoveries: [], medianMs: null, worstMs: null, stillRed: null },
+        timeToGreen: {
+          recoveries: [],
+          medianMs: null,
+          worstMs: null,
+          stillRed: {
+            failedAt: new Date('2026-09-22T04:37:00.242Z'),
+            elapsedMs: 13 * DAY_MS + 7 * 60 * MINUTE + 22 * MINUTE + 59_758,
+          },
+        },
       });
     });
 
@@ -508,12 +522,13 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       expect(landingHeadline(seeded)).toEqual({
         // 142 + 1041 + 3.
         totalTests: 1186,
-        // (192 + 1044 + 1) / (192 + 1044 + 1 + 0 + 1 + 1) = 1237 / 1239; skipped 0 + 0 + 1.
+        // Distinct tests: (142 + 1040 + 1) / (142 + 1040 + 1 + 0 + 1 + 1) = 1183 / 1185;
+        // skipped 0 + 0 + 1. Passed, failed and skipped add up to the 1186 total.
         passRate: {
-          passed: 1237,
+          passed: 1183,
           failed: 2,
           skipped: 1,
-          rate: 1237 / 1239,
+          rate: 1183 / 1185,
           counted: ['ostomate2', 'routeserve', 'testpulse'],
         },
         emptyLatestRuns: [],
@@ -532,6 +547,27 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
             { slug: 'testpulse', runs: 1 },
           ],
         },
+        // All three have a CI run on main; only Ostomate2's latest passed. testpulse has been
+        // red 13 d 7 h (never passed), routeserve 3 h 46 min: longest first.
+        projectsPassing: {
+          passing: 1,
+          withRun: 3,
+          red: [
+            {
+              slug: 'testpulse',
+              name: 'testpulse',
+              elapsedMs: 13 * DAY_MS + 7 * 60 * MINUTE + 22 * MINUTE + 59_758,
+            },
+            { slug: 'routeserve', name: 'RouteServe', elapsedMs: 226 * MINUTE + 4_588 },
+          ],
+          lastRunEmpty: [],
+        },
+      });
+      expect(projectsPassingTile(landingHeadline(seeded).projectsPassing)).toEqual({
+        label: 'Projects passing',
+        value: '1 of 3',
+        sub: 'Red: testpulse 13d 7h · RouteServe 3h 46m',
+        fail: true,
       });
     });
   });

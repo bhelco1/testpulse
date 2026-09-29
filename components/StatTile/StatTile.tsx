@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
 
-import { ArrowDownIcon, ClockIcon, EmptyIcon, type IconProps } from '../icons/icons';
+import { ArrowDownIcon, ClockIcon, EmptyIcon, XCircleIcon, type IconProps } from '../icons/icons';
 import { Skeleton } from '../Skeleton/Skeleton';
 import styles from './StatTile.module.css';
 
@@ -19,12 +19,15 @@ interface Common {
   label: string;
   value: string;
   sub?: string;
-  // Attention never colours the value; it replaces the sub-line (web) or the label (kiosk).
-  attention?: StatTileAttention;
   loading?: boolean;
 }
 
-export type StatTileProps = Common & { variant?: 'web' | 'kiosk' };
+// Neither colours the value. Attention replaces the sub-line (web) or the label (kiosk) with its
+// text; fail (design v6: Projects passing while a project is red) shows the sub-line (web) or the
+// label (kiosk) in --fail. A tile is one or the other.
+type Tone = { attention?: StatTileAttention; fail?: never } | { attention?: never; fail?: boolean };
+
+export type StatTileProps = Common & Tone & { variant?: 'web' | 'kiosk' };
 
 function Attention({ attention, kiosk }: { attention: StatTileAttention; kiosk: boolean }) {
   const Icon = ATTENTION_ICON[attention.icon];
@@ -32,6 +35,15 @@ function Attention({ attention, kiosk }: { attention: StatTileAttention; kiosk: 
     <div className={styles.attention} data-part="attention">
       <Icon size={kiosk ? 22 : 12} strokeWidth={kiosk ? 2.6 : 2.8} />
       <span>{attention.text}</span>
+    </div>
+  );
+}
+
+function Fail({ text, kiosk }: { text: string; kiosk: boolean }) {
+  return (
+    <div className={styles.fail} data-part="fail">
+      <XCircleIcon size={kiosk ? 22 : 12} strokeWidth={kiosk ? 2.6 : 2.8} />
+      <span>{text}</span>
     </div>
   );
 }
@@ -44,6 +56,7 @@ export function StatTile({
   value,
   sub,
   attention,
+  fail = false,
   loading = false,
   variant = 'web',
 }: StatTileProps) {
@@ -68,10 +81,13 @@ export function StatTile({
         className={`${styles.tile} ${styles.kiosk}`}
         data-variant={variant}
         data-attention={hasAttention}
+        data-fail={fail}
       >
         <span className={styles.kioskText}>
           {attention ? (
             <Attention attention={attention} kiosk />
+          ) : fail ? (
+            <Fail text={label} kiosk />
           ) : (
             <span className={styles.label} data-part="label">
               {label}
@@ -110,6 +126,7 @@ export function StatTile({
       className={`${styles.tile} ${styles.web}`}
       data-variant={variant}
       data-attention={hasAttention}
+      data-fail={fail}
     >
       <div className={styles.label} data-part="label">
         {label}
@@ -119,6 +136,8 @@ export function StatTile({
       </div>
       {attention ? (
         <Attention attention={attention} kiosk={false} />
+      ) : fail && sub ? (
+        <Fail text={sub} kiosk={false} />
       ) : (
         sub && (
           <div className={styles.sub} data-part="sub">

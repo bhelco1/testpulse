@@ -3,9 +3,10 @@ import type { DeclaredSuite, Visibility } from '../projects/schema.ts';
 import { latestCoverage, type ModuleCoverage } from './coverage.ts';
 import { projectHealth, type ProjectHealth } from './health.ts';
 import type { StatsCoverage, StatsRun } from './input.ts';
+import { projectsPassing, type ProjectsPassing } from './projects-passing.ts';
 import { countsTowardCiOnlyStats, inWindow, latestRun } from './rules.ts';
 import { greenStreak, type GreenStreak } from './streak.ts';
-import { testCounts, type TestLayerRow } from './test-counts.ts';
+import { testCounts, testOutcomes, type LatestRunTest } from './test-counts.ts';
 import { timeToGreen, type TimeToGreen } from './time-to-green.ts';
 import { passRate } from './trends.ts';
 
@@ -13,11 +14,15 @@ import { passRate } from './trends.ts';
 // project's numbers come from its own runs; the headline combines only the ones that describe
 // the whole portfolio. Read as follows, and pinned by the tests:
 // - "Latest run" is the latest default-branch CI run (design/data-map.md).
+// - Its passed, failed and skipped are distinct tests, as Total tests is (decision 2026-09-28,
+//   section 19; design v6 item 10): a test failing on any platform is one failed test, not one
+//   per execution. So Ostomate2's 142 tests on two platforms count 142, not 192.
 // - Overall pass rate adds up the latest runs' counts, passed / (passed + failed), as a day's
 //   pass rate does (section 11): a run of 1,000 tests outweighs a run of 3. A run that passed
 //   and failed nothing (empty, or all skipped) adds nothing and has no rate of its own.
-// - Time to green and green streaks stay on each project's card and are never combined: each
-//   project is standalone, and one left red on purpose would skew a portfolio-wide number.
+// - Time to green and green streaks are per project, on its project page (RecoveryStats), and
+//   are never combined: each project is standalone, and one left red on purpose would skew a
+//   portfolio-wide number. The headline has Projects passing instead (design v6 item 1).
 // - Projects reporting counts projects that have reported and are not stale.
 // - Declared suites travel with the project and are never in a total or a layer (5.8).
 
@@ -37,7 +42,7 @@ export interface ProjectSummaryInput {
   readonly project: SummaryProject;
   readonly runs: readonly StatsRun[];
   readonly lastReportAt: Date | null;
-  readonly latestRunTests: readonly TestLayerRow[];
+  readonly latestRunTests: readonly LatestRunTest[];
   readonly coverage: readonly StatsCoverage[];
 }
 
@@ -85,6 +90,7 @@ export interface LandingHeadline {
     readonly total: number;
     readonly byProject: readonly { readonly slug: string; readonly runs: number }[];
   };
+  readonly projectsPassing: ProjectsPassing;
 }
 
 export function runsInLast30Days(
@@ -104,6 +110,7 @@ export function projectSummary(input: ProjectSummaryInput, now: Date): ProjectSu
   const latest = latestRun(runs, project.defaultBranch, now);
   const { totalTests, layers } =
     latest === null ? { totalTests: 0, layers: {} } : testCounts(input.latestRunTests);
+  const outcomes = testOutcomes(latest === null ? [] : input.latestRunTests);
   const coverage = latestCoverage(runs, input.coverage, {
     defaultBranch: project.defaultBranch,
     floors: project.coverageFloors,
@@ -119,10 +126,8 @@ export function projectSummary(input: ProjectSummaryInput, now: Date): ProjectSu
             finishedAt: latest.finishedAt,
             branch: latest.branch,
             commitSha: latest.commitSha,
-            passed: latest.passed,
-            failed: latest.failed,
-            skipped: latest.skipped,
-            passRate: passRate(latest.passed, latest.failed),
+            ...outcomes,
+            passRate: passRate(outcomes.passed, outcomes.failed),
           },
     totalTests,
     layers,
@@ -179,5 +184,13 @@ export function landingHeadline(summaries: readonly ProjectSummary[]): LandingHe
         runs: summary.runsInLast30Days,
       })),
     },
+    projectsPassing: projectsPassing(
+      summaries.map((summary) => ({
+        slug: summary.project.slug,
+        name: summary.project.name,
+        latestStatus: summary.latestRun?.status ?? null,
+        stillRed: summary.timeToGreen.stillRed,
+      })),
+    ),
   };
 }

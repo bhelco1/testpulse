@@ -226,6 +226,97 @@ describe('timeToGreen', () => {
     expect(result.recoveries.map((r) => [r.failedRunId, r.greenRunId])).toEqual([['a2', 'b']]);
   });
 
+  // Decision 2026-09-28 (section 19): red now is the latest default-branch CI run failing, timed
+  // from the first failed run since the last passed run. An empty run neither starts nor ends a
+  // red stretch; a project that has never passed is timed from its first failed run. Median and
+  // worst are unchanged by it.
+  describe('red now', () => {
+    const empty = (id: string, finishedAt: string) =>
+      run(id, finishedAt, { status: 'empty', passed: 0 });
+
+    it('is red from the failed run when an empty run sits between it and the last pass', () => {
+      // passed, empty, failed: red since f2 at 06:00, 6 h before now (12:00).
+      const result = timeToGreen(
+        [
+          passed('p0', '2026-10-01T00:00:00Z'),
+          empty('e1', '2026-10-01T03:00:00Z'),
+          failed('f2', '2026-10-01T06:00:00Z'),
+        ],
+        options,
+      );
+      expect(result.stillRed).toEqual({
+        failedRunId: 'f2',
+        failedAt: at('2026-10-01T06:00:00Z'),
+        elapsedMs: 6 * HOUR,
+      });
+      // f2 did not follow a passed run immediately, so it opens no recovery episode.
+      expect(result.recoveries).toEqual([]);
+    });
+
+    it('is not red when the latest run is empty, even after a failure', () => {
+      // passed, failed, empty: the latest run did not fail.
+      const result = timeToGreen(
+        [
+          passed('p0', '2026-10-01T00:00:00Z'),
+          failed('f1', '2026-10-01T03:00:00Z'),
+          empty('e2', '2026-10-01T06:00:00Z'),
+        ],
+        options,
+      );
+      expect(result.stillRed).toBeNull();
+    });
+
+    it('times a project that has never passed from its first failed run', () => {
+      // failed, failed: red since f0 at 2026-09-30T02:00Z, 34 h before now.
+      const result = timeToGreen(
+        [failed('f0', '2026-09-30T02:00:00Z'), failed('f1', '2026-10-01T09:00:00Z')],
+        options,
+      );
+      expect(result.stillRed).toEqual({
+        failedRunId: 'f0',
+        failedAt: at('2026-09-30T02:00:00Z'),
+        elapsedMs: 34 * HOUR,
+      });
+      expect(result).toMatchObject({ recoveries: [], medianMs: null, worstMs: null });
+    });
+
+    it('times two failures in a row from the first of them', () => {
+      // passed, failed, failed: red since f1 at 01:00, 11 h before now.
+      const result = timeToGreen(
+        [
+          passed('p0', '2026-10-01T00:00:00Z'),
+          failed('f1', '2026-10-01T01:00:00Z'),
+          failed('f2', '2026-10-01T05:00:00Z'),
+        ],
+        options,
+      );
+      expect(result.stillRed).toEqual({
+        failedRunId: 'f1',
+        failedAt: at('2026-10-01T01:00:00Z'),
+        elapsedMs: 11 * HOUR,
+      });
+    });
+
+    it('is not red when the latest run passed', () => {
+      expect(timeToGreen([passed('p0', '2026-10-01T00:00:00Z')], options).stillRed).toBeNull();
+    });
+
+    it('keeps timing across an empty run inside the stretch', () => {
+      // passed, failed, empty, failed: red since f1 at 02:00, 10 h before now; the empty run
+      // does not end the stretch.
+      const result = timeToGreen(
+        [
+          passed('p0', '2026-10-01T00:00:00Z'),
+          failed('f1', '2026-10-01T02:00:00Z'),
+          empty('e2', '2026-10-01T03:00:00Z'),
+          failed('f3', '2026-10-01T04:00:00Z'),
+        ],
+        options,
+      );
+      expect(result.stillRed).toMatchObject({ failedRunId: 'f1', elapsedMs: 10 * HOUR });
+    });
+  });
+
   it('is empty for no runs', () => {
     expect(timeToGreen([], options)).toEqual({
       recoveries: [],

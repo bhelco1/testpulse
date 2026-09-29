@@ -104,6 +104,14 @@ const coverageRow = (
   reports: { run_id: runId },
 });
 
+const result = (id: string, testId: string, status: string, layer: string, runId: string) => ({
+  id,
+  test_id: testId,
+  status,
+  tests: { layer },
+  reports: { run_id: runId },
+});
+
 const isLastReportQuery = (query: Query) =>
   query.table === 'runs_public' && argsOf(query, 'limit').length > 0;
 
@@ -172,9 +180,9 @@ describe('loadLanding', () => {
         ],
         lastReport: [{ finished_at: '2026-10-05T09:26:17.747+00:00' }],
         results: [
-          { id: 'x1', test_id: 't1', tests: { layer: 'unit' }, reports: { run_id: 'r2' } },
-          { id: 'x2', test_id: 't1', tests: { layer: 'unit' }, reports: { run_id: 'r2' } },
-          { id: 'x3', test_id: 't2', tests: { layer: 'visual' }, reports: { run_id: 'r2' } },
+          result('x1', 't1', 'passed', 'unit', 'r2'),
+          result('x2', 't1', 'failed', 'unit', 'r2'),
+          result('x3', 't2', 'passed', 'visual', 'r2'),
         ],
         coverage: (ids) =>
           ids.includes('r2')
@@ -208,7 +216,7 @@ describe('loadLanding', () => {
 
     expect(results?.table).toBe('results');
     expect(argsOf(results as Query, 'select')).toEqual([
-      ['id, test_id, tests!inner(layer), reports!inner(run_id)'],
+      ['id, test_id, status, tests!inner(layer), reports!inner(run_id)'],
     ]);
     expect(argsOf(results as Query, 'eq')).toEqual([['reports.run_id', 'r2']]);
 
@@ -223,7 +231,9 @@ describe('loadLanding', () => {
         coverageFloors: { shared: 91, composeApp: 93 },
         expectedCadenceDays: 8,
       },
-      latestRun: { id: 'r2', passed: 192, passRate: 1 },
+      // Distinct tests, not r2's 192 executions: t1 failed on one of its two platforms, t2
+      // passed. 1 / (1 + 1) = 0.5.
+      latestRun: { id: 'r2', passed: 1, failed: 1, skipped: 0, passRate: 0.5 },
       // t1 twice and t2: 2 tests; the 5 declared flows are not added.
       totalTests: 2,
       layers: { unit: 1, visual: 1 },

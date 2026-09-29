@@ -125,12 +125,13 @@ a:focus-visible,button:focus-visible,select:focus-visible,svg:focus-visible{outl
 
 <!-- 05 STAT TILE -->
 <section style="padding:48px 0;border-top:1px solid var(--line)">
-<div style="max-width:760px;margin-bottom:24px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">05</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">StatTile</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3)">The landing set from spec §11, then attention and loading. Attention colours the sub-line and adds an icon; the value stays ink.</p></div>
+<div style="max-width:760px;margin-bottom:24px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">05</div><h2 style="margin:6px 0 10px;font:500 30px 'Source Serif 4',serif">StatTile</h2><p style="margin:0;font-size:14px;line-height:1.55;color:var(--ink-3)">The landing set: portfolio-wide numbers only (total tests is the hero; then Pass rate, Projects reporting, Runs in last 30 days, Projects passing). Time to green and green streak are per project and never combined; they live on the project page (below). Then attention, failing and loading. Attention colours the sub-line amber with an icon; failing (Projects passing while a project is red) colours it --fail with the x-circle. The value stays ink.</p></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
-<sc-for list="{{ tiles }}" as="t" hint-placeholder-count="7">
+<sc-for list="{{ tiles }}" as="t" hint-placeholder-count="8">
 <div aria-busy="{{ t.loading }}" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)">
 <sc-if value="{{ t.ready }}" hint-placeholder-val="{{ true }}"><div style="font-size:14px;color:var(--ink-3)">{{ t.label }}</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px">{{ t.value }}</div>
 <sc-if value="{{ t.attn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--attn);margin-top:2px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><span>{{ t.sub }}</span></div></sc-if>
+<sc-if value="{{ t.fail }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--fail);margin-top:2px"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>{{ t.sub }}</span></div></sc-if>
 <sc-if value="{{ t.plain }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ t.sub }}</div></sc-if></sc-if>
 <sc-if value="{{ t.loading }}" hint-placeholder-val="{{ false }}"><div style="animation:tpShimmer 1.6s ease-in-out infinite"><div style="width:60%;height:12px;border-radius:4px;background:var(--raised)"></div><div style="width:45%;height:34px;border-radius:6px;background:var(--raised);margin-top:14px"></div><div style="width:75%;height:10px;border-radius:4px;background:var(--raised);margin-top:12px"></div></div></sc-if>
 </div>
@@ -143,7 +144,20 @@ a:focus-visible,button:focus-visible,select:focus-visible,svg:focus-visible{outl
 <sc-if value="{{ t.loading }}" hint-placeholder-val="{{ false }}"><div style="flex:1;display:flex;justify-content:space-between;align-items:center;gap:16px;animation:tpShimmer 1.6s ease-in-out infinite"><div style="width:45%;height:22px;border-radius:4px;background:var(--raised)"></div><div style="width:120px;height:52px;border-radius:6px;background:var(--raised)"></div></div></sc-if>
 </div>
 </sc-for>
-<span style="font-size:13px;color:var(--ink-3)">Variant kiosk · default · with sub (20 px --ink-3 under the label) · stale · empty · below floor · loading. Attention icons 22 px, stroke 2.6, same glyphs as HealthMarker.</span>
+<span style="font-size:13px;color:var(--ink-3)">Variant kiosk · default · with sub (20 px --ink-3 under the label) · stale · empty · below floor · Projects passing · Projects passing while red (label replaced by "{project} red for {duration}", --fail 600, x-circle) · loading. Attention icons 22 px, stroke 2.6, same glyphs as HealthMarker.</span>
+</div>
+<div style="margin-top:32px;display:flex;flex-direction:column;gap:12px"><span style="font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3)">PROJECT PAGE · recovery stats (per project, spec §11) · every state · SAMPLE figures</span>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px">
+<sc-for list="{{ recStates }}" as="r" hint-placeholder-count="4">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)">
+<div style="font:600 12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-bottom:12px">{{ r.tag }}</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+<div><div style="font-size:13px;color:var(--ink-3)">Green streak</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span style="font:500 30px/1.15 'Source Serif 4',serif">{{ r.streak }}</span><span style="font-size:18px;color:var(--ink-3)">{{ r.unit }}</span></div><div style="display:flex;gap:4px;margin-top:2px;font-size:13px;color:var(--ink-3)"><span>Longest</span><span>{{ r.longest }}</span></div></div>
+<div><div style="font-size:13px;color:var(--ink-3)">Time to green</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ r.ttg }}</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3);text-wrap:pretty">{{ r.ttgSub }}</div><sc-if value="{{ r.red }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;font-weight:600;color:var(--fail)"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>Red now for</span><span>{{ r.redFor }}</span></div></sc-if></div>
+</div></div>
+</sc-for>
+</div>
+<span style="font-size:13px;color:var(--ink-3)">Sits in the project page’s latest-run card stat row (label 13 --ink-3, value serif 30, sub 13 --ink-3). Not on the ProjectCard. Green streak: current (0 while red) + "Longest {n} runs". Time to green: median + "Median of {k}, 90 days · worst {w}"; while the latest default-branch run is failed, a --fail line "Red now for {duration}" is added. No recoveries in 90 days: value "None", sub "No recoveries in 90 days" (never 0). A failed pull-request run does not make the project red.</span>
 </div>
 </section>
 
@@ -524,19 +538,28 @@ class Component extends DCLogic {
       { name: 'testpulse', note: '', cur: 'false', bg: 'transparent', st: S.not_reporting },
     ];
 
-    const tile = (label, value, sub, x) => Object.assign({ label, value, sub, attn: false, plain: true, ready: true, loading: false }, x || {});
+    const tile = (label, value, sub, x) => Object.assign({ label, value, sub, attn: false, fail: false, plain: true, ready: true, loading: false }, x || {});
+    const rs = (tag, streak, longest, ttg, ttgSub, redFor) => ({ tag, streak: String(streak), unit: streak === 1 ? 'run' : 'runs', longest: longest + ' runs', ttg, ttgSub, red: !!redFor, redFor: redFor || '' });
+    const recStates = [
+      rs('GREEN', 41, 58, '2h 14m', 'Median of 4, 90 days · worst 9h 02m'),
+      rs('RED NOW', 0, 58, '2h 14m', 'Median of 4, 90 days · worst 9h 02m', '21h 10m'),
+      rs('NO RECOVERIES IN 90 DAYS', 41, 41, 'None', 'No recoveries in 90 days'),
+      rs('RED NOW, NO RECOVERIES YET', 0, 12, 'None', 'No recoveries in 90 days', '3d 4h'),
+    ];
     const tiles = [
       tile('Pass rate', '100%', 'Latest runs · 0 skipped, excluded'),
       tile('Projects reporting', '2', '3 once testpulse reports on itself'),
       tile('Runs in last 30 days', '24', 'Ostomate2 18 · RouteServe 6'),
-      tile('Median time to green', '2h 14m', 'Last 90 days'),
-      tile('Green streak', '41 runs', 'Consecutive passed, default branch'),
+      tile('Projects passing', '2 of 2', 'Latest default-branch runs'),
       tile('Projects reporting', '1 of 2', 'RouteServe silent 12 days', { attn: true, plain: false }),
+      tile('Projects passing', '1 of 2', 'Ostomate2 red for 4m', { fail: true, plain: false }),
+      tile('Projects passing', '0 of 2', 'Red: RouteServe 2d 3h · Ostomate2 4m', { fail: true, plain: false }),
+      tile('Projects passing', '1 of 2', 'Ostomate2 last run empty'),
       tile('', '', '', { ready: false, loading: true }),
     ];
 
     const kt = (label, value, sub, icon) => ({ label, value, sub: sub || '', attn: !!icon, icon: icon ? H[icon] : H.healthy, ink: icon ? 'var(--attn)' : 'var(--ink-3)', w: icon ? 600 : 400, ready: true, loading: false });
-    const kTiles = [kt('Pass rate', '100%'), kt('Runs in last 30 days', '24', 'Ostomate2 18 · RouteServe 6'), kt('1 silent 12 days', '1 of 2', '', 'stale'), kt('1 last run empty', '2', 'SAMPLE STATE', 'empty'), kt('1 below coverage floor', '2', 'SAMPLE STATE', 'below_floor'), { ready: false, loading: true, label: '', value: '', sub: '', attn: false, icon: H.healthy, ink: '', w: 400 }];
+    const kTiles = [kt('Pass rate', '100%'), kt('Runs in last 30 days', '24', 'Ostomate2 18 · RouteServe 6'), kt('1 silent 12 days', '1 of 2', '', 'stale'), kt('1 last run empty', '2', 'SAMPLE STATE', 'empty'), kt('1 below coverage floor', '2', 'SAMPLE STATE', 'below_floor'), kt('Projects passing', '2 of 2'), Object.assign(kt('Ostomate2 red for 4m', '1 of 2', 'SAMPLE STATE', 'stale'), { icon: { r: 10, dash: 'none', d: 'm15 9-6 6M9 9l6 6' }, ink: 'var(--fail)' }), { ready: false, loading: true, label: '', value: '', sub: '', attn: false, icon: H.healthy, ink: '', w: 400 }];
     const osto = { name: 'Ostomate2', tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
       run: { status: 'passed', when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', total: 142, failed: 0, skipped: 0, dur: '27 s' },
       layers: { unit: 103, integration: 29, visual: 10 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
@@ -691,7 +714,7 @@ class Component extends DCLogic {
 
     return Object.assign(base, {
       themeVars: K.themeVars(dark), tokens, pairsDark: pd, pairsLight: pl, lowDark: low(pd), lowLight: low(pl),
-      statuses, healths, buttons, switcher, tiles, kTiles, cards, kcards, toneList, rsLayers, pyramids, declared, declaredBoxes, stacks, covDemo,
+      statuses, healths, buttons, switcher, tiles, kTiles, recStates, cards, kcards, toneList, rsLayers, pyramids, declared, declaredBoxes, stacks, covDemo,
       feed, feedPhone, kFeed, three: [1, 2, 3], six: [1, 2, 3, 4, 5, 6], rtTabs, rtRows, rtNarrow, timelines, charts,
     });
   }

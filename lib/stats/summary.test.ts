@@ -15,7 +15,9 @@ import {
 // (default-branch CI runs only). Per project: the latest run, its tests per layer with declared
 // suites excluded, latest coverage against floors, time to green (median and worst), current and
 // longest green streak, and reporting health. Time to green and green streak belong to one
-// project, so the headline does not combine them (decision 2026-09-28, second row).
+// project, so the headline does not combine them (decision 2026-09-28, second row); it has
+// Projects passing instead (design v6 item 1). The latest run's pass rate counts distinct tests,
+// as Total tests does (decision 2026-09-28, section 19).
 
 const HOUR = 3_600_000;
 const now = at('2026-10-05T12:00:00Z');
@@ -73,11 +75,12 @@ describe('projectSummary', () => {
       run('c4', '2026-10-05T09:00:00Z', { passed: 190, failed: 0, skipped: 2 }),
     ],
     lastReportAt: at('2026-10-05T09:00:00Z'),
-    // t1 ran on two platforms.
+    // t1 ran on two platforms; t3 was skipped.
     latestRunTests: [
-      { testId: 't1', layer: 'unit' },
-      { testId: 't1', layer: 'unit' },
-      { testId: 't2', layer: 'integration' },
+      { testId: 't1', layer: 'unit', status: 'passed' },
+      { testId: 't1', layer: 'unit', status: 'passed' },
+      { testId: 't2', layer: 'integration', status: 'passed' },
+      { testId: 't3', layer: 'unit', status: 'skipped' },
     ],
     coverage: [
       pctCoverage('cv0', 'bf1', 'shared', 93.3),
@@ -89,21 +92,22 @@ describe('projectSummary', () => {
     const summary = projectSummary(input, now);
 
     expect(summary.project).toBe(input.project);
-    // c4 is the latest default-branch CI run: 190 / (190 + 0) = 1, skipped excluded.
+    // c4 is the latest default-branch CI run. Its counts are distinct tests, not the run's
+    // 190 passed and 2 skipped executions: t1 and t2 passed, t3 skipped. 2 / (2 + 0) = 1.
     expect(summary.latestRun).toEqual({
       id: 'c4',
       status: 'passed',
       finishedAt: at('2026-10-05T09:00:00Z'),
       branch: 'main',
       commitSha: 'sha-c4',
-      passed: 190,
+      passed: 2,
       failed: 0,
-      skipped: 2,
+      skipped: 1,
       passRate: 1,
     });
-    // t1 and t2; the 12 declared Maestro flows are not added.
-    expect(summary.totalTests).toBe(2);
-    expect(summary.layers).toEqual({ unit: 1, integration: 1 });
+    // t1, t2 and t3; the 12 declared Maestro flows are not added.
+    expect(summary.totalTests).toBe(3);
+    expect(summary.layers).toEqual({ unit: 2, integration: 1 });
     // c4's 457 / 490 = 93.2653...%, newer than the backfilled 93.3.
     expect(summary.coverage).toEqual([
       { module: 'shared', runId: 'c4', pct: (457 / 490) * 100, floor: 91, belowFloor: false },
@@ -183,14 +187,43 @@ describe('projectSummary', () => {
       {
         ...input,
         runs: [allSkipped],
-        latestRunTests: [{ testId: 't1', layer: 'unit' }],
+        latestRunTests: [
+          { testId: 't1', layer: 'unit', status: 'skipped' },
+          { testId: 't1', layer: 'unit', status: 'skipped' },
+        ],
         coverage: [],
       },
       now,
     );
-    // 0 / (0 + 0): no rate, and the 5 skipped still show.
-    expect(summary.latestRun).toMatchObject({ passRate: null, skipped: 5 });
+    // 0 / (0 + 0): no rate, and the skipped test still shows, once.
+    expect(summary.latestRun).toMatchObject({ passed: 0, failed: 0, skipped: 1, passRate: null });
     expect(summary.totalTests).toBe(1);
+  });
+
+  it('counts a test that failed or errored on any platform as one failing test', () => {
+    const red = run('r', '2026-10-05T09:00:00Z', { status: 'failed', passed: 5, failed: 2 });
+    const summary = projectSummary(
+      {
+        ...input,
+        runs: [red],
+        // 7 executions of 4 tests: t1 passed on both platforms, t2 failed on ios-sim only, t3
+        // errored on jvm only, t4 passed. Passed t1, t4; failing t2, t3. 2 / (2 + 2) = 0.5,
+        // where the executions would give 5 / 7.
+        latestRunTests: [
+          { testId: 't1', layer: 'unit', status: 'passed' },
+          { testId: 't1', layer: 'unit', status: 'passed' },
+          { testId: 't2', layer: 'unit', status: 'passed' },
+          { testId: 't2', layer: 'unit', status: 'failed' },
+          { testId: 't3', layer: 'unit', status: 'error' },
+          { testId: 't3', layer: 'unit', status: 'passed' },
+          { testId: 't4', layer: 'unit', status: 'passed' },
+        ],
+        coverage: [],
+      },
+      now,
+    );
+    expect(summary.latestRun).toMatchObject({ passed: 2, failed: 2, skipped: 0, passRate: 0.5 });
+    expect(summary.totalTests).toBe(4);
   });
 
   it('flags a stale, empty, below-floor project', () => {
@@ -283,6 +316,7 @@ describe('landingHeadline', () => {
       emptyLatestRuns: [],
       projectsReporting: { reporting: 0, registered: 0, silent: [], notReporting: [] },
       runsInLast30Days: { total: 0, byProject: [] },
+      projectsPassing: { passing: 0, withRun: 0, red: [], lastRunEmpty: [] },
     });
   });
 
@@ -305,9 +339,16 @@ describe('landingHeadline', () => {
     const headline = landingHeadline([
       summary('a', {
         latestRun: { passed: 190, failed: 2, skipped: 3 },
-        totalTests: 150,
+        totalTests: 195,
         runsInLast30Days: 18,
-        timeToGreen: recovered(3 * HOUR),
+        timeToGreen: {
+          ...recovered(3 * HOUR),
+          stillRed: {
+            failedRunId: 'fa',
+            failedAt: at('2026-10-05T07:00:00Z'),
+            elapsedMs: 2 * HOUR,
+          },
+        },
         greenStreak: { current: 0, longest: 5 },
       }),
       summary('b', {
@@ -344,8 +385,8 @@ describe('landingHeadline', () => {
       }),
     ]);
 
-    // 150 + 10 + 0 (empty) + 0 (none) + 5.
-    expect(headline.totalTests).toBe(165);
+    // 195 + 10 + 0 (empty) + 0 (none) + 5.
+    expect(headline.totalTests).toBe(210);
     // Pooled over the latest runs: (190 + 10 + 0) / (190 + 2 + 10 + 0 + 0) = 200 / 202,
     // not the mean of each run's rate ((190/192 + 10/10) / 2). Skipped 3 + 0 + 0 + 5 = 8.
     // c and e passed and failed nothing, so only a and b are counted.
@@ -376,34 +417,53 @@ describe('landingHeadline', () => {
         { slug: 'e', runs: 2 },
       ],
     });
-    // a and b have recovered and have green streaks, but those stay on their cards: the
-    // headline has no time to green or green streak.
+    // a, b, c and e have a latest run; b and e passed (e skipped everything, which is not a
+    // failure). a is red for 2 h; c's latest run is empty. 2 of 4.
+    expect(headline.projectsPassing).toEqual({
+      passing: 2,
+      withRun: 4,
+      red: [{ slug: 'a', name: 'a', elapsedMs: 2 * HOUR }],
+      lastRunEmpty: [{ slug: 'c', name: 'c' }],
+    });
+    // a and b have recovered and have green streaks, but those stay on their project pages:
+    // the headline has no time to green or green streak.
     expect(Object.keys(headline)).toEqual([
       'totalTests',
       'passRate',
       'emptyLatestRuns',
       'projectsReporting',
       'runsInLast30Days',
+      'projectsPassing',
     ]);
   });
 
   it('has a single project’s numbers when there is one', () => {
     const headline = landingHeadline([
       summary('only', {
-        latestRun: { passed: 1044, failed: 1, skipped: 0 },
+        latestRun: { passed: 1040, failed: 1, skipped: 0 },
         totalTests: 1041,
         runsInLast30Days: 10,
-        timeToGreen: recovered(44 * 60_000),
+        timeToGreen: {
+          ...recovered(44 * 60_000),
+          stillRed: { failedRunId: 'f', failedAt: at('2026-10-05T08:00:00Z'), elapsedMs: 4 * HOUR },
+        },
         greenStreak: { current: 0, longest: 2 },
       }),
     ]);
-    // 1044 / 1045. The one project's time to green and streaks are its card's, not the headline's.
+    // 1040 of 1041 tests passed. The one project's time to green and streaks are its project
+    // page's, not the headline's; that it is red is: 0 of 1.
     expect(headline).toEqual({
       totalTests: 1041,
-      passRate: { passed: 1044, failed: 1, skipped: 0, rate: 1044 / 1045, counted: ['only'] },
+      passRate: { passed: 1040, failed: 1, skipped: 0, rate: 1040 / 1041, counted: ['only'] },
       emptyLatestRuns: [],
       projectsReporting: { reporting: 1, registered: 1, silent: [], notReporting: [] },
       runsInLast30Days: { total: 10, byProject: [{ slug: 'only', runs: 10 }] },
+      projectsPassing: {
+        passing: 0,
+        withRun: 1,
+        red: [{ slug: 'only', name: 'only', elapsedMs: 4 * HOUR }],
+        lastRunEmpty: [],
+      },
     });
   });
 

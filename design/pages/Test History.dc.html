@@ -166,24 +166,6 @@ class Component extends DCLogic {
     };
   }
 
-  chart(o) {
-    const h = React.createElement, W = 780, H = 230, L = 56, R = 72, T = 20, B = 34;
-    const n = o.series[0].ys.length;
-    const X = i => L + (n === 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1));
-    const Y = v => T + (o.max - v) / (o.max - o.min) * (H - T - B);
-    const k = [];
-    o.ticks.forEach(t => { k.push(h('line', { key: 'g' + t, x1: L, x2: W - R, y1: Y(t), y2: Y(t), stroke: 'var(--line)' })); k.push(h('text', { key: 't' + t, x: L - 10, y: Y(t) + 4, textAnchor: 'end', fill: 'var(--ink-3)', fontSize: 12 }, o.fmt(t))); });
-    o.series.forEach((s, si) => {
-      if (n > 1) k.push(h('polyline', { key: 'l' + si, points: s.ys.map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' '), fill: 'none', stroke: s.stroke, strokeWidth: 2.25, strokeDasharray: s.dash, strokeLinejoin: 'round' }));
-      s.marks.forEach(([i, color]) => k.push(h('circle', { key: 'm' + si + i, cx: X(i), cy: Y(s.ys[i]), r: 5, fill: color, stroke: 'var(--surface)', strokeWidth: 2 })));
-      const li = n - 1;
-      k.push(h('circle', { key: 'e' + si, cx: X(li), cy: Y(s.ys[li]), r: 4, fill: s.stroke }));
-      k.push(h('text', { key: 'lab' + si, x: X(li) + 12, y: Y(s.ys[li]) + 4, fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, s.label));
-    });
-    k.push(h('text', { key: 'x0', x: L, y: H - 10, fill: 'var(--ink-3)', fontSize: 12 }, n === 1 ? '' : '39 runs ago'));
-    k.push(h('text', { key: 'x1', x: W - R, y: H - 10, fill: 'var(--ink-3)', fontSize: 12, textAnchor: 'end' }, 'Latest'));
-    return h('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', role: 'img', 'aria-label': o.aria, style: { display: 'block', height: 'auto', fontFamily: "'Public Sans',sans-serif", fontVariantNumeric: 'tabular-nums' } }, k);
-  }
 
   renderVals() {
     const L = Component.LIGHT;
@@ -195,7 +177,7 @@ class Component extends DCLogic {
     const M = this.build(variant);
     const { t, runs, plats } = M;
     const last = runs.length - 1;
-    const failIdx = runs.map(r => plats.some(p => M.status(p, r.i) !== 'pass')).lastIndexOf(true); /* v5 item 9: latest failing run, else latest */
+    const failIdx = runs.map(r => plats.some(p => ['fail', 'error'].includes(M.status(p, r.i)))).lastIndexOf(true); /* v6 item 7: failing = failed or error on any platform; flaky, skipped, not run don't count */
     const selK = this.state.sel ?? (failIdx >= 0 ? failIdx : last);
     const IC = { pass: { r: 10, dash: 'none', d: 'm8 12 3 3 5-6' }, fail: { r: 10, dash: 'none', d: 'm15 9-6 6M9 9l6 6' }, error: { r: 10, dash: 'none', d: 'M12 7v6M12 17h.01' }, flaky: { r: 0, dash: 'none', d: 'M2 12h4l3-7 6 14 3-7h4' }, skip: { r: 10, dash: 'none', d: 'M8 12h8' }, notrun: { r: 10, dash: '3.5 3', d: '' } };
     const look = { pass: ['14px', 'var(--pass)', '', 'Passed', 'var(--pass)', 'none'], flaky: ['24px', 'var(--attn)', '', 'Flaky', 'var(--attn)', 'none'], fail: ['44px', 'var(--fail)', '✕', 'Failed', 'var(--fail)', 'none'], error: ['44px', 'var(--fail)', '!', 'Error', 'var(--fail)', 'none'], skip: ['14px', 'transparent', '', 'Skipped', 'var(--neutral)', '1.5px solid var(--ink-3)'], notrun: ['4px', 'var(--line-strong)', '', 'Not run', 'var(--ink-3)', 'none'] };

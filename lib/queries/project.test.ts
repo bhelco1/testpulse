@@ -137,11 +137,24 @@ const answering =
         if (select.includes('tests!inner(layer)')) {
           return {
             data: [
-              { id: 'x3', test_id: 't1', tests: { layer: 'unit' }, reports: { run_id: 'ci-2' } },
-              { id: 'x4', test_id: 't2', tests: { layer: 'unit' }, reports: { run_id: 'ci-2' } },
+              {
+                id: 'x3',
+                test_id: 't1',
+                status: 'passed',
+                tests: { layer: 'unit' },
+                reports: { run_id: 'ci-2' },
+              },
+              {
+                id: 'x4',
+                test_id: 't2',
+                status: 'passed',
+                tests: { layer: 'unit' },
+                reports: { run_id: 'ci-2' },
+              },
               {
                 id: 'x5',
                 test_id: 't3',
+                status: 'skipped',
                 tests: { layer: 'integration' },
                 reports: { run_id: 'ci-2' },
               },
@@ -240,7 +253,8 @@ describe('loadProjectPage', () => {
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
     expect(page?.summary).toMatchObject({
-      latestRun: { id: 'ci-2', status: 'passed', passRate: 1 },
+      // Distinct tests: t1 and t2 passed, t3 skipped. 2 / (2 + 0) = 1.
+      latestRun: { id: 'ci-2', status: 'passed', passed: 2, failed: 0, skipped: 1, passRate: 1 },
       // t1, t2 unit and t3 integration; the 5 declared flows are not added.
       totalTests: 3,
       layers: { unit: 2, integration: 1 },

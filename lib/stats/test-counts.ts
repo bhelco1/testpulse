@@ -1,4 +1,6 @@
 import type { Layer } from '../ingest/layer-rules.ts';
+import type { TestStatus } from '../parsers/types.ts';
+import { combinedStatus } from '../results/run-results.ts';
 import type { PublicRun, StatsResult, StatsRun } from './input.ts';
 import { byFinish, countsTowardCiOnlyStats, inWindow } from './rules.ts';
 import type { TrendOptions } from './trends.ts';
@@ -26,6 +28,41 @@ export function testCounts(rows: readonly TestLayerRow[]): TestCounts {
   const layers: Partial<Record<Layer, number>> = {};
   for (const layer of layerOf.values()) layers[layer] = (layers[layer] ?? 0) + 1;
   return { totalTests: layerOf.size, layers };
+}
+
+// Decision 2026-09-28 (section 19): the latest run's pass rate on the landing headline and the
+// project card counts distinct tests, so it reads "{passed} of {total}" against Total tests.
+// Each test's results combine as on the run page (combinedStatus): failed or error on any
+// platform is failing, else passed on any is passed, else skipped. Skipped tests are left out of
+// the rate and shown beside it.
+
+export interface TestOutcomeRow {
+  readonly testId: string;
+  readonly status: TestStatus;
+}
+
+/** A latest-run result as the landing loader reads it: its test, layer and status. */
+export interface LatestRunTest extends TestLayerRow, TestOutcomeRow {}
+
+export interface TestOutcomes {
+  readonly passed: number;
+  readonly failed: number;
+  readonly skipped: number;
+}
+
+export function testOutcomes(rows: readonly TestOutcomeRow[]): TestOutcomes {
+  const statusesOf = new Map<string, TestStatus[]>();
+  for (const { testId, status } of rows) {
+    statusesOf.set(testId, [...(statusesOf.get(testId) ?? []), status]);
+  }
+  const outcomes = { passed: 0, failed: 0, skipped: 0 };
+  for (const statuses of statusesOf.values()) {
+    const status = combinedStatus(statuses);
+    if (status === 'passed') outcomes.passed += 1;
+    else if (status === 'skipped') outcomes.skipped += 1;
+    else outcomes.failed += 1;
+  }
+  return outcomes;
 }
 
 // Spec section 11: "Test count per run: The "Total tests" measure for each default-branch run

@@ -1,0 +1,53 @@
+.label {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.value {
+  font: 500 30px/1.15 var(--font-serif);
+}
+
+.streakValue {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.greenValue {
+  margin-top: 4px;
+}
+
+.unit {
+  font-size: 18px;
+  color: var(--ink-3);
+}
+
+.sub {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.longest {
+  display: flex;
+  gap: 4px;
+}
+
+.greenSub {
+  text-wrap: pretty;
+}
+
+.redNow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fail);
+}
+
+.redNow svg {
+  flex: none;
+}

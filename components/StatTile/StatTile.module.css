@@ -35,6 +35,20 @@
   margin-top: 2px;
 }
 
+.fail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fail);
+  margin-top: 2px;
+}
+
+.web .fail svg {
+  flex: none;
+}
+
 .second {
   margin-top: 14px;
 }
@@ -81,6 +95,12 @@
 }
 
 .kiosk .attention {
+  gap: 10px;
+  font-size: 24px;
+  margin-top: 0;
+}
+
+.kiosk .fail {
   gap: 10px;
   font-size: 24px;
   margin-top: 0;

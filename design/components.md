@@ -33,6 +33,7 @@ Props: `status: 'passed' | 'failed' | 'error' | 'empty' | 'skipped' | 'flaky' | 
 Lock icon 12 + "Private repository". 13px/500 `--ink-2` on `--neutral-tint`, padding 5×10, pill. Kiosk variant: lock 30 `--ink-3` + "Private" 24px `--ink-3`, no fill.
 
 ## HealthMarker
+One marker per project. When several apply, precedence is stale, then empty, then below_floor (not_reporting only when there is no run). The detail text is the chosen marker's own ("Expected every {n} days" for stale) and does not list the others: an empty run already shows as the amber "0" total and a below-floor module as its amber CoverageBar row, so nothing is lost.
 Props: `health: 'healthy' | 'stale' | 'empty' | 'below_floor' | 'not_reporting'`, `days?`, `size: 'web' | 'kiosk'` (default web). web: 14px/600, icon 13, stroke 2.8. kiosk: 24px/600, icon 24, stroke 2.8, gap 10.
 - healthy: check, `--pass`, "Reporting healthy"
 - stale: clock, `--attn`, "No report in {days} days" ("1 day" at 1)
@@ -72,8 +73,17 @@ Disclosure, not an ARIA menu: a button (`aria-expanded`, `aria-controls`) toggli
 Props: `label`, `value`, `sub`, `attention?: {icon: 'stale' | 'empty' | 'below_floor', text}`, `loading?`. Surface, `--radius-lg`, padding 18×20, label 14 `--ink-3`, value `--text-stat` `--ink`, sub 13 `--ink-3`.
 - attention: the value stays `--ink`; the sub-line becomes 13/600 `--attn` with a 12px icon before the text ("1 silent for 12 days"). The value never turns amber.
 - loading: three `--raised` bars (label 60%, value 45%×34, sub 75%).
-- Landing set (spec §11) beside the hero total: Pass rate (sub "Latest runs · N skipped, excluded"), Projects reporting, Runs in last 30 days (sub per project), Median time to green, Green streak. Grid `repeat(auto-fit, minmax(min(100%, 200px), 1fr))`, gap 12: 5 across at 1440, 4 + 1 at 1024, 1 per row at 390.
-- Variant `kiosk`: one horizontal row, label 24 `--ink-3` left, value 52 serif right, padding 20×26, `--radius-lg`. `sub`: 20px `--ink-3` under the label, gap 4. Attention: label text replaced by the attention text in `--attn` 600 with a 22px icon (stroke 2.6; same glyph as HealthMarker: clock for stale, dashed ring + dash for empty, arrow-down for below_floor); value stays `--ink`. Loading: label bar 45%×22 and value bar 120×52, `--raised`, shimmer.
+- Landing set beside the hero total (portfolio-wide numbers only; time to green and green streak are per project and never combined across projects): Pass rate (sub "Latest runs · N skipped, excluded"), Projects reporting, Runs in last 30 days (sub per project), Projects passing. Grid `repeat(auto-fit, minmax(min(100%, 200px), 1fr))`, gap 12: 4 across at 1440 and 1024, 2 + 2 at ~600, 1 per row at 390.
+- `fail?` (sub-line variant): like attention but 13/600 `--fail` with a 12px x-circle. Used only by Projects passing while a project is red.
+- Projects passing: label "Projects passing"; value "{p} of {n}" (n = projects with at least one default-branch run; p = those whose latest default-branch run passed).
+  - all passed: sub "Latest default-branch runs" (plain).
+  - one red: `fail` sub "{project} red for {duration}" → "Ostomate2 red for 4m".
+  - several red: `fail` sub "Red: {project} {duration} · {project} {duration}", longest red first → "Red: RouteServe 2d 3h · Ostomate2 4m".
+  - not passed but not red (latest run empty): plain sub "{project} last run empty"; if a project is also red, the `fail` sub wins and lists only red projects.
+  - no project has a run yet: value "0", sub "No runs yet".
+  - duration: calendar time since the first failed default-branch run of the current red episode (nights, weekends, parked work count): under 1 h "{m}m"; under 24 h "{h}h {m}m" (minutes two digits); 24 h and over "{d}d {h}h".
+  - loading: as every StatTile.
+- Variant `kiosk`: one horizontal row, label 24 `--ink-3` left, value 52 serif right, padding 20×26, `--radius-lg`. `sub`: 20px `--ink-3` under the label, gap 4. Attention: label text replaced by the attention text in `--attn` 600 with a 22px icon (stroke 2.6; same glyph as HealthMarker: clock for stale, dashed ring + dash for empty, arrow-down for below_floor); value stays `--ink`. Kiosk set: Pass rate, Projects reporting, Projects passing. Projects passing while red: label replaced by "{project} red for {duration}" (several: "{k} projects red") in `--fail` 600 with a 22px x-circle; value "{p} of {n}" stays `--ink`. Loading: label bar 45%×22 and value bar 120×52, `--raised`, shimmer.
 
 ## ProjectCard
 Props: `project {name, tagline, visibility, href}`, `latestRun: {status, when, branch, sha, href, total, failed, skipped, duration} | null`, `layers: {label, count, tone}[]`, `coverage: {module, pct, floor}[]`, `reports: {key, total}[]`, `declared: DeclaredSuite[]`, `health: {health, days}`, `failing?: {suite, name, platform}[]`, `loading?`, `variant: 'web' | 'kiosk'`, `headingLevel` (default 3; the page sets it).
@@ -84,8 +94,9 @@ Web variant (canonical, one layout for every state):
 - Total `--text-count` + sub-line "tests · {failed} failed · {skipped} skipped · {duration}" ("test" at 1). When failed > 0, "{n} failed" is `--fail` 600; the total stays `--ink`.
 - Failed: inset block `--fail-tint`, `--radius-md`, padding 12×14, min-height 44: first failing test "{short suite} › {name}" mono 13 `--ink` (full name in `title`), platform 13 `--ink-3`, "+{n} more" when more than one; links to the run page (testpulse’s own page, so also on private projects; spec §9: test names are public). The failure message is never on the card.
 - Short suite: path-style suites keep the last path segment ("apps/backend/src/routes/jobs.test.ts" → "jobs.test.ts"); dotted class names keep the last segment ("com.ostomate.app.ui.home.HomeViewModelTest" → "HomeViewModelTest"). The block wraps; it never truncates.
-- LayerBar, then CoverageBar rows (grid `128px minmax(40px,1fr) auto`, gap 14), then the per-report block (inset, mono 13: header "{n} reports in this run" + platform split; body `repeat(auto-fill, minmax(200px,1fr))` key/count pairs).
+- LayerBar, then CoverageBar rows sorted by module key (code-point order, e.g. composeApp before shared; the database doesn't keep YAML order) (grid `128px minmax(40px,1fr) auto`, gap 14), then the per-report block (inset, mono 13: header "{n} reports in this run" + platform split; body `repeat(auto-fill, minmax(200px,1fr))` key/count pairs).
 - Platform split: platform = last segment of the report key "job/module/platform"; totals summed per platform, in first-seen order, always with counts: "jvm 142 · ios-sim 132", "node 1,045", "node 284 · chromium 38". Empty run: counts are 0.
+- No time to green or green streak on the card: they are per-project history and live on the project page (RecoveryStats). A red project is already the failed card state.
 - Footer: hairline, left "Not counted: {declared summary}" 13.5 `--ink-3`; right HealthMarker. No declared suites: left side is empty and the marker stays right-aligned.
 - Declared summary (a declared suite always has count ≥ 1: `projects:sync` rejects a YAML entry with count < 1; defensively, a missing count drops the brackets: "Not counted: {name}, {phrase}"; phrases: runs_in_ci_not_reported "run in CI, not yet reported"; authored_not_executed "authored, not yet executed"; unit "flows" for e2e, else "tests"; counts per unit joined with " and "):
   - one suite: "Not counted: {name} ({count} {unit}), {phrase}" → "Not counted: Maestro E2E · iOS (13 flows), authored, not yet executed"
@@ -139,6 +150,14 @@ Props: `variant: 'built' | 'tested'`, `groups: {category, items: {name, declared
 - Grid `96px minmax(0,1fr)`, gap 12×16, 13.5px. Category `--ink-3`.
 - Tag: padding 4×10, `--radius-tag` (6). built: bg `--inset`, 1px `--line`. tested: no bg, 1px `--line-strong`.
 - declaredStatus (from `declared_suites`, matched by tool name): dashed border, `--ink-2`, text "{name} · not yet executed" / "{name} · not yet reported".
+
+## RecoveryStats (project page)
+Two cells in the project page's latest-run stat row (after "Pass rate, 30 days"), from spec §11, default branch only, per project, never combined across projects. Cell: label 13 `--ink-3`, value serif 30/1.15 (4 below), sub 13 `--ink-3` (2 below).
+- Green streak: value current consecutive passed default-branch runs + unit 18 `--ink-3` ("run" at 1); sub "Longest {n} runs". While red the value is "0". A failed pull-request run doesn't count (not default branch).
+- Time to green (calendar time from a default-branch run that turned failed after a passed run to the next passed run; 90 days): value median; sub "Median of {k}, 90 days · worst {w}". Durations as Projects passing ("2h 14m", "9h 02m", "3d 4h").
+- Red now (latest default-branch run failed): add a line 13/600 `--fail`, 12px x-circle, "Red now for {duration}", 4 below the sub. The open episode is not in the median or worst until it recovers.
+- No recoveries in 90 days: value "None", sub "No recoveries in 90 days" (never "0"). Red with no recovery yet: same, plus the Red now line.
+- Drawn on the Design System (section 05): green · red now · no recoveries · red now with no recoveries.
 
 ## CoverageBar
 Props: `module` (stored module key, verbatim), `pct`, `floor`. Row grid `128px minmax(40px,1fr) auto`, gap 14, 14px.
@@ -197,7 +216,7 @@ Props: `kind: 'results' | 'runs'`, `testName` (results), `runs: {title, branch, 
 - Before measurement (and without JS): up to 40 cells render right-aligned, the oldest clipped by overflow, and the oldest label is empty until measured. No separate pre-measure state.
 - Spacing: strips gap 14; legend margin-top 14, padding-top 12, hairline, gap 8×18; card padding 22×24.
 - Legend: always, 13 `--ink-3`: each cell type present with its word; swatch 10 wide, height = min(cell height, 20) (Failed, Error, Flaky and Empty all 20).
-- Interaction (results kind): selection is a run, shared by every strip. Each strip is one Tab stop: `role="listbox"` `aria-orientation="horizontal"` with `aria-activedescendant` on the selected cell (`role="option"`, `aria-selected`); focus stays on the strip. Keys: ← → one run, Home / End oldest / latest, ↑ ↓ move focus to the other strip (same run). Pointer and touch: the whole 48px strip is the target; press, mouse hover, or drag across it selects the cell nearest the pointer’s x (`touch-action: pan-y` so vertical scrolling still works). Default selection: `initialRun`, else the latest run. Test History passes the latest failing run when there is one, else the latest run.
+- Interaction (results kind): selection is a run, shared by every strip. Each strip is one Tab stop: `role="listbox"` `aria-orientation="horizontal"` with `aria-activedescendant` on the selected cell (`role="option"`, `aria-selected`); focus stays on the strip. Keys: ← → one run, Home / End oldest / latest, ↑ ↓ move focus to the other strip (same run). Pointer and touch: the whole 48px strip is the target; press, mouse hover, or drag across it selects the cell nearest the pointer’s x (`touch-action: pan-y` so vertical scrolling still works). Default selection: `initialRun`, else the latest run. Test History passes the latest failing run when there is one, else the latest run. "Failing" = a run where this test's result is failed or error on any platform; flaky, skipped and not run don't count.
 - Selected: the run’s cell in every strip gets a 2px `--ink` outline, offset 2. Strip focus-visible: 2px `--ink` outline, offset 4, radius 4 around the strip.
 - Panel (always shown for the results kind, below the legend): `--inset`, 1px `--line`, `--radius-md`, padding 14×16, margin-top 14, flex-wrap, gap 12×28, 14px, `aria-live="polite"`. Fields (label 12.5 `--ink-3` above value): "Run" = "{title} · {sha7}" (title per RunFeedRow); "When" = relative time; then per platform: label = platform key (two or more platforms) or "Result" (one platform), value = status icon 14 + word 600 in status ink + " · {duration}" `--ink-3` (duration omitted for skipped and not run); "Open run →" link 44px, right.
   - one platform: Run · When · Result "Passed · 0.41 s" · Open run →
@@ -210,7 +229,7 @@ Props: `kind: 'results' | 'runs'`, `testName` (results), `runs: {title, branch, 
 Built with Recharts; the Design System page draws it with `tp-charts.js`, which lays out in real pixels at the measured width (fixed text sizes), as Recharts does.
 Props: `kind: 'line' | 'bar'`, `series: {name, values, dashed?}[]`, `labels[]`, `floor?`, `marks?: {index, status: 'fail' | 'empty'}[]`, `format: 'pct' | 'int' | 'sec' | 'dur'`, `zero?`, `unit: 'run' | 'day'`, `loading?`, `error?`, `onRetry?`.
 - Card (every page, including Test History): `--surface`, 1px `--line`, `--radius-xl`, padding 22×24, `--shadow-card`; title serif 20; scope line 13 `--ink-3` 2 below; caption (figcaption) 14/1.5 `--ink-2` 6 below the scope; chart 14 below.
-- Height 250 (200 below 560 wide). Margins L 56, T 22, B 30 (phone L 44). Right margin fits the end labels: max(60, 8 + widest end-value label + 6), phone max(44, …); label width measured at 13/600 (Recharts: measure the formatted last values before render and set `margin.right`).
+- Height 250 (200 below 560 wide). Margins L 56, T 22, B 30 (phone L 44). Right margin fits the end labels: max(60, 8 + widest end-value label + 6), phone max(44, …); label width measured at 13/600 (Recharts: measure the formatted last values before render and set `margin.right`). Bar kind is exempt (no end labels): right margin stays 60, phone 44.
 - Text: axis 12 `--ink-3`; first/last value labels 13/600 `--ink`. Fixed at every width.
 - Line: primary stroke 2.5 `--ink`; second series 2 `--ink-3` dashed 6 4 with a legend above. Endpoint dots r 4.5 at first and last points. Hollow intermediate dots (r 3) only when ≤ 12 points and width ≥ 560. End label = value.
 - Marks: 8px square at non-pass runs (`--fail` failed, `--attn` empty), 2px `--surface` stroke.
@@ -224,7 +243,7 @@ Props: `kind: 'line' | 'bar'`, `series: {name, values, dashed?}[]`, `labels[]`, 
 - "Show table" secondary Button (44px) under every chart with ≥ 2 points; table has sticky header, newest first, max-height 320 with scroll.
 - one point: dashed frame, value, dot, "One run so far. The trend appears after the next run." — no axes. Same everywhere.
 - empty: dashed frame, "No runs yet". loading: `--raised` block.
-- error: the plot area (same height) becomes an inset panel inside the chart card, not a card of its own: `--inset`, 1px `--line`, `--radius-md`, centred: error icon 18 `--fail`, "Chart couldn’t be loaded" serif 20, "The rest of the page is still current." 14 `--ink-2`, secondary Button "Try again" 12 below; `role="alert"`. Title and scope line stay; caption and "Show table" are hidden.
+- error: the plot area (same height) becomes an inset panel inside the chart card, not a card of its own: `--inset`, 1px `--line`, `--radius-md`, centred: error icon 18 `--fail` (6 below), "Chart couldn’t be loaded" serif 20, "The rest of the page is still current." 14 `--ink-2` (4 below the title), secondary Button "Try again" 12 below the message; `role="alert"`. Title and scope line stay; caption and "Show table" are hidden.
 - Phone: same chart, fewer x labels, no intermediate dots, 2-step y ticks.
 Caption templates (figcaption; generated from data; omitted when fewer than 2 points — the in-chart one-point text covers it):
 - Pass rate: "{latest}% on the latest run. {n_failed} of the last {n} runs failed." / all passed: "All {n} runs passed."

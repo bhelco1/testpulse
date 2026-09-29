@@ -12,8 +12,11 @@ import { byFinish, countsTowardCiOnlyStats, windowStart } from './rules.ts';
 // - "After a passed run" is the run immediately before. An empty run (section 5.2) is neither,
 //   so passed, empty, failed starts no episode, and an empty run inside an episode does not end it.
 // - The 90 days hold the failing run; the passed run before it may be older.
-// - A branch still red at now is reported as stillRed and kept out of median and worst, which
-//   describe completed recoveries only.
+// - Red now (stillRed) is the latest run failing (decision 2026-09-28, section 19), timed from
+//   the first failed run since the last passed run, or from the first failed run when none has
+//   passed. An empty run neither starts nor ends it, so passed, empty, failed is red from the
+//   failed run and passed, failed, empty is not red. It is kept out of median and worst, which
+//   describe completed recoveries only; the Projects passing tile and the project page read it.
 // - With an even count the median is the mean of the middle two.
 
 export interface TimeToGreenOptions {
@@ -65,7 +68,10 @@ export function timeToGreen(runs: readonly StatsRun[], options: TimeToGreenOptio
   const recoveries: Recovery[] = [];
   let red: StatsRun | null = null;
   let previous: StatsRun | null = null;
+  let firstFailedSincePass: StatsRun | null = null;
   for (const run of ordered) {
+    if (run.status === 'passed') firstFailedSincePass = null;
+    else if (run.status === 'failed') firstFailedSincePass ??= run;
     if (red === null && run.status === 'failed' && previous?.status === 'passed') {
       red = run;
     } else if (red !== null && run.status === 'passed') {
@@ -89,12 +95,12 @@ export function timeToGreen(runs: readonly StatsRun[], options: TimeToGreenOptio
     medianMs: median(elapsed),
     worstMs: elapsed.at(-1) ?? null,
     stillRed:
-      red === null
+      previous?.status !== 'failed' || firstFailedSincePass === null
         ? null
         : {
-            failedRunId: red.id,
-            failedAt: red.finishedAt,
-            elapsedMs: now.getTime() - red.finishedAt.getTime(),
+            failedRunId: firstFailedSincePass.id,
+            failedAt: firstFailedSincePass.finishedAt,
+            elapsedMs: now.getTime() - firstFailedSincePass.finishedAt.getTime(),
           },
   };
 }

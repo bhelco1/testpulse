@@ -58,7 +58,7 @@
       h('svg', { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', stroke: 'var(--fail)', strokeWidth: 2.6, strokeLinecap: 'round', style: { marginBottom: 6 } }, h('circle', { cx: 12, cy: 12, r: 10 }), h('path', { d: 'M12 7v6M12 17h.01' })),
       h('span', { style: { font: "500 20px 'Source Serif 4',serif", color: 'var(--ink)' } }, 'Chart couldn’t be loaded'),
       h('span', { style: { font: '14px ' + font, color: 'var(--ink-2)' } }, 'The rest of the page is still current.'),
-      h('button', { onClick: props.onRetry, style: { marginTop: 12, minHeight: 44, padding: '0 16px', borderRadius: 10, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)', font: '600 15px ' + font, cursor: 'pointer' } }, 'Try again'));
+      h('button', { onClick: props.onRetry, style: { marginTop: 8, /* + gap 4 = 12 below the message (v6 item 6) */ minHeight: 44, padding: '0 16px', borderRadius: 10, border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink)', font: '600 15px ' + font, cursor: 'pointer' } }, 'Try again'));
     else if (props.loading) body = Frame(props, H, h('span', { style: { font: '14px ' + font, color: 'var(--ink-3)' } }, 'Loading chart…'));
     else if (n === 0) body = Frame(props, H, h('span', { style: { font: '14px ' + font, color: 'var(--ink-3)' } }, 'No runs yet'));
     else if (n === 1) {

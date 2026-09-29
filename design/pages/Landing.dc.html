@@ -90,10 +90,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
-<sc-for list="{{ tiles }}" as="t" hint-placeholder-count="5">
+<sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)">
 <div style="font-size:14px;color:var(--ink-3)">{{ t.label }}</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px">{{ t.value }}</div>
 <sc-if value="{{ t.attn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--attn);margin-top:2px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><span>{{ t.sub }}</span></div></sc-if>
+<sc-if value="{{ t.fail }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--fail);margin-top:2px"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>{{ t.sub }}</span></div></sc-if>
 <sc-if value="{{ t.plain }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ t.sub }}</div></sc-if>
 </div>
 </sc-for>
@@ -193,13 +194,12 @@ class Component extends DCLogic {
       { status: 'passed', private: true, project: 'RouteServe', branch: 'main', sha: 'c238574', total: 1048, dur: '29 s', when: '2 hours ago' },
     ];
     let heroTotal = '1,190', heroNote = 'automated tests across two projects. 100% passing on the latest runs, 0 skipped or disabled.';
-    const tile = (label, value, sub, attn) => ({ label, value, sub, attn: !!attn, plain: !attn });
+    const tile = (label, value, sub, attn) => ({ label, value, sub, attn: attn === true, fail: attn === 'fail', plain: !attn });
     const tiles = [
       tile('Pass rate', '100%', 'Latest runs · 0 skipped, excluded'),
       tile('Projects reporting', '2', '3 once testpulse reports on itself'),
       tile('Runs in last 30 days', '24', 'Ostomate2 18 · RouteServe 6'),
-      tile('Median time to green', '2h 14m', 'Last 90 days'),
-      tile('Green streak', '41 runs', 'Consecutive passed, default branch'),
+      tile('Projects passing', '2 of 2', 'Latest default-branch runs'),
     ];
     let sampleNote = '', feedNote = 'Updates as reports arrive', feedNoteInk = 'var(--ink-3)', footerNote = 'Last report received 4 minutes ago';
 
@@ -209,7 +209,7 @@ class Component extends DCLogic {
       osto.failing = [{ suite: 'com.ostomate.app.ui.home.HomeViewModelTest', name: 'rendersToday', platform: 'ios-sim' }];
       heroNote = 'automated tests across two projects. 1 failing on Ostomate2’s latest run, 0 skipped or disabled.';
       tiles[0] = tile('Pass rate', '99.9%', '1,189 of 1,190 · 0 skipped, excluded');
-      tiles[4] = tile('Green streak', '0 runs', 'Broken by Ostomate2 a41f9c2');
+      tiles[3] = tile('Projects passing', '1 of 2', 'Ostomate2 red for 4m', 'fail');
       rows[0] = { status: 'failed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: 'a41f9c2', total: 142, passed: 141, failed: 1, when: '4 minutes ago' };
     } else if (sc === 'empty run') {
       sampleNote = 'Ostomate2’s latest run shown with zero tests executed to illustrate the state.';
@@ -217,6 +217,7 @@ class Component extends DCLogic {
       heroTotal = '1,048';
       heroNote = 'tests executed on the latest runs. Ostomate2’s latest run executed none, so it isn’t counted.';
       tiles[0] = tile('Pass rate', '100%', 'RouteServe only · 0 skipped, excluded');
+      tiles[3] = tile('Projects passing', '1 of 2', 'Ostomate2 last run empty');
       rows[0] = { status: 'empty', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', reports: 4, when: '4 minutes ago' };
     } else if (sc === 'stale project') {
       sampleNote = 'RouteServe shown with no report for 12 days to illustrate the state.';

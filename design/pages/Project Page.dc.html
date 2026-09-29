@@ -77,9 +77,10 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="margin-top:10px;font-size:13.5px;color:var(--ink-3)">{{ p.platforms }}</div>
 <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
 <div><div style="font-size:13px;color:var(--ink-3)">Pass rate, 30 days</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">100%</div></div>
-<div><div style="font-size:13px;color:var(--ink-3);display:flex;gap:6px;align-items:center">Green streak</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ p.streak }} <span style="font-size:18px;color:var(--ink-3)">runs</span></div></div>
-<div><div style="font-size:13px;color:var(--ink-3);display:flex;gap:6px;align-items:center">Time to green</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ p.ttg }}</div></div>
+<div><div style="font-size:13px;color:var(--ink-3)">Green streak</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span style="font:500 30px/1.15 'Source Serif 4',serif">{{ rec.streak }}</span><span style="font-size:18px;color:var(--ink-3)">{{ rec.streakUnit }}</span></div><div style="display:flex;gap:4px;margin-top:2px;font-size:13px;color:var(--ink-3)"><span>Longest</span><span>{{ rec.longest }}</span></div></div>
+<div><div style="font-size:13px;color:var(--ink-3)">Time to green</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ rec.ttg }}</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3);text-wrap:pretty">{{ rec.ttgSub }}</div><sc-if value="{{ rec.red }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;font-weight:600;color:var(--fail)"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>Red now for</span><span>{{ rec.redFor }}</span></div></sc-if></div>
 </div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Longest streak, worst time to green and red-now duration are illustrative.</div>
 <a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:10px;font-size:14.5px;font-weight:600;color:var(--ink)">View this run →</a>
 </article>
 </section>
@@ -227,7 +228,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received {{ p.lastReport }}</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;project&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ostomate2&quot;,&quot;routeserve&quot;],&quot;default&quot;:&quot;ostomate2&quot;,&quot;tsType&quot;:&quot;'ostomate2' | 'routeserve'&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;current&quot;,&quot;latest run failed&quot;,&quot;stale&quot;,&quot;coverage below floor&quot;],&quot;default&quot;:&quot;current&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;project&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ostomate2&quot;,&quot;routeserve&quot;],&quot;default&quot;:&quot;ostomate2&quot;,&quot;tsType&quot;:&quot;'ostomate2' | 'routeserve'&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;current&quot;,&quot;latest run failed&quot;,&quot;stale&quot;,&quot;coverage below floor&quot;,&quot;no recoveries in 90 days&quot;],&quot;default&quot;:&quot;current&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { project: null, theme: null, menuOpen: false, branches: 'default' };
   static DARK = { bg:'#121110', surface:'#1a1917', inset:'#151412', raised:'#211f1c', line:'#2a2825', 'line-strong':'#3d3a35', ink:'#ede9e3', 'ink-2':'#cfc9bf', 'ink-3':'#a8a298', pass:'#7fd79a', 'pass-tint':'#1d2a20', fail:'#f4897c', 'fail-tint':'#33201c', attn:'#e3b35c', 'attn-tint':'#302716', neutral:'#b3ada3', 'neutral-tint':'#252320', 'on-ink':'#121110', 'layer-1':'#ede9e3', 'layer-2':'#b8b2a8', 'layer-3':'#8a847a', 'layer-4':'#6f6a62' };
@@ -244,7 +245,7 @@ class Component extends DCLogic {
     const rep = (a, b) => Array.from({ length: b }, () => a);
     return {
       ostomate2: {
-        name: 'Ostomate2', private: false, lastReport: '4 minutes ago', streak: 41, ttg: '2h 14m',
+        name: 'Ostomate2', private: false, lastReport: '4 minutes ago', streak: 41, ttg: '2h 14m', longest: 58, worst: '9h 02m', recN: 4,
         tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
         description: 'Logs bag and flange changes with a tap or a QR deep link, predicts days of supply, and sends reorder reminders. Data stays on the device. Crash reporting is opt-in and off by default, and there is no analytics.',
         run: { when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', figure: '142', line: 'tests · 142 passed · 0 failed · 0 skipped · 27 s' },
@@ -292,7 +293,7 @@ class Component extends DCLogic {
         flaky: [{ name: 'insertsAndQueriesByDay', suite: 'ChangeEventDaoTest', rate: 'Failed 2 of last 40 runs', layer: 'Integration', plat: 'jvm' }],
       },
       routeserve: {
-        name: 'RouteServe', private: true, lastReport: '2 hours ago', streak: 27, ttg: '1h 05m',
+        name: 'RouteServe', private: true, lastReport: '2 hours ago', streak: 27, ttg: '1h 05m', longest: 63, worst: '3h 40m', recN: 3,
         tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
         description: 'For field-service pros covering a wide region: customer records, scheduling with calendar sync, SMS reminders, and route-corridor trip planning. Piano service first, on a multi-tenant core meant for other appointment-dispatch businesses.',
         run: { when: '2 hours ago', branch: 'main', sha: 'c238574', figure: '1,048', line: 'tests · 1,048 passed · 0 failed · 0 skipped · 29 s' },
@@ -360,6 +361,10 @@ class Component extends DCLogic {
     const sc = this.props.scenario ?? 'current';
     const failed = sc === 'latest run failed', stale = sc === 'stale', below = sc === 'coverage below floor';
 
+    /* v6 item 3: recovery stats (spec §11). Red = latest default-branch run failed; a failed PR run does not break the streak. */
+    const red = failed && p.failRun.branch === 'main', noRec = sc === 'no recoveries in 90 days';
+    const rec = { streak: String(red ? 0 : p.streak), streakUnit: (red ? 0 : p.streak) === 1 ? 'run' : 'runs', longest: p.longest + ' runs',
+      ttg: noRec ? 'None' : p.ttg, ttgSub: noRec ? 'No recoveries in 90 days' : `Median of ${p.recN}, 90 days · worst ${p.worst}`, red, redFor: '21h 10m' };
     const r0 = failed ? p.failRun : p.run;
     const run = Object.assign({}, r0, { figColor: failed ? 'var(--fail)' : 'var(--ink)' });
     if (stale) Object.assign(run, { when: 'Sep 12' });
@@ -368,7 +373,7 @@ class Component extends DCLogic {
     const pyramid = [{ label: 'E2E', labelInk: 'var(--ink-3)', isBar: false, isText: true, text: p.e2e.flows + ' flows declared · not counted', countText: '', pct: '', w: '0', bg: 'transparent' }]
       .concat(L.slice().reverse().map(l => ({ label: l.label, labelInk: 'var(--ink-2)', isBar: true, isText: false, text: '', w: (l.count / mx * 100) + '%', bg: l.tone, countText: l.countText, pct: (l.count / tot < 0.01 ? '<1' : Math.round(l.count / tot * 100)) + '%' })));
 
-    const coverage = p.cov.map(([m, v, f], i) => K.cov(m, below && p.below[0] === i ? p.below[1] : v, f));
+    const coverage = p.cov.map(([m, v, f], i) => K.cov(m, below && p.below[0] === i ? p.below[1] : v, f)).sort((a, b) => a.m < b.m ? -1 : a.m > b.m ? 1 : 0); /* v6 item 9: by module key (code-point order) */
     const dates = Component.DATES;
     const covScope = 'Default branch · CI and imported history';
     const charts = [
@@ -396,7 +401,7 @@ class Component extends DCLogic {
     return Object.assign(base, {
       themeVars: K.themeVars(dark), liveDot, menuItems,
       p: Object.assign({}, p, { lastReport: stale ? '12 days ago' : p.lastReport }),
-      isPublic: !p.private, isStale: stale, isHealthy: !stale, isPass: !failed, isFail: failed, isBelow: below,
+      isPublic: !p.private, isStale: stale, isHealthy: !stale, isPass: !failed, isFail: failed, isBelow: below, rec,
       run, pyramid, pyrCols: '110px minmax(0,1fr) 120px', coverage, charts, runs, branchTabs, strip, stripNote: 'All 40 passed.', stripAria: 'Last 40 runs on main: 40 passed.',
       hasFlaky: p.flaky.length > 0, noFlaky: p.flaky.length === 0,
     });

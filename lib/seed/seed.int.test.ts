@@ -789,9 +789,15 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         reports: 3,
         runUrl: 'https://github.com/bhelco1/Ostomate2/actions/runs/36100000009',
       });
+      // Each row counts distinct tests (decision 2026-09-29): 192 executions are 142 tests.
+      expect(ostomate2.runs.items.map((run) => run.tests)).toEqual(
+        Array(8).fill({ total: 142, passed: 142, failed: 0, skipped: 0 }),
+      );
       const all = await load('ostomate2', { branches: 'all' });
       expect(all.runs.items).toHaveLength(9);
       expect(all.runs.items[5]?.title).toBe('Pull request from seed/pull-request');
+      // The pull request run is not a default-branch run, so its results are read for the list.
+      expect(all.runs.items[5]?.tests).toEqual({ total: 142, passed: 142, failed: 0, skipped: 0 });
 
       // routeserve: 10 runs on main fit the first 10; all 11 do not.
       expect(routeserve.runs).toMatchObject({ branches: 'default', hasMore: false });
@@ -800,6 +806,15 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         hasMore: true,
       });
       expect(routeserve.runs.items[0]).toMatchObject({ status: 'failed', runUrl: null });
+      // 1044 of 1045 executions passed, but distinct tests are 1040 of 1041 (apps/mobile runs one
+      // name five times), as the latest-run card reads.
+      expect(routeserve.runs.items[0]).toMatchObject({ passed: 1044, failed: 1, total: 1045 });
+      expect(routeserve.runs.items[0]?.tests).toEqual({
+        total: 1041,
+        passed: 1040,
+        failed: 1,
+        skipped: 0,
+      });
     });
 
     it('loads a public run with its per-test rows on both platforms', async () => {

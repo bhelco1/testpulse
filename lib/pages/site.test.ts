@@ -21,7 +21,7 @@ describe('siteChromeView', () => {
       { name: 'Ostomate 2.0', href: '/p/ostomate2', status: 'passed' },
       { name: 'testpulse', href: '/p/testpulse', status: 'not_reporting' },
     ]);
-    expect(view.lastReport).toBe('2 hours ago');
+    expect(view.lastReport).toBe('2 h ago');
   });
 
   it('has no last report before anything has reported', () => {

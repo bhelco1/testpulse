@@ -9,16 +9,19 @@ const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
+// The design's short style (Project Page run rows, Kiosk, Design System): "4 min ago",
+// "2 h ago", "yesterday", "3 days ago", and "just now" (Landing footer). Provisional until design
+// v7 item 16 gives the full rule (spec section 13.2).
 describe('relativeTime', () => {
   it.each([
-    [0, 'now'],
-    [59 * SECOND, '59 seconds ago'],
-    [MINUTE, '1 minute ago'],
-    [4 * MINUTE + 59 * SECOND, '4 minutes ago'],
-    [59 * MINUTE, '59 minutes ago'],
-    [HOUR, '1 hour ago'],
-    [2 * HOUR + 30 * MINUTE, '2 hours ago'],
-    [23 * HOUR + 59 * MINUTE, '23 hours ago'],
+    [0, 'just now'],
+    [59 * SECOND, 'just now'],
+    [MINUTE, '1 min ago'],
+    [4 * MINUTE + 59 * SECOND, '4 min ago'],
+    [59 * MINUTE, '59 min ago'],
+    [HOUR, '1 h ago'],
+    [2 * HOUR + 30 * MINUTE, '2 h ago'],
+    [23 * HOUR + 59 * MINUTE, '23 h ago'],
     [DAY, 'yesterday'],
     [2 * DAY - 1, 'yesterday'],
     [2 * DAY, '2 days ago'],
@@ -28,8 +31,8 @@ describe('relativeTime', () => {
     expect(relativeTime(before(ms), NOW)).toBe(expected);
   });
 
-  it('reads a time after now as now, rather than in the future', () => {
-    expect(relativeTime(new Date(NOW.getTime() + 5 * MINUTE), NOW)).toBe('now');
+  it('reads a time after now as just now, rather than in the future', () => {
+    expect(relativeTime(new Date(NOW.getTime() + 5 * MINUTE), NOW)).toBe('just now');
   });
 });
 

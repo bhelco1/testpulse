@@ -81,10 +81,11 @@ describe('coverageCaption', () => {
   });
 
   it('compares first and last at one decimal, as they are displayed', () => {
-    expect(coverageCaption([92.01, 92.04], 91)).toBe(
+    // Percentages round down to the tenth (decision 2026-09-29), so 92.09 reads 92.0%.
+    expect(coverageCaption([92.01, 92.09], 91)).toBe(
       'Held at 92.0% over 2 runs; above its 91% floor.',
     );
-    expect(coverageCaption([92.04, 92.06], 91)).toBe(
+    expect(coverageCaption([92.09, 92.11], 91)).toBe(
       'Rose from 92.0% to 92.1% over 2 runs; above its 91% floor.',
     );
   });

@@ -5,6 +5,7 @@ import {
   testCounts,
   testCountTrend,
   testOutcomes,
+  testOutcomesByRun,
   type TestCountRun,
   type TestLayerRow,
 } from './test-counts.ts';
@@ -61,6 +62,46 @@ describe('testOutcomes', () => {
     // 1 + 1 + 1 = 3 = t1, t2, t3.
     expect([passed, failed, skipped]).toEqual([1, 1, 1]);
     expect(passed + failed + skipped).toBe(testCounts(rows).totalTests);
+  });
+});
+
+// Decision 2026-09-29 (section 19): each row of the project page's run list counts distinct
+// tests, as the latest-run card does, not the run's executions.
+describe('testOutcomesByRun', () => {
+  const result = (
+    runId: string,
+    testId: string,
+    status: 'passed' | 'failed' | 'error' | 'skipped',
+  ) => ({ runId, testId, status });
+
+  it('counts each run’s distinct tests on its own, with their total', () => {
+    // r1: t1 and t2 passed on jvm and ios-sim, t3 failed on ios-sim only, t4 skipped: 7
+    // executions, 4 tests (2 passed, 1 failed, 1 skipped). r2: t1 errored on jvm and passed on
+    // ios-sim, t2 passed: 3 executions, 2 tests (1 passed, 1 failed).
+    const results = [
+      result('r1', 't1', 'passed'),
+      result('r1', 't1', 'passed'),
+      result('r1', 't2', 'passed'),
+      result('r1', 't2', 'passed'),
+      result('r1', 't3', 'passed'),
+      result('r1', 't3', 'failed'),
+      result('r1', 't4', 'skipped'),
+      result('r2', 't1', 'error'),
+      result('r2', 't1', 'passed'),
+      result('r2', 't2', 'passed'),
+    ];
+
+    const byRun = testOutcomesByRun(['r1', 'r2'], results);
+
+    expect(byRun.get('r1')).toEqual({ total: 4, passed: 2, failed: 1, skipped: 1 });
+    expect(byRun.get('r2')).toEqual({ total: 2, passed: 1, failed: 1, skipped: 0 });
+  });
+
+  it('gives a run with no results zero tests, and leaves out runs it was not asked about', () => {
+    const byRun = testOutcomesByRun(['empty'], [result('other', 't1', 'passed')]);
+
+    expect(byRun.get('empty')).toEqual({ total: 0, passed: 0, failed: 0, skipped: 0 });
+    expect(byRun.has('other')).toBe(false);
   });
 });
 

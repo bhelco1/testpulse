@@ -5,8 +5,12 @@ import { formatCount, qty } from '../copy/count';
 import { formatRunDuration, relativeTime, shortDate } from '../copy/time';
 import { LAYER_LABEL, layerSegments, type LayerSegment } from '../design/layers';
 import type { DeclaredSuite } from '../projects/schema';
-import type { BranchScope, ProjectPage, ProjectPageOptions } from '../queries/project';
-import type { ListedRun } from '../queries/run-rows';
+import type {
+  BranchScope,
+  ProjectPage,
+  ProjectPageOptions,
+  ProjectRunItem,
+} from '../queries/project';
 import { shortSuite } from '../results/short-suite';
 import type { PublicHealth } from '../stats/health';
 import type { GreenStreak } from '../stats/streak';
@@ -223,7 +227,10 @@ function latestRunView(page: ProjectPage, now: Date): LatestRunView | null {
   };
 }
 
-function feedRun(run: ListedRun, page: ProjectPage, now: Date): FeedRun {
+function feedRun(run: ProjectRunItem, page: ProjectPage, now: Date): FeedRun {
+  // Distinct tests, as the latest-run card counts them (decision 2026-09-29). A pruned run has
+  // none left to count and keeps its executions until the design defines its row (13.2).
+  const tests = run.tests ?? run;
   const base = {
     id: run.id,
     href: runHref(page.project.slug, run.id),
@@ -242,7 +249,7 @@ function feedRun(run: ListedRun, page: ProjectPage, now: Date): FeedRun {
         ...base,
         ...title,
         status: 'passed',
-        total: run.total,
+        total: tests.total,
         duration: formatRunDuration(run.durationMs),
       };
     case 'failed':
@@ -250,9 +257,9 @@ function feedRun(run: ListedRun, page: ProjectPage, now: Date): FeedRun {
         ...base,
         ...title,
         status: 'failed',
-        failed: run.failed,
-        passed: run.passed,
-        total: run.total,
+        failed: tests.failed,
+        passed: tests.passed,
+        total: tests.total,
       };
     case 'empty':
       return { ...base, ...title, status: 'empty', reports: run.reports };

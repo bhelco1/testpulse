@@ -8,19 +8,20 @@ const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-// numeric: 'auto' gives the design's "yesterday" for one day and "now" for zero.
-const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-
 /**
- * "4 minutes ago", "2 hours ago", "yesterday", "13 days ago": the largest whole unit up to days.
- * Days are 24-hour periods, as the health marker counts them. A time after now reads "now".
+ * "just now", "4 min ago", "2 h ago", "yesterday", "13 days ago": the largest whole unit up to
+ * days, in the design's short style (Project Page run rows, Kiosk; "just now" from the Landing
+ * footer). Written out because Intl.RelativeTimeFormat's short style gives "4 min. ago".
+ * Provisional until design v7 item 16 (spec section 13.2). Days are 24-hour periods, as the
+ * health marker counts them. A time after now reads "just now".
  */
 export function relativeTime(then: Date, now: Date): string {
   const elapsed = Math.max(0, now.getTime() - then.getTime());
-  if (elapsed < MINUTE) return relative.format(-Math.floor(elapsed / SECOND), 'second');
-  if (elapsed < HOUR) return relative.format(-Math.floor(elapsed / MINUTE), 'minute');
-  if (elapsed < DAY) return relative.format(-Math.floor(elapsed / HOUR), 'hour');
-  return relative.format(-Math.floor(elapsed / DAY), 'day');
+  if (elapsed < MINUTE) return 'just now';
+  if (elapsed < HOUR) return `${Math.floor(elapsed / MINUTE)} min ago`;
+  if (elapsed < DAY) return `${Math.floor(elapsed / HOUR)} h ago`;
+  const days = Math.floor(elapsed / DAY);
+  return days === 1 ? 'yesterday' : `${days} days ago`;
 }
 
 const monthDay = new Intl.DateTimeFormat('en-US', {

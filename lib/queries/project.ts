@@ -10,6 +10,7 @@ import {
   PUBLIC_RUN_COLUMNS,
   PublicRunRowSchema,
   type PublicRun,
+  type StatsResult,
 } from '../stats/input.ts';
 import { readAll, readByRunIds } from '../stats/load.ts';
 import {
@@ -20,7 +21,12 @@ import {
   type WindowDays,
 } from '../stats/rules.ts';
 import { projectSummary, type ProjectSummary } from '../stats/summary.ts';
-import { testCountTrend, type TestCountPoint } from '../stats/test-counts.ts';
+import {
+  testCountTrend,
+  testOutcomesByRun,
+  type RunTests,
+  type TestCountPoint,
+} from '../stats/test-counts.ts';
 import {
   coverageTrend,
   passRateTrend,
@@ -83,6 +89,11 @@ export interface FlakyListTest {
   readonly platforms: readonly string[];
 }
 
+/** A run list row: the run, and its distinct tests unless its results were pruned (5.12). */
+export interface ProjectRunItem extends ListedRun {
+  readonly tests: RunTests | null;
+}
+
 export interface ProjectPage {
   readonly project: ProjectDetail;
   readonly summary: ProjectSummary;
@@ -102,7 +113,7 @@ export interface ProjectPage {
   };
   readonly runs: {
     readonly branches: BranchScope;
-    readonly items: readonly ListedRun[];
+    readonly items: readonly ProjectRunItem[];
     readonly hasMore: boolean;
   };
 }
@@ -180,6 +191,7 @@ async function loadRunList(
   branches: BranchScope,
   limit: number,
   at: Date,
+  read: { readonly runIds: ReadonlySet<string>; readonly results: readonly StatsResult[] },
 ): Promise<ProjectPage['runs']> {
   // The run list shows what CI reported: imported history is not a report (section 11,
   // "Which runs"). Newest first in byFinish order, one row past the limit to tell if more exist.
@@ -205,9 +217,19 @@ async function loadRunList(
     client,
     shown.map((run) => run.id),
   );
+  // Each row counts distinct tests (decision 2026-09-29), from the results the page has already
+  // read where it can. A pruned run has no per-test rows left to count.
+  const counted = shown.filter((run) => run.resultsPrunedAt === null).map((run) => run.id);
+  const unread = counted.filter((id) => !read.runIds.has(id));
+  const results =
+    unread.length === 0 ? read.results : [...read.results, ...(await loadResults(client, unread))];
+  const tests = testOutcomesByRun(counted, results);
   return {
     branches,
-    items: shown.map((run) => toListedRun(run, counts.get(run.id) ?? 0)),
+    items: shown.map((run) => ({
+      ...toListedRun(run, counts.get(run.id) ?? 0),
+      tests: tests.get(run.id) ?? null,
+    })),
     hasMore: rows.length > limit,
   };
 }
@@ -244,12 +266,10 @@ export async function loadProjectPage(
   );
 
   // Test count per run and flakiness both read CI results; 90 days is the longer window.
-  const results = await loadResults(
-    client,
-    runs
-      .filter((run) => countsTowardCiOnlyStats(run, project.defaultBranch) && inLongest(run))
-      .map((run) => run.id),
-  );
+  const resultRunIds = runs
+    .filter((run) => countsTowardCiOnlyStats(run, project.defaultBranch) && inLongest(run))
+    .map((run) => run.id);
+  const results = await loadResults(client, resultRunIds);
 
   const stats = { defaultBranch: project.defaultBranch, now: at };
   const trends = (days: WindowDays): ProjectTrends => {
@@ -314,6 +334,9 @@ export async function loadProjectPage(
       totalTests: flaky.totalTests,
       flakeRate: flaky.flakeRate,
     },
-    runs: await loadRunList(client, project, branches, runLimit, at),
+    runs: await loadRunList(client, project, branches, runLimit, at, {
+      runIds: new Set(resultRunIds),
+      results,
+    }),
   };
 }

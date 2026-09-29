@@ -120,6 +120,9 @@ const isFeed = (query: Query) =>
   query.table === 'runs_public' &&
   argsOf(query, 'order').some(([column]) => column === 'finished_at') &&
   argsOf(query, 'limit').length === 0;
+const isStatsResults = (query: Query) =>
+  query.table === 'results' &&
+  firstArgs(query, 'select')[0] === 'id, test_id, status, reports!inner(run_id, platform)';
 const isLastReport = (query: Query) =>
   query.table === 'runs_public' && argsOf(query, 'limit').length > 0;
 
@@ -468,6 +471,67 @@ describe('loadProjectPage', () => {
         expect.objectContaining({ id: 'ci-1', status: 'failed', failed: 1, passed: 2, reports: 0 }),
       ],
     });
+  });
+
+  it('counts each listed run’s distinct tests from the results already read', async () => {
+    const { client, queries } = fakeClient(answering({ feed: [RUNS[2], RUNS[1]] }));
+
+    const page = await loadProjectPage('ostomate2', {}, client, NOW);
+
+    // ci-2: t1, t2 and t3 passed. ci-1: t1 failed and t2 passed, against the run row's 3.
+    expect(page?.runs.items.map((run) => [run.id, run.tests])).toEqual([
+      ['ci-2', { total: 3, passed: 3, failed: 0, skipped: 0 }],
+      ['ci-1', { total: 2, passed: 1, failed: 1, skipped: 0 }],
+    ]);
+    // Both runs are default-branch CI runs in the 90 days, whose results are already read.
+    expect(queries.filter(isStatsResults)).toHaveLength(1);
+  });
+
+  it('reads the results of listed runs outside the 90-day default-branch set', async () => {
+    const answer = answering({ feed: [RUNS[2], PR_RUN] });
+    const { client, queries } = fakeClient((query) =>
+      isStatsResults(query) && argsOf(query, 'in')[0]?.[1]?.toString() === 'pr'
+        ? {
+            data: [
+              {
+                ...statsResult('p1', 'pr', 't1', 'passed'),
+                reports: { run_id: 'pr', platform: 'jvm' },
+              },
+              {
+                ...statsResult('p2', 'pr', 't1', 'failed'),
+                reports: { run_id: 'pr', platform: 'ios-sim' },
+              },
+            ],
+          }
+        : answer(query),
+    );
+
+    const page = await loadProjectPage('ostomate2', { branches: 'all' }, client, NOW);
+
+    const reads = queries.filter(isStatsResults).map((query) => argsOf(query, 'in'));
+    expect(reads).toEqual([[['reports.run_id', ['ci-1', 'ci-2']]], [['reports.run_id', ['pr']]]]);
+    // One test, failing on ios-sim: 1 failed of 1.
+    expect(page?.runs.items.find((run) => run.id === 'pr')?.tests).toEqual({
+      total: 1,
+      passed: 0,
+      failed: 1,
+      skipped: 0,
+    });
+  });
+
+  it('has no distinct count for a run whose results were pruned, and does not read them', async () => {
+    const pruned = runRow('old', '2026-05-01T10:00:00+00:00', {
+      results_pruned_at: '2026-10-01T00:00:00+00:00',
+    });
+    const { client, queries } = fakeClient(answering({ feed: [RUNS[2], pruned] }));
+
+    const page = await loadProjectPage('ostomate2', {}, client, NOW);
+
+    expect(page?.runs.items.map((run) => [run.id, run.tests])).toEqual([
+      ['ci-2', { total: 3, passed: 3, failed: 0, skipped: 0 }],
+      ['old', null],
+    ]);
+    expect(queries.filter(isStatsResults)).toHaveLength(1);
   });
 
   it('adds every branch when asked, and says when there are more runs than the limit', async () => {

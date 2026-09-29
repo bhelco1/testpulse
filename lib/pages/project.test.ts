@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ProjectPage } from '../queries/project.ts';
-import type { ListedRun } from '../queries/run-rows.ts';
+import type { ProjectPage, ProjectRunItem } from '../queries/project.ts';
 import type { LatestRunSummary, ProjectSummary } from '../stats/summary.ts';
 import { projectPageOptions, projectPageView, runListHref } from './project.ts';
 
@@ -64,7 +63,7 @@ const summary: ProjectSummary = {
   health: { daysSinceLastReport: 0, problems: [], marker: { health: 'healthy' } },
 };
 
-const listed = (overrides: Partial<ListedRun> = {}): ListedRun => ({
+const listed = (overrides: Partial<ProjectRunItem> = {}): ProjectRunItem => ({
   id: 'run-9',
   title: 'Push to main',
   event: 'push',
@@ -75,12 +74,14 @@ const listed = (overrides: Partial<ListedRun> = {}): ListedRun => ({
   finishedAt: ago(2 * HOUR + 34 * MINUTE),
   source: 'ci',
   status: 'passed',
+  // Executions: 142 tests, 50 of them on two platforms.
   total: 192,
   passed: 192,
   failed: 0,
   skipped: 0,
   durationMs: 35_604,
   reports: 3,
+  tests: { total: 142, passed: 142, failed: 0, skipped: 0 },
   ...overrides,
 });
 
@@ -172,7 +173,7 @@ describe('projectPageView', () => {
   it('pairs a healthy marker with when the last report arrived', () => {
     expect(projectPageView(page(), NOW).hero).toMatchObject({
       health: { health: 'healthy' },
-      healthDetail: 'Last report 2 hours ago',
+      healthDetail: 'Last report 2 h ago',
       stale: null,
     });
   });
@@ -247,7 +248,7 @@ describe('projectPageView', () => {
 
       expect(card).toEqual({
         status: 'passed',
-        when: '2 hours ago',
+        when: '2 h ago',
         branch: 'main',
         sha: '0e2d0b4',
         href: '/p/ostomate2/runs/run-9',
@@ -295,8 +296,8 @@ describe('projectPageView', () => {
           platform: 'node',
           href: '/p/ostomate2/runs/run-9',
         },
-        // 99.96% rounds to 100% at the one decimal the site shows rates at.
-        passRate30: '100%',
+        // 99.96% rounds down to 99.9%: a failing window never reads 100% (decision 2026-09-29).
+        passRate30: '99.9%',
       });
     });
 
@@ -312,6 +313,13 @@ describe('projectPageView', () => {
 
     it('shows a pass rate to one decimal place', () => {
       const view = projectPageView(page({ trends: { 30: trends(0.999), 90: trends(1) } }), NOW);
+      expect(view.latestRun?.passRate30).toBe('99.9%');
+    });
+
+    it('never shows a failing window as 100%', () => {
+      // RouteServe's seeded 30 days: 10,446 of 10,450 is 99.96%.
+      const rate = 10_446 / 10_450;
+      const view = projectPageView(page({ trends: { 30: trends(rate), 90: trends(1) } }), NOW);
       expect(view.latestRun?.passRate30).toBe('99.9%');
     });
 
@@ -432,11 +440,12 @@ describe('projectPageView', () => {
             project: 'Ostomate 2.0',
             branch: 'main',
             sha: '0e2d0b4',
-            when: '2 hours ago',
+            when: '2 h ago',
             visibility: 'public',
             title: 'Push to main',
             status: 'passed',
-            total: 192,
+            // Distinct tests, not the 192 executions (decision 2026-09-29).
+            total: 142,
             duration: '36 s',
           },
         ],
@@ -452,8 +461,22 @@ describe('projectPageView', () => {
             branches: 'all',
             hasMore: true,
             items: [
-              listed({ id: 'f', status: 'failed', passed: 1044, failed: 1, total: 1045 }),
-              listed({ id: 'e', status: 'empty', total: 0, passed: 0, reports: 3 }),
+              listed({
+                id: 'f',
+                status: 'failed',
+                passed: 1044,
+                failed: 1,
+                total: 1045,
+                tests: { total: 1041, passed: 1040, failed: 1, skipped: 0 },
+              }),
+              listed({
+                id: 'e',
+                status: 'empty',
+                total: 0,
+                passed: 0,
+                reports: 3,
+                tests: { total: 0, passed: 0, failed: 0, skipped: 0 },
+              }),
             ],
           },
         }),
@@ -465,13 +488,28 @@ describe('projectPageView', () => {
           id: 'f',
           status: 'failed',
           failed: 1,
-          passed: 1044,
-          total: 1045,
+          passed: 1040,
+          total: 1041,
         }),
         expect.objectContaining({ id: 'e', status: 'empty', reports: 3 }),
       ]);
       // Two shown and 20 more.
       expect(view.runs.loadMoreHref).toBe('/p/ostomate2?branches=all&runs=22');
+    });
+
+    it('keeps a pruned run’s executions until the design says what it shows', () => {
+      const view = projectPageView(
+        page({
+          runs: {
+            branches: 'default',
+            hasMore: false,
+            items: [listed({ status: 'failed', passed: 191, failed: 1, total: 192, tests: null })],
+          },
+        }),
+        NOW,
+      );
+
+      expect(view.runs.items[0]).toMatchObject({ failed: 1, passed: 191, total: 192 });
     });
 
     it('titles no row of a private project', () => {

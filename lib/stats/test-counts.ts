@@ -65,6 +65,28 @@ export function testOutcomes(rows: readonly TestOutcomeRow[]): TestOutcomes {
   return outcomes;
 }
 
+/** A run's distinct tests: its total and how each test came out (testOutcomes). */
+export interface RunTests extends TestOutcomes {
+  readonly total: number;
+}
+
+// Decision 2026-09-29 (section 19): the project page's run list counts each run's distinct
+// tests, as the latest-run card does, not its executions (runs.total). A run with no results
+// has none.
+export function testOutcomesByRun(
+  runIds: readonly string[],
+  results: readonly Pick<StatsResult, 'runId' | 'testId' | 'status'>[],
+): Map<string, RunTests> {
+  const rowsOf = new Map<string, TestOutcomeRow[]>(runIds.map((id) => [id, []]));
+  for (const { runId, testId, status } of results) rowsOf.get(runId)?.push({ testId, status });
+  return new Map(
+    [...rowsOf].map(([runId, rows]) => {
+      const outcomes = testOutcomes(rows);
+      return [runId, { total: outcomes.passed + outcomes.failed + outcomes.skipped, ...outcomes }];
+    }),
+  );
+}
+
 // Spec section 11: "Test count per run: The "Total tests" measure for each default-branch run
 // with source = ci, trended per run. Imported history is left out: it has no per-test rows. Not
 // runs.total, which counts executions." Read as follows, and pinned by the tests:

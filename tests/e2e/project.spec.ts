@@ -35,7 +35,7 @@ test.describe('Ostomate2 (public)', () => {
     const main = page.getByRole('main');
     await expect(main.getByText('Reporting healthy')).toBeVisible();
     // The latest CI run finished at 09:26:36 UTC, 2 hours 33 minutes before SEED_NOW.
-    await expect(main.getByText('Last report 2 hours ago')).toBeVisible();
+    await expect(main.getByText('Last report 2 h ago')).toBeVisible();
     await expect(main.getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
       'href',
       'https://github.com/bhelco1/Ostomate2',
@@ -47,7 +47,7 @@ test.describe('Ostomate2 (public)', () => {
     const card = page.getByRole('article');
     await expect(card.getByText('Passed', { exact: true })).toBeVisible();
     await expect(card.locator('[data-part="meta"]')).toHaveText(
-      /^Latest run · 2 hours ago · main · [0-9a-f]{7}$/,
+      /^Latest run · 2 h ago · main · [0-9a-f]{7}$/,
     );
     await expect(card.locator('[data-part="figure"]')).toHaveText('142');
     // 35,604 ms: the three JUnit files' testsuite times.
@@ -98,8 +98,9 @@ test.describe('Ostomate2 (public)', () => {
     const rows = runsLog(page).getByRole('link');
     await expect(rows).toHaveCount(8);
     await expect(rows.first()).toContainText('Push to main');
-    await expect(rows.first()).toContainText('192 tests· 36 s');
-    await expect(rows.first()).toContainText('2 hours ago');
+    // Distinct tests, not the run's 192 executions.
+    await expect(rows.first()).toContainText('142 tests· 36 s');
+    await expect(rows.first()).toContainText('2 h ago');
     await expect(page.getByRole('button', { name: 'Load 20 more' })).toHaveCount(0);
     await expect(page.getByText('No flaky tests in the last 30 days')).toBeVisible();
   });
@@ -148,10 +149,10 @@ test.describe('RouteServe (private)', () => {
       'assetCreateSchema accepts a minimal valid asset',
     );
     await expect(card.locator('[data-part="failing"]')).toContainText('node');
-    // 10,446 of 10,450 is 99.96%, shown at one decimal. Recoveries of 26, 44 and 247 minutes;
-    // red since the latest run finished at 08:13:55.
+    // 10,446 of 10,450 is 99.96%, rounded down to one decimal. Recoveries of 26, 44 and 247
+    // minutes; red since the latest run finished at 08:13:55.
     await expect(card.locator('[data-part="stats"] > [data-part="cell"]')).toHaveText([
-      'Pass rate, 30 days100%',
+      'Pass rate, 30 days99.9%',
       'Green streak0runsLongest2 runs',
       'Time to green44mMedian of 3, 90 days · worst 4h 07mRed now for3h 46m',
     ]);
@@ -181,7 +182,8 @@ test.describe('RouteServe (private)', () => {
     const rows = runsLog(page).getByRole('link');
     await expect(rows).toHaveCount(10);
     await expect(rows.filter({ hasText: 'Private repository' })).toHaveCount(10);
-    await expect(rows.first()).toContainText('1 failed· 1,044 of 1,045');
+    // Distinct tests, as the latest-run card reads, not 1,044 of 1,045 executions.
+    await expect(rows.first()).toContainText('1 failed· 1,040 of 1,041');
     await expect(page.getByRole('button', { name: 'Load 20 more' })).toHaveCount(0);
   });
 

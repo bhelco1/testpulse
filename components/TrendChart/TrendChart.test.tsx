@@ -5,11 +5,19 @@ import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { coverageCaption, passRateCaption, TREND_SCOPE } from '../../lib/charts/captions';
+import {
+  coverageCaption,
+  durationCaption,
+  passRateCaption,
+  TREND_SCOPE,
+} from '../../lib/charts/captions';
+import { formatTrendValue } from '../../lib/charts/format';
 import {
   COVERAGE_10,
   DATES,
+  IOS_GAP_SECONDS,
   IOS_SECONDS,
+  JVM_GAP_SECONDS,
   JVM_SECONDS,
   PASS_RATE_30,
   RUNS_PER_DAY,
@@ -804,6 +812,144 @@ describe('TrendChart tooltip', () => {
       'font-family': 'var(--font-sans)',
       'font-variant-numeric': 'tabular-nums',
     });
+  });
+});
+
+// Design v7 item 9 (components.md TrendChart, "Missing values"; tp-charts.js): a null is a run
+// where the series has no value, such as a platform that did not run.
+describe('TrendChart with missing values', () => {
+  const GAPS: TrendChartProps = {
+    title: 'Duration, rendersToday',
+    scope: TREND_SCOPE.duration,
+    caption: durationCaption([JVM_GAP_SECONDS, IOS_GAP_SECONDS], 'sec'),
+    series: [
+      { name: 'jvm', values: JVM_GAP_SECONDS },
+      { name: 'ios-sim', values: IOS_GAP_SECONDS, dashed: true },
+    ],
+    format: 'sec',
+    unit: 'run',
+  };
+
+  // Each "M…" run of a Recharts line path as its points' x positions.
+  const segmentXs = (path: Element | undefined) =>
+    (path?.getAttribute('d') ?? '')
+      .split('M')
+      .filter(Boolean)
+      .map((segment) =>
+        segment
+          .replace(/Z$/, '')
+          .split('L')
+          .map((pair) => Number(pair.split(',')[0])),
+      );
+
+  it('breaks the line at a missing value, never joining across the gap', () => {
+    const { container } = render(<TrendChart {...GAPS} />);
+    const layout = chartLayout(720, 10, 'line', '0.64 s'.length * 7);
+    const [, ios] = [...container.querySelectorAll('path.recharts-line-curve')];
+    const xs = segmentXs(ios);
+    expect(xs.map((segment) => segment.length)).toEqual([2, 2, 3]);
+    const expected = [0, 1, 4, 5, 7, 8, 9].map((i) => xAt(layout, i));
+    expect(xs.flat()).toHaveLength(expected.length);
+    xs.flat().forEach((x, k) => expect(x).toBeCloseTo(expected[k] ?? Number.NaN, 6));
+  });
+
+  it('draws no dot where a value is missing', () => {
+    const { container } = render(<TrendChart {...GAPS} />);
+    const layout = chartLayout(720, 10, 'line', '0.64 s'.length * 7);
+    // Desktop, 10 points: hollow dots between the ends, none where ios-sim did not run.
+    const iosDots = parts(container, 'dot')
+      .filter((dot) => dot.getAttribute('stroke') === 'var(--ink-3)')
+      .map((dot) => Math.round(num(dot, 'cx')));
+    expect(iosDots).toEqual(
+      expect.arrayContaining([1, 4, 5, 7, 8].map((i) => Math.round(xAt(layout, i)))),
+    );
+    for (const missing of [2, 3, 6])
+      expect(iosDots).not.toContain(Math.round(xAt(layout, missing)));
+  });
+
+  it('draws a lone point between gaps as a 3 px filled dot where no hollow dots are drawn', () => {
+    chartWidth = 390;
+    const { container } = render(
+      <TrendChart {...GAPS} series={[{ name: 'jvm', values: [0.5, null, 0.6, null, 0.55] }]} />,
+    );
+    const lone = parts(container, 'lone-dot');
+    expect(lone).toHaveLength(1);
+    expect(lone[0]?.getAttribute('r')).toBe('3');
+    expect(lone[0]?.getAttribute('fill')).toBe('var(--ink)');
+    expect(num(lone[0], 'cx')).toBe(xAt(chartLayout(390, 5, 'line', '0.55 s'.length * 7), 2));
+  });
+
+  it('gives a series whose latest value is missing no end dot or end label', () => {
+    const { container } = render(
+      <TrendChart
+        {...GAPS}
+        series={[
+          { name: 'jvm', values: [0.41, 0.4, 0.42, 0.43] },
+          { name: 'ios-sim', values: [0.6, 0.62, 0.61, null] },
+        ]}
+      />,
+    );
+    expect(parts(container, 'end-dot').map((dot) => dot.getAttribute('fill'))).toEqual([
+      'var(--ink)',
+      'var(--ink)',
+    ]);
+    expect(parts(container, 'value-label').map((label) => label.textContent)).toEqual([
+      '0.41 s',
+      '0.43 s',
+    ]);
+  });
+
+  it('leaves missing values out of the y axis', () => {
+    const { container } = render(<TrendChart {...GAPS} />);
+    const scale = trendYScale({
+      values: [...JVM_GAP_SECONDS, ...IOS_GAP_SECONDS].filter((v): v is number => v !== null),
+      zero: false,
+      percent: false,
+      integer: false,
+      steps: 3,
+    });
+    expect(parts(container, 'y-label').map((label) => label.textContent)).toEqual(
+      scale.ticks.map((tick) => formatTrendValue(tick, 'sec')),
+    );
+  });
+
+  it('reads "Not run" in the tooltip, in --ink-3 at 400, with no hover dot for that series', () => {
+    const { container, getByRole } = render(<TrendChart {...GAPS} />);
+    const surface = surfaceOf(container);
+    fireEvent.focus(surface);
+    for (let i = 0; i < 6; i++) fireEvent.keyDown(surface, { key: 'ArrowLeft' });
+    const panel = getByRole('status').querySelector('[data-part="tooltip"]');
+    expect(panel?.textContent).toBe('6 runs agojvm0.42 sios-simNot run');
+    expect(has(panel?.querySelector('[data-part="not-run"]'), 'tipNotRun')).toBe(true);
+    expect(parts(container, 'hover-dot').map((dot) => dot.getAttribute('stroke'))).toEqual([
+      'var(--ink)',
+    ]);
+    expect(ruleFor(CSS, '.tipNotRun')).toEqual({ color: 'var(--ink-3)', 'font-weight': '400' });
+  });
+
+  it('reads "Not run" in the table, in --ink-3 at 400', () => {
+    const { getByRole } = render(<TrendChart {...GAPS} />);
+    fireEvent.click(getByRole('button', { name: 'Show table' }));
+    const rows = within(getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows[0]?.textContent).toBe('Latest0.41 s0.63 s');
+    expect(rows[3]?.textContent).toBe('3 runs ago0.44 sNot run');
+    const [, , cell] = [...(rows[3]?.children ?? [])];
+    expect(has(cell, 'notRun')).toBe(true);
+    expect(ruleFor(CSS, '.table .notRun')).toEqual({ color: 'var(--ink-3)', 'font-weight': '400' });
+  });
+
+  it('draws no mark on a run the primary series has no value for', () => {
+    const { container } = render(
+      <TrendChart
+        {...GAPS}
+        series={[{ name: 'ios-sim', values: IOS_GAP_SECONDS }]}
+        marks={[
+          { index: 2, status: 'fail' },
+          { index: 4, status: 'fail' },
+        ]}
+      />,
+    );
+    expect(parts(container, 'mark')).toHaveLength(1);
   });
 });
 

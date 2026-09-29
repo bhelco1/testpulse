@@ -12,6 +12,7 @@ import {
   type WebProjectCardProps,
   type ProjectCardRun,
 } from './ProjectCard';
+import { timeLabel } from '../testing/time';
 
 afterEach(cleanup);
 
@@ -19,7 +20,7 @@ const CSS = join(import.meta.dirname, 'ProjectCard.module.css');
 
 const PASSED_RUN: ProjectCardRun = {
   status: 'passed',
-  when: '4 minutes ago',
+  when: timeLabel('4 min ago'),
   branch: 'main',
   sha: '0e2d0b4c9a11f3e7',
   href: '/p/ostomate2/runs/35642780279',
@@ -69,7 +70,7 @@ const FAILED: WebProjectCardProps = {
 
 const ROUTESERVE_RUN: ProjectCardRun = {
   status: 'passed',
-  when: '2 hours ago',
+  when: timeLabel('2 h ago'),
   branch: 'main',
   sha: 'c238574',
   href: '/p/routeserve/runs/1',
@@ -111,7 +112,7 @@ describe('ProjectCard (web)', () => {
     expect(card.tagName).toBe('ARTICLE');
     expect(card.dataset.variant).toBe('web');
     expect(card.querySelector('[data-status]')?.getAttribute('data-status')).toBe('passed');
-    expect(part(card, 'meta')?.textContent).toBe('4 minutes ago·main·0e2d0b4');
+    expect(part(card, 'meta')?.textContent).toBe('4 min ago·main·0e2d0b4');
     expect(getByRole('link', { name: '0e2d0b4' }).getAttribute('href')).toBe(
       '/p/ostomate2/runs/35642780279',
     );
@@ -298,13 +299,13 @@ describe('ProjectCard (web)', () => {
     const { container, queryByRole } = render(
       <ProjectCard
         {...ROUTESERVE}
-        latestRun={{ ...ROUTESERVE_RUN, when: '12 days ago' }}
+        latestRun={{ ...ROUTESERVE_RUN, when: timeLabel('1 week ago') }}
         health={{ health: 'stale', days: 12 }}
       />,
     );
     const card = cardOf(container);
 
-    expect(part(card, 'when')?.textContent).toBe('12 days ago');
+    expect(part(card, 'when')?.textContent).toBe('1 week ago');
     expect(part(card, 'when')?.className).toContain('stale');
     expect(card.querySelector('[data-health]')?.textContent).toBe('No report in 12 days');
     expect(queryByRole('status')).toBeNull();
@@ -638,7 +639,13 @@ describe('ProjectCard (web)', () => {
 const KIOSK_FAILED: KioskProjectCardProps = {
   variant: 'kiosk',
   project: OSTOMATE2.project,
-  latestRun: { ...PASSED_RUN, status: 'failed', when: '4 min ago', sha: 'a41f9c2', failed: 1 },
+  latestRun: {
+    ...PASSED_RUN,
+    status: 'failed',
+    when: timeLabel('4 min ago'),
+    sha: 'a41f9c2',
+    failed: 1,
+  },
   layers: OSTOMATE2.layers,
   coverage: [{ module: 'shared', pct: 92, floor: 91 }],
   reports: OSTOMATE2.reports,
@@ -654,7 +661,7 @@ const KIOSK_FAILED: KioskProjectCardProps = {
 
 const KIOSK_EMPTY: KioskProjectCardProps = {
   ...KIOSK_FAILED,
-  latestRun: { ...PASSED_RUN, status: 'empty', when: '4 min ago', total: 0 },
+  latestRun: { ...PASSED_RUN, status: 'empty', when: timeLabel('4 min ago'), total: 0 },
   health: { health: 'empty' },
   failing: [],
 };
@@ -676,7 +683,7 @@ const KIOSK_NOT_REPORTING: KioskProjectCardProps = {
 
 const KIOSK_PASSED: KioskProjectCardProps = {
   ...KIOSK_FAILED,
-  latestRun: { ...PASSED_RUN, status: 'passed', when: '4 min ago' },
+  latestRun: { ...PASSED_RUN, status: 'passed', when: timeLabel('4 min ago') },
   failing: [],
 };
 
@@ -820,7 +827,7 @@ describe('ProjectCard (kiosk)', () => {
     const { container } = render(
       <ProjectCard
         {...KIOSK_PASSED}
-        latestRun={{ ...PASSED_RUN, status: 'passed', when: '12 days ago' }}
+        latestRun={{ ...PASSED_RUN, status: 'passed', when: timeLabel('1 week ago') }}
         health={{ health: 'stale', days: 12 }}
       />,
     );

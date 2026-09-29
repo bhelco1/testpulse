@@ -1,37 +1,87 @@
 import { formatTrendValue } from '../charts/format';
 
 // Times as pages print them. Pure: the current time is passed in (spec section 16, "Fixed
-// time"), so the server renders the same words on every run of the e2e suite.
+// time"), so the server renders the same words on every run of the e2e suite. Everything is in
+// UTC: pages are rendered on the server and must read the same without JavaScript, so the
+// viewer's time zone is never known (decision 2026-09-29).
 
 const SECOND = 1_000;
 const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
+// Written out rather than from Intl: en-GB's short month for September is "Sept" in current
+// CLDR data, and the design writes "Sep".
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const utcDayNumber = (instant: Date): number => Math.floor(instant.getTime() / DAY);
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
+/** "22 Sep" in now's UTC year, else "22 Sep 2025": the one date format of every page. */
+export function shortDate(instant: Date, now: Date): string {
+  const dayMonth = `${instant.getUTCDate()} ${MONTHS[instant.getUTCMonth()]}`;
+  return instant.getUTCFullYear() === now.getUTCFullYear()
+    ? dayMonth
+    : `${dayMonth} ${instant.getUTCFullYear()}`;
+}
+
+/** "22 Sep 2026, 04:37 UTC": the full date and time a <time> element's title gives. */
+export function fullTimestamp(instant: Date): string {
+  return (
+    `${instant.getUTCDate()} ${MONTHS[instant.getUTCMonth()]} ${instant.getUTCFullYear()}, ` +
+    `${pad2(instant.getUTCHours())}:${pad2(instant.getUTCMinutes())} UTC`
+  );
+}
+
 /**
- * "just now", "4 min ago", "2 h ago", "yesterday", "13 days ago": the largest whole unit up to
- * days, in the design's short style (Project Page run rows, Kiosk; "just now" from the Landing
- * footer). Written out because Intl.RelativeTimeFormat's short style gives "4 min. ago".
- * Provisional until design v7 item 16 (spec section 13.2). Days are 24-hour periods, as the
- * health marker counts them. A time after now reads "just now".
+ * Design v7 item 16 (components.md, "Relative time"), in UTC. The first rule that applies wins,
+ * so no two overlap:
+ * 1. under 1 minute, or after now: "just now";
+ * 2. under 1 hour: "{m} min ago", whole minutes;
+ * 3. under 24 hours: "{h} h ago", whole hours, even when the instant is on the previous UTC day;
+ * 4. otherwise by UTC calendar days back (d is at least 1 here): 1 is "yesterday", 2 to 6
+ *    "{d} days ago", 7 to 27 "1 week ago" or "{w} weeks ago" (w = d / 7, rounded down), and from
+ *    28 the date, "12 Aug", with the year when it is not now's year, "12 Aug 2025".
+ * Hours come before the calendar so a run 30 minutes before midnight reads "1 h ago" shortly
+ * after it rather than "yesterday"; v7 says "yesterday" once 24 hours have passed.
  */
 export function relativeTime(then: Date, now: Date): string {
-  const elapsed = Math.max(0, now.getTime() - then.getTime());
+  const elapsed = now.getTime() - then.getTime();
   if (elapsed < MINUTE) return 'just now';
   if (elapsed < HOUR) return `${Math.floor(elapsed / MINUTE)} min ago`;
   if (elapsed < DAY) return `${Math.floor(elapsed / HOUR)} h ago`;
-  const days = Math.floor(elapsed / DAY);
-  return days === 1 ? 'yesterday' : `${days} days ago`;
+  const days = utcDayNumber(now) - utcDayNumber(then);
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 28) {
+    const weeks = Math.floor(days / 7);
+    return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+  }
+  return shortDate(then, now);
 }
 
-const monthDay = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  timeZone: 'UTC',
+/** A "when" as a <time> element shows it: its words, datetime, and full date and time as title. */
+export interface TimeLabel {
+  readonly text: string;
+  /** The instant in ISO 8601, UTC. */
+  readonly datetime: string;
+  readonly title: string;
+}
+
+/** Copy with times in it, such as the stale notice: each TimeLabel renders as a <time>. */
+export type TimedText = readonly (string | TimeLabel)[];
+
+const label = (text: string, instant: Date): TimeLabel => ({
+  text,
+  datetime: instant.toISOString(),
+  title: fullTimestamp(instant),
 });
 
-/** "Sep 12", on the UTC day, as the stale project notice dates the last report. */
-export const shortDate = (instant: Date): string => monthDay.format(instant);
+export const relativeLabel = (then: Date, now: Date): TimeLabel =>
+  label(relativeTime(then, now), then);
+
+export const dateLabel = (instant: Date, now: Date): TimeLabel =>
+  label(shortDate(instant, now), instant);
 
 /** A run's duration as the charts and run rows read it: whole seconds, "36 s". */
 export const formatRunDuration = (ms: number): string => formatTrendValue(ms / SECOND, 'dur');

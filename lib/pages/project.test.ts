@@ -173,7 +173,11 @@ describe('projectPageView', () => {
   it('pairs a healthy marker with when the last report arrived', () => {
     expect(projectPageView(page(), NOW).hero).toMatchObject({
       health: { health: 'healthy' },
-      healthDetail: 'Last report 2 h ago',
+      // 09:26 UTC, 2 h 34 min before now.
+      healthDetail: [
+        'Last report ',
+        { text: '2 h ago', datetime: '2026-10-05T09:26:00.000Z', title: '5 Oct 2026, 09:26 UTC' },
+      ],
       stale: null,
     });
   });
@@ -194,13 +198,17 @@ describe('projectPageView', () => {
 
     expect(projectPageView(stale, NOW).hero).toMatchObject({
       health: { health: 'stale', days: 13 },
-      healthDetail: 'Expected every 8 days',
+      healthDetail: ['Expected every 8 days'],
       stale: {
         title: 'Ostomate 2.0 hasn’t reported in 13 days',
-        // 2026-09-22 + 8 days = 2026-09-30.
-        body:
-          'The weekly scheduled run should have posted by Sep 30. Its CI may be failing ' +
-          'silently. Everything below is from the last report, Sep 22.',
+        // 2026-09-22 + 8 days = 2026-09-30; one date format everywhere, "22 Sep" (design v7).
+        body: [
+          'The weekly scheduled run should have posted by ',
+          { text: '30 Sep', datetime: '2026-09-30T04:37:00.000Z', title: '30 Sep 2026, 04:37 UTC' },
+          '. Its CI may be failing silently. Everything below is from the last report, ',
+          { text: '22 Sep', datetime: '2026-09-22T04:37:00.000Z', title: '22 Sep 2026, 04:37 UTC' },
+          '.',
+        ],
       },
     });
   });
@@ -223,7 +231,7 @@ describe('projectPageView', () => {
     );
 
     expect(view.hero.stale?.title).toBe('Ostomate 2.0 hasn’t reported in 1 day');
-    expect(view.hero.healthDetail).toBe('Expected every 1 day');
+    expect(view.hero.healthDetail).toEqual(['Expected every 1 day']);
   });
 
   it.each(['empty', 'below_floor', 'not_reporting'] as const)(
@@ -248,7 +256,7 @@ describe('projectPageView', () => {
 
       expect(card).toEqual({
         status: 'passed',
-        when: '2 h ago',
+        when: expect.objectContaining({ text: '2 h ago' }),
         branch: 'main',
         sha: '0e2d0b4',
         href: '/p/ostomate2/runs/run-9',
@@ -354,7 +362,11 @@ describe('projectPageView', () => {
         }),
         NOW,
       );
-      expect(view.latestRun?.when).toBe('Sep 22');
+      expect(view.latestRun?.when).toEqual({
+        text: '22 Sep',
+        datetime: '2026-09-22T04:40:00.000Z',
+        title: '22 Sep 2026, 04:40 UTC',
+      });
     });
 
     it('holds back the figure of an empty run, which the project page does not draw', () => {
@@ -385,7 +397,7 @@ describe('projectPageView', () => {
     });
   });
 
-  it('groups the stacks by category, with no declared-suite status (pending design)', () => {
+  it('groups the stacks by category, marking a test tool that stands for a declared suite', () => {
     const view = projectPageView(page(), NOW);
 
     expect(view.built).toEqual([
@@ -394,7 +406,22 @@ describe('projectPageView', () => {
         items: [{ name: 'Kotlin Multiplatform 2.3.21' }, { name: 'Koin 4.2.1' }],
       },
     ]);
-    expect(view.tested).toEqual([{ category: 'E2E', items: [{ name: 'Maestro 2.6.1' }] }]);
+    // Design v7 item 8: "Maestro 2.6.1" matches "Maestro E2E (Android)", the version ignored and
+    // still shown. A dev-stack tool is never marked, whatever its name.
+    expect(view.tested).toEqual([
+      {
+        category: 'E2E',
+        items: [{ name: 'Maestro 2.6.1', declaredStatus: 'runs_in_ci_not_reported' }],
+      },
+    ]);
+  });
+
+  it('leaves a test tool with no matching suite a plain tag', () => {
+    const view = projectPageView(
+      page({ project: { ...project, testStack: [{ category: 'Runners', items: ['JUnit4'] }] } }),
+      NOW,
+    );
+    expect(view.tested).toEqual([{ category: 'Runners', items: [{ name: 'JUnit4' }] }]);
   });
 
   it('builds the pyramid from the latest run’s layers, with declared suites beside it', () => {
@@ -440,7 +467,7 @@ describe('projectPageView', () => {
             project: 'Ostomate 2.0',
             branch: 'main',
             sha: '0e2d0b4',
-            when: '2 h ago',
+            when: expect.objectContaining({ text: '2 h ago' }),
             visibility: 'public',
             title: 'Push to main',
             status: 'passed',

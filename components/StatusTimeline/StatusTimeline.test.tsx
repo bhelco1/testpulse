@@ -13,6 +13,7 @@ import {
   type ResultsTimelineRun,
   type RunsTimelineRun,
 } from './StatusTimeline';
+import { timeLabel } from '../testing/time';
 
 const CSS = join(import.meta.dirname, 'StatusTimeline.module.css');
 
@@ -50,7 +51,7 @@ const base = (i: number) => ({
   title: i === 38 ? 'Pull request from fix-today-count' : 'Push to main',
   branch: i === 38 ? 'fix-today-count' : 'main',
   sha: `${sha7(i)}ffffffffff`,
-  when: i === 39 ? '4 minutes ago' : i === 38 ? 'yesterday' : `${39 - i} days ago`,
+  when: timeLabel(i === 39 ? '4 min ago' : i === 38 ? 'yesterday' : `${39 - i} days ago`),
   href: `/p/ostomate2/runs/${i}`,
 });
 
@@ -188,7 +189,7 @@ describe('StatusTimeline, results kind', () => {
       `Error, 3 days ago, Push to main, ${sha7(36)}`,
       `Flaky, 2 days ago, Push to main, ${sha7(37)}`,
       `Skipped, yesterday, Pull request from fix-today-count, ${sha7(38)}`,
-      `Not run, 4 minutes ago, Push to main, ${sha7(39)}`,
+      `Not run, 4 min ago, Push to main, ${sha7(39)}`,
     ]);
     expect(cells.map((c) => c.textContent)).toEqual(['', '✕', '!', '', '', '']);
   });
@@ -320,7 +321,7 @@ describe('StatusTimeline, results kind', () => {
 
     fireEvent.keyDown(listboxes(container)[0] as HTMLElement, { key: 'ArrowRight' });
     expect(text(panel, 'run-title')).toBe('Push to main');
-    expect(text(panel, 'when')).toBe('4 minutes ago');
+    expect(text(panel, 'when')).toBe('4 min ago');
     expect(open.getAttribute('href')).toBe('/p/ostomate2/runs/39');
   });
 
@@ -410,7 +411,7 @@ describe('StatusTimeline, results kind', () => {
       `Passed, 27 days ago, Push to main, ${sha7(12)}`,
     );
     expect(iosCells?.at(-1)?.getAttribute('aria-label')).toBe(
-      `Passed, 4 minutes ago, Push to main, ${sha7(39)}`,
+      `Passed, 4 min ago, Push to main, ${sha7(39)}`,
     );
     expect(text(container, 'oldest')).toBe('Last 28 runs');
     expect(listboxes(container)[0]?.getAttribute('aria-label')).toBe(
@@ -459,7 +460,11 @@ describe('StatusTimeline, runs kind', () => {
 
   it('is one image named by its counts; cells have no names and nothing is focusable', () => {
     const { container } = render(
-      <StatusTimeline kind="runs" runs={runsOf(['passed', 'failed', 'empty', 'passed'])} />,
+      <StatusTimeline
+        kind="runs"
+        defaultBranch="main"
+        runs={runsOf(['passed', 'failed', 'empty', 'passed'])}
+      />,
     );
     const img = container.querySelector<HTMLElement>('[role="img"]');
 
@@ -481,22 +486,39 @@ describe('StatusTimeline, runs kind', () => {
 
   it('labels the oldest of the runs shown by the same counting rule', () => {
     const { container } = render(
-      <StatusTimeline kind="runs" runs={runsOf(['passed', 'failed', 'empty', 'passed'])} />,
+      <StatusTimeline
+        kind="runs"
+        defaultBranch="main"
+        runs={runsOf(['passed', 'failed', 'empty', 'passed'])}
+      />,
     );
     expect(text(container, 'oldest')).toBe('3 runs ago');
     expect(text(container, 'latest')).toBe('Latest');
   });
 
   it('omits zero counts and is singular at one run', () => {
-    const two = render(<StatusTimeline kind="runs" runs={runsOf(['passed', 'passed'])} />);
+    const two = render(
+      <StatusTimeline kind="runs" defaultBranch="main" runs={runsOf(['passed', 'passed'])} />,
+    );
     expect(two.container.querySelector('[role="img"]')?.getAttribute('aria-label')).toBe(
       'Last 2 runs on main: 2 passed.',
     );
     two.unmount();
 
-    const one = render(<StatusTimeline kind="runs" runs={runsOf(['failed'])} />);
+    const one = render(
+      <StatusTimeline kind="runs" defaultBranch="main" runs={runsOf(['failed'])} />,
+    );
     expect(one.container.querySelector('[role="img"]')?.getAttribute('aria-label')).toBe(
       'Last 1 run on main: 1 failed.',
+    );
+  });
+
+  // Design v7 item 10: the name uses the project's default branch, never the runs' own.
+  it('names the strip by the default branch it is given', () => {
+    const runs = runsOf(['passed', 'failed']).map((run) => ({ ...run, branch: 'feature/x' }));
+    const { container } = render(<StatusTimeline kind="runs" defaultBranch="trunk" runs={runs} />);
+    expect(container.querySelector('[role="img"]')?.getAttribute('aria-label')).toBe(
+      'Last 2 runs on trunk: 1 passed, 1 failed.',
     );
   });
 

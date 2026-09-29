@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 
 import { ClockIcon, type IconProps, LockIcon, XCircleIcon } from '../icons/icons';
 import styles from './Notice.module.css';
@@ -11,7 +11,8 @@ export interface NoticeProps {
   // failed-run summary, lock for the private repository note.
   icon: NoticeIcon;
   title?: string;
-  body: string;
+  // Text, or text with times in it (TimedText).
+  body: ReactNode;
   // Only for a Notice inserted after the page loaded, such as a project going stale while it is
   // open; one rendered with the page is not announced (design v4 item 1).
   live?: boolean;

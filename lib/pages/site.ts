@@ -1,5 +1,5 @@
 import type { SwitcherProject } from '../../components/ProjectSwitcher/ProjectSwitcher';
-import { relativeTime } from '../copy/time';
+import { relativeLabel, type TimeLabel } from '../copy/time';
 import type { SiteChrome } from '../queries/site';
 
 // The footer's "Source on GitHub": testpulse's own repository, the same as its
@@ -9,7 +9,7 @@ export const SOURCE_URL = 'https://github.com/bhelco1/testpulse';
 export interface SiteChromeView {
   readonly projects: readonly SwitcherProject[];
   /** "Last report received {relative}"; none before any project has reported. */
-  readonly lastReport: string | undefined;
+  readonly lastReport: TimeLabel | undefined;
 }
 
 export function siteChromeView(chrome: SiteChrome, now: Date): SiteChromeView {
@@ -19,6 +19,6 @@ export function siteChromeView(chrome: SiteChrome, now: Date): SiteChromeView {
       href: `/p/${encodeURIComponent(project.slug)}`,
       status: project.status,
     })),
-    lastReport: chrome.lastReportAt === null ? undefined : relativeTime(chrome.lastReportAt, now),
+    lastReport: chrome.lastReportAt === null ? undefined : relativeLabel(chrome.lastReportAt, now),
   };
 }

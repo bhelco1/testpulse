@@ -9,6 +9,7 @@ import type { FeedRun, KioskFeedRun } from '../RunFeedRow/RunFeedRow';
 import { ruleFor } from '../testing/stylesheet';
 import { RunFeed, type FeedEntry } from './RunFeed';
 import styles from './RunFeed.module.css';
+import { timeLabel } from '../testing/time';
 
 afterEach(cleanup);
 
@@ -30,7 +31,7 @@ const run = (id: string, extra: Partial<FeedRun> = {}): FeedEntry =>
     project: 'Ostomate2',
     branch: 'main',
     sha: '0e2d0b4',
-    when: '4 minutes ago',
+    when: timeLabel('4 min ago'),
     total: 142,
     duration: '27 s',
     ...extra,
@@ -41,9 +42,9 @@ const RUNS: FeedEntry[] = [
   run('2', {
     project: 'RouteServe',
     visibility: 'private',
-    when: '2 hours ago',
+    when: timeLabel('2 h ago'),
   } as Partial<FeedRun>),
-  run('1', { when: 'yesterday' }),
+  run('1', { when: timeLabel('yesterday') }),
 ];
 
 describe('RunFeed (web, landing)', () => {
@@ -319,7 +320,7 @@ const KIOSK_RUNS: KioskFeedRun[] = [
     visibility: 'public',
     project: 'Ostomate2',
     branch: 'main',
-    when: '4 min ago',
+    when: timeLabel('4 min ago'),
     total: 142,
   },
   {
@@ -328,7 +329,7 @@ const KIOSK_RUNS: KioskFeedRun[] = [
     visibility: 'private',
     project: 'RouteServe',
     branch: 'main',
-    when: '2 h ago',
+    when: timeLabel('2 h ago'),
     total: 1048,
   },
   {
@@ -337,7 +338,7 @@ const KIOSK_RUNS: KioskFeedRun[] = [
     visibility: 'public',
     project: 'Ostomate2',
     branch: 'fix-today-count',
-    when: 'yesterday',
+    when: timeLabel('yesterday'),
     failed: 1,
   },
 ];
@@ -370,7 +371,7 @@ describe('RunFeed (kiosk)', () => {
             visibility: 'public',
             project: 'Ostomate2',
             branch: 'main',
-            when: '2 days ago',
+            when: timeLabel('2 days ago'),
           },
         ]}
         connected

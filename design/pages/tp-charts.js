@@ -13,6 +13,7 @@
     : f === 'dur' ? v => Math.round(v) + ' s'
     : v => Math.round(v).toLocaleString('en-US');
   const ago = (k, unit) => k === 0 ? 'Latest' : k + (unit === 'day' ? (k === 1 ? ' day ago' : ' days ago') : (k === 1 ? ' run ago' : ' runs ago'));
+  const has = v => v != null && isFinite(v);
   let mctx = null;
   const textW = (t, f) => { mctx = mctx || document.createElement('canvas').getContext('2d'); mctx.font = f; return mctx.measureText(t).width; };
   function nice(lo, hi, count, pct, whole, zero) {
@@ -70,9 +71,10 @@
     } else if (W > 0) {
       const bar = props.kind === 'bar';
       const bar0 = props.kind === 'bar';
-      const endW = bar0 ? 0 : Math.max(...series.map(s => textW(f(s.values[n - 1], true), '600 13px ' + font)));
+      /* v7 item 9: null = not run → gap in the line, "Not run" in tooltip and table */
+      const endW = bar0 ? 0 : Math.max(0, ...series.filter(s => has(s.values[n - 1])).map(s => textW(f(s.values[n - 1], true), '600 13px ' + font)));
       const L = phone ? 44 : 56, Rr = Math.max(phone ? 44 : 60, Math.ceil(8 + endW + 6)), T = 22, B = 30;
-      const all = series.flatMap(s => s.values).concat(props.floor != null ? [props.floor] : []);
+      const all = series.flatMap(s => s.values).filter(has).concat(props.floor != null ? [props.floor] : []);
       const zero = bar || props.zero;
       const pct = props.format === 'pct';
       let lo = zero ? 0 : Math.min(...all), hi = Math.max(...all);
@@ -94,11 +96,14 @@
         series[0].values.forEach((v, i) => k.push(h('rect', { key: 'b' + i, x: X(i) - bw / 2, y: Y(v), width: bw, height: Math.max(0, Y(0) - Y(v)), rx: 2, fill: hover === i ? 'var(--ink)' : 'var(--layer-2)' })));
       } else {
         series.forEach((s, si) => {
-          k.push(h('polyline', { key: 'l' + si, points: s.values.map((v, i) => X(i).toFixed(1) + ',' + Y(v).toFixed(1)).join(' '), fill: 'none', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: si ? 2 : 2.5, strokeDasharray: s.dashed || si ? '6 4' : 'none', strokeLinejoin: 'round', strokeLinecap: 'round' }));
-          if (n <= 12 && !phone) s.values.forEach((v, i) => { if (i > 0 && i < n - 1) k.push(h('circle', { key: 'd' + si + i, cx: X(i), cy: Y(v), r: 3, fill: 'var(--surface)', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: 1.5 })); });
-          k.push(h('circle', { key: 'e' + si, cx: X(n - 1), cy: Y(s.values[n - 1]), r: 4.5, fill: si ? 'var(--ink-3)' : 'var(--ink)' }));
-          k.push(h('text', { key: 'ev' + si, x: X(n - 1) + 8, y: Y(s.values[n - 1]) + 4, fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, f(s.values[n - 1], true)));
-          if (si === 0) {
+          const segs = []; let cur = [];
+          s.values.forEach((v, i) => { if (has(v)) cur.push(i); else { if (cur.length) segs.push(cur); cur = []; } }); if (cur.length) segs.push(cur);
+          segs.forEach((g, gi) => { if (g.length === 1 && g[0] > 0 && g[0] < n - 1) k.push(h('circle', { key: 'iso' + si + gi, cx: X(g[0]), cy: Y(s.values[g[0]]), r: 3, fill: si ? 'var(--ink-3)' : 'var(--ink)' })); });
+          segs.filter(g => g.length > 1).forEach((g, gi) => k.push(h('polyline', { key: 'l' + si + '-' + gi, points: g.map(i => X(i).toFixed(1) + ',' + Y(s.values[i]).toFixed(1)).join(' '), fill: 'none', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: si ? 2 : 2.5, strokeDasharray: s.dashed || si ? '6 4' : 'none', strokeLinejoin: 'round', strokeLinecap: 'round' })));
+          if (n <= 12 && !phone) s.values.forEach((v, i) => { if (has(v) && i > 0 && i < n - 1) k.push(h('circle', { key: 'd' + si + i, cx: X(i), cy: Y(v), r: 3, fill: 'var(--surface)', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: 1.5 })); });
+          if (has(s.values[n - 1])) k.push(h('circle', { key: 'e' + si, cx: X(n - 1), cy: Y(s.values[n - 1]), r: 4.5, fill: si ? 'var(--ink-3)' : 'var(--ink)' }),
+            h('text', { key: 'ev' + si, x: X(n - 1) + 8, y: Y(s.values[n - 1]) + 4, fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, f(s.values[n - 1], true)));
+          if (si === 0 && has(s.values[0])) {
             k.push(h('circle', { key: 's0', cx: X(0), cy: Y(s.values[0]), r: 4.5, fill: 'var(--ink)' }));
             k.push(h('text', { key: 'sv', x: X(0) + 8, y: Y(s.values[0]) + (Y(s.values[0]) > H - B - 20 ? -10 : 18), fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, f(s.values[0], true)));
           }
@@ -109,7 +114,7 @@
       xi.forEach((i, j) => k.push(h('text', { key: 'x' + j, x: X(i), y: H - 8, textAnchor: j === 0 ? 'start' : (j === xi.length - 1 ? 'end' : 'middle'), fill: 'var(--ink-3)', fontSize: 12 }, labels[i] || ago(n - 1 - i, props.unit))));
       if (hover != null) {
         k.push(h('line', { key: 'hv', x1: X(hover), x2: X(hover), y1: T - 6, y2: H - B, stroke: 'var(--line-strong)' }));
-        if (!bar) series.forEach((s, si) => k.push(h('circle', { key: 'hd' + si, cx: X(hover), cy: Y(s.values[hover]), r: 5, fill: 'var(--surface)', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: 2 })));
+        if (!bar) series.forEach((s, si) => has(s.values[hover]) && k.push(h('circle', { key: 'hd' + si, cx: X(hover), cy: Y(s.values[hover]), r: 5, fill: 'var(--surface)', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: 2 })));
       }
       const pick = e => { const r = e.currentTarget.getBoundingClientRect(); const x = e.clientX - r.left; let best = 0, bd = 1e9; for (let i = 0; i < n; i++) { const d = Math.abs(X(i) - x); if (d < bd) { bd = d; best = i; } } setHover(best); };
       const key = e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); setHover(v => Math.max(0, Math.min(n - 1, (v == null ? n - 1 : v) + (e.key === 'ArrowRight' ? 1 : -1)))); } if (e.key === 'Escape') setHover(null); };
@@ -119,7 +124,7 @@
         const left = Math.min(Math.max(X(hover) - 90, 0), W - 180);
         tip = h('div', { role: 'status', style: { position: 'absolute', left, top: 0, width: 180, boxSizing: 'border-box', padding: '10px 12px', borderRadius: 12, background: 'var(--raised)', border: '1px solid var(--line-strong)', boxShadow: 'var(--shadow-menu)', font: '13px ' + font, pointerEvents: 'none' } },
           h('div', { style: { color: 'var(--ink-3)', fontSize: 12 } }, labels[hover] || ago(n - 1 - hover, props.unit)),
-          series.map((s, si) => h('div', { key: si, style: { display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 4 } }, h('span', { style: { color: 'var(--ink-2)' } }, s.name), h('b', { style: { fontWeight: 600, color: 'var(--ink)' } }, f(s.values[hover], true)))),
+          series.map((s, si) => h('div', { key: si, style: { display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 4 } }, h('span', { style: { color: 'var(--ink-2)' } }, s.name), has(s.values[hover]) ? h('b', { style: { fontWeight: 600, color: 'var(--ink)' } }, f(s.values[hover], true)) : h('span', { style: { color: 'var(--ink-3)' } }, 'Not run'))),
           (props.marks || []).filter(m => m.index === hover).map(m => h('div', { key: 'mk', style: { marginTop: 4, color: m.status === 'fail' ? 'var(--fail)' : 'var(--attn)', fontWeight: 600 } }, m.status === 'fail' ? 'Run failed' : 'Run empty')));
       }
       body = h('div', { style: { position: 'relative' } }, svg, tip);
@@ -131,7 +136,7 @@
     const tbl = table && canTable ? h('div', { style: { maxHeight: 320, overflow: 'auto', marginTop: 8, border: '1px solid var(--line)', borderRadius: 12 } },
       h('table', { style: { width: '100%', borderCollapse: 'collapse', font: '14px ' + font, fontVariantNumeric: 'tabular-nums' } },
         h('thead', null, h('tr', null, [h('th', { key: 'x', style: th }, props.unit === 'day' ? 'Day (UTC)' : 'Run')].concat(series.map((s, si) => h('th', { key: si, style: Object.assign({}, th, { textAlign: 'right' }) }, s.name))))),
-        h('tbody', null, Array.from({ length: n }, (_, i) => n - 1 - i).map(i => h('tr', { key: i }, [h('td', { key: 'x', style: td }, labels[i] || ago(n - 1 - i, props.unit))].concat(series.map((s, si) => h('td', { key: si, style: Object.assign({}, td, { textAlign: 'right', fontWeight: 600 }) }, f(s.values[i], true))))))))) : null;
+        h('tbody', null, Array.from({ length: n }, (_, i) => n - 1 - i).map(i => h('tr', { key: i }, [h('td', { key: 'x', style: td }, labels[i] || ago(n - 1 - i, props.unit))].concat(series.map((s, si) => (v => h('td', { key: si, style: Object.assign({}, td, { textAlign: 'right', fontWeight: has(v) ? 600 : 400, color: has(v) ? 'var(--ink)' : 'var(--ink-3)' }) }, has(v) ? f(v, true) : 'Not run'))(s.values[i])))))))) : null;
     return h('div', { ref, style: { width: '100%', minWidth: 0 } }, legend, body, btn, tbl);
   }
   const th = { position: 'sticky', top: 0, background: 'var(--surface)', textAlign: 'left', padding: '10px 14px', borderBottom: '1px solid var(--line)', font: "600 12px 'JetBrains Mono',monospace", letterSpacing: '.04em', color: 'var(--ink-3)' };

@@ -75,13 +75,15 @@ Props: `label`, `value`, `sub`, `attention?: {icon: 'stale' | 'empty' | 'below_f
 - loading: three `--raised` bars (label 60%, value 45%×34, sub 75%).
 - Landing set beside the hero total (portfolio-wide numbers only; time to green and green streak are per project and never combined across projects): Pass rate (sub "Latest runs · N skipped, excluded"), Projects reporting, Runs in last 30 days (sub per project), Projects passing. Grid `repeat(auto-fit, minmax(min(100%, 200px), 1fr))`, gap 12: 4 across at 1440 and 1024, 2 + 2 at ~600, 1 per row at 390.
 - `fail?` (sub-line variant): like attention but 13/600 `--fail` with a 12px x-circle. Used only by Projects passing while a project is red.
+- Projects passing, several latest runs empty and none red: plain sub, each "{project} last run empty" joined " · ". Drawn: all passed, one red, several red, one empty, several empty, no runs yet.
+- Kiosk Projects passing: latest run empty, none red: label stays "Projects passing", value "{p} of {n}", plain 20 `--ink-3` sub "{project} last run empty" (several joined " · "). Several red: label "{k} projects red", `--fail` 600, 22px x-circle. No runs yet: value "0", sub "No runs yet".
 - Projects passing: label "Projects passing"; value "{p} of {n}" (n = projects with at least one default-branch run; p = those whose latest default-branch run passed).
   - all passed: sub "Latest default-branch runs" (plain).
   - one red: `fail` sub "{project} red for {duration}" → "Ostomate2 red for 4m".
   - several red: `fail` sub "Red: {project} {duration} · {project} {duration}", longest red first → "Red: RouteServe 2d 3h · Ostomate2 4m".
   - not passed but not red (latest run empty): plain sub "{project} last run empty"; if a project is also red, the `fail` sub wins and lists only red projects.
   - no project has a run yet: value "0", sub "No runs yet".
-  - duration: calendar time since the first failed default-branch run of the current red episode (nights, weekends, parked work count): under 1 h "{m}m"; under 24 h "{h}h {m}m" (minutes two digits); 24 h and over "{d}d {h}h".
+  - duration: calendar time since the first failed default-branch run of the current red episode (nights, weekends, parked work count): under 1 h "{m}m"; under 24 h "{h}h {m}m" (minutes two digits); 24 h and over "{d}d {h}h". Every unit rounds down (59m 59s → "59m", 226m 4s → "3h 46m", 47h 59m → "1d 23h"); under 1 minute reads "0m". Same rule for RecoveryStats.
   - loading: as every StatTile.
 - Variant `kiosk`: one horizontal row, label 24 `--ink-3` left, value 52 serif right, padding 20×26, `--radius-lg`. `sub`: 20px `--ink-3` under the label, gap 4. Attention: label text replaced by the attention text in `--attn` 600 with a 22px icon (stroke 2.6; same glyph as HealthMarker: clock for stale, dashed ring + dash for empty, arrow-down for below_floor); value stays `--ink`. Kiosk set: Pass rate, Projects reporting, Projects passing. Projects passing while red: label replaced by "{project} red for {duration}" (several: "{k} projects red") in `--fail` 600 with a 22px x-circle; value "{p} of {n}" stays `--ink`. Loading: label bar 45%×22 and value bar 120×52, `--raised`, shimmer.
 
@@ -149,15 +151,22 @@ Props: `variant: 'built' | 'tested'`, `groups: {category, items: {name, declared
 - Title is part of the component, text fixed by variant: "Built with" / "Tested with". Heading element, mono 12/600, uppercase (CSS), letter-spacing .08em, `--ink-3`, 14 below.
 - Grid `96px minmax(0,1fr)`, gap 12×16, 13.5px. Category `--ink-3`.
 - Tag: padding 4×10, `--radius-tag` (6). built: bg `--inset`, 1px `--line`. tested: no bg, 1px `--line-strong`.
-- declaredStatus (from `declared_suites`, matched by tool name): dashed border, `--ink-2`, text "{name} · not yet executed" / "{name} · not yet reported".
+- declaredStatus (from `declared_suites`): dashed border, `--ink-2`, text "{name} · not yet executed" / "{name} · not yet reported".
+- Match rule: a test-stack item matches a declared suite when the suite's `name`, trimmed and case-folded, equals the item's name or starts with it followed by a space ("Maestro" matches "Maestro E2E (iOS)"; "Jest" does not match "jest-expo …"; no other partial matches). Several suites matching one item: "not yet reported" if any is `runs_in_ci_not_reported`, else "not yet executed". Tool in the test stack with no matching suite: normal solid tag. Declared suite with no matching tag: listed in Declared suites and the pyramid footer as usual, no tag added; `projects:sync` logs a warning.
 
 ## RecoveryStats (project page)
 Two cells in the project page's latest-run stat row (after "Pass rate, 30 days"), from spec §11, default branch only, per project, never combined across projects. Cell: label 13 `--ink-3`, value serif 30/1.15 (4 below), sub 13 `--ink-3` (2 below).
+- Layout: the stat row is flex-wrap, gap 16×12; Pass rate and Green streak `flex: 1 1 120px`, Time to green `flex: 1 1 240px`, all min-width 0. Three across when the card content is ≥ 516px; narrower (phone 390) Pass rate | Green streak on one line and Time to green full width below. Drawn on the Design System (section 05, PHONE · 390).
 - Green streak: value current consecutive passed default-branch runs + unit 18 `--ink-3` ("run" at 1); sub "Longest {n} runs". While red the value is "0". A failed pull-request run doesn't count (not default branch).
 - Time to green (calendar time from a default-branch run that turned failed after a passed run to the next passed run; 90 days): value median; sub "Median of {k}, 90 days · worst {w}". Durations as Projects passing ("2h 14m", "9h 02m", "3d 4h").
 - Red now (latest default-branch run failed): add a line 13/600 `--fail`, 12px x-circle, "Red now for {duration}", 4 below the sub. The open episode is not in the median or worst until it recovers.
 - No recoveries in 90 days: value "None", sub "No recoveries in 90 days" (never "0"). Red with no recovery yet: same, plus the Red now line.
 - Drawn on the Design System (section 05): green · red now · no recoveries · red now with no recoveries.
+
+## Relative time
+Used by every "when" (run rows, card meta, timeline panel, "Last report received"), from the event's UTC timestamp, with the full date and time in `<time datetime>` and `title`.
+- under 1 min: "just now"; 1–59 min: "{m} min ago"; 1–23 h: "{h} h ago" (rounded down); previous calendar day in the viewer's local time, when 24 h or more have passed or it is before midnight: "yesterday"; 2–6 days: "{d} days ago"; 7–27 days: "1 week ago" / "{w} weeks ago".
+- 28 days and older: the date replaces it, "12 Aug" (same year) or "12 Aug 2025". The kiosk clock and "As of {HH:MM}" are absolute and unaffected.
 
 ## CoverageBar
 Props: `module` (stored module key, verbatim), `pct`, `floor`. Row grid `128px minmax(40px,1fr) auto`, gap 14, 14px.
@@ -197,11 +206,15 @@ Props: `results[]`, `visibility`, `pruned?`, `loading?`. Owns the status filter,
 - Markup: a real `<table>`. Failed and error rows: the toggle is a `<button aria-expanded>` in the test-name cell, stretched over the whole row (::after, inset 0), so the row stays a 44px target; the detail is a following row with one full-width cell. Every other row: a link to the test’s history stretched over the row the same way (hover and focus bg `--raised`). Nothing visible differs from the drawing. Narrow layout keeps the same markup and lays cells out with CSS grid (explicit table roles kept).
 - Header labels are typed in sentence case ("Status") and uppercased with CSS.
 - Filters: status radio group (All · Passed · Failed · Error · Skipped, with counts), buttons 44px, `--radius-tag` inside a 3px-padded `--surface` group; Failed and Error labels in `--fail` while their count is above 0, otherwise as the other tabs. Layer native `<select>` 44px. No search (spec §13 filters by status and layer only).
+- One row per test. Row status = the worst of its platforms: failed if any platform failed, else error if any errored, else passed if any passed (flaky included), else skipped. The status filter counts tests (rows), so Passed + Failed + Error + Skipped = All; each test appears under exactly one group, its row status.
+- Time column: the slowest platform's duration ("—" when no platform has one). Per-platform times appear in the expanded failure heads and on Test history.
+- Platform list: one line per platform, "{platform}" + glyph: ✓ passed, ✕ failed (`--fail` 600), "! Error" errored (`--fail` 600, glyph and word), – skipped; single-platform tests show the platform only.
 - Sort: failed and error first, then by suite, then name. Header note "Failures first, then by suite".
 - Wide layout (container ≥ 720): grid `36px 130px minmax(0,1fr) 110px 130px 80px` (chevron, status, test, layer, platform, time), padding 12×16, header row mono 12. Status icon 15, platform text 13.
 - Narrow layout (< 720, e.g. 390): no header; each row stacks — line 1 chevron + status + time right; line 2 test name + suite; line 3 "{layer} · {platforms}" 13 `--ink-3`. Same data, no horizontal scroll.
 - Row states: passed, failed (row bg `--fail-tint`, expandable, open by default), error (same as failed with Error badge), skipped, flaky (Flaky pill after the name), platform mismatch (platform list shows failing platforms first: "ios-sim ✕" `--fail`, then "jvm ✓" / "jvm –" `--ink-3`).
 - Platform mismatch: whenever a test’s statuses differ across platforms in one run (any two different statuses). Line: "Platform mismatch" 600 `--fail` + sentence `--ink-3`, same in wide and narrow: "Failed on {a}, passed on {b} in the same run." Groups in order failed, errored, passed, skipped (verbs "failed on", "errored on", "passed on", "skipped on"; first letter capitalised); platforms inside a group in data order, joined ", ". Examples: "Failed on ios-sim, skipped on jvm in the same run." · "Failed on ios-sim, errored on jvm in the same run." · "Passed on jvm, skipped on ios-sim in the same run." The line appears in the expanded detail, so only failed and error rows show it; a passed/skipped mismatch shows in the platform list only.
+- Several failures (failed or errored on more than one platform): one block per such platform, in platform data order, gap 14. Each block starts with a head 13/600 `--fail`: 14px status icon + "{platform} · {Failed|Error} · {time}", then its message and stack trace as below. With one failure the head is omitted. `ResultRow.failures: {platform, status, duration, message, detail}[]` replaces `failure`.
 - Expanded (public): mismatch line if any, message mono 13.5/600, stack trace `<pre>` inset, horizontal scroll inside the pre; link "Test history" (44px). Padding `4px 16px 18px 64px` wide; `4px 16px 16px 16px` narrow.
 - Expanded (private): mismatch line still shown (statuses only), then the private-details notice: lock, "Details hidden: private repository", "This repository is private, so failure messages and stack traces are hidden. Test names and counts are real.", then the "Test history" link after the notice (not inside it).
 - Footer: "Showing {n} of {m}", m = rows matching the current filters (the total when no filter is set) + secondary Button "Load 50 more" (44px).
@@ -222,7 +235,8 @@ Props: `kind: 'results' | 'runs'`, `testName` (results), `runs: {title, branch, 
   - one platform: Run · When · Result "Passed · 0.41 s" · Open run →
   - two platforms: Run · When · jvm "Passed · 0.41 s" · ios-sim "Failed · 0.63 s" · Open run →
 - Accessible names: results strip "{testName} on {platform}, last {n} runs" (one strip: "{testName}, last {n} runs"); cell "{Status word}, {when}, {title}, {sha7}", e.g. "Failed, yesterday, Pull request from fix-today-count, a41f9c2". Runs kind: one `role="img"` for the strip, name "Last {n} runs on {default branch}: {p} passed, {f} failed, {e} empty." (zero counts omitted; {default branch} = `projects.default_branch`, the branch the strip shows); cells have no names.
-- Project page "Last 40 runs" is this component with `kind: 'runs'` (run status per default-branch run).
+- Project page "Last 40 runs" is this component with `kind: 'runs'` (run status per default-branch run; CI runs only, imported history excluded, same as the run list). Prop `defaultBranch` (runs kind, required): the project's `projects.default_branch`; the accessible name uses it, never the branch of the runs passed in.
+- Flaky list rate "Failed {n} of last {m} runs": m = the last 40 default-branch CI runs in which the test has a result (m < 40 when there are fewer; "1 run" at 1); n = those runs where the test failed or errored on any platform.
 - Flaky meaning (spec §11): a test with both a passing and a failing result on the same commit and platform within 30 days.
 
 ## TrendChart
@@ -236,6 +250,7 @@ Props: `kind: 'line' | 'bar'`, `series: {name, values, dashed?}[]`, `labels[]`, 
 - Bar (runs per UTC day): width 62% of slot, min 2, radius 2, `--layer-2`; hovered bar `--ink`. Starts at zero.
 - Y axis: bars and counts-that-must-read-as-amounts start at 0; lines are fitted to data ∪ floor with 12% padding, snapped to nice steps (2–3 steps), percentages clamped to 0–100. The CoverageBar (a bar) always runs 0–100.
 - X axis: one point per run (pass rate, test count, coverage per module, duration), one bar per UTC day (runs per day). Desktop labels at 0, ⅓, ⅔, last; phone first and last only. Duplicate positions are dropped (2–3 points never repeat a label).
+- Missing values (`null`, e.g. a platform that didn't run): the line breaks at the gap (no interpolation); a lone point between gaps draws as a 3px filled dot; no end label for a series whose latest value is missing. Tooltip and table show "Not run" in `--ink-3` 400 for that series. Excluded from the y domain and from caption min/max/median. Recharts: `connectNulls={false}`. Drawn ("LINE · gaps where ios-sim didn’t run").
 - Counting rule (axis, tooltip, table alike): the latest point is "Latest"; point i of n is "{n−1−i} runs ago" ("1 run ago" at 1; "days" for bars, "1 day ago"). The oldest of 30 points is "29 runs ago". Date labels, when given, replace it.
 - Y steps: `int` and `dur` step by whole numbers only (1, 2, 5, 10 × 10ⁿ, never below 1). All-zero data on a from-zero chart (bars, `zero`): domain 0…1, never −1…1.
 - Floor: dashed 1.5 `--attn` line + "floor {n}%" 12/600.
@@ -251,7 +266,7 @@ Caption templates (figcaption; generated from data; omitted when fewer than 2 po
 - Coverage: "{Rose|Fell} from {first}% to {last}% over {n} runs; {above|below} its {floor}% floor." / last = first: "Held at {last}% over {n} runs; {above|below} its {floor}% floor." (compared at one decimal, as displayed)
 - Duration: "Between {min} and {max} over the last {n} runs." + " Median {med}." (median only with one series; with several, min and max are across all series). Test History uses this template.
 - Runs per day: "{total} runs in the last {days} days, {max} on the busiest day." / total 0: "No runs in the last {days} days."
-Scope line under each chart title: pass rate, coverage — "Default branch · CI and imported history"; test count — "Default branch · CI runs only" (distinct tests per CI run; imported history is JVM-only, so mixing it would jump when iOS results arrive); duration — "Default branch · CI runs only (imported history has no durations)"; runs per day — "Default branch · CI and imported history".
+Scope line under each chart title, with the window: project page per-run charts cover the last 30 default-branch runs (fewer when there are fewer; the caption states n). Pass rate, coverage — "Default branch · last 30 runs · CI and imported history"; test count — "Default branch · last 30 CI runs"; duration — "Default branch · last 30 CI runs (imported history has no durations)". Test history duration: "Default branch · CI runs only (imported history has no durations)"; runs per day: "Default branch · CI and imported history" (unchanged). Test count is CI only because imported history is JVM-only; mixing it would jump when iOS results arrive.
 
 ## ErrorState
 Two variants of one component. Props: `variant: 'page' | 'inline'`, `title`, `message`, `onRetry`.

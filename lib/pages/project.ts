@@ -2,9 +2,16 @@ import type { StackGroup } from '../../components/StackTagGroup/StackTagGroup';
 import type { FeedRun } from '../../components/RunFeedRow/RunFeedRow';
 import { formatTrendValue } from '../charts/format';
 import { formatCount, qty } from '../copy/count';
-import { formatRunDuration, relativeTime, shortDate } from '../copy/time';
+import {
+  dateLabel,
+  formatRunDuration,
+  relativeLabel,
+  type TimedText,
+  type TimeLabel,
+} from '../copy/time';
 import { LAYER_LABEL, layerSegments, type LayerSegment } from '../design/layers';
 import type { DeclaredSuite } from '../projects/schema';
+import { declaredStatusFor } from '../projects/stack-match';
 import type { BranchScope, ProjectPage, ProjectPageOptions } from '../queries/project';
 import { shortSuite } from '../results/short-suite';
 import { feedRun, runHref } from './feed';
@@ -28,15 +35,15 @@ export interface HeroView {
   readonly paragraphs: readonly string[];
   readonly health: PublicHealth;
   /** "Last report {relative}" when healthy, "Expected every {n} days" when stale, else none. */
-  readonly healthDetail: string | null;
+  readonly healthDetail: TimedText | null;
   /** Public projects only: projects_public nulls it for a private one (section 9). */
   readonly repoUrl: string | null;
-  readonly stale: { readonly title: string; readonly body: string } | null;
+  readonly stale: { readonly title: string; readonly body: TimedText } | null;
 }
 
 export interface LatestRunView {
   readonly status: 'passed' | 'failed' | 'empty';
-  readonly when: string;
+  readonly when: TimeLabel;
   readonly branch: string;
   readonly sha: string;
   readonly href: string;
@@ -144,20 +151,22 @@ function hero(page: ProjectPage, now: Date): HeroView {
     health: marker,
     healthDetail:
       marker.health === 'healthy' && lastReportAt !== null
-        ? `Last report ${relativeTime(lastReportAt, now)}`
+        ? ['Last report ', relativeLabel(lastReportAt, now)]
         : marker.health === 'stale'
-          ? `Expected every ${qty(project.expectedCadenceDays, 'day')}`
+          ? [`Expected every ${qty(project.expectedCadenceDays, 'day')}`]
           : null,
     repoUrl: project.repoUrl,
     stale:
       marker.health === 'stale' && staleSince !== null
         ? {
             title: `${project.name} hasn’t reported in ${qty(marker.days, 'day')}`,
-            body:
-              'The weekly scheduled run should have posted by ' +
-              `${shortDate(new Date(staleSince.getTime() + project.expectedCadenceDays * DAY_MS))}. ` +
-              'Its CI may be failing silently. Everything below is from the last report, ' +
-              `${shortDate(staleSince)}.`,
+            body: [
+              'The weekly scheduled run should have posted by ',
+              dateLabel(new Date(staleSince.getTime() + project.expectedCadenceDays * DAY_MS), now),
+              '. Its CI may be failing silently. Everything below is from the last report, ',
+              dateLabel(staleSince, now),
+              '.',
+            ],
           }
         : null,
   };
@@ -200,7 +209,7 @@ function latestRunView(page: ProjectPage, now: Date): LatestRunView | null {
 
   return {
     status: run.status,
-    when: stale ? shortDate(run.finishedAt) : relativeTime(run.finishedAt, now),
+    when: stale ? dateLabel(run.finishedAt, now) : relativeLabel(run.finishedAt, now),
     branch: run.branch,
     sha: sha7(run.commitSha),
     href,
@@ -229,12 +238,21 @@ export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
       category: group.category,
       items: group.items.map((name) => ({ name })),
     }));
+  // A test tool standing for a declared suite says the suite does not report yet (v7 item 8).
+  const tested = (groups: ProjectPage['project']['testStack']): StackGroup[] =>
+    groups.map((group) => ({
+      category: group.category,
+      items: group.items.map((name) => {
+        const declaredStatus = declaredStatusFor(name, project.declaredSuites);
+        return declaredStatus === undefined ? { name } : { name, declaredStatus };
+      }),
+    }));
   return {
     title: `${project.name} · testpulse`,
     hero: hero(page, now),
     latestRun: latestRunView(page, now),
     built: stack(project.devStack),
-    tested: stack(project.testStack),
+    tested: tested(project.testStack),
     pyramid: {
       layers: layerSegments(summary.layers),
       declared: project.declaredSuites,

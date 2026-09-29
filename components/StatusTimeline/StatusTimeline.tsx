@@ -12,6 +12,7 @@ import {
 } from 'react';
 
 import { qty } from '../../lib/copy/count';
+import type { TimeLabel } from '../../lib/copy/time';
 import type { RunStatus } from '../../lib/ingest/normalize';
 import type { TestStatus } from '../../lib/parsers/types';
 import {
@@ -23,6 +24,7 @@ import {
   XCircleIcon,
   type IconProps,
 } from '../icons/icons';
+import { RelativeTime } from '../RelativeTime/RelativeTime';
 import styles from './StatusTimeline.module.css';
 
 // A result a platform reported for the test, flaky per spec section 11.
@@ -36,7 +38,7 @@ export interface TimelineRunBase {
   branch: string;
   sha: string;
   // Already relative, such as "yesterday": components do not read the clock.
-  when: string;
+  when: TimeLabel;
   // The run page.
   href: string;
 }
@@ -63,7 +65,12 @@ export type StatusTimelineProps =
       // History passes the latest failing run.
       initialRun?: number;
     }
-  | { kind: 'runs'; runs: readonly RunsTimelineRun[] };
+  | {
+      kind: 'runs';
+      runs: readonly RunsTimelineRun[];
+      // projects.default_branch, which the strip's name gives (design v7 item 10).
+      defaultBranch: string;
+    };
 
 type CellStatus = ResultCellStatus | RunStatus;
 
@@ -187,7 +194,7 @@ export function StatusTimeline(props: StatusTimelineProps) {
   return props.kind === 'runs' ? <RunsTimeline {...props} /> : <ResultsTimeline {...props} />;
 }
 
-function RunsTimeline({ runs }: { runs: readonly RunsTimelineRun[] }) {
+function RunsTimeline({ runs, defaultBranch }: Extract<StatusTimelineProps, { kind: 'runs' }>) {
   const [measured, capacity] = useCapacity();
   const shown = runs.slice(-(capacity ?? MAX_CELLS));
   const count = (status: RunStatus) => shown.filter((run) => run.status === status).length;
@@ -195,10 +202,7 @@ function RunsTimeline({ runs }: { runs: readonly RunsTimelineRun[] }) {
     .map((status) => [count(status), status] as const)
     .filter(([n]) => n > 0)
     .map(([n, status]) => `${n} ${status}`);
-  // The strip holds default-branch runs only, so its runs' branch is projects.default_branch,
-  // the branch design v5 item 9 names it by.
-  const branch = runs.at(-1)?.branch ?? '';
-  const name = `Last ${qty(shown.length, 'run')} on ${branch}: ${counts.join(', ')}.`;
+  const name = `Last ${qty(shown.length, 'run')} on ${defaultBranch}: ${counts.join(', ')}.`;
 
   return (
     <div data-kind="runs" data-platforms="false">
@@ -343,7 +347,7 @@ function ResultsTimeline({
                     aria-selected={isSelected}
                     aria-label={
                       cellRun &&
-                      `${look.word}, ${cellRun.when}, ${cellRun.title}, ${sha7(cellRun.sha)}`
+                      `${look.word}, ${cellRun.when.text}, ${cellRun.title}, ${sha7(cellRun.sha)}`
                     }
                     className={cx(
                       styles.cell,
@@ -378,7 +382,7 @@ function ResultsTimeline({
           <div>
             <div className={styles.fieldLabel}>When</div>
             <div className={styles.whenValue} data-part="when">
-              {run.when}
+              <RelativeTime when={run.when} />
             </div>
           </div>
           {platforms.map((platform) => {

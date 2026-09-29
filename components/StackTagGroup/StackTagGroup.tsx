@@ -43,7 +43,7 @@ export function StackTagGroup({ variant, groups, headingLevel = 3 }: StackTagGro
               <ul className={styles.tags}>
                 {group.items.map((item, index) => (
                   <li
-                    // A tool can appear twice, once per declared suite status.
+                    // Keyed by position too: a stack may list a tool twice.
                     key={`${item.name}-${index}`}
                     className={[styles.tag, item.declaredStatus && styles.declared]
                       .filter(Boolean)

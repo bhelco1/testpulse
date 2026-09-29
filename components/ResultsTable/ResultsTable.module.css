@@ -211,6 +211,7 @@
 
 .platformFail {
   color: var(--fail);
+  font-weight: 600;
 }
 
 .timeCell {

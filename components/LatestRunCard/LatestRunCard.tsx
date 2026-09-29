@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import type { LatestRunView } from '../../lib/pages/project';
 import { RecoveryStats } from '../RecoveryStats/RecoveryStats';
+import { RelativeTime } from '../RelativeTime/RelativeTime';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
 import styles from './LatestRunCard.module.css';
 
@@ -18,7 +19,7 @@ export function LatestRunCard({ run }: LatestRunCardProps) {
       <div className={styles.top}>
         <StatusBadge status={run.status} variant="pill" />
         <span className={styles.meta} data-part="meta">
-          Latest run · {run.when} · {run.branch} ·{' '}
+          Latest run · <RelativeTime when={run.when} /> · {run.branch} ·{' '}
           <span className={styles.sha} data-part="sha">
             {run.sha}
           </span>
@@ -53,7 +54,7 @@ export function LatestRunCard({ run }: LatestRunCardProps) {
       )}
       <div className={styles.stats} data-part="stats">
         {run.passRate30 !== null && (
-          <div data-part="cell">
+          <div className={styles.passRateCell} data-part="cell">
             <div className={styles.statLabel}>Pass rate, 30 days</div>
             <div className={styles.statValue} data-part="pass-rate">
               {run.passRate30}

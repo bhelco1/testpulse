@@ -1,4 +1,4 @@
-# testpulse handoff v6
+# testpulse handoff v7
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -43,13 +43,13 @@ To view a page, open it in a browser from inside `pages/` (it needs `support.js`
 ## Screens
 The HTML is the source of truth for exact measurements; below is the structure.
 
-**Landing `/`** Lede (serif 24) → hero total (`--text-hero`) with a one-line note to its right → 5 stat tiles (Pass rate with skipped count in its sub-line, Projects reporting, Runs in last 30 days, Median time to green, Green streak) → "Projects" h2 + two project cards → row of Recent runs (feed) and About this site. Squint test: the first thing seen is the hero number, the second a project name.
+**Landing `/`** Lede (serif 24) → hero total (`--text-hero`) with a one-line note to its right → 4 stat tiles (Pass rate with skipped count in its sub-line, Projects reporting, Runs in last 30 days, Projects passing) → "Projects" h2 + two project cards → row of Recent runs (feed) and About this site. Squint test: the first thing seen is the hero number, the second a project name.
 
 *Project card*: see components.md › ProjectCard (canonical, v3).
 
 **Project, Run detail, Test history, How it's tested, Admin, Privacy** — see the pages; each is annotated with its tweaks. Private projects: no repo link, no `run_url`, and failure text replaced by the private-details notice.
 
-**Kiosk** Fixed 1920×1080 artboard scaled with `transform: scale(min(vw/1920, vh/1080))`, letterboxed on `#0b0a09`. Minimum text 22px. Header: wordmark, overall status pill (All projects passing / N failing / N silent), Live, last report, clock (HH:MM). Main grid 480px / 1fr / 1fr: hero column (total 200px, note, 3 tiles) and one card per project (name 64, total 104, layer bar, coverage, health). Card border becomes 3px `--fail` or `--attn` when that project needs attention. Bottom strip: 3 most recent runs. No interactive controls; dark only.
+**Kiosk** Fixed 1920×1080 artboard scaled with `transform: scale(min(vw/1920, vh/1080))`, letterboxed on `#0b0a09`. Minimum text 22px. Header: wordmark, overall status pill (All projects passing / N failing / N silent), Live, last report, clock (HH:MM). Main grid 480px / 1fr / 1fr: hero column (total 200px, note, 3 tiles: Pass rate, Projects reporting, Projects passing) and one card per project (name 64, total 104, layer bar, coverage, health). Card border becomes 3px `--fail` or `--attn` when that project needs attention. Bottom strip: 3 most recent runs. No interactive controls; dark only.
 
 ## Interactions and behaviour
 - Theme toggle: dark default; stores choice in localStorage; `prefers-color-scheme` used when none stored. Only `background-color, border-color, color, fill, stroke` transition, over `--motion-base`, while `html[data-theme-switching]` is set.
@@ -347,3 +347,37 @@ Same rules: the Design System page is canonical, components.md matches it, every
 13. components.md: bar kind is exempt from the right-margin rule (stays 60, phone 44).
 
 Files changed in v6: Landing.dc.html, Kiosk.dc.html, Project Page.dc.html, Test History.dc.html, Design System.dc.html, tp-charts.js, tp-kit.js, design/README.md, design/components.md, design/data-map.md. Phone Views changes through its Landing embed; the file itself is unchanged.
+
+## Changes in v7
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing outside items 1–17 was changed except where noted.
+
+**Run detail: one row per test**
+1. Count tests. Each test has one row status, the worst of its platforms: Failed if any platform failed, else Error if any errored, else Passed if any passed (flaky included), else Skipped. It appears under that one filter group, so Passed + Failed + Error + Skipped = All. data-map.md "Status filter" rewritten. The Design System filter bar now reads the real run (All 142 · Passed 141 · Failed 1 · Error 0 · Skipped 0); rows marked SAMPLE are illustrative.
+2. The slowest platform (max `duration_ms`). Per-platform times are in the expanded failure heads and on Test history. data-map row "Row time" added.
+3. Drawn (Design System section 10, "syncsOnReconnect · SAMPLE"): one block per failed or errored platform, in platform data order, gap 14. Each block has a head, 13/600 `--fail` with a 14 px status icon, "ios-sim · Failed · 0.88 s", then its message and stack trace. With one failure the head is omitted. `ResultRow.failures[]` replaces `failure`.
+4. Drawn ("migratesSchema · SAMPLE"): the platform list reads "jvm ! Error" in `--fail` 600, glyph and word. The mismatch line reads "Errored on jvm, passed on ios-sim in the same run."
+
+**Project page gaps**
+5. Every per-run chart covers the last 30 default-branch runs (fewer when there are fewer; the caption already states n). Scope lines: pass rate and coverage "Default branch · last 30 runs · CI and imported history"; tests per run "Default branch · last 30 CI runs"; duration "Default branch · last 30 CI runs (imported history has no durations)". Applied on the Project page, the Design System, components.md and data-map.md.
+6. Confirmed with one change: the last 40 default-branch CI runs in which the test has a result, counting failed or error on any platform. With fewer: "Failed {n} of last {m} runs" (m = runs available, "1 run" at 1).
+7. Confirmed: CI runs only, imported history excluded. data-map.md now says so.
+8. Rule: trim and case-fold both sides. An item matches a suite when the suite's name equals it or starts with it followed by a space ("Maestro" matches "Maestro E2E (iOS)"; "Jest" does not match "jest-expo"). No other partial matches. Several suites matching one item: "not yet reported" if any runs in CI, else "not yet executed". A tool with no suite gets a normal solid tag. A suite with no tag is listed as usual with no tag added, and `projects:sync` logs a warning.
+
+**Test history**
+9. Drawn ("LINE · gaps where ios-sim didn’t run", tooltip open on a gap): the line breaks at a missing value, and a lone point between gaps is a 3 px dot. Tooltip and table show "Not run" in `--ink-3`. A series whose latest value is missing has no end label. Missing values are excluded from the axis range and from the caption's min, max and median. tp-charts.js now accepts `null`; in Recharts, use `connectNulls={false}`.
+10. Confirmed: it names the project's default branch. The `defaultBranch` prop (runs kind, required, `projects.default_branch`) is added to components.md.
+
+**v6 leftovers**
+11. Confirmed: each "{project} last run empty" joined with " · ". Drawn.
+12. The label stays "Projects passing", the value is "1 of 2", and a plain 20 px `--ink-3` sub reads "Ostomate2 last run empty" (several joined with " · "). Drawn in the kiosk tiles.
+13. Drawn: web "0" / "No runs yet"; kiosk "0" / "No runs yet"; kiosk "2 projects red" (value "0 of 2", `--fail` 600, x-circle). Also drawn: web "0 of 2" with two empty runs.
+14. Confirmed: every unit rounds down (59m 59s → "59m", 226m 4s → "3h 46m", 47h 59m → "1d 23h"); under a minute reads "0m". The same rule applies to RecoveryStats.
+
+**Bundle fix**
+15. The README Screens section now lists the four v6 tiles, and the kiosk hero column names its three tiles.
+
+**Project page, as built**
+16. New components.md section, "Relative time": "just now" under 1 min; "{m} min ago"; "{h} h ago" (rounded down); "yesterday" (previous calendar day, viewer's local time); "{d} days ago" for 2–6 days; "1 week ago" / "{w} weeks ago" for 7–27 days. From 28 days the date replaces it: "12 Aug", or "12 Aug 2025" in another year. The full timestamp is always in `<time datetime>` and `title`.
+17. Drawn (Design System section 05, "PHONE · 390"): the stat row is flex-wrap, gap 16×12. Pass rate and Green streak are `flex: 1 1 120px`, and Time to green is `flex: 1 1 240px`. Below 516 px of card content, Time to green drops to its own full-width line, with no media query. The Project page uses it, so the desktop layout gives Time to green a slightly wider cell.
+
+Files changed in v7: Design System.dc.html, Project Page.dc.html, tp-charts.js, design/README.md, design/components.md, design/data-map.md.

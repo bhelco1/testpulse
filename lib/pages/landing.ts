@@ -4,7 +4,7 @@ import type { FeedRun } from '../../components/RunFeedRow/RunFeedRow';
 import { formatTrendValue } from '../charts/format';
 import { formatCount, qty } from '../copy/count';
 import { projectsPassingTile } from '../copy/projects-passing';
-import { formatRunDuration, relativeTime } from '../copy/time';
+import { formatRunDuration, relativeLabel } from '../copy/time';
 import { layerSegments } from '../design/layers';
 import type { Landing, LandingProject } from '../queries/landing';
 import type { LandingHeadline } from '../stats/summary';
@@ -111,7 +111,7 @@ function card(summary: LandingProject, now: Date): LandingCard {
         ? null
         : {
             status: run.status,
-            when: relativeTime(run.finishedAt, now),
+            when: relativeLabel(run.finishedAt, now),
             branch: run.branch,
             sha: run.commitSha,
             href: runHref(project.slug, run.id),

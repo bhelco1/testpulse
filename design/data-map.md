@@ -36,12 +36,12 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 | Dev / test stack | `projects.dev_stack`, `projects.test_stack` |
 | Pyramid | `Pyramid {layers: {label, count, tone}[], declared: DeclaredSuite[], total}`: §11 Test pyramid, rows in §8 order; `declared` from `projects.declared_suites` rendered as text rows only |
 | Declared suites | `projects.declared_suites` {name, layer, count, status: `authored_not_executed` \| `runs_in_ci_not_reported`, note}. Unit: "flows" for e2e, "tests" otherwise |
-| Stack tags | `dev_stack`, `test_stack`; a test-stack item whose tool matches a declared suite gets `declaredStatus` from that suite |
+| Stack tags | `dev_stack`, `test_stack`; a test-stack item gets `declaredStatus` when a declared suite's name (trimmed, case-folded) equals it or starts with it + space; rules in components.md StackTagGroup |
 | Green streak | §11 Green streak over default-branch `runs_public`: current (consecutive `passed` from the latest; 0 when the latest is `failed`) and longest |
 | Time to green | §11 Time to green over default-branch `runs_public`, 90 days, calendar time (`finished_at` of the failed run → `finished_at` of the next passed): median, worst, count k. k = 0 → "None" / "No recoveries in 90 days". Red now: latest `failed` → now − `finished_at` of the first failed run of the episode |
-| Trends | Pass rate per run, coverage per run per module: default branch, CI and imported history. Test count per run: distinct tests, default branch, CI runs only (imported history is JVM-only; mixing it would jump when iOS results arrive). Duration per run: CI runs only (imported history has no durations). Runs per UTC day (bar): default branch, CI and imported history (spec §11) |
-| Last 40 runs strip | `StatusTimeline kind: 'runs'`, `runs[]` = `runs_public` {status, event, branch, sha, created_at} of the last 40 default-branch runs; not interactive; one image name "Last {n} runs on {branch}: …" |
-| Flaky list | §11 Flaky test, 30 days |
+| Trends | Window: last 30 default-branch runs per chart. Pass rate per run, coverage per run per module: default branch, CI and imported history. Test count per run: distinct tests, default branch, CI runs only (imported history is JVM-only; mixing it would jump when iOS results arrive). Duration per run: CI runs only (imported history has no durations). Runs per UTC day (bar): default branch, CI and imported history (spec §11) |
+| Last 40 runs strip | `StatusTimeline kind: 'runs'`, `runs[]` = `runs_public` {status, event, branch, sha, created_at} of the last 40 default-branch CI runs (`source = ci`; imported history excluded); `defaultBranch` = `projects.default_branch`; not interactive; one image name "Last {n} runs on {branch}: …" |
+| Flaky list | §11 Flaky test, 30 days. Rate: over the last 40 default-branch CI runs with a result for the test (m ≤ 40), n = runs with failed or error on any platform → "Failed {n} of last {m} runs" |
 | Repo link | `projects.repo_url`, public only |
 
 ## Run detail `/p/[slug]/runs/[id]`
@@ -53,7 +53,9 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 | Results table | `results` ⋈ `tests` (suite, name, layer, status, duration_ms) |
 | Platform mismatch | same `test_id` with any differing `status` across reports in the run (§11 Cross-platform parity); sentence groups failed, errored, passed, skipped, as components.md ResultsTable |
 | Failure detail | `result_failures.message`, `.detail` for failed and error results — RLS returns nothing for private projects → private-details notice (with Test history link; mismatch line still shown) |
-| Status filter | counts by `results.status`: passed, failed, error, skipped |
+| Status filter | counts distinct tests (rows), not results: each test counted once under its row status (worst across platforms: failed, error, passed, skipped); groups sum to All |
+| Row time | max `results.duration_ms` across the test's results in the run |
+| Failure detail (several) | one entry per failed/error result: report platform, status, duration, `result_failures.message`, `.detail` |
 | Pruned notice | `runs.results_pruned_at` not null (§5.12) |
 
 ## Test history `/p/[slug]/tests/[testKey]`

@@ -4,7 +4,7 @@ import { formatElapsed } from './elapsed';
 
 // Design v6 item 1 and components.md (StatTile, Projects passing; RecoveryStats): calendar time
 // as "{m}m" under 1 h, "{h}h {mm}m" under 24 h with two-digit minutes, "{d}d {h}h" from 24 h.
-// Whole units, counted down: 59 min 59 s is still "59m".
+// Whole units, counted down: 59 min 59 s is still "59m" (confirmed by design v7 item 14).
 
 const SECOND = 1_000;
 const MINUTE = 60 * SECOND;
@@ -32,6 +32,7 @@ describe('formatElapsed', () => {
     expect(formatElapsed(DAY)).toBe('1d 0h');
     expect(formatElapsed(2 * DAY + 3 * HOUR)).toBe('2d 3h');
     expect(formatElapsed(3 * DAY + 4 * HOUR + 59 * MINUTE)).toBe('3d 4h');
+    expect(formatElapsed(47 * HOUR + 59 * MINUTE)).toBe('1d 23h');
     // Calendar time over a weekend: Friday 18:00 to Monday 06:00.
     expect(formatElapsed(60 * HOUR)).toBe('2d 12h');
   });

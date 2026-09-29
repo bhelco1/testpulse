@@ -327,7 +327,7 @@ describe('landingView at the seed', () => {
       },
       latestRun: {
         status: 'passed',
-        when: '2 h ago',
+        when: expect.objectContaining({ text: '2 h ago' }),
         branch: 'main',
         sha: OSTOMATE_SHA,
         href: '/p/ostomate2/runs/o-9',
@@ -361,7 +361,7 @@ describe('landingView at the seed', () => {
     expect(card?.project.visibility).toBe('private');
     expect(card?.latestRun).toEqual({
       status: 'failed',
-      when: '3 h ago',
+      when: expect.objectContaining({ text: '3 h ago' }),
       branch: 'main',
       sha: 'c238574',
       href: '/p/routeserve/runs/r-11',
@@ -383,7 +383,12 @@ describe('landingView at the seed', () => {
     const card = view.cards[2];
     expect(card?.latestRun).toMatchObject({
       status: 'failed',
-      when: '13 days ago',
+      // 13 days 7 hours back is 13 UTC days: a week, in v7's wording.
+      when: {
+        text: '1 week ago',
+        datetime: '2026-09-22T04:37:00.242Z',
+        title: '22 Sep 2026, 04:37 UTC',
+      },
       total: 3,
       failed: 1,
       skipped: 1,
@@ -402,7 +407,7 @@ describe('landingView at the seed', () => {
         project: 'Ostomate 2.0',
         branch: 'main',
         sha: '0e2d0b4',
-        when: '2 h ago',
+        when: expect.objectContaining({ text: '2 h ago' }),
         visibility: 'public',
         title: 'Push to main',
         status: 'passed',
@@ -415,14 +420,18 @@ describe('landingView at the seed', () => {
         project: 'RouteServe',
         branch: 'main',
         sha: 'c238574',
-        when: '3 h ago',
+        when: expect.objectContaining({ text: '3 h ago' }),
         visibility: 'private',
         status: 'failed',
         failed: 1,
         passed: 1040,
         total: 1041,
       },
-      expect.objectContaining({ id: 'o-8', title: 'Scheduled run', when: 'yesterday' }),
+      expect.objectContaining({
+        id: 'o-8',
+        title: 'Scheduled run',
+        when: expect.objectContaining({ text: 'yesterday' }),
+      }),
     ]);
   });
 });
@@ -572,7 +581,7 @@ describe('landingView tiles in other states', () => {
     };
     expect(landingView(landingOf([empty]), NOW).cards[0]?.latestRun).toMatchObject({
       status: 'empty',
-      when: '2 h ago',
+      when: expect.objectContaining({ text: '2 h ago' }),
     });
   });
 });

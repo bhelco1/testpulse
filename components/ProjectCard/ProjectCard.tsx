@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 import { formatCount, qty } from '../../lib/copy/count';
+import type { TimeLabel } from '../../lib/copy/time';
 import type { LayerSegment } from '../../lib/design/layers';
 import type { RunStatus } from '../../lib/ingest/normalize';
 import { declaredSummary } from '../../lib/projects/declared-summary';
@@ -13,6 +14,7 @@ import { HealthMarker, type HealthState } from '../HealthMarker/HealthMarker';
 import { EmptyIcon } from '../icons/icons';
 import { LayerBar } from '../LayerBar/LayerBar';
 import { PrivateTag } from '../PrivateTag/PrivateTag';
+import { RelativeTime } from '../RelativeTime/RelativeTime';
 import { Skeleton } from '../Skeleton/Skeleton';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
 import styles from './ProjectCard.module.css';
@@ -27,8 +29,8 @@ export interface ProjectCardProject {
 
 export interface ProjectCardRun {
   status: RunStatus;
-  // Already relative, such as "4 minutes ago": components do not read the clock.
-  when: string;
+  // Already relative, such as "4 min ago": components do not read the clock.
+  when: TimeLabel;
   branch: string;
   sha: string;
   // The run page, which exists for private projects too.
@@ -158,7 +160,7 @@ function WebCard({
         {run && (
           <span className={styles.meta} data-part="meta">
             <span className={cx(stale && styles.stale)} data-part="when">
-              {run.when}
+              <RelativeTime when={run.when} />
             </span>
             <span>·</span>
             <span>{run.branch}</span>
@@ -315,7 +317,9 @@ function KioskCard({
         <StatusBadge status={run ? run.status : 'not_reporting'} variant="kiosk" />
         {run && (
           <span className={cx(styles.meta, stale && styles.stale)} data-part="meta">
-            <span>{run.when}</span>
+            <span>
+              <RelativeTime when={run.when} />
+            </span>
             <span>·</span>
             <span className={styles.sha}>{sha7(run.sha)}</span>
           </span>

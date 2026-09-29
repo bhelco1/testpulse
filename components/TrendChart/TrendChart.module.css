@@ -173,6 +173,11 @@
   color: var(--ink);
 }
 
+.tipNotRun {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
 .tipMark {
   margin-top: 4px;
   font-weight: 600;
@@ -231,6 +236,12 @@
 .table .value {
   text-align: right;
   font-weight: 600;
+}
+
+/* After .table .value, which it overrides at the same specificity. */
+.table .notRun {
+  color: var(--ink-3);
+  font-weight: 400;
 }
 
 /* Design v5 item 3: the error state is an inset panel inside the chart card, not a card of its own. */

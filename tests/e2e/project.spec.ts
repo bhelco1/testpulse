@@ -57,6 +57,18 @@ test.describe('Ostomate2 (public)', () => {
     );
   });
 
+  // Design v7 item 17: three across on a desktop; on a phone Time to green takes its own line.
+  test('wraps Time to green below the other stats only on a phone', async ({ page }, testInfo) => {
+    const cells = page.locator('[data-part="stats"] > [data-part="cell"]');
+    const tops = await cells.evaluateAll((elements) =>
+      elements.map((element) => Math.round(element.getBoundingClientRect().top)),
+    );
+    const [passRate, streak, green] = tops;
+    expect(streak).toBe(passRate);
+    if (testInfo.project.name.startsWith('phone')) expect(green).toBeGreaterThan(streak ?? 0);
+    else expect(green).toBe(passRate);
+  });
+
   test('shows the pyramid, declared suites, coverage and reports', async ({ page }) => {
     const tested = page.getByRole('region', { name: 'How it’s tested' });
     await expect(tested.locator('figure')).toContainText('142tests executed in the latest run');
@@ -68,6 +80,10 @@ test.describe('Ostomate2 (public)', () => {
       'Unit10373%',
     ]);
     await expect(tested.getByRole('listitem').filter({ hasText: 'Maestro E2E' })).toHaveCount(2);
+    // "Maestro 2.6.1" stands for both Maestro suites, which run in CI unreported (v7 item 8).
+    await expect(page.locator('[data-part="tag"][data-declared]')).toHaveText([
+      'Maestro 2.6.1 · not yet reported',
+    ]);
 
     const coverage = page.getByRole('region', { name: 'Coverage and reports' });
     // 497 / 527 and 457 / 490.
@@ -155,6 +171,9 @@ test.describe('RouteServe (private)', () => {
       'API26926%',
       'Component16516%',
       'Unit60758%',
+    ]);
+    await expect(page.locator('[data-part="tag"][data-declared]')).toHaveText([
+      'Maestro · not yet executed',
     ]);
     await expect(
       page.getByRole('region', { name: 'Coverage and reports' }).locator('[data-state]'),

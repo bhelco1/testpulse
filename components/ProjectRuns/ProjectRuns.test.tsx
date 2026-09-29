@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { FeedRun } from '../RunFeedRow/RunFeedRow';
 import { ProjectRuns } from './ProjectRuns';
+import { timeLabel } from '../testing/time';
 
 const push = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
@@ -17,7 +18,7 @@ const RUN: FeedRun = {
   project: 'Ostomate 2.0',
   branch: 'main',
   sha: '0e2d0b4',
-  when: '2 hours ago',
+  when: timeLabel('2 h ago'),
   visibility: 'public',
   title: 'Push to main',
   status: 'passed',

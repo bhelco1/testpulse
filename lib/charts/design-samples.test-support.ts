@@ -48,3 +48,8 @@ export const ROUTESERVE_RUN_SECONDS = [
   27, 28, 27, 29, 28, 27, 30, 28, 29, 27, 28, 31, 29, 28, 27, 29, 28, 30, 29, 28, 27, 29, 30, 28,
   29, 28, 30, 29, 28, 29,
 ];
+
+// rendersToday on two platforms over 10 runs, ios-sim not run in three of them: the Design
+// System's "LINE · gaps where ios-sim didn’t run" (design v7 item 9).
+export const JVM_GAP_SECONDS = [0.41, 0.4, 0.43, 0.42, 0.39, 0.41, 0.44, 0.42, 0.4, 0.41];
+export const IOS_GAP_SECONDS = [0.6, 0.62, null, null, 0.63, 0.61, null, 0.64, 0.62, 0.63];

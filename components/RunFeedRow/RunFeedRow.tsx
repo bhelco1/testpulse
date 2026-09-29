@@ -1,9 +1,11 @@
 import Link from 'next/link';
 
 import { formatCount, qty } from '../../lib/copy/count';
+import type { TimeLabel } from '../../lib/copy/time';
 import type { RunStatus } from '../../lib/ingest/normalize';
 import type { Visibility } from '../../lib/projects/schema';
 import { LockIcon } from '../icons/icons';
+import { RelativeTime } from '../RelativeTime/RelativeTime';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
 import styles from './RunFeedRow.module.css';
 
@@ -16,8 +18,8 @@ interface RunBase {
   // runs.branch, for every event (design v4 item 28).
   branch: string;
   sha: string;
-  // Already relative, such as "4 minutes ago": components do not read the clock.
-  when: string;
+  // Already relative, such as "4 min ago": components do not read the clock.
+  when: TimeLabel;
 }
 
 type RunCounts =
@@ -36,7 +38,7 @@ export type KioskFeedRun = {
   project: string;
   visibility: Visibility;
   branch: string;
-  when: string;
+  when: TimeLabel;
 } & (
   | { status: Extract<RunStatus, 'passed'>; total: number }
   | { status: Extract<RunStatus, 'failed'>; failed: number }
@@ -133,7 +135,7 @@ function WebRow({
       </span>
       <Count run={run} />
       <span className={styles.when} data-part="when">
-        {run.when}
+        <RelativeTime when={run.when} />
       </span>
     </Link>
   );
@@ -160,7 +162,7 @@ function KioskTile({ run }: { run: KioskFeedRun }) {
           <StatusBadge status={run.status} variant="inline-kiosk" />
         </span>
         <span className={styles.tileWhen} data-part="when">
-          {run.when}
+          <RelativeTime when={run.when} />
         </span>
       </div>
       <div className={styles.tileBottom}>

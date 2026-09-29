@@ -4,6 +4,7 @@ import type { HeroView } from '../../lib/pages/project';
 import { HealthMarker } from '../HealthMarker/HealthMarker';
 import { ExternalLinkIcon, LockIcon } from '../icons/icons';
 import { Notice } from '../Notice/Notice';
+import { TimedText } from '../RelativeTime/RelativeTime';
 import styles from './ProjectHero.module.css';
 
 export interface ProjectHeroProps {
@@ -22,7 +23,12 @@ export function ProjectHero({ hero, children }: ProjectHeroProps) {
     <>
       {hero.stale && (
         <div className={styles.stale}>
-          <Notice tone="attn" icon="clock" title={hero.stale.title} body={hero.stale.body} />
+          <Notice
+            tone="attn"
+            icon="clock"
+            title={hero.stale.title}
+            body={<TimedText parts={hero.stale.body} />}
+          />
         </div>
       )}
       <section className={styles.hero}>
@@ -46,7 +52,7 @@ export function ProjectHero({ hero, children }: ProjectHeroProps) {
               <HealthMarker {...hero.health} />
               {hero.healthDetail !== null && (
                 <span className={styles.detail} data-part="health-detail">
-                  {hero.healthDetail}
+                  <TimedText parts={hero.healthDetail} />
                 </span>
               )}
             </span>

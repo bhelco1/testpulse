@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { ProjectsPassing } from '../stats/projects-passing';
 import { projectsPassingKioskTile, projectsPassingTile } from './projects-passing';
 
-// Design v6 items 1 and 2; components.md, StatTile "Projects passing" and the kiosk variant.
+// Design v6 items 1 and 2, v7 items 11 to 13; components.md, StatTile "Projects passing" and the
+// kiosk variant.
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -57,7 +58,7 @@ describe('projectsPassingTile', () => {
     });
   });
 
-  // Not drawn in v6: components.md gives the line for one project. Listed for the next batch.
+  // Design v7 item 11 confirms and draws it.
   it('several empty and none red: each project’s line, joined as the red list is', () => {
     const tile = projectsPassingTile(
       state({
@@ -116,6 +117,43 @@ describe('projectsPassingKioskTile', () => {
     expect(
       projectsPassingKioskTile(state({ passing: 0, red: [routeserveRed, ostomate2Red] })),
     ).toEqual({ label: '2 projects red', value: '0 of 2', fail: true });
+  });
+
+  // Design v7 item 12: the label stays, and a plain sub-line names the empty runs.
+  it('a latest run empty and none red: "{project} last run empty" under the label', () => {
+    expect(
+      projectsPassingKioskTile(
+        state({ passing: 1, lastRunEmpty: [{ slug: 'ostomate2', name: 'Ostomate2' }] }),
+      ),
+    ).toEqual({
+      label: 'Projects passing',
+      value: '1 of 2',
+      sub: 'Ostomate2 last run empty',
+      fail: false,
+    });
+    expect(
+      projectsPassingKioskTile(
+        state({
+          passing: 0,
+          lastRunEmpty: [
+            { slug: 'ostomate2', name: 'Ostomate2' },
+            { slug: 'routeserve', name: 'RouteServe' },
+          ],
+        }),
+      ),
+    ).toMatchObject({ sub: 'Ostomate2 last run empty · RouteServe last run empty', fail: false });
+  });
+
+  it('a red project wins over an empty one, with no sub-line', () => {
+    expect(
+      projectsPassingKioskTile(
+        state({
+          passing: 0,
+          red: [ostomate2Red],
+          lastRunEmpty: [{ slug: 'routeserve', name: 'RouteServe' }],
+        }),
+      ),
+    ).toEqual({ label: 'Ostomate2 red for 4m', value: '0 of 2', fail: true });
   });
 
   it('no project has a run yet: value "0", sub "No runs yet"', () => {

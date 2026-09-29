@@ -1,11 +1,13 @@
 import Link from 'next/link';
 
+import type { TimeLabel } from '../../lib/copy/time';
+import { RelativeTime } from '../RelativeTime/RelativeTime';
 import styles from './SiteFooter.module.css';
 
 export interface SiteFooterProps {
-  // Already relative, such as "4 minutes ago": components do not read the clock. Left out before
+  // Already relative, such as "4 min ago": components do not read the clock. Left out before
   // any project has reported.
-  lastReport?: string;
+  lastReport?: TimeLabel;
   sourceHref: string;
 }
 
@@ -20,7 +22,11 @@ export function SiteFooter({ lastReport, sourceHref }: SiteFooterProps) {
           Source on GitHub
         </a>
       </div>
-      {lastReport !== undefined && <span>Last report received {lastReport}</span>}
+      {lastReport !== undefined && (
+        <span>
+          Last report received <RelativeTime when={lastReport} />
+        </span>
+      )}
     </footer>
   );
 }

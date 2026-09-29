@@ -766,7 +766,8 @@ describe('ResultsTable styles', () => {
       'font-size': '13px',
     });
     expect(ruleFor(CSS, '.platform')).toEqual({ color: 'var(--ink-3)' });
-    expect(ruleFor(CSS, '.platformFail')).toEqual({ color: 'var(--fail)' });
+    // Design v7 (Design System section 10): a failing platform is --fail at 600.
+    expect(ruleFor(CSS, '.platformFail')).toEqual({ color: 'var(--fail)', 'font-weight': '600' });
     expect(ruleFor(CSS, '.timeCell')).toEqual({ 'text-align': 'right', color: 'var(--ink-2)' });
   });
 

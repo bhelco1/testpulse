@@ -75,10 +75,10 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ run.failName }}</span><span style="font-size:13px;color:var(--ink-3)">{{ run.failPlat }}</span></a>
 </sc-if>
 <div style="margin-top:10px;font-size:13.5px;color:var(--ink-3)">{{ p.platforms }}</div>
-<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
-<div><div style="font-size:13px;color:var(--ink-3)">Pass rate, 30 days</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">100%</div></div>
-<div><div style="font-size:13px;color:var(--ink-3)">Green streak</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span style="font:500 30px/1.15 'Source Serif 4',serif">{{ rec.streak }}</span><span style="font-size:18px;color:var(--ink-3)">{{ rec.streakUnit }}</span></div><div style="display:flex;gap:4px;margin-top:2px;font-size:13px;color:var(--ink-3)"><span>Longest</span><span>{{ rec.longest }}</span></div></div>
-<div><div style="font-size:13px;color:var(--ink-3)">Time to green</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ rec.ttg }}</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3);text-wrap:pretty">{{ rec.ttgSub }}</div><sc-if value="{{ rec.red }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;font-weight:600;color:var(--fail)"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>Red now for</span><span>{{ rec.redFor }}</span></div></sc-if></div>
+<div style="display:flex;flex-wrap:wrap;gap:16px 12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
+<div style="flex:1 1 120px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Pass rate, 30 days</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">100%</div></div>
+<div style="flex:1 1 120px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Green streak</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span style="font:500 30px/1.15 'Source Serif 4',serif">{{ rec.streak }}</span><span style="font-size:18px;color:var(--ink-3)">{{ rec.streakUnit }}</span></div><div style="display:flex;gap:4px;margin-top:2px;font-size:13px;color:var(--ink-3)"><span>Longest</span><span>{{ rec.longest }}</span></div></div>
+<div style="flex:1 1 240px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Time to green</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ rec.ttg }}</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3);text-wrap:pretty">{{ rec.ttgSub }}</div><sc-if value="{{ rec.red }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;font-weight:600;color:var(--fail)"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>Red now for</span><span>{{ rec.redFor }}</span></div></sc-if></div>
 </div>
 <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Longest streak, worst time to green and red-now duration are illustrative.</div>
 <a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:10px;font-size:14.5px;font-weight:600;color:var(--ink)">View this run →</a>
@@ -375,12 +375,12 @@ class Component extends DCLogic {
 
     const coverage = p.cov.map(([m, v, f], i) => K.cov(m, below && p.below[0] === i ? p.below[1] : v, f)).sort((a, b) => a.m < b.m ? -1 : a.m > b.m ? 1 : 0); /* v6 item 9: by module key (code-point order) */
     const dates = Component.DATES;
-    const covScope = 'Default branch · CI and imported history';
+    const covScope = 'Default branch · last 30 runs · CI and imported history';
     const charts = [
       { title: 'Pass rate', scope: covScope, caption: 'All 30 runs passed.', props: { series: [{ name: 'Pass rate', values: p.pass }], format: 'pct', unit: 'run', ariaLabel: 'Pass rate per run. All 30 runs passed.' } },
-      { title: 'Tests per run', scope: 'Default branch · CI runs only', caption: p.testsCap, props: { series: [{ name: 'Tests', values: p.tests }], format: 'int', unit: 'run', ariaLabel: 'Tests per run. ' + p.testsCap } },
+      { title: 'Tests per run', scope: 'Default branch · last 30 CI runs', caption: p.testsCap, props: { series: [{ name: 'Tests', values: p.tests }], format: 'int', unit: 'run', ariaLabel: 'Tests per run. ' + p.testsCap } },
       { title: p.covTitle, scope: covScope, caption: p.covCaption, props: { series: [{ name: p.cov[0][0], values: p.covVals }], labels: dates, floor: p.covFloor, format: 'pct', unit: 'run', ariaLabel: p.covTitle + '. ' + p.covCaption } },
-      { title: 'Run duration', scope: 'Default branch · CI runs only (imported history has no durations)', caption: p.durCap, props: { series: [{ name: 'Duration', values: p.dur }], format: 'dur', unit: 'run', ariaLabel: 'Run duration. ' + p.durCap } },
+      { title: 'Run duration', scope: 'Default branch · last 30 CI runs (imported history has no durations)', caption: p.durCap, props: { series: [{ name: 'Duration', values: p.dur }], format: 'dur', unit: 'run', ariaLabel: 'Run duration. ' + p.durCap } },
     ];
 
     const allBranches = this.state.branches === 'all';

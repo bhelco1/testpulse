@@ -1,5 +1,5 @@
 import type { FeedRun } from '../../components/RunFeedRow/RunFeedRow';
-import { formatRunDuration, relativeTime } from '../copy/time';
+import { formatRunDuration, relativeLabel } from '../copy/time';
 import type { Visibility } from '../projects/schema';
 import type { ListedRun } from '../queries/run-rows';
 import type { RunTests } from '../stats/test-counts';
@@ -30,7 +30,7 @@ export function feedRun(
     project: project.name,
     branch: run.branch,
     sha: run.commitSha.slice(0, 7),
-    when: relativeTime(run.finishedAt, now),
+    when: relativeLabel(run.finishedAt, now),
   };
   // A private project's row shows no title (design/components.md, RunFeedRow).
   const title =

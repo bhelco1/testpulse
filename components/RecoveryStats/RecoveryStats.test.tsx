@@ -138,6 +138,23 @@ describe('RecoveryStats', () => {
     expect(part(green, 'sub')?.textContent).toBe('Median of 1, 90 days · worst 1h 00m');
   });
 
+  // Design v7 item 17: in the stat row's flex-wrap, Green streak takes 120 px and Time to green
+  // 240 px before growing, so below 504 px of card content (120 + 120 + 240 + two 12 px gaps)
+  // Time to green drops to a full-width line of its own.
+  it('gives each cell its flex basis in the wrapping stat row', () => {
+    const { container } = render(
+      <RecoveryStats
+        greenStreak={{ current: 8, longest: 8 }}
+        timeToGreen={{ recoveries: [], medianMs: null, worstMs: null, stillRed: null }}
+      />,
+    );
+    const { streak, green } = cells(container);
+    expect(streak.className).toContain('streakCell');
+    expect(green.className).toContain('greenCell');
+    expect(ruleFor(CSS, '.streakCell')).toEqual({ flex: '1 1 120px', 'min-width': '0px' });
+    expect(ruleFor(CSS, '.greenCell')).toEqual({ flex: '1 1 240px', 'min-width': '0px' });
+  });
+
   it('sets the cells as the design draws them: 13 labels, 30 serif values, 13 sub-lines', () => {
     expect(ruleFor(CSS, '.label')).toEqual({ 'font-size': '13px', color: 'var(--ink-3)' });
     expect(ruleFor(CSS, '.value')).toEqual({ font: '500 30px/1.15 var(--font-serif)' });

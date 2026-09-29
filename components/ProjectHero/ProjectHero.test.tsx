@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import type { HeroView } from '../../lib/pages/project';
 import { ruleFor } from '../testing/stylesheet';
+import { timeLabel } from '../testing/time';
 import { ProjectHero } from './ProjectHero';
 
 afterEach(cleanup);
@@ -18,7 +19,7 @@ const HERO: HeroView = {
   tagline: 'Local-first ostomy supply tracker.',
   paragraphs: ['Tracks supply changes.', 'Second paragraph.'],
   health: { health: 'healthy' },
-  healthDetail: 'Last report 2 hours ago',
+  healthDetail: ['Last report ', timeLabel('2 h ago')],
   repoUrl: 'https://github.com/bhelco1/Ostomate2',
   stale: null,
 };
@@ -51,7 +52,7 @@ describe('ProjectHero', () => {
     expect(marker?.dataset.health).toBe('healthy');
     expect(marker?.textContent).toBe('Reporting healthy');
     expect(container.querySelector('[data-part="health-detail"]')?.textContent).toBe(
-      'Last report 2 hours ago',
+      'Last report 2 h ago',
     );
     const source = getByRole('link', { name: 'Source on GitHub' });
     expect(source.getAttribute('href')).toBe('https://github.com/bhelco1/Ostomate2');
@@ -89,8 +90,11 @@ describe('ProjectHero', () => {
         hero={{
           ...HERO,
           health: { health: 'stale', days: 13 },
-          healthDetail: 'Expected every 8 days',
-          stale: { title: 'testpulse hasn’t reported in 13 days', body: 'Everything below…' },
+          healthDetail: ['Expected every 8 days'],
+          stale: {
+            title: 'testpulse hasn’t reported in 13 days',
+            body: ['Everything below is from the last report, ', timeLabel('22 Sep'), '.'],
+          },
         }}
       >
         {null}
@@ -100,6 +104,12 @@ describe('ProjectHero', () => {
     const notice = container.firstElementChild?.querySelector<HTMLElement>('[data-tone="attn"]');
     expect(notice?.querySelector('[data-part="title"]')?.textContent).toBe(
       'testpulse hasn’t reported in 13 days',
+    );
+    expect(notice?.querySelector('[data-part="body"]')?.textContent).toBe(
+      'Everything below is from the last report, 22 Sep.',
+    );
+    expect(notice?.querySelector('time')?.getAttribute('datetime')).toBe(
+      '2026-10-05T11:56:00.000Z',
     );
     expect(notice?.getAttribute('role')).toBeNull();
     expect(container.querySelector('[data-health]')?.textContent).toBe('No report in 13 days');

@@ -120,7 +120,8 @@ test.describe('the landing page', () => {
   test('gives testpulse a stale failed card with no coverage', async ({ page }) => {
     const testpulse = card(page, 'testpulse');
     await expect(testpulse.getByText('Failed', { exact: true })).toBeVisible();
-    await expect(testpulse.locator('[data-part="when"]')).toHaveText('13 days ago');
+    // 13 UTC days back reads in weeks (design v7 item 16).
+    await expect(testpulse.locator('[data-part="when"]')).toHaveText('1 week ago');
     await expect(testpulse.locator('[data-part="total"]')).toHaveText('3');
     await expect(testpulse.locator('[data-part="sub"]')).toHaveText(
       /^tests ·1 failed·1 skipped ·\d+ s$/,
@@ -164,7 +165,12 @@ test.describe('the landing page', () => {
 
   test('dates the last report in the footer', async ({ page }) => {
     // Ostomate2's 09:26:17 run, 2 h 33 min before SEED_NOW.
-    await expect(page.getByRole('contentinfo')).toContainText('Last report received 2 h ago');
+    const footer = page.getByRole('contentinfo');
+    await expect(footer).toContainText('Last report received 2 h ago');
+    // Every "when" carries its instant and full date and time (design v7 item 16).
+    const time = footer.locator('time');
+    await expect(time).toHaveAttribute('datetime', /^2026-10-05T09:26:\d{2}\.\d{3}Z$/);
+    await expect(time).toHaveAttribute('title', '5 Oct 2026, 09:26 UTC');
   });
 
   test('does not scroll sideways', async ({ page }) => {

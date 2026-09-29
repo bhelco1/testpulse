@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { keyframesIn, ruleFor } from '../testing/stylesheet';
 import { RunFeedRow, type FeedRun, type KioskFeedRun } from './RunFeedRow';
 import styles from './RunFeedRow.module.css';
+import { timeLabel } from '../testing/time';
 
 afterEach(cleanup);
 
@@ -32,7 +33,7 @@ const PASSED: FeedRun = {
   project: 'Ostomate2',
   branch: 'main',
   sha: '0e2d0b4c9a11f3e7',
-  when: '4 minutes ago',
+  when: timeLabel('4 min ago'),
   total: 142,
   duration: '27 s',
 };
@@ -46,7 +47,7 @@ const FAILED: FeedRun = {
   project: 'Ostomate2',
   branch: 'fix-today-count',
   sha: 'a41f9c2',
-  when: 'yesterday',
+  when: timeLabel('yesterday'),
   failed: 1,
   passed: 141,
   total: 142,
@@ -61,7 +62,7 @@ const EMPTY: FeedRun = {
   project: 'Ostomate2',
   branch: 'main',
   sha: '0e2d0b4',
-  when: '4 minutes ago',
+  when: timeLabel('4 min ago'),
   reports: 4,
 };
 
@@ -73,7 +74,7 @@ const PRIVATE: FeedRun = {
   project: 'RouteServe',
   branch: 'main',
   sha: 'c238574',
-  when: '2 hours ago',
+  when: timeLabel('2 h ago'),
   total: 1048,
   duration: '29 s',
 };
@@ -99,12 +100,12 @@ describe('RunFeedRow (web)', () => {
     expect(part(row, 'count-lead')?.textContent).toBe('142 tests');
     expect(part(row, 'count-rest')?.textContent).toBe('· 27 s');
     expect(has(part(row, 'count-lead'), 'countPassed')).toBe(true);
-    expect(part(row, 'when')?.textContent).toBe('4 minutes ago');
+    expect(part(row, 'when')?.textContent).toBe('4 min ago');
   });
 
   it('keeps the design order: status, title, meta, count, time', () => {
     expect(renderRow(PASSED).textContent).toBe(
-      'PassedPush to mainOstomate2·main·0e2d0b4142 tests· 27 s4 minutes ago',
+      'PassedPush to mainOstomate2·main·0e2d0b4142 tests· 27 s4 min ago',
     );
   });
 
@@ -304,7 +305,7 @@ const KIOSK_PASSED: KioskFeedRun = {
   visibility: 'public',
   project: 'Ostomate2',
   branch: 'main',
-  when: '4 min ago',
+  when: timeLabel('4 min ago'),
   total: 142,
 };
 
@@ -314,7 +315,7 @@ const KIOSK_FAILED: KioskFeedRun = {
   visibility: 'public',
   project: 'Ostomate2',
   branch: 'fix-today-count',
-  when: 'yesterday',
+  when: timeLabel('yesterday'),
   failed: 1,
 };
 
@@ -324,7 +325,7 @@ const KIOSK_EMPTY: KioskFeedRun = {
   visibility: 'public',
   project: 'Ostomate2',
   branch: 'main',
-  when: '4 min ago',
+  when: timeLabel('4 min ago'),
 };
 
 const KIOSK_PRIVATE: KioskFeedRun = {
@@ -333,7 +334,7 @@ const KIOSK_PRIVATE: KioskFeedRun = {
   visibility: 'private',
   project: 'RouteServe',
   branch: 'main',
-  when: '2 hr ago',
+  when: timeLabel('2 h ago'),
   total: 1048,
 };
 

@@ -48,8 +48,10 @@ import styles from './TrendChart.module.css';
 
 export interface TrendSeries {
   name: string;
-  // Oldest first, one value per point; every series has the same number of points.
-  values: readonly number[];
+  // Oldest first, one value per point; every series has the same number of points. Null where
+  // the series has no value, such as a platform that did not run: the line breaks there and the
+  // tooltip and table read "Not run" (design v7 item 9).
+  values: readonly (number | null)[];
   // The second series is always dashed; this dashes the first as well.
   dashed?: boolean;
 }
@@ -86,6 +88,9 @@ const NO_LABELS: readonly string[] = [];
 const NO_MARKS: readonly TrendMark[] = [];
 
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
+
+const isValue = (value: number | null | undefined): value is number =>
+  value !== null && value !== undefined;
 
 // The width the chart is drawn at, measured the way tp-charts.js measures it: whole pixels, and
 // only a change of 2 px or more redraws, so a scrollbar appearing cannot make it oscillate.
@@ -194,9 +199,13 @@ function ChartBody({
   const series = data?.series ?? [];
   const points = series[0]?.values.length ?? 0;
   const kind = data?.kind ?? 'line';
+  // A series with no latest value has no end label, so it takes no margin.
   const endLabels =
     data && kind === 'line' && points >= 2
-      ? series.map((s) => formatTrendValue(s.values[points - 1] ?? 0, data.format, true))
+      ? series
+          .map((s) => s.values[points - 1])
+          .filter(isValue)
+          .map((value) => formatTrendValue(value, data.format, true))
       : [];
   const endLabelWidth = useLabelWidth(measured, endLabels);
 
@@ -298,7 +307,7 @@ function Plot({ data, layout, label }: { data: TrendData; layout: ChartLayout; l
   const active = hover !== null && hover < count ? hover : null;
 
   const scale = trendYScale({
-    values: series.flatMap((s) => s.values),
+    values: series.flatMap((s) => s.values).filter(isValue),
     floor: data.floor,
     zero: bar || (data.zero ?? false),
     percent: format === 'pct',
@@ -451,51 +460,63 @@ function Plot({ data, layout, label }: { data: TrendData; layout: ChartLayout; l
           strokeLinecap="round"
           isAnimationActive={false}
           activeDot={false}
+          connectNulls={false}
           dot={(dot: DotItemDotProps) => (
-            <PointDot key={dot.index} dot={dot} seriesIndex={si} layout={layout} format={format} />
-          )}
-        />
-      ))}
-      {marks.map((mark) => (
-        <ReferenceDot
-          key={`mark-${mark.index}`}
-          x={mark.index}
-          y={series[0]?.values[mark.index]}
-          shape={(dot: { cx?: number; cy?: number }) => (
-            <rect
-              x={(dot.cx ?? 0) - 4}
-              y={(dot.cy ?? 0) - 4}
-              width={8}
-              height={8}
-              fill={mark.status === 'fail' ? 'var(--fail)' : 'var(--attn)'}
-              stroke="var(--surface)"
-              strokeWidth={2}
-              data-part="mark"
+            <PointDot
+              key={dot.index}
+              dot={dot}
+              values={s.values}
+              seriesIndex={si}
+              layout={layout}
+              format={format}
             />
           )}
         />
       ))}
-      {hoverRule}
-      {active !== null &&
-        series.map((s, si) => (
+      {marks
+        .filter((mark) => isValue(series[0]?.values[mark.index]))
+        .map((mark) => (
           <ReferenceDot
-            key={`hover-${s.name}`}
-            x={active}
-            y={s.values[active]}
-            zIndex={DefaultZIndexes.activeDot}
+            key={`mark-${mark.index}`}
+            x={mark.index}
+            y={series[0]?.values[mark.index] ?? undefined}
             shape={(dot: { cx?: number; cy?: number }) => (
-              <circle
-                cx={dot.cx}
-                cy={dot.cy}
-                r={5}
-                fill="var(--surface)"
-                stroke={strokeOf(si)}
+              <rect
+                x={(dot.cx ?? 0) - 4}
+                y={(dot.cy ?? 0) - 4}
+                width={8}
+                height={8}
+                fill={mark.status === 'fail' ? 'var(--fail)' : 'var(--attn)'}
+                stroke="var(--surface)"
                 strokeWidth={2}
-                data-part="hover-dot"
+                data-part="mark"
               />
             )}
           />
         ))}
+      {hoverRule}
+      {active !== null &&
+        series.map((s, si) =>
+          !isValue(s.values[active]) ? null : (
+            <ReferenceDot
+              key={`hover-${s.name}`}
+              x={active}
+              y={s.values[active]}
+              zIndex={DefaultZIndexes.activeDot}
+              shape={(dot: { cx?: number; cy?: number }) => (
+                <circle
+                  cx={dot.cx}
+                  cy={dot.cy}
+                  r={5}
+                  fill="var(--surface)"
+                  stroke={strokeOf(si)}
+                  strokeWidth={2}
+                  data-part="hover-dot"
+                />
+              )}
+            />
+          ),
+        )}
     </LineChart>
   );
 
@@ -535,17 +556,20 @@ function Plot({ data, layout, label }: { data: TrendData; layout: ChartLayout; l
 
 function PointDot({
   dot,
+  values,
   seriesIndex,
   layout,
   format,
 }: {
   dot: DotItemDotProps;
+  values: readonly (number | null)[];
   seriesIndex: number;
   layout: ChartLayout;
   format: TrendFormat;
 }) {
   const { cx: x = 0, cy: y = 0, index } = dot;
-  const value = Number(dot.value);
+  const value = values[index];
+  if (!isValue(value)) return <g />;
   const last = index === layout.count - 1;
   if (last || (index === 0 && seriesIndex === 0)) {
     return (
@@ -568,7 +592,16 @@ function PointDot({
       </g>
     );
   }
-  if (!showsIntermediateDots(layout.count, layout.phone)) return <g />;
+  if (!showsIntermediateDots(layout.count, layout.phone)) {
+    // A point with gaps on both sides has no line through it, so it is drawn as a 3 px dot;
+    // where hollow dots are drawn they cover it, as in tp-charts.js.
+    const lone = !isValue(values[index - 1]) && !isValue(values[index + 1]);
+    return lone ? (
+      <circle cx={x} cy={y} r={3} fill={strokeOf(seriesIndex)} data-part="lone-dot" />
+    ) : (
+      <g />
+    );
+  }
   return (
     <circle
       cx={x}
@@ -603,14 +636,21 @@ function Tooltip({
       data-part="tooltip"
     >
       <div className={styles.tipLabel}>{pointLabel(index, layout.count, labels, data.unit)}</div>
-      {data.series.map((s) => (
-        <div key={s.name} className={styles.tipRow}>
-          <span className={styles.tipName}>{s.name}</span>
-          <b className={styles.tipValue}>
-            {formatTrendValue(s.values[index] ?? 0, data.format, true)}
-          </b>
-        </div>
-      ))}
+      {data.series.map((s) => {
+        const value = s.values[index];
+        return (
+          <div key={s.name} className={styles.tipRow}>
+            <span className={styles.tipName}>{s.name}</span>
+            {isValue(value) ? (
+              <b className={styles.tipValue}>{formatTrendValue(value, data.format, true)}</b>
+            ) : (
+              <span className={styles.tipNotRun} data-part="not-run">
+                Not run
+              </span>
+            )}
+          </div>
+        );
+      })}
       {mark && (
         <div
           className={cx(styles.tipMark, mark.status === 'fail' ? styles.tipFail : styles.tipEmpty)}
@@ -675,11 +715,18 @@ function DataTable({ data, title, id }: { data: TrendData; title: string; id?: s
           {newestFirst.map((i) => (
             <tr key={i}>
               <th scope="row">{pointLabel(i, count, labels, data.unit)}</th>
-              {data.series.map((s) => (
-                <td key={s.name} className={styles.value}>
-                  {formatTrendValue(s.values[i] ?? 0, data.format, true)}
-                </td>
-              ))}
+              {data.series.map((s) => {
+                const value = s.values[i];
+                return isValue(value) ? (
+                  <td key={s.name} className={styles.value}>
+                    {formatTrendValue(value, data.format, true)}
+                  </td>
+                ) : (
+                  <td key={s.name} className={cx(styles.value, styles.notRun)}>
+                    Not run
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

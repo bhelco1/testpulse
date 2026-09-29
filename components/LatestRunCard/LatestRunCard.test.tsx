@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { LatestRunView } from '../../lib/pages/project';
 import { ruleFor } from '../testing/stylesheet';
 import { LatestRunCard } from './LatestRunCard';
+import { timeLabel } from '../testing/time';
 
 afterEach(cleanup);
 
@@ -14,7 +15,7 @@ const CSS = join(import.meta.dirname, 'LatestRunCard.module.css');
 
 const PASSED: LatestRunView = {
   status: 'passed',
-  when: '2 hours ago',
+  when: timeLabel('2 h ago'),
   branch: 'main',
   sha: '0e2d0b4',
   href: '/p/ostomate2/runs/run-9',
@@ -55,7 +56,7 @@ describe('LatestRunCard', () => {
       status: 'passed',
       variant: 'pill',
     });
-    expect(part(card, 'meta')?.textContent).toBe('Latest run · 2 hours ago · main · 0e2d0b4');
+    expect(part(card, 'meta')?.textContent).toBe('Latest run · 2 h ago · main · 0e2d0b4');
     expect(part(card, 'sha')?.textContent).toBe('0e2d0b4');
     expect(part(card, 'figure')?.textContent).toBe('142');
     expect(part(card, 'figure')?.dataset.tone).toBe('ink');
@@ -70,6 +71,7 @@ describe('LatestRunCard', () => {
     const card = getByRole('article');
 
     const cells = [...(part(card, 'stats')?.querySelectorAll(':scope > [data-part="cell"]') ?? [])];
+    expect(cells[0]?.className).toContain('passRateCell');
     expect(cells.map((cell) => cell.textContent)).toEqual([
       'Pass rate, 30 days100%',
       'Green streak8runsLongest8 runs',
@@ -153,12 +155,16 @@ describe('LatestRunCard', () => {
       color: 'var(--ink)',
       'overflow-wrap': 'anywhere',
     });
+    // Design v7 item 17: a wrapping row, so on a phone Time to green takes its own line.
     expect(ruleFor(CSS, '.stats')).toMatchObject({
-      'grid-template-columns': 'repeat(3, minmax(0, 1fr))',
+      display: 'flex',
+      'flex-wrap': 'wrap',
+      gap: '16px 12px',
       'margin-top': '22px',
       'padding-top': '18px',
       'border-top': '1px solid var(--line)',
     });
+    expect(ruleFor(CSS, '.passRateCell')).toEqual({ flex: '1 1 120px', 'min-width': '0px' });
     expect(ruleFor(CSS, '.statLabel')).toEqual({ 'font-size': '13px', color: 'var(--ink-3)' });
     expect(ruleFor(CSS, '.statValue')).toEqual({
       margin: 'var(--space-1) 0 0',

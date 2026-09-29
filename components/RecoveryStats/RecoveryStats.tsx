@@ -7,7 +7,8 @@ import styles from './RecoveryStats.module.css';
 
 // Design v6 item 3; components.md RecoveryStats. The project page's two recovery cells, from
 // spec section 11, for one project only: its green streak and its time to green, with "Red now"
-// while its latest default-branch run is failed. The page's stat row lays the cells out.
+// while its latest default-branch run is failed. The page's stat row is a wrapping flex row, and
+// each cell brings its flex basis (design v7 item 17).
 
 export interface RecoveryStatsProps {
   greenStreak: GreenStreak;
@@ -19,7 +20,7 @@ export function RecoveryStats({ greenStreak, timeToGreen }: RecoveryStatsProps) 
   const recovered = recoveries.length > 0 && medianMs !== null && worstMs !== null;
   return (
     <>
-      <div data-part="cell">
+      <div className={styles.streakCell} data-part="cell">
         <div className={styles.label} data-part="label">
           Green streak
         </div>
@@ -32,7 +33,7 @@ export function RecoveryStats({ greenStreak, timeToGreen }: RecoveryStatsProps) 
           <span>{qty(greenStreak.longest, 'run')}</span>
         </div>
       </div>
-      <div data-part="cell">
+      <div className={styles.greenCell} data-part="cell">
         <div className={styles.label} data-part="label">
           Time to green
         </div>

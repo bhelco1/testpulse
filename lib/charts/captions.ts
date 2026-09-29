@@ -51,23 +51,30 @@ export function coverageCaption(pcts: readonly number[], floor: number): string 
 function median(values: readonly number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  // Callers pass at least two values, so both middle entries exist.
+  // Callers pass at least one value, so the middle entries exist.
   return sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
 }
 
+const present = (values: readonly (number | null)[]): number[] =>
+  values.filter((value): value is number => value !== null);
+
 // One series (a run's duration) gets a median; one test on several platforms has no single one.
+// A null is a run with no value, such as a platform that did not run, and is left out of the
+// min, max and median (design v7 item 9); n still counts every run.
 export function durationCaption(
-  series: readonly (readonly number[])[],
+  series: readonly (readonly (number | null)[])[],
   format: 'sec' | 'dur',
 ): string | null {
   const n = series[0]?.length ?? 0;
-  if (n < 2) return null;
-  const all = series.flat();
+  const all = present(series.flat());
+  if (n < 2 || all.length === 0) return null;
   const range =
     `Between ${formatTrendValue(Math.min(...all), format, true)} and ` +
     `${formatTrendValue(Math.max(...all), format, true)} over the last ${n} runs.`;
-  const only = series.length === 1 ? series[0] : undefined;
-  return only ? `${range} Median ${formatTrendValue(median(only), format, true)}.` : range;
+  // With one series, all holds its values: at least one.
+  return series.length === 1
+    ? `${range} Median ${formatTrendValue(median(all), format, true)}.`
+    : range;
 }
 
 export function runsPerDayCaption(perDay: readonly number[]): string | null {

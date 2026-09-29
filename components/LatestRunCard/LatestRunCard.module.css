@@ -73,13 +73,19 @@
   color: var(--ink-3);
 }
 
+/* Design v7 item 17: no media query; the cells' flex bases decide when Time to green wraps. */
 .stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 12px;
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid var(--line);
+}
+
+.passRateCell {
+  flex: 1 1 120px;
+  min-width: 0;
 }
 
 .statLabel {

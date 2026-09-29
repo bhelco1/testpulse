@@ -10,7 +10,9 @@ import {
 } from './captions';
 import {
   COVERAGE_10,
+  IOS_GAP_SECONDS,
   IOS_SECONDS,
+  JVM_GAP_SECONDS,
   JVM_SECONDS,
   OSTOMATE2_RUN_SECONDS,
   PASS_RATE_30,
@@ -114,6 +116,16 @@ describe('durationCaption', () => {
   it('gives the range across platforms, with no single median, for one test on several', () => {
     expect(durationCaption([JVM_SECONDS, IOS_SECONDS], 'sec')).toBe(
       'Between 0.38 s and 0.64 s over the last 30 runs.',
+    );
+  });
+
+  // Design v7 item 9: a run where a platform did not run is left out of min, max and median.
+  it('leaves missing values out of the range and the median', () => {
+    expect(durationCaption([JVM_GAP_SECONDS, IOS_GAP_SECONDS], 'sec')).toBe(
+      'Between 0.39 s and 0.64 s over the last 10 runs.',
+    );
+    expect(durationCaption([[1, null, 3, 5]], 'dur')).toBe(
+      'Between 1 s and 5 s over the last 4 runs. Median 3 s.',
     );
   });
 

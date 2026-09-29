@@ -1,3 +1,7 @@
+'use client';
+
+// A client component: its handlers guard busy and disabled clicks, and a server page that uses
+// the link form (NotFound's "Go to overview") cannot hand those handlers across the boundary.
 import Link from 'next/link';
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent } from 'react';
 

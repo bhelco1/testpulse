@@ -71,12 +71,12 @@ const compareText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 
  * landing page and project card is always a CI run (design/data-map.md): backfilled history has
  * no per-test rows to count.
  */
-export function latestRun(
-  runs: readonly StatsRun[],
+export function latestRun<R extends StatsRun>(
+  runs: readonly R[],
   defaultBranch: string,
   now: Date,
-): StatsRun | null {
-  let latest: StatsRun | null = null;
+): R | null {
+  let latest: R | null = null;
   for (const run of runs) {
     if (!countsTowardCiOnlyStats(run, defaultBranch)) continue;
     if (run.finishedAt.getTime() > now.getTime()) continue;

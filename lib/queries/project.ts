@@ -86,10 +86,13 @@ export interface FlakyListTest {
 export interface ProjectPage {
   readonly project: ProjectDetail;
   readonly summary: ProjectSummary;
-  /** The latest default-branch CI run's reports and failing tests; null before the first. */
+  /** When the project's latest CI run on any branch finished, as section 11 dates a report. */
+  readonly lastReportAt: Date | null;
+  /** The latest default-branch CI run's reports, failing tests and duration; null before the first. */
   readonly latestRun: {
     readonly reports: readonly RunReport[];
     readonly failing: readonly FailingTest[];
+    readonly durationMs: number;
   } | null;
   readonly trends: Readonly<Record<WindowDays, ProjectTrends>>;
   readonly flaky: {
@@ -282,12 +285,14 @@ export async function loadProjectPage(
   return {
     project,
     summary,
+    lastReportAt: input.lastReportAt,
     latestRun:
       latest === null
         ? null
         : {
             reports: await loadRunReports(client, latest.id),
             failing: await loadFailing(client, latest.id),
+            durationMs: latest.durationMs,
           },
     trends: { 30: trends(30), 90: trends(90) },
     flaky: {

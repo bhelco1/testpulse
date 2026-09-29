@@ -16,6 +16,9 @@ export type BranchScope = 'default' | 'all';
 // the clock.
 type Connection = { connected: true } | { connected: false; asOf: string };
 
+// The project page run list before realtime reaches it: with no connection there is no note.
+type ProjectConnection = Connection | { connected?: undefined };
+
 // The project page run list's header: its branch filter, and the project named in its empty copy.
 // The parent fetches; this only asks.
 type ProjectList = {
@@ -23,7 +26,7 @@ type ProjectList = {
   project: string;
   branches: BranchScope;
   onBranchesChange: (branches: BranchScope) => void;
-} & Connection;
+} & ProjectConnection;
 
 // recent: the landing feed. project: the project page run list, with paging.
 type ReadyFeed =
@@ -100,7 +103,8 @@ function EmptyText({ text }: { text: string }) {
   );
 }
 
-function LiveNote({ connection, project }: { connection: Connection; project: boolean }) {
+function LiveNote({ connection, project }: { connection: ProjectConnection; project: boolean }) {
+  if (connection.connected === undefined) return null;
   return (
     <span
       className={cx(

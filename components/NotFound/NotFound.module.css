@@ -1,0 +1,79 @@
+.main {
+  max-width: 640px;
+  padding: var(--space-8) 0 var(--space-11);
+}
+
+.eyebrow {
+  font: var(--text-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.title {
+  margin: 14px 0 0;
+  font: 500 clamp(34px, 4.5vw, 48px)/1.1 var(--font-serif);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.path {
+  margin-top: var(--space-4);
+  display: inline-flex;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border-radius: var(--radius-tag);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  font: 13.5px/1.5 var(--font-mono);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.body {
+  margin: var(--space-4) 0 0;
+  font: 400 19px/1.5 var(--font-serif);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.projects {
+  list-style: none;
+  margin: var(--space-5) 0 0;
+  padding: 6px;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.project {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: var(--target-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-tag);
+  text-decoration: none;
+}
+
+.project:hover {
+  background: var(--raised);
+}
+
+.name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}

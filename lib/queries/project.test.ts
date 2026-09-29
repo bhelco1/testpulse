@@ -314,6 +314,15 @@ describe('loadProjectPage', () => {
     expect(argsOf(failingQuery as Query, 'in')).toEqual([['status', ['failed', 'error']]]);
   });
 
+  it('carries the latest run’s duration and when the project last reported', async () => {
+    const { client } = fakeClient(answering({}));
+
+    const page = await loadProjectPage('ostomate2', {}, client, NOW);
+
+    expect(page?.lastReportAt).toEqual(new Date('2026-10-05T09:00:00Z'));
+    expect(page?.latestRun?.durationMs).toBe(19_500);
+  });
+
   it('trends pass rate, run count and coverage over both sources, duration and test count over CI', async () => {
     const { client } = fakeClient(answering({}));
 

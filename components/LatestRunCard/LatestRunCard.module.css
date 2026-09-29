@@ -1,0 +1,103 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) 26px;
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  font-size: 14px;
+}
+
+.meta {
+  color: var(--ink-3);
+}
+
+.sha {
+  font-family: var(--font-mono);
+  color: var(--ink-2);
+}
+
+.figureRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-top: 18px;
+}
+
+.figure {
+  font: 500 64px/1 var(--font-serif);
+  color: var(--ink);
+}
+
+.fail {
+  color: var(--fail);
+}
+
+.line {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+/* The whole block is the link, at least 44 tall like every target. */
+.failing {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  margin-top: 14px;
+  padding: var(--space-3) 14px;
+  border-radius: var(--radius-md);
+  background: var(--fail-tint);
+  text-decoration: none;
+  min-height: var(--target-min);
+  box-sizing: border-box;
+}
+
+.failName {
+  font: 13px var(--font-mono);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.failPlatform {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.statLabel {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.statValue {
+  margin: var(--space-1) 0 0;
+  font: 500 30px/1.15 var(--font-serif);
+}
+
+.view {
+  display: flex;
+  align-items: center;
+  min-height: var(--target-min);
+  margin-top: 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+}

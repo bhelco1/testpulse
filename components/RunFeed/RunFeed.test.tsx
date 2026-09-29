@@ -254,6 +254,27 @@ describe('RunFeed (web, project page)', () => {
     expect(has(note, 'offline')).toBe(true);
   });
 
+  // Before realtime reaches the page (Phase 5 PR 8) neither note would be true.
+  it('has no live note when no connection state is given, ready or empty', () => {
+    const list = {
+      list: 'project',
+      project: 'Ostomate2',
+      branches: 'default',
+      onBranchesChange: () => {},
+    } as const;
+    const { container, getByRole, rerender } = render(
+      <RunFeed state="ready" runs={RUNS} {...list} />,
+    );
+
+    expect(container.querySelector('[data-part="live-note"]')).toBeNull();
+    expect(getByRole('heading', { level: 2 }).textContent).toBe('Runs');
+    expect(getByRole('radiogroup', { name: 'Branches' })).toBeTruthy();
+
+    rerender(<RunFeed state="empty" {...list} />);
+    expect(container.querySelector('[data-part="live-note"]')).toBeNull();
+    expect(container.textContent).toContain('Runs appear here when Ostomate2’s CI reports.');
+  });
+
   // v4 item 37: the project run list keeps its header, filter and note when there are no runs.
   it('empty: header, filter and note stay; "No runs yet" names the project', () => {
     const { container, getByRole, queryByRole } = render(

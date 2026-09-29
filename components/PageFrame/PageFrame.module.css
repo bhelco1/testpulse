@@ -1,0 +1,13 @@
+/* 1280 is the content width; the gutter is outside it, as the design's page container has it. */
+.frame {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.frame > main {
+  flex: 1;
+}

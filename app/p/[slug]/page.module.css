@@ -1,0 +1,21 @@
+/* Section layouts from design/pages/Project Page.dc.html; every value there is literal. */
+.stack {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: var(--space-7) 56px;
+}
+
+.declared:not(:empty) {
+  margin-top: var(--space-4);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.pair > * {
+  min-width: 0;
+}

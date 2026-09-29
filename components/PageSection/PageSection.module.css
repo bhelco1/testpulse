@@ -1,0 +1,26 @@
+.section {
+  padding: 48px 0;
+  border-top: 1px solid var(--line);
+}
+
+.last {
+  padding-bottom: var(--space-10);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.number {
+  font: 600 12px var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.title {
+  margin: 0;
+  font: var(--text-h2);
+}

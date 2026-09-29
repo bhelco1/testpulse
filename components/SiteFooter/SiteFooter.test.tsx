@@ -24,4 +24,12 @@ describe('SiteFooter', () => {
     ).toBe('https://github.com/bobbyhelco/testpulse');
     expect(within(footer).getByText('Last report received 4 minutes ago')).toBeTruthy();
   });
+
+  it('leaves out the last report before any project has reported', () => {
+    const { getByRole } = render(<SiteFooter sourceHref="https://github.com/bhelco1/testpulse" />);
+    const footer = getByRole('contentinfo');
+
+    expect(footer.textContent).not.toContain('Last report received');
+    expect(within(footer).getAllByRole('link')).toHaveLength(2);
+  });
 });

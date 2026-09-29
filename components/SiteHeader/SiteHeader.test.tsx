@@ -43,6 +43,18 @@ describe('SiteHeader', () => {
     expect(getByText('Offline · reconnecting')).toBeTruthy();
   });
 
+  // The project page renders before realtime reaches it (Phase 5 PR 8): claiming "Live" or
+  // "Offline · reconnecting" would both be untrue, so the indicator waits for a connection.
+  it('has no live indicator when no connection state is given', () => {
+    const { getByRole } = render(<SiteHeader projects={PROJECTS} />);
+    const nav = getByRole('navigation', { name: 'Site' });
+
+    expect(within(nav).queryByText('Live')).toBeNull();
+    expect(within(nav).queryByText('Offline · reconnecting')).toBeNull();
+    expect(nav.querySelector('[data-part="dot"]')).toBeNull();
+    expect(within(nav).getByRole('button', { name: 'Switch to light theme' })).toBeTruthy();
+  });
+
   it('marks the current page on the matching link only', () => {
     const { getByRole, rerender } = render(
       <SiteHeader projects={PROJECTS} connected current="home" />,

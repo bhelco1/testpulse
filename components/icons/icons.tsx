@@ -158,3 +158,12 @@ export function ArrowDownIcon(props: IconProps) {
     </Svg>
   );
 }
+
+// The external arrow after "Source on GitHub" on the project page.
+export function ExternalLinkIcon(props: IconProps) {
+  return (
+    <Svg {...props} linecap="round">
+      <path d="M7 17 17 7M8 7h9v9" />
+    </Svg>
+  );
+}

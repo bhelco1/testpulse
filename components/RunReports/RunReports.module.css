@@ -1,0 +1,64 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) 26px;
+  box-shadow: var(--shadow-card);
+}
+
+.title {
+  margin: 0 0 18px;
+  font: 500 22px var(--font-serif);
+}
+
+/* A real table laid out as the design's grid rows. */
+.table {
+  display: block;
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.table thead,
+.table tbody {
+  display: block;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.row th,
+.row td {
+  padding: 0;
+  font-weight: inherit;
+}
+
+/* The table's own border closes the last row. */
+.table tbody .row:last-child {
+  border-bottom: none;
+}
+
+/* Typed in sentence case and uppercased here, as the results table's headers are. */
+.head {
+  font: 600 12px var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.body {
+  font: 13px var(--font-mono);
+}
+
+.key {
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}

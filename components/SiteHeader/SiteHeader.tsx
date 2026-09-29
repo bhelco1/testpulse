@@ -9,7 +9,8 @@ export interface SiteHeaderProps {
   projects: readonly SwitcherProject[];
   // The href of the project page being shown, if any.
   currentProject?: string;
-  connected: boolean;
+  // The realtime connection. Left out on a page that has none yet, which then shows no indicator.
+  connected?: boolean;
   current?: 'home' | 'how-its-tested';
 }
 
@@ -35,7 +36,7 @@ export function SiteHeader({ projects, currentProject, connected, current }: Sit
           >
             How it’s tested
           </Link>
-          <LiveIndicator connected={connected} />
+          {connected !== undefined && <LiveIndicator connected={connected} />}
           <ThemeToggle />
         </nav>
       </header>

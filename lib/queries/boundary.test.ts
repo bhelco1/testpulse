@@ -27,6 +27,9 @@ describe('public read boundary (spec section 15)', () => {
         'app/page.tsx',
         'app/p/[slug]/runs/[id]/page.tsx',
         'app/p/[slug]/runs/[id]/not-found.tsx',
+        'app/p/[slug]/tests/[testKey]/page.tsx',
+        'app/p/[slug]/tests/[testKey]/not-found.tsx',
+        'lib/queries/test-history.ts',
         'lib/queries/projects.ts',
       ]),
     );

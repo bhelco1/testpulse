@@ -4,6 +4,7 @@ import { now } from '../clock.ts';
 import { LayerSchema } from '../ingest/layer-rules.ts';
 import { PUBLIC_RUN_COLUMNS, PublicRunRowSchema } from '../stats/input.ts';
 import { readAll, readByRunIds } from '../stats/load.ts';
+import { TREND_RUNS } from '../stats/rules.ts';
 import { testHistory, type HistoryResult, type TestHistory } from '../stats/test-history.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
 import { loadProject, type ProjectDetail } from './project-summary.ts';
@@ -112,6 +113,29 @@ export async function loadTestHistory(
         .range(from, to),
   );
 
+  // The duration chart covers the project's last 30 default-branch CI runs, however old
+  // (section 11, "Windows"); one where the test has no result is a gap, so they are read whether
+  // or not the test reported in them, in the run list's order.
+  const recent =
+    results.length === 0
+      ? []
+      : await readAll('load the latest default-branch runs', PublicRunRowSchema, () =>
+          client
+            .from('runs_public')
+            .select(PUBLIC_RUN_COLUMNS)
+            .eq('project_id', project.id)
+            .eq('branch', project.defaultBranch)
+            .eq('source', 'ci')
+            .lte('finished_at', at.toISOString())
+            .order('finished_at', { ascending: false })
+            .order('started_at', { ascending: false })
+            .order('ci_run_id', { ascending: false })
+            .order('run_attempt', { ascending: false })
+            .limit(TREND_RUNS),
+        );
+  const read = new Set(runs.map((run) => run.id));
+  const allRuns = [...runs, ...recent.filter((run) => !read.has(run.id))];
+
   return {
     project,
     test: {
@@ -123,6 +147,6 @@ export async function loadTestHistory(
       firstSeenAt: test.first_seen_at,
       lastSeenAt: test.last_seen_at,
     },
-    history: testHistory(runs, results, { defaultBranch: project.defaultBranch, now: at }),
+    history: testHistory(allRuns, results, { defaultBranch: project.defaultBranch, now: at }),
   };
 }

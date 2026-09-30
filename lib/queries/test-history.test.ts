@@ -85,7 +85,13 @@ interface Tables {
   readonly tests?: readonly unknown[];
   readonly results?: readonly unknown[];
   readonly runs?: readonly unknown[];
+  /** The project's latest default-branch CI runs, read for the duration chart. */
+  readonly recent?: readonly unknown[];
 }
+
+// The duration chart's query asks for the last 30 runs; the timeline's asks for runs by id.
+const isRecent = (query: Query) =>
+  query.table === 'runs_public' && query.calls.some(([name]) => name === 'limit');
 
 const answering =
   (tables: Tables) =>
@@ -104,6 +110,7 @@ const answering =
           ],
         };
       case 'runs_public':
+        if (isRecent(query)) return { data: tables.recent ?? [] };
         return {
           data: tables.runs ?? [
             runRow('r2', '2026-10-05T09:26:17.747+00:00'),
@@ -187,7 +194,7 @@ describe('loadTestHistory', () => {
       ['r2', 'Push to main', [['jvm', 'passed', 400]]],
     ]);
     // Duration reads the default branch only: the pull request run has no point.
-    expect(page?.history.duration[30].points.map((point) => point.durationsMs)).toEqual([[400]]);
+    expect(page?.history.duration.points.map((point) => point.durationsMs)).toEqual([[400]]);
     expect(page?.history.flaky).toBe(false);
 
     const results = queries.find((query) => query.table === 'results') as Query;
@@ -195,9 +202,50 @@ describe('loadTestHistory', () => {
       'id, status, duration_ms, reports!inner(run_id, job, module, platform)',
     ]);
     expect(argsOf(results, 'eq')).toEqual([['test_id', 'test-1']]);
-    const runs = queries.find((query) => query.table === 'runs_public') as Query;
+    const runs = queries.find(
+      (query) => query.table === 'runs_public' && !isRecent(query),
+    ) as Query;
     expect(argsOf(runs, 'in')).toEqual([['id', ['r1', 'r2']]]);
     expect(argsOf(runs, 'eq')).toEqual([['project_id', 'project-1']]);
+  });
+
+  // Section 11 (the 2026-09-29 row Bobby confirmed on 2026-09-30): the duration chart covers the
+  // project's last 30 default-branch CI runs, however old, in the run list's order; one of them
+  // in which the test has no result is a gap, not a reason to reach further back.
+  it('reads the last 30 default-branch CI runs up to now for the duration chart', async () => {
+    const { client, queries } = fakeClient(
+      answering({
+        recent: [
+          runRow('r3', '2026-10-05T11:00:00+00:00'),
+          runRow('r2', '2026-10-05T09:26:17.747+00:00'),
+          runRow('r0', '2026-05-01T10:00:00+00:00'),
+        ],
+      }),
+    );
+
+    const page = await loadTestHistory('ostomate2', KEY, client, NOW);
+
+    const recent = queries.find((query) => isRecent(query)) as Query;
+    expect(recent.calls).toEqual([
+      ['select', expect.stringContaining('finished_at')],
+      ['eq', 'project_id', 'project-1'],
+      ['eq', 'branch', 'main'],
+      ['eq', 'source', 'ci'],
+      ['lte', 'finished_at', '2026-10-05T12:00:00.000Z'],
+      ['order', 'finished_at', { ascending: false }],
+      ['order', 'started_at', { ascending: false }],
+      ['order', 'ci_run_id', { ascending: false }],
+      ['order', 'run_attempt', { ascending: false }],
+      ['limit', 30],
+    ]);
+    // r0 is five months old and still among the last 30; r3 has no result for the test: a gap.
+    // The pull request r1 is on the timeline only.
+    expect(page?.history.duration.points.map((point) => [point.runId, point.durationsMs])).toEqual([
+      ['r0', [null]],
+      ['r2', [400]],
+      ['r3', [null]],
+    ]);
+    expect(page?.history.runs.map((run) => run.id)).toEqual(['r1', 'r2']);
   });
 
   it('has an empty history for a test whose results were all pruned', async () => {

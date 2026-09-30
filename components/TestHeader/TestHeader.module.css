@@ -1,0 +1,44 @@
+/* The top of design/pages/Test History.dc.html; every value there is literal. */
+.header {
+  padding: 36px 0 40px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-size: 14px;
+}
+
+.layer {
+  padding: 3px 10px;
+  border-radius: var(--radius-tag);
+  border: 1px solid var(--line-strong);
+  color: var(--ink-2);
+}
+
+.flaky {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--attn-tint);
+  color: var(--attn);
+  font-weight: 600;
+}
+
+.name {
+  margin: 14px 0 0;
+  font: 500 clamp(32px, 4.5vw, 52px)/1.1 var(--font-mono);
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.suite {
+  margin-top: 8px;
+  font: 14px var(--font-mono);
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}

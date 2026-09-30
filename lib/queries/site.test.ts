@@ -33,7 +33,7 @@ const answering =
       return { data: lastReport === null ? [] : [{ finished_at: lastReport }] };
     }
     const status = latest[String(project)];
-    return { data: status === undefined ? [] : [{ status }] };
+    return { data: status === undefined ? [] : [{ id: `run-${String(project)}`, status }] };
   };
 
 describe('loadSiteChrome', () => {
@@ -42,7 +42,7 @@ describe('loadSiteChrome', () => {
     vi.mocked(createClient).mockReset();
   });
 
-  it('lists every project in dashboard order with its latest run’s status', async () => {
+  it('lists every project in dashboard order with its latest run and its status', async () => {
     const { client, queries } = fakeClient(
       answering({ p1: 'passed', p2: 'failed' }, '2026-10-05T09:26:00+00:00'),
     );
@@ -50,10 +50,10 @@ describe('loadSiteChrome', () => {
     const chrome = await loadSiteChrome(client, NOW);
 
     expect(chrome.projects).toEqual([
-      { slug: 'ostomate2', name: 'Ostomate 2.0', status: 'passed' },
-      { slug: 'routeserve', name: 'RouteServe', status: 'failed' },
+      { slug: 'ostomate2', name: 'Ostomate 2.0', status: 'passed', latestRunId: 'run-p1' },
+      { slug: 'routeserve', name: 'RouteServe', status: 'failed', latestRunId: 'run-p2' },
       // No CI run on its default branch yet.
-      { slug: 'testpulse', name: 'testpulse', status: 'not_reporting' },
+      { slug: 'testpulse', name: 'testpulse', status: 'not_reporting', latestRunId: null },
     ]);
     expect(queries[0]).toEqual({
       table: 'projects_public',
@@ -72,7 +72,7 @@ describe('loadSiteChrome', () => {
 
     const testpulse = queries.find((query) => projectOf(query) === 'p3') as Query;
     expect(testpulse.calls).toEqual([
-      ['select', 'status'],
+      ['select', 'id, status'],
       ['eq', 'project_id', 'p3'],
       ['eq', 'branch', 'trunk'],
       ['eq', 'source', 'ci'],

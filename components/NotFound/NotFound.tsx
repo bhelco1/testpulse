@@ -14,10 +14,19 @@ export type NotFoundProps =
       projects: readonly SwitcherProject[];
     }
   | {
-      // A run the project does not have. The test kind comes with its page.
+      // A run the project does not have.
       kind: 'run';
       path: ReactNode;
       project: { name: string; href: string };
+    }
+  | {
+      // A test key the project does not have.
+      kind: 'test';
+      path: ReactNode;
+      project: { name: string; href: string };
+      // The project's latest run page, "Latest {project} results"; null before it has a run,
+      // which the design does not draw, so only the overview link is offered.
+      latestRunHref: string | null;
     };
 
 // design/components.md "NotFound (page)": nothing failed, so there is no Error badge and no retry,
@@ -28,7 +37,13 @@ export function NotFound(props: NotFoundProps) {
       <div className={styles.eyebrow} data-part="eyebrow">
         404 · Not found
       </div>
-      {props.kind === 'project' ? <NoProject {...props} /> : <NoRun {...props} />}
+      {props.kind === 'project' ? (
+        <NoProject {...props} />
+      ) : props.kind === 'run' ? (
+        <NoRun {...props} />
+      ) : (
+        <NoTest {...props} />
+      )}
     </main>
   );
 }
@@ -82,6 +97,29 @@ function NoRun({ path, project }: Extract<NotFoundProps, { kind: 'run' }>) {
         <Button href={project.href} variant="primary">
           {project.name} runs
         </Button>
+        <Link href="/" className={styles.link}>
+          Overview
+        </Link>
+      </div>
+    </>
+  );
+}
+
+function NoTest({ path, project, latestRunHref }: Extract<NotFoundProps, { kind: 'test' }>) {
+  return (
+    <>
+      <h1 className={styles.title}>This test isn’t in {project.name}</h1>
+      <Path path={path} />
+      <p className={styles.body}>
+        Test history follows each test’s key, so a renamed or moved test starts a new history under
+        its new name. Nothing has reported under this key.
+      </p>
+      <div className={styles.actions}>
+        {latestRunHref !== null && (
+          <Button href={latestRunHref} variant="primary">
+            Latest {project.name} results
+          </Button>
+        )}
         <Link href="/" className={styles.link}>
           Overview
         </Link>

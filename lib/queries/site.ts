@@ -6,7 +6,8 @@ import { createPublicClient, type PublicClient } from '../supabase/public.ts';
 
 // What the header and footer of every public page read (design/components.md, SiteHeader,
 // ProjectSwitcher, SiteFooter), as anon: each project with its latest run's status for the
-// project switcher, and when the last report arrived for the footer. Time is read once, here.
+// project switcher and its id for the test kind of the not-found page ("Latest {project}
+// results"), and when the last report arrived for the footer. Time is read once, here.
 // - "Latest run" is the latest default-branch CI run, as on the landing card (section 11).
 // - The last report is the latest finished_at of any project's CI runs on any branch, the time
 //   section 11 dates a report by for staleness. reports.created_at is when a row was written,
@@ -18,6 +19,8 @@ export interface SiteProject {
   readonly slug: string;
   readonly name: string;
   readonly status: SwitcherStatus;
+  /** The latest default-branch CI run; null before the project has one. */
+  readonly latestRunId: string | null;
 }
 
 export interface SiteChrome {
@@ -32,9 +35,10 @@ const ProjectRowSchema = z.object({
   default_branch: z.string().min(1),
 });
 
-const StatusRowSchema = z
-  .object({ status: z.enum(['passed', 'failed', 'empty']) })
-  .transform((row) => row.status);
+const LatestRunRowSchema = z.object({
+  id: z.string().min(1),
+  status: z.enum(['passed', 'failed', 'empty']),
+});
 
 const FinishedRowSchema = z
   .object({ finished_at: z.iso.datetime({ offset: true }) })
@@ -54,24 +58,26 @@ export async function loadSiteChrome(
   );
   const projects = await Promise.all(
     rows.map(async (project): Promise<SiteProject> => {
-      const [status = 'not_reporting'] = await readAll(
-        'load the latest run status',
-        StatusRowSchema,
-        () =>
-          client
-            .from('runs_public')
-            .select('status')
-            .eq('project_id', project.id)
-            .eq('branch', project.default_branch)
-            .eq('source', 'ci')
-            .lte('finished_at', until)
-            .order('finished_at', { ascending: false })
-            .order('started_at', { ascending: false })
-            .order('ci_run_id', { ascending: false })
-            .order('run_attempt', { ascending: false })
-            .limit(1),
+      const [latest] = await readAll('load the latest run status', LatestRunRowSchema, () =>
+        client
+          .from('runs_public')
+          .select('id, status')
+          .eq('project_id', project.id)
+          .eq('branch', project.default_branch)
+          .eq('source', 'ci')
+          .lte('finished_at', until)
+          .order('finished_at', { ascending: false })
+          .order('started_at', { ascending: false })
+          .order('ci_run_id', { ascending: false })
+          .order('run_attempt', { ascending: false })
+          .limit(1),
       );
-      return { slug: project.slug, name: project.name, status };
+      return {
+        slug: project.slug,
+        name: project.name,
+        status: latest?.status ?? 'not_reporting',
+        latestRunId: latest?.id ?? null,
+      };
     }),
   );
   const [lastReportAt = null] = await readAll('load the last report', FinishedRowSchema, () =>

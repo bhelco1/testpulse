@@ -325,6 +325,38 @@ describe('StatusTimeline, results kind', () => {
     expect(open.getAttribute('href')).toBe('/p/ostomate2/runs/39');
   });
 
+  // The panel's "Run" is "{title} · {sha7}", the title as RunFeedRow gives it, which for a private
+  // project is a lock and "Private repository" in place of the title (design/components.md).
+  it('on a private project names each run "Private repository", with a lock in the panel', () => {
+    const { container } = render(
+      <StatusTimeline
+        kind="results"
+        testName="rendersToday"
+        runs={history({ node: () => 'failed' }, 2, 38)}
+        private
+      />,
+    );
+    const panel = part(container, 'panel') as HTMLElement;
+    const title = part(panel, 'run-title') as HTMLElement;
+
+    expect(title.textContent).toBe('Private repository');
+    expect(title.className).toContain('private');
+    expect(title.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(text(panel, 'run-sha')).toBe(sha7(39));
+    expect(cellsOf(container).map((c) => c.getAttribute('aria-label'))).toEqual([
+      `Failed, yesterday, Private repository, ${sha7(38)}`,
+      `Failed, 4 min ago, Private repository, ${sha7(39)}`,
+    ]);
+    expect(container.textContent).not.toContain('Pull request from');
+    expect(ruleFor(CSS, '.private')).toEqual({
+      display: 'flex',
+      'align-items': 'center',
+      gap: '6px',
+      color: 'var(--ink-3)',
+      'font-weight': '400',
+    });
+  });
+
   it('draws each panel result as its status icon and word in the status ink', () => {
     const { container } = render(results(TWO, 38));
     const statuses = [...container.querySelectorAll<HTMLElement>('[data-part="field-status"]')];

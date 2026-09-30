@@ -3,7 +3,7 @@ import { byPlatform, combinedStatus, type ReportPlatform } from '../results/run-
 import { runTitle } from '../runs/title.ts';
 import { flakyPlatforms, flakyResultIds } from './flaky.ts';
 import type { PublicRun, StatsResult } from './input.ts';
-import { byFinish, countsTowardCiOnlyStats, inWindow, type WindowDays } from './rules.ts';
+import { byFinish, countsTowardCiOnlyStats, lastRuns, TREND_RUNS } from './rules.ts';
 
 // One test's history (spec section 13, /p/[slug]/tests/[testKey]; design/data-map.md, Test
 // history): the StatusTimeline's runs and the duration TrendChart. Read as follows, and pinned
@@ -16,10 +16,11 @@ import { byFinish, countsTowardCiOnlyStats, inWindow, type WindowDays } from './
 // - A cell is flaky when any of its results is one side of a section 11 flip: a pass and a fail
 //   on one commit and platform, in default-branch CI runs of the last 30 days. The test is flaky
 //   when it has such a flip on any platform.
-// - Duration per platform reads default-branch CI runs in the window, as suite duration does. A
-//   skipped result took no time worth plotting, so it has no value, and a run with no value on
-//   any platform has no point. A platform with no value in a run is null, so every series has a
-//   value slot for every point.
+// - Duration per platform covers the last 30 default-branch CI runs, however old, as the project
+//   page's charts do (section 11, "Windows"): the runs given may include ones where the test has
+//   no result, which the loader reads for this. A skipped result took no time worth plotting, so
+//   it has no value; a platform with no value in a run is null, and a run with no value on any
+//   platform keeps its place as a gap, so no older run is pulled in to fill it.
 
 export interface HistoryResult extends ReportPlatform {
   readonly id: string;
@@ -74,10 +75,11 @@ export interface TestHistory {
   readonly flakyPlatforms: readonly string[];
   /**
    * The run the timeline opens on, as an index into runs: the latest with a failed or error
-   * result on any platform, else the latest (section 19, 2026-09-28); null with no runs.
+   * result on any platform that is not flaky, else the latest (section 19, 2026-09-28 and
+   * 2026-09-29); null with no runs.
    */
   readonly initialRun: number | null;
-  readonly duration: Readonly<Record<WindowDays, DurationByPlatform>>;
+  readonly duration: DurationByPlatform;
 }
 
 /** The platforms of several results, each once, in report order. */
@@ -85,8 +87,10 @@ function platformsOf(results: readonly HistoryResult[]): string[] {
   return byPlatform(results).map(([platform]) => platform);
 }
 
+// Failing is failed or error on any platform; a flaky cell draws as Flaky, so the failing side of
+// a flip does not count (design v6 item 7, components.md StatusTimeline).
 const isFailing = (cell: HistoryCell): boolean =>
-  cell.status === 'failed' || cell.status === 'error';
+  !cell.flaky && (cell.status === 'failed' || cell.status === 'error');
 
 function initialRun(runs: readonly HistoryRun[]): number | null {
   if (runs.length === 0) return null;
@@ -144,29 +148,26 @@ export function testHistory(
     ];
   });
 
-  const byRun = new Map(shown.map((run) => [run.id, run]));
-  const duration = (days: WindowDays): DurationByPlatform => {
-    const counted = timeline.filter((entry) => {
-      const run = byRun.get(entry.id);
-      return (
-        run !== undefined &&
-        countsTowardCiOnlyStats(run, options.defaultBranch) &&
-        inWindow(run.finishedAt, options.now, days)
-      );
-    });
-    const platforms = platformsOf(
-      kept.filter((result) => counted.some((c) => c.id === result.runId)),
-    );
-    const points = counted.flatMap((entry): DurationByPlatformPoint[] => {
-      const durationsMs = platforms.map((platform) => {
-        const cell = entry.results.find((result) => result.platform === platform);
-        return cell === undefined || cell.status === 'skipped' ? null : cell.durationMs;
-      });
-      if (durationsMs.every((value) => value === null)) return [];
-      return [{ runId: entry.id, finishedAt: entry.finishedAt, status: entry.status, durationsMs }];
-    });
-    return { platforms: points.length === 0 ? [] : platforms, points };
-  };
+  const counted = lastRuns(
+    shown,
+    TREND_RUNS,
+    (run) => countsTowardCiOnlyStats(run, options.defaultBranch),
+    options.now,
+  );
+  const countedIds = new Set(counted.map((run) => run.id));
+  const chartPlatforms = platformsOf(kept.filter((result) => countedIds.has(result.runId)));
+  const cellsOf = new Map(timeline.map((entry) => [entry.id, entry.results]));
+  const points = counted.map((run): DurationByPlatformPoint => ({
+    runId: run.id,
+    finishedAt: run.finishedAt,
+    status: run.status,
+    durationsMs: chartPlatforms.map((platform) => {
+      const cell = cellsOf.get(run.id)?.find((result) => result.platform === platform);
+      return cell === undefined || cell.status === 'skipped' ? null : cell.durationMs;
+    }),
+  }));
+  const duration: DurationByPlatform =
+    counted.length === 0 ? { platforms: [], points: [] } : { platforms: chartPlatforms, points };
 
   return {
     platforms: platformsOf(kept),
@@ -174,6 +175,6 @@ export function testHistory(
     flaky: flaky !== undefined,
     flakyPlatforms: flaky?.platforms ?? [],
     initialRun: initialRun(timeline),
-    duration: { 30: duration(30), 90: duration(90) },
+    duration,
   };
 }

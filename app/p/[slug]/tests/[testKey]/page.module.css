@@ -1,0 +1,25 @@
+/* Section layouts from design/pages/Test History.dc.html; every value there is literal. */
+.section {
+  padding: 40px 0;
+  border-top: 1px solid var(--line);
+}
+
+.last {
+  padding-bottom: 64px;
+}
+
+/* The mock sets its note and per-test caption under "Status by run", which are held back
+   (section 13.6), so the heading takes the 20 px the mock's other section heading has. */
+.title {
+  margin: 0 0 20px;
+  font: 500 30px/1.2 var(--font-serif);
+}
+
+/* The timeline card: components.md, StatusTimeline "card padding 22×24" (the Design System's
+   drawing), where the page mock writes 24×26. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 22px var(--space-6);
+}

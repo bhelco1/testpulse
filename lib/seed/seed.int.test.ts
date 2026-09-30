@@ -965,7 +965,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
             ]),
         ),
       ).toBe(true);
-      expect(page?.history.duration[30].points.map((point) => point.durationsMs)).toEqual(
+      expect(page?.history.duration.points.map((point) => point.durationsMs)).toEqual(
         Array.from({ length: 8 }, () => [25, 3]),
       );
       expect(page?.history.flaky).toBe(false);
@@ -1011,7 +1011,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         initialRun: 10,
       });
       // 1 ms passing, 2 ms failing, as the two Jest files record it; the pull request is left out.
-      expect(page?.history.duration[30].points.map((point) => point.durationsMs[0])).toEqual([
+      expect(page?.history.duration.points.map((point) => point.durationsMs[0])).toEqual([
         1, 2, 1, 1, 2, 1, 2, 1, 1, 2,
       ]);
       expect(await loadTestHistory('ostomate2', key, anon, NOW)).toBeNull();

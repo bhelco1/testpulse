@@ -152,3 +152,48 @@ describe('NotFound (run)', () => {
     });
   });
 });
+
+// design/components.md "NotFound (page)", test kind, as design/pages/NotFound.dc.html draws it.
+describe('NotFound (test)', () => {
+  const PATH = `/p/ostomate2/tests/${'0'.repeat(64)}`;
+  const renderTest = (latestRunHref: string | null) =>
+    render(
+      <NotFound
+        kind="test"
+        path={PATH}
+        project={{ name: 'Ostomate 2.0', href: '/p/ostomate2' }}
+        latestRunHref={latestRunHref}
+      />,
+    );
+
+  it('says the test isn’t in the project, shows the path and explains why', () => {
+    const { getByRole, container, queryByRole } = renderTest('/p/ostomate2/runs/r9');
+    const main = getByRole('main');
+
+    expect(container.querySelector('[data-part="eyebrow"]')?.textContent).toBe('404 · Not found');
+    expect(getByRole('heading', { level: 1 }).textContent).toBe('This test isn’t in Ostomate 2.0');
+    expect(container.querySelector('[data-part="path"]')?.textContent).toBe(PATH);
+    expect(main.querySelector('p')?.textContent).toBe(
+      'Test history follows each test’s key, so a renamed or moved test starts a new history under its new name. Nothing has reported under this key.',
+    );
+    expect(queryByRole('list', { name: 'Projects' })).toBeNull();
+  });
+
+  it('offers the latest run’s results as the primary link and the overview as a plain one', () => {
+    const { getByRole, queryByRole } = renderTest('/p/ostomate2/runs/r9');
+    const latest = getByRole('link', { name: 'Latest Ostomate 2.0 results' });
+    const overview = getByRole('link', { name: 'Overview' });
+
+    expect(latest.getAttribute('href')).toBe('/p/ostomate2/runs/r9');
+    expect(latest.dataset.variant).toBe('primary');
+    expect(overview.getAttribute('href')).toBe('/');
+    expect(overview.className).toContain('link');
+    expect(queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
+
+  // A project with no run has no latest results to link to; the design does not draw it.
+  it('with no run to link to offers only the overview', () => {
+    const { getAllByRole } = renderTest(null);
+    expect(getAllByRole('link').map((link) => link.textContent)).toEqual(['Overview']);
+  });
+});

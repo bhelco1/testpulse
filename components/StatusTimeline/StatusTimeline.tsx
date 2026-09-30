@@ -20,6 +20,7 @@ import {
   CheckCircleIcon,
   DashedCircleIcon,
   FlakyIcon,
+  LockIcon,
   MinusCircleIcon,
   XCircleIcon,
   type IconProps,
@@ -64,6 +65,9 @@ export type StatusTimelineProps =
       // The run selected on first render, as an index into runs; the latest by default. Test
       // History passes the latest failing run.
       initialRun?: number;
+      // A private project's runs are untitled: "Private repository" with a lock stands in for
+      // each title, as on RunFeedRow (design/components.md, the panel's "Run").
+      private?: boolean;
     }
   | {
       kind: 'runs';
@@ -234,10 +238,13 @@ interface Strip {
   cells: ResultCellStatus[];
 }
 
+const PRIVATE_TITLE = 'Private repository';
+
 function ResultsTimeline({
   testName,
   runs,
   initialRun,
+  private: isPrivate = false,
 }: Extract<StatusTimelineProps, { kind: 'results' }>) {
   const id = useId();
   const [measured, capacity] = useCapacity();
@@ -347,7 +354,7 @@ function ResultsTimeline({
                     aria-selected={isSelected}
                     aria-label={
                       cellRun &&
-                      `${look.word}, ${cellRun.when.text}, ${cellRun.title}, ${sha7(cellRun.sha)}`
+                      `${look.word}, ${cellRun.when.text}, ${isPrivate ? PRIVATE_TITLE : cellRun.title}, ${sha7(cellRun.sha)}`
                     }
                     className={cx(
                       styles.cell,
@@ -372,7 +379,14 @@ function ResultsTimeline({
           <div>
             <div className={styles.fieldLabel}>Run</div>
             <div className={styles.runValue}>
-              <span data-part="run-title">{run.title}</span>
+              {isPrivate ? (
+                <span className={styles.private} data-part="run-title">
+                  <LockIcon size={12} strokeWidth={2.4} />
+                  {PRIVATE_TITLE}
+                </span>
+              ) : (
+                <span data-part="run-title">{run.title}</span>
+              )}
               <span>·</span>
               <span className={styles.sha} data-part="run-sha">
                 {sha7(run.sha)}

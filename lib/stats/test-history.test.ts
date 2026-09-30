@@ -50,7 +50,7 @@ describe('testHistory', () => {
       flaky: false,
       flakyPlatforms: [],
       initialRun: null,
-      duration: { 30: { platforms: [], points: [] }, 90: { platforms: [], points: [] } },
+      duration: { platforms: [], points: [] },
     });
   });
 
@@ -79,8 +79,8 @@ describe('testHistory', () => {
         ],
       },
     ]);
-    // One run: one point per window, a value per platform.
-    expect(history.duration[30]).toEqual({
+    // One run: one point, a value per platform.
+    expect(history.duration).toEqual({
       platforms: ['jvm', 'ios-sim'],
       points: [
         {
@@ -129,7 +129,7 @@ describe('testHistory', () => {
       { platform: 'jvm', status: 'passed', durationMs: 300, flaky: false },
     ]);
     // The duration trend keeps both series the same length: no ios-sim value for r2.
-    expect(history.duration[30].points.map((point) => point.durationsMs)).toEqual([
+    expect(history.duration.points.map((point) => point.durationsMs)).toEqual([
       [100, 100],
       [300, null],
     ]);
@@ -202,34 +202,110 @@ describe('testHistory', () => {
     ]);
   });
 
-  it('trends duration over default-branch CI runs in the window, without skipped results', () => {
-    const runs = [
-      publicRun('old', '2026-09-01T23:59:59.999Z'),
-      publicRun('in', '2026-09-02T00:00:00Z'),
-      publicRun('pr', '2026-09-10T00:00:00Z', { branch: 'feature/x' }),
-      publicRun('skipped', '2026-09-11T00:00:00Z'),
-      publicRun('last', '2026-09-12T00:00:00Z'),
-    ];
-    const history = testHistory(
-      runs,
-      [
-        result('a', 'old', 'jvm', 'passed', 50),
-        result('b', 'in', 'jvm', 'passed', 60),
-        result('c', 'pr', 'jvm', 'passed', 70),
-        result('d', 'skipped', 'jvm', 'skipped', 0),
-        result('e', 'last', 'jvm', 'failed', 80),
-      ],
-      options,
-    );
-    // A skipped test took no time worth plotting, so its run has no point; the failed run does.
-    expect(history.duration[30].points.map((point) => [point.runId, point.durationsMs])).toEqual([
-      ['in', [60]],
-      ['last', [80]],
-    ]);
-    // 90 days reaches the 2026-09-01 run as well.
-    expect(history.duration[90].points.map((point) => point.runId)).toEqual(['old', 'in', 'last']);
-    // The timeline keeps every run, the pull request and the skipped one included.
-    expect(history.runs.map((entry) => entry.id)).toEqual(['old', 'in', 'pr', 'skipped', 'last']);
+  // Section 11 and the 2026-09-29 row Bobby confirmed on 2026-09-30: the duration chart covers the
+  // last 30 default-branch CI runs, however old, as each project page chart does. A run among them
+  // with no value keeps its place as a gap; no older run is pulled in to fill it.
+  describe('duration', () => {
+    const main = (i: number, finishedAt: string) => publicRun(`m${i}`, finishedAt);
+
+    it('reads every default-branch CI run when there are fewer than 30, without others', () => {
+      const runs = [
+        publicRun('in', '2026-09-02T00:00:00Z'),
+        publicRun('pr', '2026-09-10T00:00:00Z', { branch: 'feature/x' }),
+        publicRun('imported', '2026-09-10T12:00:00Z', { source: 'backfill' }),
+        publicRun('skipped', '2026-09-11T00:00:00Z'),
+        publicRun('last', '2026-09-12T00:00:00Z'),
+      ];
+      const history = testHistory(
+        runs,
+        [
+          result('b', 'in', 'jvm', 'passed', 60),
+          result('c', 'pr', 'jvm', 'passed', 70),
+          result('d', 'skipped', 'jvm', 'skipped', 0),
+          result('e', 'last', 'jvm', 'failed', 80),
+        ],
+        options,
+      );
+      // The pull request and the imported run are not default-branch CI runs. The skipped run
+      // keeps its place, with no value: a skipped test took no time worth plotting.
+      expect(history.duration.points.map((point) => [point.runId, point.durationsMs])).toEqual([
+        ['in', [60]],
+        ['skipped', [null]],
+        ['last', [80]],
+      ]);
+      // The timeline keeps every run with a result, the pull request included.
+      expect(history.runs.map((entry) => entry.id)).toEqual(['in', 'pr', 'skipped', 'last']);
+    });
+
+    it('takes the latest 30 of 32 runs, leaving the two oldest out', () => {
+      // m0 on 2026-08-01, then one a day to m31 on 2026-09-01.
+      const runs = Array.from({ length: 32 }, (_, i) =>
+        main(i, new Date(Date.UTC(2026, 7, 1 + i, 10)).toISOString()),
+      );
+      const history = testHistory(
+        runs,
+        runs.map((run, i) => result(`x${i}`, run.id, 'jvm', 'passed', 100 + i)),
+        options,
+      );
+      expect(history.duration.points).toHaveLength(30);
+      expect(history.duration.points[0]?.runId).toBe('m2');
+      expect(history.duration.points.at(-1)?.runId).toBe('m31');
+      // 100 + 2 ms for m2, 100 + 31 ms for m31.
+      expect(history.duration.points[0]?.durationsMs).toEqual([102]);
+      expect(history.duration.points.at(-1)?.durationsMs).toEqual([131]);
+    });
+
+    it('reaches back past 90 days when the last 30 runs do', () => {
+      // 2026-05-01 is 153 days before now; it is still one of the last 30 (here, 3) runs.
+      const runs = [
+        main(0, '2026-05-01T10:00:00Z'),
+        main(1, '2026-09-30T10:00:00Z'),
+        main(2, '2026-10-01T10:00:00Z'),
+      ];
+      const history = testHistory(
+        runs,
+        [
+          result('a', 'm0', 'jvm', 'passed', 50),
+          result('b', 'm1', 'jvm', 'passed', 60),
+          result('c', 'm2', 'jvm', 'passed', 70),
+        ],
+        options,
+      );
+      expect(history.duration.points.map((point) => point.durationsMs)).toEqual([[50], [60], [70]]);
+    });
+
+    it('keeps a gap where the test did not report on a platform, or at all', () => {
+      // m1 is a default-branch CI run the loader read for the window in which this test has no
+      // result: a gap on both platforms, not a reason to reach for an older run.
+      const runs = [
+        main(0, '2026-09-28T10:00:00Z'),
+        main(1, '2026-09-29T10:00:00Z'),
+        main(2, '2026-09-30T10:00:00Z'),
+      ];
+      const history = testHistory(
+        runs,
+        [
+          result('a', 'm0', 'jvm', 'passed', 25),
+          result('b', 'm0', 'ios-sim', 'passed', 3),
+          result('c', 'm2', 'jvm', 'error', 30),
+        ],
+        options,
+      );
+      expect(history.duration.platforms).toEqual(['jvm', 'ios-sim']);
+      expect(history.duration.points.map((point) => [point.runId, point.durationsMs])).toEqual([
+        ['m0', [25, 3]],
+        ['m1', [null, null]],
+        ['m2', [30, null]],
+      ]);
+      // The timeline holds only the runs with a result.
+      expect(history.runs.map((entry) => entry.id)).toEqual(['m0', 'm2']);
+    });
+
+    it('has no points when no default-branch CI run has been read', () => {
+      const runs = [publicRun('pr', '2026-09-10T00:00:00Z', { branch: 'feature/x' })];
+      const history = testHistory(runs, [result('a', 'pr', 'jvm', 'passed', 70)], options);
+      expect(history.duration).toEqual({ platforms: [], points: [] });
+    });
   });
 
   // Spec section 19, 2026-09-28 (design v5): Test History opens on the latest run with a failed
@@ -267,6 +343,40 @@ describe('testHistory', () => {
         options,
       );
       expect(history.initialRun).toBe(2);
+    });
+
+    // Design v6 item 7 (components.md StatusTimeline): a flaky cell draws as Flaky, not Failed, so
+    // the failing side of a flip does not count as a failing run either.
+    it('passes over a failed result that is one side of a flip', () => {
+      const flipRuns = [
+        publicRun('r1', '2026-09-20T10:00:00Z'),
+        publicRun('r2', '2026-09-21T10:00:00Z', { commitSha: 'same' }),
+        publicRun('r3', '2026-09-22T10:00:00Z', { commitSha: 'same', runAttempt: 2 }),
+      ];
+      const history = testHistory(
+        flipRuns,
+        [
+          result('a', 'r1', 'jvm', 'error'),
+          result('b', 'r2', 'jvm', 'failed'),
+          result('c', 'r3', 'jvm', 'passed'),
+        ],
+        options,
+      );
+      expect(history.runs.map((entry) => entry.results[0]?.flaky)).toEqual([false, true, true]);
+      expect(history.initialRun).toBe(0);
+    });
+
+    it('is the latest run when its only failure is flaky', () => {
+      const flipRuns = [
+        publicRun('r1', '2026-09-20T10:00:00Z', { commitSha: 'same' }),
+        publicRun('r2', '2026-09-21T10:00:00Z', { commitSha: 'same', runAttempt: 2 }),
+      ];
+      const history = testHistory(
+        flipRuns,
+        [result('a', 'r1', 'jvm', 'failed'), result('b', 'r2', 'jvm', 'passed')],
+        options,
+      );
+      expect(history.initialRun).toBe(1);
     });
   });
 });

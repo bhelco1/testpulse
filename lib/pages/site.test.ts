@@ -9,8 +9,8 @@ describe('siteChromeView', () => {
     const view = siteChromeView(
       {
         projects: [
-          { slug: 'ostomate2', name: 'Ostomate 2.0', status: 'passed' },
-          { slug: 'testpulse', name: 'testpulse', status: 'not_reporting' },
+          { slug: 'ostomate2', name: 'Ostomate 2.0', status: 'passed', latestRunId: 'r9' },
+          { slug: 'testpulse', name: 'testpulse', status: 'not_reporting', latestRunId: null },
         ],
         lastReportAt: new Date('2026-10-05T09:26:00Z'),
       },
@@ -26,6 +26,23 @@ describe('siteChromeView', () => {
       datetime: '2026-10-05T09:26:00.000Z',
       title: '5 Oct 2026, 09:26 UTC',
     });
+  });
+
+  // The test kind of the not-found page links "Latest {project} results" to the latest run page
+  // (design/components.md, "NotFound (page)"); a project with no run has no such page.
+  it('gives each project’s latest run page, keyed by the project’s page', () => {
+    const view = siteChromeView(
+      {
+        projects: [
+          { slug: 'ostomate2', name: 'Ostomate 2.0', status: 'passed', latestRunId: 'r9' },
+          { slug: 'testpulse', name: 'testpulse', status: 'not_reporting', latestRunId: null },
+        ],
+        lastReportAt: null,
+      },
+      NOW,
+    );
+
+    expect(view.latestRuns).toEqual({ '/p/ostomate2': '/p/ostomate2/runs/r9' });
   });
 
   it('has no last report before anything has reported', () => {

@@ -162,6 +162,15 @@
   font-weight: 600;
 }
 
+/* A private project's run, as RunFeedRow draws it. */
+.private {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
 .sha {
   font-family: var(--font-mono);
   font-weight: 500;

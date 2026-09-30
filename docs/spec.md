@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.44, 2026-09-29. Status: Phases 0 to 4 and the design track complete; Phase 5 in progress. The project page, `/p/[slug]`, and the landing page, `/`, are built with the live feed, and the run page, `/p/[slug]/runs/[id]`, without it (sections 13.2 to 13.5); the other public pages follow.
+Version 0.45, 2026-09-29. Status: Phases 0 to 4 and the design track complete; Phase 5 in progress. The project page, `/p/[slug]`, and the landing page, `/`, are built with the live feed, and the run page, `/p/[slug]/runs/[id]`, without it (sections 13.2 to 13.5); the other public pages follow.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -346,7 +346,7 @@ type NormalizedReport = {
 
 | Format | Source | Mapping notes |
 |---|---|---|
-| JUnit XML | Gradle (Ostomate2), Playwright (testpulse), Maestro `--format junit` (future) | `testcase@classname` → suite, `@name` → name, `@time` s → ms. Child `failure`/`error`/`skipped` sets status. Handles both a single `testsuite` root and a `testsuites` wrapper. Multiple files per request are merged |
+| JUnit XML | Gradle (Ostomate2), Playwright (testpulse), Maestro `--format junit` (Ostomate2's `android-e2e` and `ios-e2e` jobs, module `e2e`, since 2026-09-29; no captured fixture yet) | `testcase@classname` → suite, `@name` → name, `@time` s → ms. Child `failure`/`error`/`skipped` sets status. Handles both a single `testsuite` root and a `testsuites` wrapper. Multiple files per request are merged |
 | Jest JSON | routeserve | `testResults[].name` minus `path_prefix` → suite. `assertionResults[].fullName` → name. `passed`/`focused`→passed, `failed`→failed, `pending`/`todo`/`skipped`/`disabled`→skipped. A file whose `status` is `failed` with no failed assertion (it did not load) becomes one synthetic `error` result named `<suite load failure>` carrying the file's message, so a broken test file can never ingest as green. `failureMessages[]` joined → detail, first line → message. Run pass/fail comes from these results, never from the process exit code, because the exit code also goes non-zero for reasons that are not test failures (routeserve's 80% coverage threshold fails the step with every test green) and the reporter step runs under `always()` regardless |
 | JaCoCo XML | Ostomate2 | Report-level `counter` elements, `type=LINE` and `type=BRANCH`, `covered` and `missed` |
 | istanbul summary | routeserve | `total.lines.covered/total`, `total.branches.covered/total` |
@@ -808,7 +808,7 @@ Design track complete 2026-09-28. Every page can be built from `design/`: v6 set
 
 ### Later candidates (not scheduled)
 
-- Maestro JUnit output from Ostomate2's E2E jobs, then routeserve's once flows are certified.
+- A captured Maestro JUnit fixture from Ostomate2's E2E jobs, which report since 2026-09-29, with a parser test against it; then routeserve's Maestro output once its flows are certified.
 - A third reporting project built on an open source codebase with a Playwright framework written from scratch.
 - A `gate_events` result type for agent-behavior gating data (Dev Agent/Gatekeeper), which does not fit pass/fail test cases.
 - Public README badge endpoint (`/api/v1/badge/[slug].svg`).
@@ -949,6 +949,7 @@ Design track complete 2026-09-28. Every page can be built from `design/`: v6 set
 | 2026-09-29 | The results table's filters and page count stay in the browser, not the URL, and the run page has no live subscription | The design's README lists them as page state. The run page's live behaviour is undefined (section 13.5), so it is held back and flagged rather than borrowed from the project page |
 | 2026-09-29 | The run page's times: Started is "5 Oct, 09:25" and a report's Received "09:26:17", both UTC, each a `<time>` titled with the full date and time; a public commit links to `{repo_url}/commit/{full SHA}` and shows 7 characters, as the mock draws it; the page is titled "{heading} · {project} · testpulse" | The mock predates the one date format (2026-09-29 relative-time row); section 9 links commits on public projects, and GitHub is where every reporting repository lives |
 | 2026-09-29 | Filter counts print grouped ("All 1,041"), as every other count on the site does | The status filter printed RouteServe's 1,041 tests as "1041" |
+| 2026-09-29 | Ostomate2's Maestro E2E jobs (`android-e2e`, `ios-e2e`) report JUnit as module `e2e`, and `projects/ostomate2.yaml` maps that module to layer `e2e` with `match: { module: e2e }` ahead of the default. Its two Maestro declared suites are removed. A captured Maestro JUnit fixture and a parser test follow once a real file exists. Approved by Bobby | Ostomate2 PR #26 made both jobs report, so production counted the 12 flows as unit while still listing them as run in CI, not yet reported. Module alone is the narrowest single rule: both jobs share it and no other Ostomate2 report uses it, where job or platform would need a rule each and suite names are unknown until a fixture is captured |
 ---
 
 ## Appendix A: reporter script and CI steps

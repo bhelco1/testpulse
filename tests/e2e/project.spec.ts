@@ -79,20 +79,16 @@ test.describe('Ostomate2 (public)', () => {
     else expect(green).toBe(passRate);
   });
 
-  test('shows the pyramid, declared suites, coverage and reports', async ({ page }) => {
+  test('shows the pyramid, coverage and reports, with no declared suites', async ({ page }) => {
     const tested = page.getByRole('region', { name: 'How it’s tested' });
     await expect(tested.locator('figure')).toContainText('142tests executed in the latest run');
     const rows = tested.locator('figure [data-part="row"]');
-    await expect(rows).toHaveText([
-      'E2E12 flows declared · not counted',
-      'Visual107%',
-      'Integration2920%',
-      'Unit10373%',
-    ]);
-    await expect(tested.getByRole('listitem').filter({ hasText: 'Maestro E2E' })).toHaveCount(2);
-    // "Maestro 2.6.1" stands for both Maestro suites, which run in CI unreported (v7 item 8).
-    await expect(page.locator('[data-part="tag"][data-declared]')).toHaveText([
-      'Maestro 2.6.1 · not yet reported',
+    await expect(rows).toHaveText(['Visual107%', 'Integration2920%', 'Unit10373%']);
+    // Its Maestro flows report as module e2e, so nothing is declared and the Maestro tag is plain.
+    await expect(page.getByRole('region', { name: 'Declared suites' })).toHaveCount(0);
+    await expect(page.locator('[data-part="tag"][data-declared]')).toHaveCount(0);
+    await expect(page.locator('[data-part="tag"]').filter({ hasText: 'Maestro' })).toHaveText([
+      'Maestro 2.6.1',
     ]);
 
     const coverage = page.getByRole('region', { name: 'Coverage and reports' });
@@ -236,13 +232,16 @@ test.describe('RouteServe (private)', () => {
     }
   });
 
-  test('shows its pyramid, three floors and the flaky test', async ({ page }) => {
+  test('shows its pyramid, declared suite, three floors and the flaky test', async ({ page }) => {
     await expect(page.locator('figure [data-part="row"]')).toHaveText([
       'E2E13 flows declared · not counted',
       'API26926%',
       'Component16516%',
       'Unit60758%',
     ]);
+    await expect(
+      page.getByRole('region', { name: 'Declared suites' }).getByRole('listitem'),
+    ).toHaveText(['Maestro E2E (iOS)E2E13 flowsAuthored, not yet executed']);
     await expect(page.locator('[data-part="tag"][data-declared]')).toHaveText([
       'Maestro · not yet executed',
     ]);

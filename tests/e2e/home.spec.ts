@@ -82,9 +82,8 @@ test.describe('the landing page', () => {
     await expect(ostomate2.locator('[data-part="reports-side"]')).toHaveText(
       'jvm 142 · ios-sim 50',
     );
-    await expect(ostomate2.locator('[data-part="declared"]')).toHaveText(
-      'Not counted: 12 flows in 2 suites, run in CI, not yet reported',
-    );
+    // Its Maestro flows report as module e2e, so nothing is declared and nothing "Not counted".
+    await expect(ostomate2.locator('[data-part="declared"]')).toBeEmpty();
     await expect(ostomate2.getByText('Reporting healthy')).toBeVisible();
   });
 

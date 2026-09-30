@@ -14,6 +14,7 @@ import {
   LayerSchema,
   type LayerTarget,
 } from './layer-rules';
+import { loadProjectFile, projectFilePath } from '../projects/files';
 
 // Wrap the real picomatch so the tests can count how often globs are compiled.
 vi.mock('picomatch', async (importOriginal) => {
@@ -34,18 +35,6 @@ const routeserveRules: LayerRules = [
   { match: { module: 'apps/mobile', suite: 'apps/mobile/src/components/**' }, layer: 'component' },
   { match: { module: 'apps/mobile', suite: 'apps/mobile/src/hooks/**' }, layer: 'component' },
   { match: { module: 'apps/mobile', suite: 'apps/mobile/src/app/**' }, layer: 'component' },
-  { default: 'unit' },
-];
-
-// Not in the spec yet: the minimal rules that reproduce the inventory's Ostomate2 layer table
-// from the JVM JUnit suite names. Module and platform values follow Appendix A's CI steps.
-const ostomate2Rules: LayerRules = [
-  { match: { module: 'shared', suite: 'com.ostomate.app.data.db.*' }, layer: 'integration' },
-  {
-    match: { module: 'shared', suite: 'com.ostomate.app.data.RepositoryTest' },
-    layer: 'integration',
-  },
-  { match: { module: 'composeApp', suite: 'com.ostomate.app.ui.screenshot.*' }, layer: 'visual' },
   { default: 'unit' },
 ];
 
@@ -367,7 +356,9 @@ describe('routeserve acceptance against fixtures/routeserve/jest', () => {
   });
 });
 
-describe('Ostomate2 acceptance against fixtures/ostomate2/junit/jvm', () => {
+// The rules in the checked-in projects/ostomate2.yaml, so these tests hold the file itself to the
+// inventory's layer table rather than a copy of its rules.
+describe('Ostomate2 acceptance against projects/ostomate2.yaml', () => {
   const suitesOf = (module: 'shared' | 'composeApp') => {
     const dir = fixture(`ostomate2/junit/jvm/${module}`);
     return readdirSync(dir)
@@ -384,7 +375,18 @@ describe('Ostomate2 acceptance against fixtures/ostomate2/junit/jvm', () => {
         };
       });
   };
-  const resolve = compileLayerRules(ostomate2Rules);
+  const resolve = compileLayerRules(loadProjectFile(projectFilePath('ostomate2')).layer_rules);
+
+  // Ostomate2's Maestro jobs report JUnit as module e2e (its PR #26), whatever the suite name
+  // Maestro writes. The fixture counts below prove the other modules keep their layers.
+  it('resolves module e2e from either Maestro job to e2e', () => {
+    for (const [job, platform] of [
+      ['android-e2e', 'android-emulator'],
+      ['ios-e2e', 'ios-sim'],
+    ] as const) {
+      expect(resolve(target({ job, module: 'e2e', platform, suite: 'Log a change' }))).toBe('e2e');
+    }
+  });
 
   // Inventory rows for Ostomate2: shared commonTest unit 53, androidHostTest integration 29.
   it('shared: unit 53, integration 29', () => {

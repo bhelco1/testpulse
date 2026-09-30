@@ -108,13 +108,11 @@ describe('projects/<slug>.yaml (spec sections 5.1, 5.8, 8, 10, Appendix B)', () 
         match: { module: 'composeApp', suite: 'com.ostomate.app.ui.screenshot.*' },
         layer: 'visual',
       },
+      { match: { module: 'e2e' }, layer: 'e2e' },
       { default: 'unit' },
     ]);
-    expect(file.declared_suites.length).toBeGreaterThan(0);
-    for (const suite of file.declared_suites) {
-      expect(suite).toMatchObject({ layer: 'e2e', status: 'runs_in_ci_not_reported' });
-      expect(suite.count).toBeGreaterThan(0);
-    }
+    // Its Maestro flows report as module e2e, so nothing is declared without reporting.
+    expect(file.declared_suites).toEqual([]);
   });
 
   it('fills the defaults the spec gives for omitted columns', () => {

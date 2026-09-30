@@ -249,8 +249,8 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       { slug: 'testpulse', visibility: 'public', repo_url: 'https://github.com/bhelco1/testpulse' },
     ]);
     expect(second.projects.map((project) => project.declared_suites)).toEqual([
-      expect.arrayContaining([expect.objectContaining({ status: 'runs_in_ci_not_reported' })]),
-      expect.arrayContaining([expect.objectContaining({ status: 'authored_not_executed' })]),
+      [],
+      [expect.objectContaining({ status: 'authored_not_executed' })],
       [],
     ]);
   });
@@ -421,13 +421,13 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
 
     it('counts distinct tests per layer in the latest run, declared suites excluded', () => {
       // Ostomate2: 82 shared + 60 composeApp on the JVM; the 50 iOS executions are composeApp
-      // tests already counted. 103 unit + 29 integration + 10 visual = 142. The 7 + 5 declared
-      // Maestro flows are not added.
+      // tests already counted. 103 unit + 29 integration + 10 visual = 142. Its Maestro flows
+      // report as module e2e, and no Maestro fixture is seeded yet.
       expect(card('ostomate2')).toMatchObject({
         totalTests: 142,
         layers: { unit: 103, integration: 29, visual: 10 },
       });
-      expect(card('ostomate2').project.declaredSuites.map((suite) => suite.count)).toEqual([7, 5]);
+      expect(card('ostomate2').project.declaredSuites).toEqual([]);
       // routeserve: 1045 executions, 1041 tests (apps/mobile runs one name five times).
       // 607 unit + 165 component + 269 api = 1041; the 13 declared flows are not added.
       expect(card('routeserve')).toMatchObject({
@@ -726,12 +726,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         'Coverage',
         'E2E',
       ]);
-      expect(
-        ostomate2.project.declaredSuites.map((suite) => [suite.name, suite.count, suite.status]),
-      ).toEqual([
-        ['Maestro E2E (Android)', 7, 'runs_in_ci_not_reported'],
-        ['Maestro E2E (iOS)', 5, 'runs_in_ci_not_reported'],
-      ]);
+      expect(ostomate2.project.declaredSuites).toEqual([]);
       expect(routeserve.project).toMatchObject({ visibility: 'private', repoUrl: null });
     });
 

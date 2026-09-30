@@ -27,8 +27,8 @@ const suite = (name: string, status: DeclaredSuite['status']): DeclaredSuite => 
 });
 
 describe('declaredStatusFor, on the real project files', () => {
-  it('Ostomate2: "Maestro 2.6.1" matches both Maestro suites, which run in CI unreported', () => {
-    expect(statusesOf('ostomate2')).toEqual({ 'Maestro 2.6.1': 'runs_in_ci_not_reported' });
+  it('Ostomate2 reports its Maestro flows and declares no suites, so no tool is marked', () => {
+    expect(statusesOf('ostomate2')).toEqual({});
   });
 
   it('routeserve: "Maestro" matches its iOS suite, authored and never run; "Jest 30" nothing', () => {

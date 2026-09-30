@@ -52,16 +52,6 @@ layer_rules:
     layer: integration
   - match: { module: composeApp, suite: 'com.ostomate.app.ui.screenshot.*' }
     layer: visual
+  - match: { module: e2e }
+    layer: e2e
   - default: unit
-
-declared_suites:
-  - name: Maestro E2E (Android)
-    layer: e2e
-    count: 7
-    status: runs_in_ci_not_reported
-    note: Runs on an API 29 emulator after merge and on dispatch; console PASS/FAIL only, no JUnit output yet.
-  - name: Maestro E2E (iOS)
-    layer: e2e
-    count: 5
-    status: runs_in_ci_not_reported
-    note: Runs on a fresh simulator after merge and on dispatch; console PASS/FAIL only, no JUnit output yet.

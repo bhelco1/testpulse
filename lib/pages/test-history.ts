@@ -4,8 +4,7 @@ import type {
 } from '../../components/StatusTimeline/StatusTimeline';
 import type { TrendMark } from '../../components/TrendChart/TrendChart';
 import { durationCaption, TREND_SCOPE } from '../charts/captions';
-import { formatTrendValue } from '../charts/format';
-import { relativeLabel } from '../copy/time';
+import { formatTestTime, relativeLabel } from '../copy/time';
 import { LAYER_LABEL } from '../design/layers';
 import type { TestHistoryPage } from '../queries/test-history';
 import { shortSuite } from '../results/short-suite';
@@ -45,13 +44,12 @@ export interface TestHistoryView {
 const projectHref = (slug: string) => `/p/${encodeURIComponent(slug)}`;
 
 // One test's time, as the design writes it: "0.41 s" (tp-charts.js, a test's duration).
-const testSeconds = (ms: number): string => formatTrendValue(ms / 1000, 'sec', true);
 
 // A flaky cell draws as Flaky, whichever side of the flip it was (components.md StatusTimeline).
 const cellResult = (cell: HistoryCell): PlatformResult => ({
   platform: cell.platform,
   status: cell.flaky ? 'flaky' : cell.status,
-  duration: testSeconds(cell.durationMs),
+  duration: formatTestTime(cell.durationMs),
 });
 
 const isFailing = (cell: HistoryCell) =>

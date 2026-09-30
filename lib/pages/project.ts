@@ -96,7 +96,7 @@ export interface HistoryView {
   readonly strip: {
     readonly runs: readonly RunsTimelineRun[];
     readonly defaultBranch: string;
-    /** "All {n} passed."; the design draws no other note, so any other strip has none. */
+    /** "All {n} passed." or "1 run, {status}."; a mixed strip has none until its PR (13.2). */
     readonly note: string | null;
   } | null;
 }
@@ -113,7 +113,7 @@ export interface ProjectPageView {
     readonly total: number;
   };
   readonly declared: readonly DeclaredSuite[];
-  readonly coverage: readonly { module: string; pct: number; floor: number }[];
+  readonly coverage: readonly { module: string; pct: number; floor: number | null }[];
   readonly reports: readonly { key: string; total: string }[];
   readonly runs: {
     readonly branches: BranchScope;
@@ -270,13 +270,9 @@ const marksOf = (points: readonly { readonly status: RunStatus }[]): TrendMark[]
         : [],
   );
 
-const allPresent = (values: readonly (number | null)[]): values is readonly number[] =>
-  values.every((value) => value !== null);
-
 // Each chart covers the last 30 default-branch runs its source rule admits (section 11). A run
-// with no value is a gap in the line; the pass-rate and test-count captions are written for
-// runs that all have a value, so with a gap they are held back (13.2). The duration caption
-// already leaves missing values out of its min, max and median (design v7 item 9).
+// with no value is a gap in the line, and each caption counts only the runs with a value (design
+// v8 item 34).
 function history(page: ProjectPage, now: Date): HistoryView {
   const { passRate, testCount, duration } = page.trends;
   const rates = passRate.map((point) => (point.passRate === null ? null : point.passRate * 100));
@@ -294,7 +290,11 @@ function history(page: ProjectPage, now: Date): HistoryView {
         marks: marksOf(passRate),
         format: 'pct',
         unit: 'run',
-        caption: allPresent(rates) ? passRateCaption(rates, failedRuns) : null,
+        // A latest run with tests but no rate had every test skipped (v9 item 11); an empty
+        // one had none.
+        caption: passRateCaption(rates, failedRuns, {
+          latestAllSkipped: passRate.at(-1)?.status !== 'empty',
+        }),
       },
       {
         title: 'Tests per run',
@@ -303,7 +303,7 @@ function history(page: ProjectPage, now: Date): HistoryView {
         marks: marksOf(testCount),
         format: 'int',
         unit: 'run',
-        caption: allPresent(counts) ? testCountCaption(counts) : null,
+        caption: testCountCaption(counts),
       },
       {
         title: 'Run duration',
@@ -328,13 +328,18 @@ function history(page: ProjectPage, now: Date): HistoryView {
               status: run.status,
             })),
             defaultBranch: page.project.defaultBranch,
-            // The Project Page mock's "All 40 passed.", for as many runs as there are.
-            note:
-              runs.length > 1 && runs.every((run) => run.status === 'passed')
-                ? `All ${runs.length} passed.`
-                : null,
+            note: stripNote(runs),
           },
   };
+}
+
+// The "Last 40 runs" note over every run the server read, not the cells that fit (owner
+// decision 2026-09-30): "All {n} passed." and, for one run, "1 run, passed." (v9 item 15). The
+// mixed note ("{p} passed, {f} failed, {e} empty.") comes with the strip's other v8 states.
+function stripNote(runs: ProjectPage['recentRuns']): string | null {
+  const [only] = runs;
+  if (runs.length === 1 && only !== undefined) return `1 run, ${only.status}.`;
+  return runs.every((run) => run.status === 'passed') ? `All ${runs.length} passed.` : null;
 }
 
 /** The page's title, which its head reads without the rest of the page (lib/queries/heads). */
@@ -369,9 +374,7 @@ export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
       total: summary.totalTests,
     },
     declared: project.declaredSuites,
-    coverage: summary.coverage.flatMap(({ module, pct, floor }) =>
-      floor === null ? [] : [{ module, pct, floor }],
-    ),
+    coverage: summary.coverage.map(({ module, pct, floor }) => ({ module, pct, floor })),
     reports: (page.latestRun?.reports ?? []).map((report) => ({
       key: `${report.job}/${report.module}/${report.platform}`,
       total: formatCount(report.total),

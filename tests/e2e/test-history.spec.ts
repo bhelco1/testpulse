@@ -74,7 +74,7 @@ const fields = (page: Page) => panel(page).locator('[data-part="field"]');
 const duration = (page: Page) =>
   page.getByRole('figure').filter({ has: page.getByRole('heading', { name: 'Duration' }) });
 
-const DURATION_SCOPE = 'Default branch · CI runs only (imported history has no durations)';
+const DURATION_SCOPE = 'Default branch · last 30 CI runs (imported history has no durations)';
 
 async function expectIdentity(page: Page, test: SeededTest, short: string, layer: string) {
   await expect(page).toHaveTitle(`${test.name} · ${test.project} · testpulse`);
@@ -131,7 +131,7 @@ test.describe('an Ostomate2 test on one platform (public)', () => {
     await expect(figure.locator('[data-part="scope"]')).toHaveText(DURATION_SCOPE);
     // The pull request run is on the timeline but not on the default-branch chart.
     await expect(figure.locator('[data-part="caption"]')).toHaveText(
-      'Between 0.07 s and 0.07 s over the last 8 runs. Median 0.07 s.',
+      'Held at 0.07 s over the last 8 runs.',
     );
   });
 
@@ -162,7 +162,7 @@ test.describe('an Ostomate2 test on two platforms (public)', () => {
   test('charts a line per platform, giving the range across both', async ({ page }) => {
     const figure = duration(page);
     await expect(figure.locator('[data-part="caption"]')).toHaveText(
-      'Between 0.00 s and 0.03 s over the last 8 runs.',
+      'Between 3 ms and 0.03 s over the last 8 runs.',
     );
     await expect(figure.locator('[data-part="legend"] li')).toHaveText(['jvm', 'ios-sim']);
   });
@@ -269,7 +269,8 @@ test.describe('RouteServe’s flaky test (private)', () => {
 
   test('charts its 10 runs on main, leaving the pull request out', async ({ page }) => {
     await expect(duration(page).locator('[data-part="caption"]')).toHaveText(
-      'Between 0.00 s and 0.00 s over the last 10 runs. Median 0.00 s.',
+      // Every run under 10 ms: whole milliseconds (design v8 item 48).
+      'Between 1 ms and 2 ms over the last 10 runs. Median 1 ms.',
     );
   });
 
@@ -296,7 +297,7 @@ test.describe('testpulse’s failing test (public, one run)', () => {
 
   test('names the test and shows its one failed run', async ({ page }) => {
     // The design's shortening takes a bare file name's last dotted segment (section 13.3).
-    await expectIdentity(page, FAILING_TEST, 'ts', 'E2E');
+    await expectIdentity(page, FAILING_TEST, 'zz-deliberate-failure.spec.ts', 'E2E');
     await expect(strips(page)).toHaveAccessibleName(`${FAILING_TEST.name}, last 1 run`);
     await expect(cells(page)).toHaveCount(1);
     await expect(cells(page)).toHaveAttribute('data-status', 'failed');
@@ -412,8 +413,10 @@ test.describe('without scripts, the duration chart is its table', { tag: '@no-js
     const table = duration(page).getByRole('table');
     await expect(table.locator('thead th')).toHaveText(['Run', 'jvm', 'ios-sim']);
     await expect(table.locator('tbody tr')).toHaveCount(8);
-    await expect(table.locator('tbody tr').first()).toHaveText('Latest0.03 s0.00 s');
-    await expect(table.locator('tbody tr').last()).toHaveText('7 runs ago0.03 s0.00 s');
+    // The simulator's 3 ms reads in whole ms (design v8 item 48).
+    await expect(table.locator('tbody tr').first()).toHaveText('Latest0.03 s3 ms');
+    await expect(table.locator('tbody tr').last()).toHaveText('7 runs ago0.03 s3 ms');
+    await expect(duration(page).getByRole('button', { name: 'Show table' })).toHaveCount(0);
   });
 });
 

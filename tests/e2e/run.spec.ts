@@ -65,7 +65,7 @@ test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => 
       'main',
       'd8dbd9c',
       'push',
-      /^5 Oct, 09:2\d$/,
+      /^5 Oct, 09:2\d UTC$/,
       'GitHub Actions',
     ]);
     // Public: the commit links to its full SHA, the CI entry to the run on GitHub (section 9).

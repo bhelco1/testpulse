@@ -29,7 +29,7 @@ function errorIconOf(svg: Element | null | undefined) {
 
 describe('ErrorState, page variant', () => {
   it('announces the error with the Error status pill, a headline and the explanation', () => {
-    const { getByRole } = render(<ErrorState variant="page" {...PAGE} onRetry={() => {}} />);
+    const { getByRole } = render(<ErrorState variant="page" {...PAGE} retryHref="/" />);
     const alert = getByRole('alert');
 
     expect(alert.dataset.variant).toBe('page');
@@ -41,14 +41,17 @@ describe('ErrorState, page variant', () => {
     expect(within(alert).getByText(PAGE.message).tagName).toBe('P');
   });
 
-  it('retries from a primary "Try again" and offers the how it’s tested page (curly, v4 item 23)', () => {
-    const onRetry = vi.fn();
-    const { getByRole } = render(<ErrorState variant="page" {...PAGE} onRetry={onRetry} />);
-    const button = getByRole('button', { name: 'Try again' });
+  // Design v9 item 7: the page variant is rendered by the server (HTTP 503), so "Try again" is
+  // the primary Button's link form to the same URL and works without JavaScript.
+  it('retries with a primary "Try again" link to the same URL and offers how it’s tested', () => {
+    const { getByRole, queryByRole } = render(
+      <ErrorState variant="page" {...PAGE} retryHref="/p/ostomate2?branches=all" />,
+    );
+    const retry = getByRole('link', { name: 'Try again' });
 
-    expect(button.dataset.variant).toBe('primary');
-    fireEvent.click(button);
-    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(retry.getAttribute('href')).toBe('/p/ostomate2?branches=all');
+    expect(retry.dataset.variant).toBe('primary');
+    expect(queryByRole('button')).toBeNull();
     expect(getByRole('link', { name: 'How it’s tested' }).getAttribute('href')).toBe(
       '/how-its-tested',
     );

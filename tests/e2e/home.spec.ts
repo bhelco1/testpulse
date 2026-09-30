@@ -119,8 +119,8 @@ test.describe('the landing page', () => {
   test('gives testpulse a stale failed card with no coverage', async ({ page }) => {
     const testpulse = card(page, 'testpulse');
     await expect(testpulse.getByText('Failed', { exact: true })).toBeVisible();
-    // 13 UTC days back reads in weeks (design v7 item 16).
-    await expect(testpulse.locator('[data-part="when"]')).toHaveText('1 week ago');
+    // A stale card is dated, not relative (design v8 item 14).
+    await expect(testpulse.locator('[data-part="when"]')).toHaveText('22 Sep');
     await expect(testpulse.locator('[data-part="total"]')).toHaveText('3');
     await expect(testpulse.locator('[data-part="sub"]')).toHaveText(
       /^tests ·1 failed·1 skipped ·\d+ s$/,

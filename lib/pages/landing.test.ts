@@ -383,9 +383,10 @@ describe('landingView at the seed', () => {
     const card = view.cards[2];
     expect(card?.latestRun).toMatchObject({
       status: 'failed',
-      // 13 days 7 hours back is 13 UTC days: a week, in v7's wording.
+      // A stale card is dated rather than relative (design v8 item 14), so its time never sits
+      // beside the marker's "No report in 13 days" with a different count.
       when: {
-        text: '1 week ago',
+        text: '22 Sep',
         datetime: '2026-09-22T04:37:00.242Z',
         title: '22 Sep 2026, 04:37 UTC',
       },
@@ -555,7 +556,7 @@ describe('landingView tiles in other states', () => {
     expect(view.heroTotal).toBe('0');
   });
 
-  it('leaves out a module with no floor, as the project page does', () => {
+  it('keeps a module with no floor, drawn with none, as the project page does (v8 item 15)', () => {
     const extra: LandingProject = {
       ...OSTOMATE2,
       coverage: [
@@ -565,7 +566,12 @@ describe('landingView tiles in other states', () => {
     };
     expect(
       landingView(landingOf([extra]), NOW).cards[0]?.coverage.map((row) => row.module),
-    ).toEqual(['composeApp', 'shared']);
+    ).toEqual(['composeApp', 'shared', 'extra']);
+    expect(landingView(landingOf([extra]), NOW).cards[0]?.coverage[2]).toEqual({
+      module: 'extra',
+      pct: 50,
+      floor: null,
+    });
   });
 
   it('keeps an empty or stale card’s own wording to the card component', () => {
@@ -579,9 +585,10 @@ describe('landingView tiles in other states', () => {
       latestRun: latest({ id: 't-3', status: 'empty', passed: 0, passRate: null }),
       latestRunDetail: detail,
     };
+    // TESTPULSE's marker is stale, so its card is dated (design v8 item 14).
     expect(landingView(landingOf([empty]), NOW).cards[0]?.latestRun).toMatchObject({
       status: 'empty',
-      when: expect.objectContaining({ text: '2 h ago' }),
+      when: expect.objectContaining({ text: '5 Oct' }),
     });
   });
 });

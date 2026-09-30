@@ -122,7 +122,10 @@ function LiveNote({ connection, project }: { connection: WebConnection; project:
           'Updates as reports arrive'
         ) : (
           <>
-            Offline. Showing runs as of <RelativeTime when={connection.asOf} />; reconnecting
+            Offline. Showing runs as of{' '}
+            {/* An absolute clock time says UTC (design v8 item 36); the kiosk's "As of" does not. */}
+            <RelativeTime when={{ ...connection.asOf, text: `${connection.asOf.text} UTC` }} />;
+            reconnecting
           </>
         )}
       </span>

@@ -33,9 +33,10 @@
   const NAME = { unit: 'Unit', component: 'Component', integration: 'Integration', api: 'API', visual: 'Visual', e2e: 'E2E' };
   const n = v => Number(v).toLocaleString('en-US');
   const layers = obj => ORDER.filter(k => obj[k] != null).map(k => ({ key: k, label: NAME[k], count: obj[k], n: obj[k], countText: n(obj[k]), tone: TONE[k], bg: TONE[k] }));
+  const down1 = v => Math.floor(v * 10 + 1e-9) / 10; /* v8 item 5: percentages round down to the tenth */
   function cov(m, v, f) {
-    const below = v < f;
-    return { m, v: (v === 100 ? '100' : v.toFixed(1)) + '%', w: v + '%', fl: f + '%', below, ink: below ? 'var(--attn)' : 'var(--ink)', floorInk: below ? 'var(--attn)' : 'var(--ink-3)', floorLabel: below ? `below floor ${f}%` : `floor ${f}%` };
+    const noFloor = f == null, below = !noFloor && v < f; /* v8 item 15: no floor → no marker, no floor text */
+    return { m, v: (v === 100 ? '100' : down1(v).toFixed(1)) + '%', w: v + '%', fl: noFloor ? '0%' : f + '%', flDisp: noFloor ? 'none' : 'block', below, ink: below ? 'var(--attn)' : 'var(--ink)', floorInk: below ? 'var(--attn)' : 'var(--ink-3)', floorLabel: noFloor ? '' : below ? `below floor ${f}%` : `floor ${f}%` };
   }
   const part = (t, ink, w) => ({ t, ink: ink || 'inherit', w: w || 400 });
   /* v4 item 28: run titles from stored data only (event, branch). */
@@ -43,7 +44,7 @@
     return { push: `Push to ${branch}`, pull_request: `Pull request from ${branch}`, schedule: 'Scheduled run', workflow_dispatch: 'Manual run' }[event] || `Run on ${branch}`;
   }
   /* v4 item 20: suite shortening. Path-style keeps the last path segment; dotted class names keep the last dotted segment. */
-  function shortSuite(s) { if (!s) return ''; return s.includes('/') ? s.split('/').pop() : s.split('.').pop(); }
+  function shortSuite(s) { if (!s) return ''; if (s.includes('/')) return s.split('/').pop(); if (/\.(spec|test)\.[cm]?[jt]sx?$|\.(ts|tsx|js|jsx|mjs|cjs|kt|kts|swift|py|rb|go)$/.test(s)) return s; return s.split('.').pop(); } /* v8 item 12: a bare file name is kept whole */
   /* v4 item 18: per-platform split, platform = last segment of the report key "job/module/platform"; counts always shown. */
   function platformSplit(reports) {
     const by = {}, order = [];
@@ -113,5 +114,9 @@
     return P.map(([f, b, min, kind]) => { const r = ratio(T[f], T[b]); const ok = r >= min;
       return { label: `--${f} on --${b}` + (kind ? ' (graphic)' : ''), fg: T[f], bg: T[b], ratio: r.toFixed(2) + ':1', verdict: ok ? (min === 3 ? '3:1 ✓' : 'AA ✓') : 'FAIL', verdictColor: ok ? 'var(--pass)' : 'var(--fail)' }; });
   }
-  window.TPKit = { DARK, LIGHT, themeVars, S, H, ORDER, TONE, NAME, layers, cov, card, row, pairs, ratio, n, runTitle, shortSuite, platformSplit, declaredSummary, qty };
+    /* v9 item 5/17: relative time from whole elapsed days D (0 = today, handled by the caller), date otherwise */
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const shortDate = (d, nowYear) => d.getUTCDate() + ' ' + MON[d.getUTCMonth()] + (d.getUTCFullYear() === (nowYear || 2026) ? '' : ' ' + d.getUTCFullYear());
+  const relDays = (D, d) => D === 1 ? 'yesterday' : D < 7 ? D + ' days ago' : D < 28 ? (D < 14 ? '1 week ago' : Math.floor(D / 7) + ' weeks ago') : shortDate(d);
+window.TPKit = { down1, relDays, shortDate, DARK, LIGHT, themeVars, S, H, ORDER, TONE, NAME, layers, cov, card, row, pairs, ratio, n, runTitle, shortSuite, platformSplit, declaredSummary, qty };
 })();

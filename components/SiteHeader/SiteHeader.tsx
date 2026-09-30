@@ -36,9 +36,13 @@ export function SiteHeader({ projects, currentProject, connected, current }: Sit
           >
             How it’s tested
           </Link>
+        </nav>
+        {/* After the nav in the DOM, so the tab order is the same at every width; on a phone the
+            grid lifts it onto the wordmark's row (design v8 item 37). */}
+        <div className={styles.controls} data-part="controls">
           {connected !== undefined && <LiveIndicator connected={connected} />}
           <ThemeToggle />
-        </nav>
+        </div>
       </header>
     </>
   );

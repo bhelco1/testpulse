@@ -1,4 +1,4 @@
-# testpulse handoff v7
+# testpulse handoff v9
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -19,7 +19,7 @@ To view a page, open it in a browser from inside `pages/` (it needs `support.js`
 | `data-map.md` | Every UI element mapped to its table/column or stat |
 | `contrast.md` | Every required contrast pair with its ratio, both themes (must match the CI check) |
 | `pages/Design System.dc.html` | **Canonical spec.** Tokens, contrast checks, every component in every state and variant, phone widths for charts, timeline, pyramid, table and feed |
-| `pages/Landing.dc.html` | `/` — tweak `scenario`: healthy, failed run, empty run, stale project, coverage below floor, live update, realtime disconnected, loading, error |
+| `pages/Landing.dc.html` | `/` — tweak `scenario`: healthy, failed run, empty run, stale project, coverage below floor, live update, realtime disconnected, no projects, error |
 | `pages/Project Page.dc.html` | `/p/[slug]` — tweaks: project (public/private), scenario, theme |
 | `pages/Run Detail.dc.html` | `/p/[slug]/runs/[id]` — tweaks: run (passed, failed, failed-private), pruned |
 | `pages/Test History.dc.html` | `/p/[slug]/tests/[testKey]` |
@@ -54,7 +54,7 @@ The HTML is the source of truth for exact measurements; below is the structure.
 ## Interactions and behaviour
 - Theme toggle: dark default; stores choice in localStorage; `prefers-color-scheme` used when none stored. Only `background-color, border-color, color, fill, stroke` transition, over `--motion-base`, while `html[data-theme-switching]` is set.
 - Realtime: new run inserts at top of feed with a "New" pill (`--ink` / `--on-ink`) and a `--raised` background fading over 2s (no fail tint, even for a failed run); card and tiles update in place. No count-up animations. No "running" status (spec non-goal).
-- Disconnected: LiveIndicator off state; inline feed note with absolute time: "Offline. Showing runs as of 10:42; reconnecting". No banner.
+- Disconnected: LiveIndicator off state; inline feed note with absolute time: "Offline. Showing runs as of 10:42 UTC; reconnecting". No banner.
 - Loading: skeletons in the shape of the content. Error: `ErrorState` (`page` or `inline` variant), no stale numbers shown.
 - Results table: status radio group (All · Passed · Failed · Error · Skipped) and native layer `<select>`, both 44 px; no search. Failures first, then by suite; "Load 50 more". Row expands (200ms) to failure detail. Stacks below 720 px container width.
 - Project run list: "Default branch" / "All branches" filter, 10 rows, "Load 20 more". Landing feed is default branch only; no "All runs" link.
@@ -381,3 +381,153 @@ Same rules: the Design System page is canonical, components.md matches it, every
 17. Drawn (Design System section 05, "PHONE · 390"): the stat row is flex-wrap, gap 16×12. Pass rate and Green streak are `flex: 1 1 120px`, and Time to green is `flex: 1 1 240px`. Below 516 px of card content, Time to green drops to its own full-width line, with no media query. The Project page uses it, so the desktop layout gives Time to green a slightly wider cell.
 
 Files changed in v7: Design System.dc.html, Project Page.dc.html, tp-charts.js, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v8
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing else was changed.
+
+**Decided by the owner**
+1. components.md "Relative time" rewritten: UTC only, seven cases checked in order, first match wins. Under 1 min "just now"; under 60 min "{m} min ago"; same UTC day "{h} h ago"; previous UTC day "yesterday"; 2–6 days "{d} days ago"; 7–27 days "{w} weeks ago"; from 28 days the date. 3 h ago across UTC midnight is "yesterday"; 40 min across midnight is "40 min ago". No overlap remains.
+2. Applied to every mock (Landing, Kiosk, Project Page, Run Detail, Test History, Privacy, NotFound, Admin, How It's Tested, Design System): "4 min ago", "2 h ago", "12 min ago", lower-case "just now". One date format everywhere: "12 Sep", "23 Mar 2027", chart labels "7 Aug". Clock times say UTC ("24 Sep, 14:02 UTC"). The stale notice and stale cards read "12 Sep".
+3. One chart per module, in module-key order, each "Line coverage, {module}" with its own floor. On the Project page Ostomate2 now draws composeApp and then shared; the composeApp series is SAMPLE (marked in its caption).
+4. The rule now drops a trailing version first ("Maestro 2.6.1" → "Maestro", which then matches "Maestro E2E (iOS)"); the tag keeps its version. Written in components.md and data-map.md. The `projects:sync` warning is removed from the bundle.
+5. Percentages round down to the tenth: `down1()` in tp-charts.js (`pct`) and tp-kit.js (`cov`, exported as `TPKit.down1`). 99.96 reads 99.9%, 79.96 reads 79.9% (drawn beside an 80% floor, below). The rule is in components.md CoverageBar; floor comparisons use the unrounded value.
+
+**Landing**
+6. components.md "Landing hero" gives the note for any number of projects: sentence 1, "automated tests across {n} projects"; sentence 2, failing on one or several projects, or the pass rate, plus skipped; then one sentence each for empty, stale ("RouteServe hasn’t reported since 12 Sep.") and never-reported projects. "disabled" is dropped because nothing stores it. The Landing mock now uses these templates in every scenario.
+7. The lede is the h1. The total and note are one `<p>`, so a screen reader reads "1,190 automated tests across two projects. …" and no separate label is needed. Applied in Landing.
+8. Projects reporting: value "{r} of {n}". Registered projects that have never reported count in n. Sub-lines: "All within their expected cadence"; "RouteServe silent 12 days"; "Silent: A 12 days · B 9 days"; "testpulse not reporting yet". The Landing mock now reads "2 of 2" / "All within their expected cadence".
+9. Pass rate with no rate: "—" / "No tests passed or failed on the latest runs". An empty run beside counted ones, or beside a failing one: "{counted projects} only · {s} skipped, excluded". Confirmed: the "of" figure is passed + failed (1,183 of 1,185).
+10. Drawn as the Landing scenario "no projects": the h1, then a "No projects yet" card with a link to How it's tested.
+11. No loading page: the page is server-rendered with its data, so the Landing "loading" scenario is removed. The error page is needed (HTTP 503), and its "Try again" is a link to the same URL.
+12. A bare file name with a source extension is kept whole ("zz-deliberate-failure.spec.ts"). tp-kit.js `shortSuite` is updated.
+13. 15 px, as the Button spec says. The Landing mock is corrected.
+14. A stale card shows the date of its last run ("12 Sep"), not "1 week ago". Applied in Landing, Kiosk and the Design System.
+15. With no floor there's no marker and no floor text, never amber. The project page chart has no floor line and no floor clause in its caption. Drawn (CoverageBar, "iosApp · SAMPLE"). tp-kit.js `cov()` accepts a null floor.
+
+**Carried from v7**
+16. Drawn (Design System section 09): the count reads "Results pruned · {duration}"; for a failed run, "Failed · Results pruned · {duration}". This is the same row on the project page run list and the landing feed.
+17. "Skipped". TrendChart takes per-series `gapLabels`; Test history passes "Skipped" where the result was skipped and "Not run" where there's no result.
+18. Yes: the platform · status · time heads are shown, then the private-details notice once.
+19. Confirmed: sum per platform (retries included), then the slowest platform. data-map.md "Row time" updated.
+20. Shown, with "Flipped on {c} commits in 30 days" in place of "Failed 0 of last 40 runs".
+21. Corrected to 504 px (120 + 120 + 240 + 2 × 12) in components.md and the Design System.
+22. Intended: series 0's start label and dot are drawn only when its first value exists. Documented in TrendChart.
+
+**Run page**
+23. Drawn (section 10, four banners). Heads: "1 test failed: {suite} › {name}" / "{f} tests failed" / "{e} tests errored" / "{f} failed, {e} errored". Sub-line from module, layer, platforms and the mismatch sentence; a private project adds its sentence. Button: "Show failure" / "Show failures". The interpretive prose is gone; Run Detail's sub-lines follow the template.
+24. Removed: the meta reads "Reports {n}".
+25. Both removed from Run Detail and the docs.
+26. Drawn: the bar runs passed, failed, skipped (`--neutral`); line "1 failed · 44 passed · 5 skipped". Run Detail's bar and line now include skipped.
+27. Drawn: Empty status, dashed `--attn` track, "No tests in this report", tests "0", time "—".
+28. Drawn: a "No test results in this run" card, with "{n} reports arrived, but none held any test cases."
+29. The heading is unchanged; the meta line adds "Attempt {k}" when above 1. See the Run Detail tweak "Ostomate2 · passed, attempt 2".
+30. Confirmed as built: no live indicator, no updates. The header's "Live" is removed from Run Detail.
+31. Copy is "Pruned on {date}" ("Pruned on 23 Mar 2027"). The tag now reads SAMPLE DATE, because only the date is illustrative.
+
+**Project page and charts**
+32. Without JavaScript: title, scope and caption, then the table open in place of the plot. There's no empty plot and no "Show table" button, because the button is client-rendered.
+33. The note reads "All {n} passed." or "{p} passed, {f} failed, {e} empty." (zero parts omitted). With no CI runs yet, a dashed "No CI runs yet" frame shows and the note is hidden.
+34. n counts runs with a value, and first/last are the first and last runs with a value. If the latest run has none, the caption adds "The latest run had no tests."
+35. Always 3. The live-update scenario now slices to 3 rows.
+
+**Live feed**
+36. The note reads "10:42 UTC", with the full timestamp in `title`. Landing is updated.
+37. Drawn (section 04, PHONE HEADER · 390): row 1 is the wordmark, Live and the theme toggle; row 2 the nav. Page mocks can't express the breakpoint with inline styles, so the drawing is canonical.
+
+**Time**
+38. Confirmed: "22 Sep 2026, 04:37 UTC".
+39. They may differ: marker and silent counts are elapsed 24-hour periods, while relative times are calendar points. They no longer meet, because a stale card shows a date (item 14).
+
+**Test history**
+40. components.md "Test history page" gives each tile's value, window and sub-line from data. Platform keys are shown verbatim ("jvm", "ios-sim"), since there's no display-name data. Test History's tiles now use the templates.
+41. Headline "Platform mismatch in {k} run(s) · {run}, {when}", shown when any run in the strip has a mismatch. "New · first seen {relative time}" shows within 7 days of the first result.
+42. The strip note is "Last {n} runs, oldest on the left" ("One run so far" for one). The prose paragraph is removed.
+43. Removed. The strip and its panel carry the same data.
+44. A mono module tag before the layer tag ("composeApp", "shared").
+45. "Default branch · last 30 CI runs (imported history has no durations)".
+46. Amber diamond, "Flaky run" in tooltip and accessible name (tp-charts.js `marks` status `flaky`). Test History passes it.
+47. A test only exists once a CI run reported it. When all its results are pruned, the Pruned notice replaces strip and chart. NotFound's primary for a test in a project with no run is "Go to {project}".
+48. Under 10 ms reads in whole ms ("4 ms", "<1 ms"). When every value is under 10 ms, the axis uses whole-ms steps. When min = max: "Held at {v} over the last {n} runs." Applied in tp-charts.js and Test History.
+49. 22 × 24, canonical, with `--shadow-card`. Test History corrected.
+
+Files changed in v8: Design System.dc.html, Landing.dc.html, Kiosk.dc.html, Project Page.dc.html, Run Detail.dc.html, Test History.dc.html, Privacy.dc.html, NotFound.dc.html, Admin.dc.html, How Its Tested.dc.html, tp-charts.js, tp-kit.js, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v9
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing else was changed.
+
+**Dates in chart tables**
+1. TrendChart tables now have a **When** column between Run and the values, in `<time datetime>` with the standard title: "22 Sep, 04:37 UTC", or "12 Dec 2025, 04:37 UTC" in another year.
+   - Column: label "When", left-aligned, auto width, `--ink-2`.
+   - Wrapping: date and time are separate nowrap pieces, so a narrow table wraps between them ("22 Sep," / "04:37 UTC"). Value columns never wrap.
+   - 390 px: the card leaves a ~292 px frame. Below 560 px the table is compact (13 px, cell padding 0 6, When always two lines): ≈ 264 px, which fits the ~273 px left after a classic vertical scrollbar. With three or more series it scrolls sideways. The frame is 320 px tall.
+   - Rows are 44 px tall.
+   - No-JS: the same table, with When and links, is rendered open in place of the plot.
+   - Bars have no When column; their Day column is already the date.
+   - New props: `whens`, `hrefs`, `nowYear`.
+   - Drawn: Design System section 12 ("TABLE OPEN", desktop and 390).
+   - Wired: every Project page chart, including each coverage module, and Test History's duration chart.
+2. Only the Run cell is the link. A row can't be one link without JavaScript, and the cell text is the link's name.
+   - Link: `<a>` filling the cell, 44 px, `--ink` 500.
+   - Hover: the row turns `--raised` and the Run text is underlined.
+   - Focus: 2 px `--ink` ring inset by 2 px, so the scroll frame doesn't clip it.
+   - Imported rows: plain `--ink-2` text with no hover (drawn: the three oldest rows).
+   - Private projects link the same way.
+
+**True-today copy**
+3. Privacy.dc.html now has a `phase` tweak.
+   - **today** (default): nothing is recorded, no cookies, no analytics. It covers:
+     - one Supabase Realtime WebSocket. Supabase sees the IP address under its own policy, and no connection is opened without JavaScript.
+     - the theme stored in localStorage only after the toggle.
+     - Vercel's and Supabase's own logs, which aren't described.
+     - "If this changes".
+   - **after Phase 6**: the lede, the summary cards and three tracking sections switch in. They say "stores a salted hash, never the address" instead of "no raw IP addresses".
+   - Live updates, Theme and Hosting stay in both versions.
+   - "Updated {date}" sits under the h1 and changes with the copy. The Phase 6 copy ships in the same PR as tracked links.
+   - Rules are in components.md "Privacy page".
+4. How It's Tested rewritten so every claim is true now:
+   - Hero no longer says it reports itself.
+   - Strategy table: Unit (90% line floor), Contract (runs in the unit job, counted as Unit), Integration (local Supabase, anon-client RLS), E2E (seeded pages, no-JS pass), Accessibility (axe + contrast check), Visual (pinned image) and Leak sweep. The last three count as E2E.
+   - Alert rules, bot classification, the prune job, tracked links and admin sign-in are removed.
+   - The incident cards no longer mention a daily check or alerts.
+   - The self-results footnote now counts contract tests as Unit.
+   - Build progress: eight phases, with icon and word per status. It reads spec §17 at build time and is labelled "As of 30 Sep": Phases 0–4 done, 5 in progress, 6–7 planned.
+   - What changes with Phases 5, 6 and 7 is in components.md "How it's tested page".
+
+**v8 leftovers**
+5. Converted:
+   - Test History: runs use relative time, dated from 28 days ("2 Sep").
+   - Test History Runs tile: "since {date}".
+   - Design System timeline: "1 week ago", "4 weeks ago", then "22 Aug".
+   - Admin: "1 week ago".
+   - Landing and Kiosk feed rows: "1 week ago".
+   - The stale card keeps its date (v8 item 14).
+   - Helper: `TPKit.relDays` / `shortDate`.
+6. Every latest run empty: "0" + "automated tests on the latest runs. The latest runs of A, B and C had no tests, so nothing is counted." Name lists everywhere: "A", "A and B", "A, B and C" (no Oxford comma).
+7. They now agree:
+   - Page variant: server-rendered HTTP 503; "Try again" is a link to the same URL (`retryHref`) and there is no `onRetry`.
+   - Inline variant (client-side only): keeps its `onRetry` button.
+   - Fixed in the Landing error mock, Design System section 13 and components.md.
+8. "<1 ms". A stored 0 means under 1 ms; tp-charts now matches the caption. Axis ticks at 0 still read "0 ms" / "0 s".
+9. "Oldest on the left". The label under the strip already gives the count ("39 runs ago", or "Last 27 runs" when fewer fit), so the note is true at every width.
+10. `tests.first_seen_at` (survives pruning).
+11. "The latest run's tests were all skipped."
+12. Drawn:
+   - Section 11: "No CI runs yet" strip; flaky list with both rate texts ("Failed 3 of last 40 runs", "Flipped on 2 commits in 30 days").
+   - Section 10: private failure heads (two platforms, no message, one notice).
+   - Section 14: NotFound "test, project has no runs" with primary "Go to Ostomate2", also a new NotFound `kind`.
+13. Fixed. At most one mark per run, priority failed/error > flaky > empty.
+   - Placement: the mark sits on the series of the platform that produced it (`marks[].series`). If that series has no value there, it goes on the first series that has one.
+   - A failure on platform 2 where platform 1 didn't run is now marked on platform 2.
+   - No mark only when no series has a value.
+   - Test History passes `series` and the priority.
+14. Corrected: pruned rows appear only on the project page run list. Each project's 5 newest runs are never pruned, so the landing feed never shows one.
+15. "1 run, passed." / "1 run, failed." / "1 run, empty."
+16. Added to the Design System (section 11, "TEST HISTORY HEADER TAGS"): module tag mono 13, padding 3×10, radius 6, 1 px `--line-strong`, beside the layer, Flaky and New pills.
+
+**Owner decisions**
+17. Relative time rewritten hours-first: under 1 min, under 1 h, under 24 h (always "{h} h ago", even across midnight), then UTC calendar days ("yesterday" only once 24 h have passed; 2–6 days; weeks), then the date from 28 days.
+18. Test History's duration chart now takes the project's last 30 default-branch CI runs. A run where a platform has no result is a gap in place, and older runs never fill it.
+   - Scope: "Default branch · last 30 CI runs (imported history has no durations)" on Test History, the Design System (both duration charts) and in components.md.
+   - Skipped gaps read "Skipped", missing ones "Not run".
+
+Files changed in v9: Design System.dc.html, Privacy.dc.html, How Its Tested.dc.html, Test History.dc.html, Project Page.dc.html, Landing.dc.html, Kiosk.dc.html, Admin.dc.html, NotFound.dc.html, tp-charts.js, tp-kit.js, design/README.md, design/components.md, design/data-map.md.

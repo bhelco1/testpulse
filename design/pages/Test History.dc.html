@@ -40,10 +40,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <main id="main">
 <section style="padding:36px 0 40px">
 <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:14px">
+<span style="padding:3px 10px;border-radius:6px;border:1px solid var(--line-strong);color:var(--ink-2);font:13px 'JetBrains Mono',monospace">{{ t.module }}</span>
 <span style="padding:3px 10px;border-radius:6px;border:1px solid var(--line-strong);color:var(--ink-2)">{{ t.layer }}</span>
 <sc-if value="{{ t.isFlaky }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></sc-if>
-<sc-if value="{{ t.isMismatch }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed on iOS simulator once<span style="font-weight:400;color:var(--ink-3)">· Pull request from fix-today-count, yesterday</span></span></sc-if>
-<sc-if value="{{ t.isNew }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600">New · first seen 4 minutes ago</span></sc-if>
+<sc-if value="{{ t.isMismatch }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>Platform mismatch in 1 run</span><span style="font-weight:400;color:var(--ink-3)">· Pull request from fix-today-count, yesterday</span></span></sc-if>
+<sc-if value="{{ t.isNew }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600">New · first seen 4 min ago</span></sc-if>
 <span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">{{ t.sampleTag }}</span>
 </div>
 <h1 style="margin:14px 0 0;font:500 clamp(32px,4.5vw,52px)/1.1 'JetBrains Mono',monospace;letter-spacing:-.03em;overflow-wrap:anywhere">{{ t.name }}</h1>
@@ -56,10 +57,9 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <!-- TIMELINE -->
 <section style="padding:40px 0;border-top:1px solid var(--line)">
-<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px"><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Status by run</h2><span style="font-size:14px;color:var(--ink-3)">{{ t.stripNote }}</span></div>
-<p style="margin:0 0 24px;max-width:720px;font-size:14.5px;line-height:1.55;color:var(--ink-2);text-wrap:pretty">{{ t.caption }}</p>
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px"><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Status by run</h2><span style="font-size:14px;color:var(--ink-3)">{{ t.stripNote }}</span></div>
 
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
 <div style="display:flex;flex-direction:column;gap:14px">
 <sc-for list="{{ strips }}" as="st" hint-placeholder-count="2">
 <div style="display:flex;gap:12px;align-items:flex-end">
@@ -86,33 +86,18 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </section>
 
 <!-- DURATION -->
-<section style="padding:40px 0;border-top:1px solid var(--line)">
+<section style="padding:40px 0 64px;border-top:1px solid var(--line)">
 <figure style="margin:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
 <div style="font:500 20px 'Source Serif 4',serif">Duration</div>
-<div style="margin-top:2px;font-size:13px;color:var(--ink-3)">Default branch · CI runs only (imported history has no durations)</div>
+<div style="margin-top:2px;font-size:13px;color:var(--ink-3)">Default branch · last 30 CI runs (imported history has no durations)</div>
 <sc-if value="{{ durCaption }}" hint-placeholder-val="{{ true }}"><figcaption style="margin-top:6px;font-size:14px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ durCaption }}</figcaption></sc-if>
 <div style="margin-top:14px"><x-import component-from-global-scope="TPCharts.Trend" from="./tp-charts.js" dc-props="{{ durProps }}" hint-size="100%,250px"></x-import></div>
 </figure>
 </section>
 
-<!-- RECENT -->
-<section style="padding:40px 0 64px;border-top:1px solid var(--line)">
-<h2 style="margin:0 0 20px;font:500 30px/1.2 'Source Serif 4',serif">Recent results</h2>
-<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
-<div style="min-width:680px">
-<div style="display:grid;grid-template-columns:minmax(0,1fr) 150px 150px 120px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>RUN</span><sc-for list="{{ platHeads }}" as="h" hint-placeholder-count="2"><span>{{ h }}</span></sc-for><span style="text-align:right">WHEN</span></div>
-<sc-for list="{{ recent }}" as="rr" hint-placeholder-count="8">
-<a href="#" style="display:grid;grid-template-columns:minmax(0,1fr) 150px 150px 120px;gap:14px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--line);font-size:14px;text-decoration:none;background:{{ rr.bg }}" style-hover="background:var(--raised)">
-<span style="min-width:0">{{ rr.branch }} · <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-2)">{{ rr.sha }}</span></span>
-<sc-for list="{{ rr.plats }}" as="rp" hint-placeholder-count="2"><span style="display:flex;align-items:center;gap:6px;font-weight:600;color:{{ rp.ink }}">{{ rp.label }}<span style="font-weight:400;color:var(--ink-3)">{{ rp.dur }}</span></span></sc-for>
-<span style="text-align:right;font-size:13px;color:var(--ink-3)">{{ rr.when }}</span>
-</a>
-</sc-for>
-</div></div>
-</section>
 </main>
 
-<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 minutes ago</span></footer>
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;platform mismatch&quot;,&quot;flaky&quot;,&quot;new test, one run&quot;],&quot;default&quot;:&quot;platform mismatch&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
@@ -131,19 +116,21 @@ class Component extends DCLogic {
     const runs = [];
     for (let k = 0; k < n; k++) {
       const i = 40 - n + k;
-      const d = new Date(2026, 7, 16 + i);
-      const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const when = i === 39 ? '4 minutes ago' : i === 38 ? 'yesterday' : date;
+      /* v9 item 5: mock "now" is 30 Sep 2026, 10:00 UTC; one run a day; relative time per components.md */
+      const D = 39 - i, d = new Date(Date.UTC(2026, 8, 30 - D, D === 0 ? 9 : 4 + (i % 6), D === 0 ? 56 : 37));
+      const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], date = d.getUTCDate() + ' ' + MON[d.getUTCMonth()];
+      const when = D === 0 ? '4 min ago' : D === 1 ? 'yesterday' : D < 7 ? D + ' days ago' : D < 14 ? '1 week ago' : D < 28 ? Math.floor(D / 7) + ' weeks ago' : date;
+      const iso = d.toISOString(), id = 'r' + (1000 + i);
       const branch = i === 38 ? 'fix-today-count' : (i % 9 === 4 ? 'renovate-kotlin-2.3' : 'main');
       const event = branch === 'main' ? 'push' : 'pull_request';
       const title = event === 'push' ? 'Push to ' + branch : 'Pull request from ' + branch;
       const w = Math.sin(i * 1.7) * 0.5 + Math.cos(i * 0.9) * 0.5;
-      runs.push({ i, sha: Component.SHAS[i], branch, title, when, w });
+      runs.push({ i, sha: Component.SHAS[i], branch, title, when, w, iso, id, date });
     }
     if (variant === 'flaky') {
       return {
-        t: { name: 'insertsAndQueriesByDay', short: 'ChangeEventDaoTest', suite: 'com.ostomate.app.data.ChangeEventDaoTest', layer: 'Integration', isFlaky: true, isMismatch: false, isNew: false, sampleTag: 'SAMPLE HISTORY', runCount: 40,
-          stripNote: 'Last 40 runs, oldest on the left', oldest: '39 runs ago',
+        t: { name: 'insertsAndQueriesByDay', short: 'ChangeEventDaoTest', suite: 'com.ostomate.app.data.ChangeEventDaoTest', module: 'shared', layer: 'Integration', isFlaky: true, isMismatch: false, isNew: false, sampleTag: 'SAMPLE HISTORY', runCount: 40,
+          stripNote: 'Oldest on the left', oldest: '39 runs ago',
           caption: 'Failed and then passed on a retry of the same commit twice in 40 runs, both times on JVM. The iOS simulator has never failed it. It is listed as flaky on the project page while a pass and a fail on the same commit and platform fall within the last 30 days.' },
         runs, plats: ['jvm', 'ios-sim'],
         status: (p, i) => (p === 'jvm' && (i === 14 || i === 29)) ? 'flaky' : 'pass',
@@ -154,10 +141,10 @@ class Component extends DCLogic {
     const isNew = n === 1;
     return {
       t: isNew
-        ? { name: 'showsReorderBanner', short: 'HomeViewModelTest', suite: 'com.ostomate.app.ui.home.HomeViewModelTest', layer: 'Unit', isFlaky: false, isMismatch: false, isNew: true, sampleTag: 'SAMPLE STATE', runCount: 1,
+        ? { name: 'showsReorderBanner', short: 'HomeViewModelTest', suite: 'com.ostomate.app.ui.home.HomeViewModelTest', module: 'composeApp', layer: 'Unit', isFlaky: false, isMismatch: false, isNew: true, sampleTag: 'SAMPLE STATE', runCount: 1,
             stripNote: 'One run so far', oldest: '', caption: 'Added in the latest run. The timeline and duration trend fill in as more runs report.' }
-        : { name: 'rendersToday', short: 'HomeViewModelTest', suite: 'com.ostomate.app.ui.home.HomeViewModelTest', layer: 'Unit', isFlaky: false, isMismatch: true, isNew: false, sampleTag: 'SAMPLE HISTORY', runCount: 40,
-            stripNote: 'Last 40 runs, oldest on the left', oldest: '39 runs ago',
+        : { name: 'rendersToday', short: 'HomeViewModelTest', suite: 'com.ostomate.app.ui.home.HomeViewModelTest', module: 'composeApp', layer: 'Unit', isFlaky: false, isMismatch: true, isNew: false, sampleTag: 'SAMPLE HISTORY', runCount: 40,
+            stripNote: 'Oldest on the left', oldest: '39 runs ago',
             caption: 'Passed on both platforms for 38 runs. On a pull request from fix-today-count it failed on the iOS simulator while passing on JVM in the same run, then passed on both once the fix landed on main.' },
       runs, plats: ['jvm', 'ios-sim'],
       status: (p, i) => (!isNew && p === 'ios-sim' && i === 38) ? 'fail' : 'pass',
@@ -203,20 +190,30 @@ class Component extends DCLogic {
 
     const all = plats.flatMap(p => runs.map(r => M.status(p, r.i)));
     const fails = all.filter(s => s === 'fail').length, flakes = all.filter(s => s === 'flaky').length;
-    const med = p => { const a = runs.map(r => M.dur(p, r)).sort((x, y) => x - y); return a[Math.floor(a.length / 2)]; };
+    /* v8 item 40: tiles over the strip's runs (last 40 CI runs with a result); platform keys verbatim */
+    const bad = st => st === 'fail' || st === 'error';
+    const failPl = plats.filter(p => runs.some(r => bad(M.status(p, r.i)))), flakyPl = plats.filter(p => runs.some(r => M.status(p, r.i) === 'flaky'));
+    const failRuns = runs.filter(r => plats.some(p => bad(M.status(p, r.i)))).length;
+    /* v9 item 18: the project's last 30 default-branch CI runs; a run where a platform has no result is a gap at its place (older runs never fill it) */
+    const runs30 = runs.filter(r => r.branch === 'main').slice(-30);
+    const medOf = p => { const a = runs30.map(r => M.dur(p, r)).filter(v => v != null).sort((x, y) => x - y), m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
     const stats = [
-      { label: 'Runs', value: String(runs.length), sub: runs.length === 1 ? 'since Sep 24' : 'since Aug 16', ink: 'var(--ink)' },
-      { label: 'Failed', value: String(fails), sub: fails ? '1 run, iOS simulator only' : 'on either platform', ink: fails ? 'var(--fail)' : 'var(--ink)' },
-      { label: 'Flaky', value: String(flakes), sub: flakes ? 'passed on retry, JVM' : 'no retries needed', ink: flakes ? 'var(--attn)' : 'var(--ink)' },
-      { label: 'Median time', value: M.fmt(med('jvm')), sub: 'JVM · iOS sim ' + M.fmt(med('ios-sim')), ink: 'var(--ink)' },
+      { label: 'Runs', value: String(runs.length), sub: 'since ' + runs[0].date, ink: 'var(--ink)' },
+      { label: 'Failed', value: String(failRuns), sub: failRuns ? (failRuns === 1 ? '1 run' : failRuns + ' runs') + ' · ' + failPl.join(', ') : 'on any platform', ink: failRuns ? 'var(--fail)' : 'var(--ink)' },
+      { label: 'Flaky', value: String(flakes), sub: flakes ? (flakes === 1 ? 'commit' : 'commits') + ' in 30 days · ' + flakyPl.join(', ') : 'none in 30 days', ink: flakes ? 'var(--attn)' : 'var(--ink)' },
+      { label: 'Median time', value: M.fmt(medOf(plats[0])), sub: plats.length > 1 ? plats[0] + ' · ' + plats.slice(1).map(p => p + ' ' + M.fmt(medOf(p))).join(' · ') : 'last 30 CI runs', ink: 'var(--ink)' },
     ];
 
-    const series = plats.map((p, si) => ({ label: p, stroke: si ? 'var(--ink-3)' : 'var(--ink)', dash: si ? '6 4' : 'none', ys: runs.map(r => M.dur(p, r)),
-      marks: runs.map((r, i) => [i, M.status(p, r.i)]).filter(([, s]) => s !== 'pass').map(([i, s]) => [i, look[s][1]]) }));
-    const durProps = { series: series.map((s, si) => ({ name: s.label, values: s.ys, dashed: si > 0 })), format: 'sec', unit: 'run', marks: series[0].marks.map(([i, c]) => ({ index: i, status: c === 'var(--fail)' ? 'fail' : 'empty' })).concat(series[1] ? series[1].marks.map(([i, c]) => ({ index: i, status: 'fail' })) : []).filter((m, i, a) => a.findIndex(x => x.index === m.index) === i), ariaLabel: 'Duration by run. ' + t.durCaption };
-    const dv = durProps.series.flatMap(s => s.values).filter(v => v != null), fs = v => v.toFixed(2) + ' s';
+    const series = plats.map((p, si) => ({ label: p, stroke: si ? 'var(--ink-3)' : 'var(--ink)', dash: si ? '6 4' : 'none', ys: runs30.map(r => M.dur(p, r)),
+      marks: runs30.map((r, i) => [i, M.status(p, r.i)]).filter(([, s]) => s !== 'pass').map(([i, s]) => [i, look[s][1]]) }));
+    /* v9 item 13: one mark per run, priority failed/error > flaky; it sits on the platform that produced it (the first such in data order) */
+    const PRI = { fail: 3, error: 3, flaky: 2 };
+    const marks = runs30.map((r, i) => { let best = null; plats.forEach((p, si) => { const st = M.status(p, r.i), pr = PRI[st] || 0; if (pr && (!best || pr > best.pr)) best = { index: i, status: pr === 3 ? 'fail' : 'flaky', series: si, pr }; }); return best; }).filter(Boolean).map(({ pr, ...m }) => m);
+    const durProps = { series: series.map((s, si) => ({ name: s.label, values: s.ys, dashed: si > 0, gapLabels: runs30.map(r => M.status(plats[si], r.i) === 'skip' ? 'Skipped' : null) })), format: 'sec', unit: 'run', marks,
+      whens: runs30.map(r => r.iso), hrefs: runs30.map(r => '/p/ostomate2/runs/' + r.id), nowYear: 2026, ariaLabel: 'Duration by run. ' + t.durCaption };
+    const dv = durProps.series.flatMap(s => s.values).filter(v => v != null), fs = v => v < 0.01 ? (v < 0.0005 ? '<1 ms' : Math.round(v * 1000) + ' ms') : v.toFixed(2) + ' s'; /* v8 item 48 */
     const med = a => { const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
-    const durCaption = runs.length < 2 || !dv.length ? '' : `Between ${fs(Math.min(...dv))} and ${fs(Math.max(...dv))} over the last ${runs.length} runs.` + (durProps.series.length === 1 ? ` Median ${fs(med(dv))}.` : '');
+    const durCaption = runs30.length < 2 || !dv.length ? '' : fs(Math.min(...dv)) === fs(Math.max(...dv)) ? `Held at ${fs(dv[0])} over the last ${runs30.length} runs.` : `Between ${fs(Math.min(...dv))} and ${fs(Math.max(...dv))} over the last ${runs30.length} runs.` + (durProps.series.length === 1 ? ` Median ${fs(med(dv))}.` : '');
     const present = Array.from(new Set(plats.flatMap(p => runs.map(r => M.status(p, r.i)))));
     const legend = ['pass', 'fail', 'error', 'flaky', 'skip', 'notrun'].filter(k => present.includes(k)).map(k => ({ w: look[k][3], h: Math.min(parseInt(look[k][0], 10), 20) + 'px', bg: look[k][1], bd: look[k][5] }));
 
@@ -229,7 +226,7 @@ class Component extends DCLogic {
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
 
     return {
-      themeVars: tv, liveDot, t, stats, strips, sel, durProps, durCaption, legend, recent, platHeads: plats.map(p => p.toUpperCase()),
+      themeVars: tv, liveDot, t, stats, strips, sel, durProps, durCaption, legend,
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
     };

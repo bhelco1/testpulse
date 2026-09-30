@@ -434,10 +434,11 @@ describe('projectPageView', () => {
     expect(view.declared).toBe(project.declaredSuites);
   });
 
-  it('lists coverage against floors, leaving out a module that has no floor', () => {
+  it('lists coverage against floors, a module with no floor included with none (v8 item 15)', () => {
     expect(projectPageView(page(), NOW).coverage).toEqual([
       { module: 'composeApp', pct: (497 / 527) * 100, floor: 93 },
       { module: 'shared', pct: (457 / 490) * 100, floor: 91 },
+      { module: 'extra', pct: 50, floor: null },
     ]);
   });
 
@@ -519,7 +520,7 @@ describe('projectPageView', () => {
       expect(view.runs.loadMoreHref).toBe('/p/ostomate2?branches=all&runs=22');
     });
 
-    it('keeps a pruned run’s executions until the design says what it shows', () => {
+    it('shows a pruned run with no test count, its duration in its place (v7 item 16)', () => {
       const view = projectPageView(
         page({
           runs: {
@@ -531,7 +532,13 @@ describe('projectPageView', () => {
         NOW,
       );
 
-      expect(view.runs.items[0]).toMatchObject({ failed: 1, passed: 191, total: 192 });
+      expect(view.runs.items[0]).toMatchObject({
+        status: 'failed',
+        pruned: true,
+        duration: '36 s',
+      });
+      expect(view.runs.items[0]).not.toHaveProperty('total');
+      expect(view.runs.items[0]).not.toHaveProperty('failed');
     });
 
     it('titles no row of a private project', () => {
@@ -680,7 +687,8 @@ describe('projectPageView', () => {
       expect(passRate).toMatchObject({ marks: [], caption: 'All 21 runs passed.' });
     });
 
-    it('leaves a gap and an empty mark for a run with no rate, and holds the caption back', () => {
+    // Design v8 item 34 and v9 item 11 (components.md TrendChart, "Captions with gaps").
+    it('leaves a gap and an empty mark for a run with no rate, counting only runs with one', () => {
       const trends = {
         ...NO_TRENDS,
         passRate: [
@@ -693,8 +701,25 @@ describe('projectPageView', () => {
       expect(passRate).toMatchObject({
         series: [{ name: 'Pass rate', values: [100, null, 100] }],
         marks: [{ index: 1, status: 'empty' }],
-        caption: null,
+        caption: 'All 2 runs passed.',
       });
+    });
+
+    it('says why the latest run has no rate: no tests, or every test skipped', () => {
+      const ending = (status: 'empty' | 'passed') => ({
+        ...NO_TRENDS,
+        passRate: [
+          passRatePoint(0, 'passed', 5, 0),
+          passRatePoint(1, 'passed', 5, 0),
+          passRatePoint(2, status, 0, 0),
+        ],
+      });
+      const captionOf = (status: 'empty' | 'passed') =>
+        projectPageView(page({ trends: ending(status) }), NOW).history.charts[0]?.caption;
+      expect(captionOf('empty')).toBe('All 2 runs passed. The latest run had no tests.');
+      expect(captionOf('passed')).toBe(
+        'All 2 runs passed. The latest run’s tests were all skipped.',
+      );
     });
 
     it('counts tests per run, marking the failed runs', () => {
@@ -710,7 +735,7 @@ describe('projectPageView', () => {
       });
     });
 
-    it('leaves a pruned run a gap in tests per run, and holds the caption back', () => {
+    it('leaves a pruned run a gap in tests per run, counting only runs with a count', () => {
       const trends = {
         ...NO_TRENDS,
         testCount: [countPoint(0, 140), countPoint(1, null), countPoint(2, 142)],
@@ -718,7 +743,7 @@ describe('projectPageView', () => {
       const [, tests] = projectPageView(page({ trends }), NOW).history.charts;
       expect(tests).toMatchObject({
         series: [{ name: 'Tests', values: [140, null, 142] }],
-        caption: null,
+        caption: 'Grew from 140 to 142 over the last 2 runs.',
       });
     });
 
@@ -812,10 +837,14 @@ describe('projectPageView', () => {
       );
     });
 
-    it('has no note for a single run', () => {
-      expect(
-        projectPageView(page({ recentRuns: [stripRun(0, 'passed')] }), NOW).history.strip?.note,
-      ).toBeNull();
+    // Design v8 item 33 as v9 item 15 words it; counts cover every run, computed on the server
+    // (owner decision 2026-09-30).
+    it('reads "1 run, {status}." for a single run', () => {
+      const noteOf = (status: 'passed' | 'failed' | 'empty') =>
+        projectPageView(page({ recentRuns: [stripRun(0, status)] }), NOW).history.strip?.note;
+      expect(noteOf('passed')).toBe('1 run, passed.');
+      expect(noteOf('failed')).toBe('1 run, failed.');
+      expect(noteOf('empty')).toBe('1 run, empty.');
     });
 
     it('has no strip before the first run', () => {

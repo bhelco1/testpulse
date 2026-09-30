@@ -121,7 +121,7 @@ test.describe('Ostomate2 (public)', () => {
     await expect(charts(page).locator('[data-part="caption"]')).toHaveText([
       'All 21 runs passed.',
       'Held at 142 for the last 8 runs.',
-      'Between 36 s and 36 s over the last 8 runs. Median 36 s.',
+      'Held at 36 s over the last 8 runs.',
     ]);
     await expect(runStrip(page).getByRole('img')).toHaveAttribute(
       'aria-label',
@@ -371,7 +371,12 @@ for (const slug of ['ostomate2', 'routeserve']) {
     await expect(
       page.getByRole('region', { name: 'Coverage and reports' }).locator('[data-state]').first(),
     ).toBeVisible();
-    // Without scripts no chart is drawn; each chart's table stands in for it, newest run first.
+    // Without scripts no chart is drawn; each chart's table stands open in its place, newest run
+    // first, with no empty plot area and no "Show table" button (design v8 item 32).
+    await expect(page.getByRole('button', { name: 'Show table' })).toHaveCount(0);
+    for (const placeholder of await page.locator('[data-part="placeholder"]').all()) {
+      await expect(placeholder).toBeHidden();
+    }
     const table = page.getByRole('region', { name: 'Pass rate, table' }).getByRole('row');
     await expect(table).toHaveCount(slug === 'ostomate2' ? 22 : 11);
     await expect(table.nth(1)).toHaveText(slug === 'ostomate2' ? 'Latest100.0%' : 'Latest99.9%');

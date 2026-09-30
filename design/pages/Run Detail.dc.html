@@ -28,7 +28,6 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
-<span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}Live</span>
 <button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
 </nav>
 </header>
@@ -55,6 +54,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <div><dt style="color:var(--ink-3)">Event</dt><dd style="margin:3px 0 0">{{ r.event }}</dd></div>
 <div><dt style="color:var(--ink-3)">Started</dt><dd style="margin:3px 0 0">{{ r.started }}</dd></div>
 <div><dt style="color:var(--ink-3)">Reports</dt><dd style="margin:3px 0 0">{{ r.reportsIn }}</dd></div>
+<sc-if value="{{ r.hasAttempt }}" hint-placeholder-val="{{ false }}"><div><dt style="color:var(--ink-3)">Attempt</dt><dd style="margin:3px 0 0">{{ r.attempt }}</dd></div></sc-if>
 <sc-if value="{{ r.isPublic }}" hint-placeholder-val="{{ true }}"><div><dt style="color:var(--ink-3)">CI</dt><dd style="margin:3px 0 0"><a href="#" style="display:inline-flex;align-items:center;gap:5px">GitHub Actions<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a></dd></div></sc-if>
 </dl>
 
@@ -73,8 +73,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 
 <!-- REPORTS -->
 <section style="padding:40px 0;border-top:1px solid var(--line)">
-<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px"><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Reports in this run</h2><sc-if value="{{ r.reportsSample }}" hint-placeholder-val="{{ false }}"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE SPLIT</span></sc-if></div>
-<p style="margin:0 0 20px;max-width:720px;font-size:14.5px;line-height:1.55;color:var(--ink-3);text-wrap:pretty">{{ r.reportsNote }}</p>
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px"><h2 style="margin:0 0 12px;font:500 30px/1.2 'Source Serif 4',serif">Reports in this run</h2><sc-if value="{{ r.reportsSample }}" hint-placeholder-val="{{ false }}"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE SPLIT</span></sc-if></div>
 <div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
 <div style="min-width:760px">
 <div style="display:grid;grid-template-columns:120px minmax(0,1.4fr) minmax(0,1fr) 90px 120px 90px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>STATUS</span><span>JOB / MODULE / PLATFORM</span><span>RESULTS</span><span style="text-align:right">TESTS</span><span style="text-align:right">RECEIVED</span><span style="text-align:right">TIME</span></div>
@@ -82,13 +81,12 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <div style="display:grid;grid-template-columns:120px minmax(0,1.4fr) minmax(0,1fr) 90px 120px 90px;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;background:{{ rp.rowBg }}">
 <span><sc-if value="{{ rp.pass }}"><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if><sc-if value="{{ rp.fail }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if></span>
 <span style="font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ rp.key }}</span>
-<span style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--raised)"><span style="width:{{ rp.passW }};background:var(--pass)"></span><span style="width:{{ rp.failW }};min-width:{{ rp.failMin }};background:var(--fail)"></span></span><span style="font-size:12.5px;white-space:nowrap;color:{{ rp.resInk }}">{{ rp.res }}</span></span>
+<span style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--raised)"><span style="width:{{ rp.passW }};background:var(--pass)"></span><span style="width:{{ rp.failW }};min-width:{{ rp.failMin }};background:var(--fail)"></span><span style="width:{{ rp.skipW }};min-width:{{ rp.skipMin }};background:var(--neutral)"></span></span><span style="font-size:12.5px;white-space:nowrap;color:{{ rp.resInk }}">{{ rp.res }}</span></span>
 <span style="text-align:right;font-weight:600">{{ rp.tests }}</span>
 <span style="text-align:right;color:var(--ink-3);font-size:13px">{{ rp.received }}</span>
 <span style="text-align:right;color:var(--ink-2)">{{ rp.dur }}</span>
 </div>
 </sc-for>
-<div style="padding:12px 18px;font-size:13px;color:var(--ink-3)">{{ r.reportsFoot }}</div>
 </div></div>
 </section>
 
@@ -97,7 +95,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px"><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Results</h2><span style="font-size:14px;color:var(--ink-3)">Failures first, then by suite</span></div>
 
 <sc-if value="{{ pruned }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;gap:14px;align-items:flex-start;padding:24px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"><svg style="flex:none;margin-top:3px" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div><div style="font:500 22px 'Source Serif 4',serif">Per-test results retained for 180 days</div><p style="margin:6px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink-2)">This run is older than that, so its individual results were removed to keep the database small. Summary totals are permanent: {{ r.total }} tests, {{ r.passed }} passed, {{ r.failed }} failed.</p><div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span>Pruned on Mar 23, 2027</div></div></div>
+<div style="display:flex;gap:14px;align-items:flex-start;padding:24px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"><svg style="flex:none;margin-top:3px" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div><div style="font:500 22px 'Source Serif 4',serif">Per-test results retained for 180 days</div><p style="margin:6px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink-2)">This run is older than that, so its individual results were removed to keep the database small. Summary totals are permanent: {{ r.total }} tests, {{ r.passed }} passed, {{ r.failed }} failed.</p><div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE DATE</span>Pruned on 23 Mar 2027</div></div></div>
 </sc-if>
 
 <sc-if value="{{ notPruned }}" hint-placeholder-val="{{ true }}">
@@ -163,10 +161,10 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 </section>
 </main>
 
-<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 minutes ago</span></footer>
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;run&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ostomate2 · passed&quot;,&quot;Ostomate2 · failed&quot;,&quot;RouteServe · failed (private)&quot;],&quot;default&quot;:&quot;Ostomate2 · failed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pruned&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;run&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ostomate2 · passed&quot;,&quot;Ostomate2 · passed, attempt 2&quot;,&quot;Ostomate2 · failed&quot;,&quot;RouteServe · failed (private)&quot;],&quot;default&quot;:&quot;Ostomate2 · failed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pruned&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null, status: 'all', layer: 'all', open: {}, narrow: false };
   box = React.createRef();
@@ -210,15 +208,15 @@ class Component extends DCLogic {
       { key: 'ios/shared/ios-sim', tests: 82, failed: 0, received: '14:06:12', dur: '9 s' },
       { key: 'ios/composeApp/ios-sim', tests: 50, failed: failed ? 1 : 0, received: '14:06:30', dur: '7 s' },
     ];
-    const common = { project: 'Ostomate2', reportsIn: '4 of 4', reportsNote: 'Each CI job posts its own report when it finishes. JVM and iOS simulator run the same shared suites, so a test that exists on both platforms is counted once in the totals.', reportsFoot: 'Totals count each test once; the iOS simulator re-runs 132 of the 142.' };
+    const common = { project: 'Ostomate2', reportsIn: '4', reportsNote: 'Each CI job posts its own report when it finishes. JVM and iOS simulator run the same shared suites, so a test that exists on both platforms is counted once in the totals.', reportsFoot: 'Totals count each test once; the iOS simulator re-runs 132 of the 142.' };
     return {
-      'Ostomate2 · passed': Object.assign({}, common, { id: '35642780279', status: 'pass', title: 'Push to main', when: '4 minutes ago', branch: 'main', sha: '0e2d0b4', event: 'push', started: 'Sep 24, 14:02', total: '142', passed: '142', failed: '0', skipped: '0', duration: '27 s', reports: ostoReports(false), rows: ostoRows(false) }),
-      'Ostomate2 · failed': Object.assign({}, common, { id: '35611904417', status: 'fail', title: 'Pull request from fix-today-count', when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', event: 'pull_request', started: 'Sep 23, 17:40', total: '142', passed: '141', failed: '1', skipped: '0', duration: '31 s', sample: true, reports: ostoReports(true), rows: ostoRows(true),
-        failHead: '1 test failed: HomeViewModelTest › rendersToday', failSub: 'It failed on the iOS simulator and passed on JVM in the same run, which points at platform-specific behaviour rather than shared logic.' }),
-      'RouteServe · failed (private)': { project: 'RouteServe', private: true, id: '35598127760', status: 'fail', title: '', when: 'yesterday', branch: 'main', sha: '5f0a2c9', event: 'push', started: 'Sep 23, 09:15', total: '1,048', passed: '1,047', failed: '1', skipped: '0', duration: '30 s', sample: true, reportsIn: '3 of 3', reportsSample: true,
+      'Ostomate2 · passed': Object.assign({}, common, { id: '35642780279', status: 'pass', title: 'Push to main', when: '4 min ago', branch: 'main', sha: '0e2d0b4', event: 'push', started: '24 Sep, 14:02 UTC', total: '142', passed: '142', failed: '0', skipped: '0', duration: '27 s', reports: ostoReports(false), rows: ostoRows(false) }),
+      'Ostomate2 · failed': Object.assign({}, common, { id: '35611904417', status: 'fail', title: 'Pull request from fix-today-count', when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', event: 'pull_request', started: '23 Sep, 17:40 UTC', total: '142', passed: '141', failed: '1', skipped: '0', duration: '31 s', sample: true, reports: ostoReports(true), rows: ostoRows(true),
+        failHead: '1 test failed: HomeViewModelTest › rendersToday', failSub: 'In composeApp, Unit layer. Failed on ios-sim, passed on jvm in the same run.' }),
+      'RouteServe · failed (private)': { project: 'RouteServe', private: true, id: '35598127760', status: 'fail', title: '', when: 'yesterday', branch: 'main', sha: '5f0a2c9', event: 'push', started: '23 Sep, 09:15 UTC', total: '1,048', passed: '1,047', failed: '1', skipped: '0', duration: '30 s', sample: true, reportsIn: '3', reportsSample: true,
         reportsNote: 'The monorepo reports once per workspace, so each report stays under the 4 MB request limit.', reportsFoot: 'Per-workspace counts are a sample split of the real 1,048 total.',
         reports: [{ key: 'test/apps/backend/node', tests: 501, failed: 1, received: '09:16:02', dur: '14 s' }, { key: 'test/apps/mobile/node', tests: 468, failed: 0, received: '09:16:20', dur: '12 s' }, { key: 'test/packages/shared/node', tests: 79, failed: 0, received: '09:15:48', dur: '4 s' }],
-        rows: rsRows(), failHead: '1 test failed: returns 409 when job overlaps', failSub: 'In apps/backend, API layer. This repository is private, so the failure message and stack trace are hidden.' },
+        rows: rsRows(), failHead: '1 test failed: returns 409 when job overlaps', failSub: 'In apps/backend, API layer. This repository is private, so failure messages and stack traces are hidden.' },
     };
   }
 
@@ -228,19 +226,20 @@ class Component extends DCLogic {
     const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
     if (!dark) { Object.keys(L).forEach(k => tv['--' + k] = L[k]); tv['--shadow-menu'] = '0 16px 40px -12px rgba(28,26,23,.22)'; }
     const all = this.runs();
+    all['Ostomate2 · passed, attempt 2'] = Object.assign({}, all['Ostomate2 · passed'], { attempt: 2, sample: true }); /* v8 item 29 */
     const src = all[this.props.run] || all['Ostomate2 · failed'];
     const priv = !!src.private, isFail = src.status === 'fail';
     const pruned = !!this.props.pruned;
 
     const r = Object.assign({}, src, {
-      private: priv, isPublic: !priv, isPass: !isFail, isFail, sample: !!src.sample, reportsSample: !!src.reportsSample,
+      private: priv, isPublic: !priv, hasAttempt: (src.attempt || 1) > 1, attempt: String(src.attempt || 1), isPass: !isFail, isFail, sample: !!src.sample, reportsSample: !!src.reportsSample,
       failTileBg: isFail ? 'var(--fail-tint)' : 'var(--surface)', failTileLine: isFail ? 'var(--fail)' : 'var(--line)',
       failTileLabel: isFail ? 'var(--fail)' : 'var(--ink-3)', failTileInk: isFail ? 'var(--fail)' : 'var(--ink)',
       reports: src.reports.map(x => {
-        const f = x.failed, pw = ((x.tests - f) / x.tests * 100) + '%';
-        return { key: x.key, pass: f === 0, fail: f > 0, tests: x.tests.toLocaleString('en-US'), received: x.received, dur: x.dur,
+        const f = x.failed, sk = x.skipped || 0, pw = ((x.tests - f - sk) / x.tests * 100) + '%';
+        return { key: x.key, pass: f === 0, fail: f > 0, skipW: (sk / x.tests * 100) + '%', skipMin: sk ? '4px' : '0px', tests: x.tests.toLocaleString('en-US'), received: x.received, dur: x.dur,
           passW: pw, failW: (f / x.tests * 100) + '%', failMin: f ? '4px' : '0px', rowBg: f ? 'var(--fail-tint)' : 'transparent',
-          res: f ? `${f} failed · ${x.tests - f} passed` : `${x.tests} passed`, resInk: f ? 'var(--fail)' : 'var(--ink-3)' };
+          res: [f ? `${f} failed` : '', `${x.tests - f - sk} passed`, sk ? `${sk} skipped` : ''].filter(Boolean).join(' · '), /* v8 item 26 */ resInk: f ? 'var(--fail)' : 'var(--ink-3)' };
       }),
     });
 

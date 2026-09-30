@@ -38,7 +38,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <section style="padding:56px 0 64px;max-width:860px">
 <div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">How it’s tested</div>
 <h1 style="margin:14px 0 0;font:500 clamp(40px,5.5vw,68px)/1.04 'Source Serif 4',serif;letter-spacing:-.03em;text-wrap:balance">This dashboard is tested the same way as the projects it reports on.</h1>
-<p style="margin:24px 0 0;max-width:680px;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">A test dashboard that isn’t tested is just a claim. testpulse is built test-first, its own CI runs the full suite on every pull request, and it reports its results here alongside everything else.</p>
+<p style="margin:24px 0 0;max-width:680px;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">A test dashboard that isn’t tested is just a claim. testpulse is built test-first, and its own CI runs every suite on every pull request. From Phase 7 it will report its results here alongside everything else.</p>
 <div style="display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:24px;font-size:14.5px">
 <a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;font-weight:600">Source on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
 <a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;color:var(--ink-2)">Read the specification<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
@@ -59,11 +59,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <!-- 02 STRATEGY -->
 <section style="padding:48px 0;border-top:1px solid var(--line)">
-<div style="max-width:760px;margin-bottom:28px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">What runs, and what it covers</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Parsers are tested against result files captured from Ostomate2 and RouteServe, not hand-written samples. Integration tests hit a real Postgres, including the row-level security that hides private projects.</p></div>
+<div style="max-width:760px;margin-bottom:28px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">What runs, and what it covers</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Parsers are tested against result files captured from Ostomate2 and RouteServe, not hand-written samples. Integration tests run against a local Supabase, including the row-level security that hides private projects from the public.</p></div>
 <div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:20px">
 <div style="min-width:760px">
 <div style="display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:14px 24px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>LAYER</span><span>TOOL</span><span>SCOPE</span></div>
-<sc-for list="{{ layers }}" as="l" hint-placeholder-count="5">
+<sc-for list="{{ layers }}" as="l" hint-placeholder-count="6">
 <div style="display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:18px 24px;border-bottom:1px solid var(--line);font-size:14.5px;align-items:start">
 <span style="display:flex;align-items:center;gap:10px;font-weight:600"><span style="width:12px;height:12px;border-radius:3px;flex:none;background:{{ l.swatch }};border:{{ l.swBorder }}"></span>{{ l.name }}</span>
 <span style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.tools }}" as="tl" hint-placeholder-count="1"><span style="padding:3px 9px;border-radius:6px;border:1px solid var(--line-strong);font-size:13.5px">{{ tl }}</span></sc-for></span>
@@ -73,7 +73,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </div></div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;margin-top:16px">
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Coverage floor</div><div style="font:500 36px/1.1 'Source Serif 4',serif;margin-top:6px">90% <span style="font-size:18px;color:var(--ink-3)">lines</span></div><div style="font-size:13.5px;color:var(--ink-2);margin-top:4px">Enforced by Vitest thresholds. Below it, CI fails.</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Coverage floor</div><div style="font:500 36px/1.1 'Source Serif 4',serif;margin-top:6px">90% <span style="font-size:18px;color:var(--ink-3)">lines</span></div><div style="font-size:13.5px;color:var(--ink-2);margin-top:4px">Enforced by Vitest thresholds in the unit job. Below it, CI fails.</div></div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">On every pull request</div><div style="font:500 22px/1.35 'Source Serif 4',serif;margin-top:8px">Lint, typecheck, unit, integration, E2E</div></div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Failure masking</div><div style="font:500 36px/1.1 'Source Serif 4',serif;margin-top:6px">None</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:4px">No <code style="font:12.5px 'JetBrains Mono',monospace">|| true</code>, no <code style="font:12.5px 'JetBrains Mono',monospace">continue-on-error</code> on test steps.</div></div>
 </div>
@@ -82,15 +82,15 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <!-- 03 ALERTS -->
 <section style="padding:48px 0;border-top:1px solid var(--line)">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:32px 56px;align-items:start">
-<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">03</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">Why it watches for silence</h2><p style="margin:0;max-width:520px;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Two incidents from Ostomate2's post-mortems shaped the alert rules. A green dashboard means nothing if the pipeline behind it has stopped running, or if a suite passes without executing anything.</p></div>
+<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">03</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">Why it watches for silence</h2><p style="margin:0;max-width:520px;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Two incidents from Ostomate2’s post-mortems shaped how results are shown. A green dashboard means nothing if the pipeline behind it has stopped running, or if a suite passes without executing anything.</p></div>
 <div style="display:flex;flex-direction:column;gap:12px">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
 <div style="font-size:13px;color:var(--ink-3)">Incident</div><div style="font:500 21px/1.3 'Source Serif 4',serif;margin-top:4px">CI was silently dead for 11 days</div>
-<div style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14.5px;line-height:1.55;color:var(--ink-2)"><svg style="flex:none;margin-top:3px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><span>Now: each project has an expected cadence. A daily check flags any project with no report past it, shown as "No report in 12 days" on the project page.</span></div>
+<div style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14.5px;line-height:1.55;color:var(--ink-2)"><svg style="flex:none;margin-top:3px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><span>{{ silenceNow }}</span></div>
 </div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
 <div style="font-size:13px;color:var(--ink-3)">Incident</div><div style="font:500 21px/1.3 'Source Serif 4',serif;margin-top:4px">E2E reported green without ever passing</div>
-<div style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14.5px;line-height:1.55;color:var(--ink-2)"><svg style="flex:none;margin-top:3px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M5 19 19 5"></path></svg><span>Now: a run with zero tests executed is marked Empty and treated as a problem, never as a pass. A sudden drop in a report’s test count raises an alert too.</span></div>
+<div style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14.5px;line-height:1.55;color:var(--ink-2)"><svg style="flex:none;margin-top:3px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M5 19 19 5"></path></svg><span>{{ emptyNow }}</span></div>
 </div>
 </div>
 </div>
@@ -109,10 +109,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;font-size:14.5px;font-weight:600">CI runs on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
 </div>
 <div>
-<div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px">Build progress</div>
-<sc-for list="{{ phases }}" as="ph" hint-placeholder-count="4">
-<div style="display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-3)">{{ ph.n }}</span><span>{{ ph.label }}</span><span style="display:flex;align-items:center;gap:6px;font-weight:600;color:{{ ph.ink }}">{{ ph.status }}</span></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-bottom:12px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Build progress</span><span style="display:flex;gap:4px;font-size:13px;color:var(--ink-3)"><span>As of</span><time datetime="{{ asOfIso }}" title="{{ asOfTitle }}">{{ asOf }}</time></span></div>
+<sc-for list="{{ phases }}" as="ph" hint-placeholder-count="8">
+<div style="display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-3)">{{ ph.n }}</span><span>{{ ph.label }}</span><span style="display:flex;align-items:center;gap:6px;font-weight:600;color:{{ ph.ink }}"><svg style="flex:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="{{ ph.dash }}"><circle cx="12" cy="12" r="10"></circle><path d="{{ ph.d }}"></path></svg><span>{{ ph.status }}</span></span></div>
 </sc-for>
+<p style="margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Read from the specification’s phase list when the site is built.</p>
 </div>
 </div>
 </sc-if>
@@ -120,14 +121,14 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ reporting }}" hint-placeholder-val="{{ false }}">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start">
 <article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span><span style="display:flex;align-items:center;gap:8px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>12 minutes ago · main · <span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">8d3e1a2</span></span></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span><span style="display:flex;align-items:center;gap:8px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>12 min ago · main · <span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">8d3e1a2</span></span></div>
 <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px"><span style="font:500 64px/1 'Source Serif 4',serif">{{ selfTotal }}</span><span style="font-size:15px;color:var(--ink-2)">tests · 0 failed · 0 skipped · 1m 48s</span></div>
 <div style="display:flex;flex-direction:column;gap:6px;margin-top:24px">
 <sc-for list="{{ selfPyramid }}" as="l" hint-placeholder-count="3">
 <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 120px;align-items:center;gap:16px;font-size:14px"><span style="text-align:right;color:var(--ink-2)">{{ l.name }}</span><div style="display:flex;justify-content:center"><div style="width:{{ l.w }};min-width:6px;height:30px;border-radius:4px;background:{{ l.bg }}"></div></div><span style="display:flex;align-items:baseline;gap:8px;white-space:nowrap"><b style="font-weight:600">{{ l.count }}</b><span style="font-size:13px;color:var(--ink-3)">{{ l.pct }}</span></span></div>
 </sc-for>
 </div>
-<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Only spec §8 layers are counted. Accessibility checks run inside the Playwright suite and count as E2E; the reporter contract tests count as Integration.</p>
+<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Only spec §8 layers are counted. Accessibility, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.</p>
 <a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:6px;font-size:14.5px;font-weight:600">Full project page →</a>
 </article>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
@@ -145,7 +146,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </section>
 </main>
 
-<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 minutes ago</span></footer>
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;selfReporting&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;not reporting yet&quot;,&quot;reporting (sample)&quot;],&quot;default&quot;:&quot;not reporting yet&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
@@ -170,20 +171,24 @@ class Component extends DCLogic {
       ['No swallowed failures', 'In testpulse’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.'],
     ].map(([title, body], i) => ({ n: String(i + 1).padStart(2, '0'), title, body }));
 
+    /* v9 item 4: every row true today (Phases 0–4 done, 5 in progress). Phase 6 adds alert rules, bot classification, tracked links, admin sign-in and the prune job. */
     const layers = [
-      ['Unit', ['Vitest'], 'Parsers against real fixtures, layer resolution, stat calculations, alert rules, token and key utilities, bot classification.', 'var(--layer-1)'],
-      ['Integration', ['Vitest', 'local Supabase'], 'The ingestion endpoint end to end against real Postgres: idempotent retries, transactions, rollups, and row-level security checked with an anonymous client. The prune job is checked against a seeded database.', 'var(--layer-3)'],
-      ['E2E', ['Playwright'], 'A seeded database behind the landing, project, run and test-history pages; visibility rules in the rendered UI; the tracked-link flow; admin sign-in.', 'var(--layer-3)'],
-      ['Accessibility', ['axe', 'Playwright'], 'Every public page, on every pull request. Counted with E2E.', 'transparent'],
-      ['Contract', ['Vitest'], 'The reporter script that projects copy into their CI, run against a local server. Counted as Integration.', 'transparent'],
+      ['Unit', ['Vitest'], 'Parsers against real fixtures, layer resolution, stat calculations, token and key utilities. 90% line floor.', 'var(--layer-1)'],
+      ['Contract', ['Vitest'], 'The reporter script that projects copy into their CI, run against a local server. Runs in the unit job; counted as Unit.', 'transparent'],
+      ['Integration', ['Vitest', 'local Supabase'], 'The ingestion endpoint end to end against local Supabase: idempotent retries, transactions and rollups, and row-level security checked with the anonymous client, so private projects stay hidden.', 'var(--layer-3)'],
+      ['E2E', ['Playwright'], 'A seeded database behind the landing, project, run and test-history pages; visibility rules in the rendered UI; every public page again with JavaScript turned off.', 'var(--layer-3)'],
+      ['Accessibility', ['axe', 'Playwright'], 'axe on every public page, and a contrast check of every text colour pair in both themes. Counted with E2E.', 'transparent'],
+      ['Visual', ['Playwright'], 'Snapshots of each page at desktop and phone widths, light and dark, compared inside a pinned container image so rendering can’t drift. Counted with E2E.', 'transparent'],
+      ['Leak sweep', ['Playwright'], 'Crawls the whole site as a visitor and fails if any private project’s failure text, stack trace or source link appears anywhere. Counted with E2E.', 'transparent'],
     ].map(([name, tools, scope, swatch]) => ({ name, tools, scope, swatch, swBorder: swatch === 'transparent' ? '1.5px solid var(--line-strong)' : 'none' }));
 
+    /* v9 item 4: from spec §17 ("Phase n complete {date}" lines); as of the build date */
+    const ST = { done: ['Done', 'var(--pass)', 'm8 12 3 3 5-6', 'none'], prog: ['In progress', 'var(--ink-2)', 'M12 7v5l3 2', 'none'], plan: ['Planned', 'var(--ink-3)', '', '3.5 3'] };
     const phases = [
-      ['Phase 0–2', 'Foundations, ingestion, Ostomate2 live', 'Done', 'var(--pass)'],
-      ['Phase 3', 'RouteServe reporting live', 'In progress', 'var(--attn)'],
-      ['Phase 4–6', 'Backfill, public site, alerts and admin', 'Planned', 'var(--ink-3)'],
-      ['Phase 7', 'Self-reporting and launch', 'Planned', 'var(--ink-3)'],
-    ].map(([n, label, status, ink]) => ({ n, label, status, ink }));
+      ['Phase 0', 'Foundations', 'done'], ['Phase 1', 'Schema, parsers, ingestion', 'done'], ['Phase 2', 'Ostomate2 reporting live', 'done'],
+      ['Phase 3', 'RouteServe reporting live', 'done'], ['Phase 4', 'Backfill', 'done'], ['Phase 5', 'Public site', 'prog'],
+      ['Phase 6', 'Alerts, tracked links, admin', 'plan'], ['Phase 7', 'Self-reporting and launch', 'plan'],
+    ].map(([n, label, k]) => ({ n, label, status: ST[k][0], ink: ST[k][1], d: ST[k][2], dash: ST[k][3] }));
 
     const sp = [['E2E', 38, 'var(--layer-3)'], ['Integration', 70, 'var(--layer-3)'], ['Unit', 214, 'var(--layer-1)']];
     const mx = 214;
@@ -194,7 +199,9 @@ class Component extends DCLogic {
 
     return {
       themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: String(sp.reduce((a, l) => a + l[1], 0)),
-      reporting, notReporting: !reporting,
+      reporting, notReporting: !reporting, asOf: '30 Sep', asOfIso: '2026-09-30', asOfTitle: '30 Sep 2026, 00:00 UTC',
+      silenceNow: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
+      emptyNow: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
     };

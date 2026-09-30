@@ -22,8 +22,8 @@ export function feedRun(
   now: Date,
 ): FeedRun {
   // Distinct tests, as the latest-run card counts them (decision 2026-09-29). A pruned run has
-  // none left to count and keeps its executions until the design defines its row (13.2).
-  const tests = run.tests ?? run;
+  // none left to count, so its row reads "Results pruned" with its duration (design v7 item 16).
+  const { tests } = run;
   const base = {
     id: run.id,
     href: runHref(project.slug, run.id),
@@ -37,6 +37,16 @@ export function feedRun(
     project.visibility === 'private'
       ? { visibility: 'private' as const }
       : { visibility: 'public' as const, title: run.title };
+  if (run.status === 'empty') return { ...base, ...title, status: 'empty', reports: run.reports };
+  if (tests === null) {
+    return {
+      ...base,
+      ...title,
+      status: run.status,
+      pruned: true,
+      duration: formatRunDuration(run.durationMs),
+    };
+  }
   switch (run.status) {
     case 'passed':
       return {
@@ -55,7 +65,5 @@ export function feedRun(
         passed: tests.passed,
         total: tests.total,
       };
-    case 'empty':
-      return { ...base, ...title, status: 'empty', reports: run.reports };
   }
 }

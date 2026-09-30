@@ -84,7 +84,7 @@ describe('RunFeed (web, landing)', () => {
     expect(has(note, 'offline')).toBe(false);
   });
 
-  it('disconnected: the ring and "Offline. Showing runs as of {HH:MM}; reconnecting" in --ink-2', () => {
+  it('disconnected: the ring and "Offline. Showing runs as of {HH:MM} UTC; reconnecting" in --ink-2', () => {
     const { container } = render(
       <RunFeed
         state="ready"
@@ -96,11 +96,11 @@ describe('RunFeed (web, landing)', () => {
     );
     const note = container.querySelector<HTMLElement>('[data-part="live-note"]');
 
-    expect(note?.textContent).toBe('Offline. Showing runs as of 10:42; reconnecting');
+    expect(note?.textContent).toBe('Offline. Showing runs as of 10:42 UTC; reconnecting');
     // Every time a page prints is a <time> with its instant and full date (spec 11, "Project
-    // page view"); the HH:MM is UTC, as the title says.
+    // page view"); the HH:MM is UTC and says so (design v8 item 36).
     const time = note?.querySelector('time');
-    expect(time?.textContent).toBe('10:42');
+    expect(time?.textContent).toBe('10:42 UTC');
     expect(time?.getAttribute('datetime')).toBe('2026-10-05T11:56:00.000Z');
     expect(time?.getAttribute('title')).toBe('5 Oct 2026, 11:56 UTC');
     expect(note?.querySelector<HTMLElement>('[data-part="dot"]')?.dataset.state).toBe('off');
@@ -256,7 +256,7 @@ describe('RunFeed (web, project page)', () => {
     expect(header?.nextElementSibling).toBe(note);
   });
 
-  it('offline: the same line reads "Offline. Showing runs as of {HH:MM}; reconnecting"', () => {
+  it('offline: the same line reads "Offline. Showing runs as of {HH:MM} UTC; reconnecting"', () => {
     const { container } = render(
       <RunFeed
         state="ready"
@@ -271,7 +271,7 @@ describe('RunFeed (web, project page)', () => {
     );
     const note = container.querySelector<HTMLElement>('[data-part="live-note"]');
 
-    expect(note?.textContent).toBe('Offline. Showing runs as of 10:42; reconnecting');
+    expect(note?.textContent).toBe('Offline. Showing runs as of 10:42 UTC; reconnecting');
     expect(note?.querySelector<HTMLElement>('[data-part="dot"]')?.dataset.state).toBe('off');
     expect(has(note, 'offline')).toBe(true);
   });

@@ -51,6 +51,29 @@ describe('CoverageBar', () => {
     expect(fill?.style.width).toBe('92.6%');
   });
 
+  // Design v8 item 15 (components.md CoverageBar, "No floor"; Design System "iosApp · SAMPLE").
+  describe('a module with no floor', () => {
+    it('has no marker and no floor text, and its figure is never amber', () => {
+      const { container } = render(<CoverageBar module="iosApp" pct={42.37} floor={null} />);
+      const { row, fill, floor, value } = parts(container);
+      expect(row.dataset.state).toBe('none');
+      expect(row.className).not.toMatch(/below/);
+      expect(floor).toBeNull();
+      expect(fill?.style.width).toBe('42.37%');
+      expect(value?.textContent).toBe('42.3%');
+      expect(value?.querySelector('svg')).toBeNull();
+    });
+
+    it('draws the kiosk row with no marker either', () => {
+      const { container } = render(
+        <CoverageBar module="iosApp" pct={100} floor={null} variant="kiosk" />,
+      );
+      const { floor, value } = parts(container);
+      expect(floor).toBeNull();
+      expect(value?.textContent).toBe('100%');
+    });
+  });
+
   it('writes full coverage without a decimal, as the design does', () => {
     const { container } = render(<CoverageBar module="shared" pct={100} floor={80} />);
     expect(parts(container).value?.textContent).toBe('100%floor 80%');

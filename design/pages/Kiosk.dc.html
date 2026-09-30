@@ -73,7 +73,7 @@ a{color:inherit}a:hover{color:inherit}
 <sc-for list="{{ c.cov }}" as="v" hint-placeholder-count="2">
 <div style="display:grid;grid-template-columns:220px minmax(40px,1fr) 100px;align-items:center;column-gap:18px">
 <span style="font:22px 'JetBrains Mono',monospace;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
-<div style="position:relative;height:10px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};top:-6px;width:3px;height:22px;background:var(--attn)"></div></div>
+<div style="position:relative;height:10px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};display:{{ v.flDisp }};top:-6px;width:3px;height:22px;background:var(--attn)"></div></div>
 <b style="font-weight:600;text-align:right">{{ v.v }}</b>
 </div>
 </sc-for>
@@ -158,10 +158,10 @@ class Component extends DCLogic {
       tiles[2] = { label: 'Ostomate2 red for 4m', value: '1 of 2', fail: true };
       feed = [row(ST.fail, 'Ostomate2', 'main', '1 failed', '4 min ago', { countInk: 'var(--fail)' }), feed[1], row(ST.pass, 'Ostomate2', 'main', '142 tests', '6 h ago')];
     } else if (sc === 'stale project') {
-      Object.assign(route, { when: '12 days ago', whenInk: 'var(--attn)', frame: 'var(--attn)', health: { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0' } });
+      Object.assign(route, { when: '12 Sep', whenInk: 'var(--attn)', frame: 'var(--attn)', health: { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0' } });
       overall = { label: '1 project silent', ink: 'var(--attn)', tint: 'var(--attn-tint)', d: 'M12 7v5l3 2' };
       tiles[1] = { label: '1 silent 12 days', value: '1 of 2', attn: true, sample: false, labelInk: 'var(--attn)', labelW: 600 };
-      feed[1] = { ...feed[1], when: '12 days ago' };
+      feed[1] = { ...feed[1], when: '1 week ago' };
     }
 
     tiles = tiles.map(t => Object.assign({ attn: false, fail: false, sample: false }, t, { labelInk: t.fail ? 'var(--fail)' : t.attn ? 'var(--attn)' : 'var(--ink-3)', labelW: t.attn || t.fail ? 600 : 400 }));

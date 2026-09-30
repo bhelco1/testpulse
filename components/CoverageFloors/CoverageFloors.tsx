@@ -2,7 +2,7 @@ import { CoverageBar } from '../CoverageBar/CoverageBar';
 import styles from './CoverageFloors.module.css';
 
 export interface CoverageFloorsProps {
-  modules: readonly { module: string; pct: number; floor: number }[];
+  modules: readonly { module: string; pct: number; floor: number | null }[];
 }
 
 // The project page's coverage card (design/pages/Project Page.dc.html): each module's latest line

@@ -147,7 +147,7 @@ describe('ProjectRuns, live', () => {
     act(() => watch?.onState('live'));
     expect(note()).toBe('Updates as reports arrive');
     act(() => watch?.onState('offline'));
-    expect(note()).toBe('Offline. Showing runs as of 12:00; reconnecting');
+    expect(note()).toBe('Offline. Showing runs as of 12:00 UTC; reconnecting');
   });
 
   it('marks a run that arrived as new, and not the runs "Load 20 more" adds below', () => {

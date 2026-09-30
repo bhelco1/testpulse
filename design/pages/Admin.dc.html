@@ -142,17 +142,17 @@ class Component extends DCLogic {
     const showAlerts = this.props.alerts ?? true;
 
     const A = [
-      { id: 'stale', kind: 'attn', glyph: '◷', title: 'RouteServe hasn’t reported in 12 days', body: 'Expected every 8 days. The weekly scheduled run should have posted by Sep 20.', opened: 'Sep 21, 06:00' },
-      { id: 'drop', kind: 'attn', glyph: '↓', title: 'Test count fell 38% in ios/composeApp/ios-sim', body: 'Ostomate2 run on main reported 31 tests where the last 5 runs averaged 50.', opened: 'Sep 24, 14:06' },
+      { id: 'stale', kind: 'attn', glyph: '◷', title: 'RouteServe hasn’t reported in 12 days', body: 'Expected every 8 days. The weekly scheduled run should have posted by 20 Sep.', opened: '21 Sep, 06:00 UTC' },
+      { id: 'drop', kind: 'attn', glyph: '↓', title: 'Test count fell 38% in ios/composeApp/ios-sim', body: 'Ostomate2 run on main reported 31 tests where the last 5 runs averaged 50.', opened: '24 Sep, 14:06 UTC' },
     ].filter(a => showAlerts && !this.state.dismissed[a.id]).map(a => Object.assign({}, a, {
       role: 'status', bg: 'var(--attn-tint)', line: 'var(--attn)', ink: 'var(--attn)',
       dismiss: () => this.setState(s => ({ dismissed: Object.assign({}, s.dismissed, { [a.id]: true }) })),
     }));
 
     const base = [
-      { id: 'acme', company: 'Acme Health', role: 'Director of Quality Engineering', sent: 'Sep 18', visits: '3 sessions · 2 visitors', last: '2 hours ago', pages: ['Ostomate2', 'How it’s tested'], token: '/v/Qm8r2LxT0aZe' },
-      { id: 'nw', company: 'Northwind Software', role: 'Sr. Engineering Manager, QA', sent: 'Sep 15', visits: '1 session', last: 'Sep 16', pages: ['Overview'], token: '/v/Hn4kWp7cYs2d' },
-      { id: 'gx', company: 'Globex', role: 'QA Manager', sent: 'Sep 12', visits: 'Not yet opened', last: '—', pages: [], token: '/v/Tb9eJx3mRq6u' },
+      { id: 'acme', company: 'Acme Health', role: 'Director of Quality Engineering', sent: '18 Sep', visits: '3 sessions · 2 visitors', last: '2 h ago', pages: ['Ostomate2', 'How it’s tested'], token: '/v/Qm8r2LxT0aZe' },
+      { id: 'nw', company: 'Northwind Software', role: 'Sr. Engineering Manager, QA', sent: '15 Sep', visits: '1 session', last: '1 week ago', pages: ['Overview'], token: '/v/Hn4kWp7cYs2d' },
+      { id: 'gx', company: 'Globex', role: 'QA Manager', sent: '12 Sep', visits: 'Not yet opened', last: '—', pages: [], token: '/v/Tb9eJx3mRq6u' },
     ];
     const links = this.state.added.concat(base).map(l => ({
       company: l.company, role: l.role, sent: l.sent, visits: l.visits, last: l.last, pages: l.pages, noPages: l.pages.length === 0, token: l.token,
@@ -171,8 +171,8 @@ class Component extends DCLogic {
     };
 
     const P = [
-      { id: 'o2', name: 'Ostomate2', vis: 'Public', report: '4 minutes ago', sync: '✓ In sync', key: 'tp_••••••••••••7Qx2' },
-      { id: 'rs', name: 'RouteServe', vis: 'Private', report: showAlerts ? '◷ 12 days ago' : '2 hours ago', stale: showAlerts, sync: '✓ In sync', key: 'tp_••••••••••••c9Lm' },
+      { id: 'o2', name: 'Ostomate2', vis: 'Public', report: '4 min ago', sync: '✓ In sync', key: 'tp_••••••••••••7Qx2' },
+      { id: 'rs', name: 'RouteServe', vis: 'Private', report: showAlerts ? '◷ 1 week ago' : '2 h ago', stale: showAlerts, sync: '✓ In sync', key: 'tp_••••••••••••c9Lm' },
       { id: 'tp', name: 'testpulse', vis: 'Public', report: 'Never', sync: 'No row yet · skipped', syncWarn: true, key: 'No key issued', noKey: true },
     ];
     const projects = P.map(p => {

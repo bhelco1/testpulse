@@ -36,6 +36,28 @@ describe('formatTrendValue', () => {
     expect(formatTrendValue(0.384, 'sec', true)).toBe('0.38 s');
   });
 
+  // Design v8 item 48 and v9 item 8 (tp-charts.js fmtFor; components.md TrendChart "sec format"):
+  // durations are stored in whole ms, so under 10 ms reads in whole ms and a stored 0 reads
+  // "<1 ms"; an axis tick at 0 stays "0 s".
+  it('reads a test time under 10 ms in whole milliseconds, and a stored 0 as "<1 ms"', () => {
+    expect(formatTrendValue(0.003, 'sec', true)).toBe('3 ms');
+    expect(formatTrendValue(0.0094, 'sec', true)).toBe('9 ms');
+    expect(formatTrendValue(0.001, 'sec', true)).toBe('1 ms');
+    expect(formatTrendValue(0, 'sec', true)).toBe('<1 ms');
+    expect(formatTrendValue(0.01, 'sec', true)).toBe('0.01 s');
+    expect(formatTrendValue(0.025, 'sec', true)).toBe('0.03 s');
+    expect(formatTrendValue(0, 'sec')).toBe('0 s');
+    expect(formatTrendValue(0.005, 'sec')).toBe('5 ms');
+  });
+
+  it('reads the whole-millisecond axis of a chart under 10 ms: "0 ms" at 0, "<1 ms" exact', () => {
+    expect(formatTrendValue(0, 'ms')).toBe('0 ms');
+    expect(formatTrendValue(4, 'ms')).toBe('4 ms');
+    expect(formatTrendValue(0, 'ms', true)).toBe('<1 ms');
+    expect(formatTrendValue(0.4, 'ms', true)).toBe('<1 ms');
+    expect(formatTrendValue(3, 'ms', true)).toBe('3 ms');
+  });
+
   it('rounds run durations to whole seconds', () => {
     expect(formatTrendValue(26.6, 'dur')).toBe('27 s');
     expect(formatTrendValue(26.6, 'dur', true)).toBe('27 s');

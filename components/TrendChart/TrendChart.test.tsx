@@ -1263,3 +1263,50 @@ describe('TrendChart empty, loading and error', () => {
     expect(ruleFor(CSS, '.errorRetry')).toMatchObject({ 'margin-top': '8px' });
   });
 });
+
+// Design v8 item 48 and v9 item 8 (components.md TrendChart, "sec format"; tp-charts.js msMode).
+describe('TrendChart sec format under 10 ms', () => {
+  const FAST: TrendChartProps = {
+    title: 'Duration',
+    scope: TREND_SCOPE.testDuration,
+    series: [{ name: 'node', values: [0.002, 0.003, 0.001, 0.004, 0] }],
+    format: 'sec',
+    unit: 'run',
+  };
+
+  it('steps the axis in whole milliseconds when every value is under 10 ms', () => {
+    const { container } = render(<TrendChart {...FAST} />);
+    const ticks = parts(container, 'y-label').map((tick) => tick.textContent);
+    // Lines are fitted with 12% padding, as tp-charts.js fits them, so the axis can reach below 0.
+    expect(ticks).toContain('0 ms');
+    expect(ticks.every((tick) => /^-?\d+ ms$/.test(tick ?? ''))).toBe(true);
+    expect(parts(container, 'value-label').map((label) => label.textContent)).toEqual([
+      '2 ms',
+      '<1 ms',
+    ]);
+  });
+
+  it('reads a stored 0 as "<1 ms" in the tooltip and table, the axis at 0 as "0 s"', () => {
+    const { container, getByRole } = render(
+      <TrendChart {...FAST} series={[{ name: 'node', values: [0.41, 0, 0.38] }]} />,
+    );
+    expect(parts(container, 'y-label').map((tick) => tick.textContent)).toContain('0 s');
+    fireEvent.click(getByRole('button', { name: 'Show table' }));
+    const rows = [...getByRole('table').querySelectorAll('tbody tr')].map((row) => row.textContent);
+    expect(rows).toEqual(['Latest0.38 s', '1 run ago<1 ms', '2 runs ago0.41 s']);
+  });
+});
+
+// Design v8 item 32 (components.md TrendChart, "Without JavaScript"): the table stands open in
+// place of the plot, with no empty plot and no "Show table" button, which only the client renders.
+describe('TrendChart without JavaScript, v8', () => {
+  it('hides the held plot area and the "Show table" button when scripting is off', () => {
+    const html = renderToStaticMarkup(<TrendChart {...PASS_RATE} />);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const placeholder = doc.querySelector<HTMLElement>('[data-part="placeholder"]');
+    const toggle = doc.querySelector('button')?.parentElement;
+    expect(placeholder?.classList.contains(String(styles.scriptOnly))).toBe(true);
+    expect(toggle?.classList.contains(String(styles.scriptOnly))).toBe(true);
+    expect(ruleFor(CSS, '.scriptOnly', '(scripting: none)')).toEqual({ display: 'none' });
+  });
+});

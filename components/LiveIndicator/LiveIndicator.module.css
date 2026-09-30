@@ -25,3 +25,10 @@
   background: transparent;
   border: 1.5px solid var(--ink-3);
 }
+
+/* The phone header's row 1 (Design System, PHONE HEADER · 390). */
+@media (max-width: 559px) {
+  .indicator {
+    padding: 0 8px;
+  }
+}

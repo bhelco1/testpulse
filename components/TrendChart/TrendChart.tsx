@@ -24,7 +24,7 @@ import {
   type DotItemDotProps,
 } from 'recharts';
 
-import { formatTrendValue, type TrendFormat } from '../../lib/charts/format';
+import { formatTrendValue, type TrendFormat, type ValueFormat } from '../../lib/charts/format';
 import {
   barWidth,
   chartHeight,
@@ -91,6 +91,23 @@ const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).j
 
 const isValue = (value: number | null | undefined): value is number =>
   value !== null && value !== undefined;
+
+// The data as drawn: a sec chart whose every value is under 10 ms is drawn in milliseconds, so
+// its axis steps in whole ms ("0 ms, 2 ms, 4 ms"; design v8 item 48, tp-charts.js msMode).
+type ShownData = Omit<TrendData, 'format'> & { format: ValueFormat };
+
+function inMilliseconds(data: TrendData): ShownData {
+  const values = data.series.flatMap((s) => s.values).filter(isValue);
+  if (data.format !== 'sec' || values.length === 0 || Math.max(...values) >= 0.01) return data;
+  return {
+    ...data,
+    format: 'ms',
+    series: data.series.map((s) => ({
+      ...s,
+      values: s.values.map((value) => (isValue(value) ? value * 1000 : value)),
+    })),
+  };
+}
 
 // The width the chart is drawn at, measured the way tp-charts.js measures it: whole pixels, and
 // only a change of 2 px or more redraws, so a scrollbar appearing cannot make it oscillate.
@@ -196,23 +213,24 @@ function ChartBody({
   const measured = useRef<HTMLDivElement>(null);
   const width = useMeasuredWidth(measured);
   const height = chartHeight(width);
-  const series = data?.series ?? [];
+  const shown = data && inMilliseconds(data);
+  const series = shown?.series ?? [];
   const points = series[0]?.values.length ?? 0;
   const kind = data?.kind ?? 'line';
   // A series with no latest value has no end label, so it takes no margin.
   const endLabels =
-    data && kind === 'line' && points >= 2
+    shown && kind === 'line' && points >= 2
       ? series
           .map((s) => s.values[points - 1])
           .filter(isValue)
-          .map((value) => formatTrendValue(value, data.format, true))
+          .map((value) => formatTrendValue(value, shown.format, true))
       : [];
   const endLabelWidth = useLabelWidth(measured, endLabels);
 
   let body;
   if (onRetry) {
     body = <ErrorPanel height={height} onRetry={onRetry} />;
-  } else if (!data) {
+  } else if (!shown) {
     body = (
       <div
         className={cx(styles.frame, styles.loading)}
@@ -236,7 +254,7 @@ function ChartBody({
       <div className={styles.single} style={{ height }} data-part="one-point">
         {isValue(only) && (
           <>
-            <span className={styles.singleValue}>{formatTrendValue(only, data.format, true)}</span>
+            <span className={styles.singleValue}>{formatTrendValue(only, shown.format, true)}</span>
             <span className={styles.singleDot} aria-hidden="true" />
           </>
         )}
@@ -247,18 +265,19 @@ function ChartBody({
     );
   } else if (width > 0) {
     body = (
-      <Plot data={data} layout={chartLayout(width, points, kind, endLabelWidth)} label={label} />
+      <Plot data={shown} layout={chartLayout(width, points, kind, endLabelWidth)} label={label} />
     );
   } else {
-    // The server and the first client render do not know the width yet: hold the space.
-    body = <div style={{ height }} data-part="placeholder" />;
+    // The server and the first client render do not know the width yet: hold the space. Without
+    // JavaScript nothing is drawn there, so the space goes and the table stands in its place.
+    body = <div className={styles.scriptOnly} style={{ height }} data-part="placeholder" />;
   }
 
   return (
     <div ref={measured} className={styles.body}>
       {series.length > 1 && <Legend series={series} />}
       {body}
-      {data && points >= 2 && <TableToggle data={data} title={title} />}
+      {shown && points >= 2 && <TableToggle data={shown} title={title} />}
     </div>
   );
 }
@@ -301,7 +320,7 @@ function Legend({ series }: { series: readonly TrendSeries[] }) {
 
 const strokeOf = (seriesIndex: number) => (seriesIndex === 0 ? 'var(--ink)' : 'var(--ink-3)');
 
-function Plot({ data, layout, label }: { data: TrendData; layout: ChartLayout; label: string }) {
+function Plot({ data, layout, label }: { data: ShownData; layout: ChartLayout; label: string }) {
   const [hover, setHover] = useState<number | null>(null);
   const { series, format, unit } = data;
   const labels = data.labels ?? NO_LABELS;
@@ -316,7 +335,7 @@ function Plot({ data, layout, label }: { data: TrendData; layout: ChartLayout; l
     floor: data.floor,
     zero: bar || (data.zero ?? false),
     percent: format === 'pct',
-    integer: format === 'int' || format === 'dur',
+    integer: format === 'int' || format === 'dur' || format === 'ms',
     steps: layout.phone ? 2 : 3,
   });
   const rows = Array.from({ length: count }, (_, i) =>
@@ -570,7 +589,7 @@ function PointDot({
   values: readonly (number | null)[];
   seriesIndex: number;
   layout: ChartLayout;
-  format: TrendFormat;
+  format: ValueFormat;
 }) {
   const { cx: x = 0, cy: y = 0, index } = dot;
   const value = values[index];
@@ -629,7 +648,7 @@ function Tooltip({
   layout,
   index,
 }: {
-  data: TrendData;
+  data: ShownData;
   labels: readonly string[];
   marks: readonly TrendMark[];
   layout: ChartLayout;
@@ -670,12 +689,12 @@ function Tooltip({
   );
 }
 
-function TableToggle({ data, title }: { data: TrendData; title: string }) {
+function TableToggle({ data, title }: { data: ShownData; title: string }) {
   const [open, setOpen] = useState(false);
   const tableId = useId();
   return (
     <>
-      <div className={styles.toggle}>
+      <div className={cx(styles.toggle, styles.scriptOnly)}>
         <Button
           variant="secondary"
           aria-expanded={open}
@@ -694,7 +713,7 @@ function TableToggle({ data, title }: { data: TrendData; title: string }) {
   );
 }
 
-function DataTable({ data, title, id }: { data: TrendData; title: string; id?: string }) {
+function DataTable({ data, title, id }: { data: ShownData; title: string; id?: string }) {
   const count = data.series[0]?.values.length ?? 0;
   const labels = data.labels ?? NO_LABELS;
   const newestFirst = Array.from({ length: count }, (_, i) => count - 1 - i);

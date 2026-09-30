@@ -39,6 +39,39 @@ describe('passRateCaption', () => {
     expect(passRateCaption([100], 0)).toBeNull();
     expect(passRateCaption([], 0)).toBeNull();
   });
+
+  // Design v8 item 34 and v9 item 11 (components.md TrendChart, "Captions with gaps"): n counts
+  // only runs with a value, and a latest run with none says why.
+  describe('with runs that have no rate', () => {
+    it('counts only the runs with a rate', () => {
+      expect(passRateCaption([100, null, 100, 100], 0)).toBe('All 3 runs passed.');
+      expect(passRateCaption([100, null, 90, 99.3], 1)).toBe(
+        '99.3% on the latest run. 1 of the last 3 runs failed.',
+      );
+    });
+
+    it('says the latest run had no tests when it was empty', () => {
+      expect(passRateCaption([100, 100, null], 0)).toBe(
+        'All 2 runs passed. The latest run had no tests.',
+      );
+    });
+
+    it('says the latest run’s tests were all skipped when it had tests but no rate', () => {
+      expect(passRateCaption([100, 100, null], 0, { latestAllSkipped: true })).toBe(
+        'All 2 runs passed. The latest run’s tests were all skipped.',
+      );
+    });
+
+    // "{latest}% on the latest run" has no figure to give when the latest run has no rate, and the
+    // design writes no sentence for it: held back rather than state an older run's rate as latest.
+    it('is held back when a run failed and the latest has no rate', () => {
+      expect(passRateCaption([100, 90, null], 1)).toBeNull();
+    });
+
+    it('is omitted with fewer than two runs that have a rate', () => {
+      expect(passRateCaption([null, 100, null], 0)).toBeNull();
+    });
+  });
 });
 
 describe('testCountCaption', () => {
@@ -53,6 +86,17 @@ describe('testCountCaption', () => {
 
   it('is omitted with fewer than two runs', () => {
     expect(testCountCaption([322])).toBeNull();
+  });
+
+  // Design v8 item 34 (components.md TrendChart, "Captions with gaps").
+  it('reads first and last from the runs with a count, and counts only those', () => {
+    expect(testCountCaption([null, 118, null, 142])).toBe(
+      'Grew from 118 to 142 over the last 2 runs.',
+    );
+    expect(testCountCaption([118, 130, 142, null])).toBe(
+      'Grew from 118 to 142 over the last 3 runs. The latest run had no tests.',
+    );
+    expect(testCountCaption([null, 142, null])).toBeNull();
   });
 });
 
@@ -119,14 +163,56 @@ describe('durationCaption', () => {
     );
   });
 
-  // Design v7 item 9: a run where a platform did not run is left out of min, max and median.
-  it('leaves missing values out of the range and the median', () => {
+  // Design v7 item 9: a run where a platform did not run is left out of min, max and median;
+  // v8 item 34: n counts only the runs with a value on some series.
+  it('leaves missing values out of the range, the median and the count of runs', () => {
     expect(durationCaption([JVM_GAP_SECONDS, IOS_GAP_SECONDS], 'sec')).toBe(
       'Between 0.39 s and 0.64 s over the last 10 runs.',
     );
     expect(durationCaption([[1, null, 3, 5]], 'dur')).toBe(
-      'Between 1 s and 5 s over the last 4 runs. Median 3 s.',
+      'Between 1 s and 5 s over the last 3 runs. Median 3 s.',
     );
+    expect(
+      durationCaption(
+        [
+          [1, null, 3],
+          [null, null, 2],
+        ],
+        'dur',
+      ),
+    ).toBe('Between 1 s and 3 s over the last 2 runs.');
+  });
+
+  // Design v8 item 48 (components.md TrendChart, Duration caption): min = max at display
+  // precision reads "Held at".
+  it('says the duration held when the range is one figure as displayed', () => {
+    expect(durationCaption([[35.604, 35.61, 35.9]], 'dur')).toBe(
+      'Held at 36 s over the last 3 runs.',
+    );
+    expect(durationCaption([[0.068, 0.07, 0.071]], 'sec')).toBe(
+      'Held at 0.07 s over the last 3 runs.',
+    );
+    expect(
+      durationCaption(
+        [
+          [0.002, 0.0024],
+          [0.0018, null],
+        ],
+        'sec',
+      ),
+    ).toBe('Held at 2 ms over the last 2 runs.');
+  });
+
+  it('reads times under 10 ms in whole ms and a stored 0 as "<1 ms" (v9 item 8)', () => {
+    expect(
+      durationCaption(
+        [
+          [0.025, 0.026],
+          [0.003, 0],
+        ],
+        'sec',
+      ),
+    ).toBe('Between <1 ms and 0.03 s over the last 2 runs.');
   });
 
   it('is omitted with fewer than two runs', () => {
@@ -171,7 +257,8 @@ describe('TREND_SCOPE', () => {
       testCount: 'Default branch · last 30 CI runs',
       coverage: 'Default branch · last 30 runs · CI and imported history',
       duration: 'Default branch · last 30 CI runs (imported history has no durations)',
-      testDuration: 'Default branch · CI runs only (imported history has no durations)',
+      // Owner decision 2026-09-30: v9's string (components.md, Test history page).
+      testDuration: 'Default branch · last 30 CI runs (imported history has no durations)',
       runsPerDay: 'Default branch · CI and imported history',
     });
   });

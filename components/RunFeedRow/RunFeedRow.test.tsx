@@ -66,6 +66,20 @@ const EMPTY: FeedRun = {
   reports: 4,
 };
 
+const PRUNED: FeedRun = {
+  id: '35000000001',
+  href: '/p/ostomate2/runs/35000000001',
+  status: 'passed',
+  pruned: true,
+  visibility: 'public',
+  title: 'Push to main',
+  project: 'Ostomate2',
+  branch: 'main',
+  sha: '3b7e1f0',
+  when: timeLabel('12 Mar'),
+  duration: '27 s',
+};
+
 const PRIVATE: FeedRun = {
   id: '1',
   href: '/p/routeserve/runs/1',
@@ -143,6 +157,24 @@ describe('RunFeedRow (web)', () => {
     expect(part(row, 'count-lead')?.textContent).toBe('0 tests');
     expect(has(part(row, 'count-lead'), 'countEmpty')).toBe(true);
     expect(part(row, 'count-rest')?.textContent).toBe('· 4 reports');
+  });
+
+  // Design v7 item 16 as v9 item 14 places it (components.md RunFeedRow "Pruned"; Design System
+  // section 09): with its per-test results gone a run has no distinct tests to count.
+  it('pruned: "Results pruned · {duration}" in --ink-3, with no test count', () => {
+    const row = renderRow(PRUNED);
+    expect(part(row, 'status')?.textContent).toBe('Passed');
+    expect(part(row, 'count-lead')).toBeNull();
+    expect(part(row, 'count-rest')?.textContent).toBe('Results pruned · 27 s');
+    expect(has(part(row, 'count-rest'), 'countRest')).toBe(true);
+    expect(row.textContent).not.toMatch(/tests?\b/);
+  });
+
+  it('pruned and failed: "Failed" in --fail 600, then "· Results pruned · {duration}"', () => {
+    const row = renderRow({ ...PRUNED, status: 'failed', duration: '31 s' });
+    expect(part(row, 'count-lead')?.textContent).toBe('Failed');
+    expect(has(part(row, 'count-lead'), 'countFailed')).toBe(true);
+    expect(part(row, 'count-rest')?.textContent).toBe('· Results pruned · 31 s');
   });
 
   it('private: a lock and "Private repository" in place of the title', () => {

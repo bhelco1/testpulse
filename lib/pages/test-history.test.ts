@@ -237,10 +237,11 @@ describe('testHistoryView', () => {
     // r1, g and r3; the pull request r2 is not a default-branch run. g keeps its place as a gap
     // on both platforms, where the tooltip reads "Not run", which is true. r4's simulator skipped, and
     // whether a skipped result reads "Not run" or "Skipped" is undecided (design v8 item 17), so
-    // its point is left out rather than printed as "Not run".
+    // its point is left out rather than printed as "Not run". The caption counts only the runs
+    // with a value (design v8 item 34), so g is not among its 2.
     expect(view.duration).toEqual({
       title: 'Duration',
-      scope: 'Default branch · CI runs only (imported history has no durations)',
+      scope: 'Default branch · last 30 CI runs (imported history has no durations)',
       series: [
         { name: 'jvm', values: [0.025, null, 0.41] },
         { name: 'ios-sim', values: [0.003, null, null] },
@@ -250,7 +251,7 @@ describe('testHistoryView', () => {
       format: 'sec',
       unit: 'run',
       // Min 3 ms, max 410 ms over the three points, gaps left out; no median with two series.
-      caption: 'Between 0.00 s and 0.41 s over the last 3 runs.',
+      caption: 'Between 3 ms and 0.41 s over the last 2 runs.',
     });
   });
 });

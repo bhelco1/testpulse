@@ -194,7 +194,7 @@ async function expectOffline(page: Page) {
   await expect(header.getByText('Offline · reconnecting', { exact: true })).toBeVisible(ARRIVAL);
   await expect(header.getByText('Live', { exact: true })).toHaveCount(0);
   const note = page.locator('[data-part="live-note"]');
-  await expect(note).toHaveText('Offline. Showing runs as of 12:00; reconnecting');
+  await expect(note).toHaveText('Offline. Showing runs as of 12:00 UTC; reconnecting');
   await expect(note.locator('time')).toHaveAttribute('datetime', '2026-10-05T12:00:00.000Z');
   await expect(note.locator('time')).toHaveAttribute('title', '5 Oct 2026, 12:00 UTC');
   await expect(feedRows(page).first()).toBeVisible();

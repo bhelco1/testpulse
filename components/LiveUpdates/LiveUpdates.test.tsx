@@ -103,7 +103,7 @@ describe('LiveUpdates', () => {
     state('offline');
 
     expect(indicator(container)).toBe('Offline · reconnecting');
-    expect(note(container)).toBe('Offline. Showing runs as of 12:00; reconnecting');
+    expect(note(container)).toBe('Offline. Showing runs as of 12:00 UTC; reconnecting');
   });
 
   it('refreshes once for a burst of reports, 2 s after the last', () => {

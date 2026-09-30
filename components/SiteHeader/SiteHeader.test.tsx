@@ -1,12 +1,20 @@
 // @vitest-environment jsdom
+import { join } from 'node:path';
+
 import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { ruleFor } from '../testing/stylesheet';
 
 import type { SwitcherProject } from '../ProjectSwitcher/ProjectSwitcher';
 import { SiteHeader } from './SiteHeader';
 
 beforeEach(() => document.documentElement.removeAttribute('data-theme'));
 afterEach(cleanup);
+
+const CSS = join(import.meta.dirname, 'SiteHeader.module.css');
+const LIVE_CSS = join(import.meta.dirname, '../LiveIndicator/LiveIndicator.module.css');
+const PHONE = '(max-width: 559px)';
 
 const PROJECTS: SwitcherProject[] = [
   { name: 'Ostomate2', href: '/p/ostomate2', status: 'passed' },
@@ -34,8 +42,48 @@ describe('SiteHeader', () => {
     expect(within(nav).getByRole('link', { name: 'How it’s tested' }).getAttribute('href')).toBe(
       '/how-its-tested',
     );
-    expect(within(nav).getByText('Live')).toBeTruthy();
-    expect(within(nav).getByRole('button', { name: 'Switch to light theme' })).toBeTruthy();
+    // Live and the theme toggle sit beside the nav, not in it: on a phone they share the
+    // wordmark's row and the nav takes the next (design v8 item 37, PHONE HEADER · 390).
+    const controls = banner.querySelector<HTMLElement>('[data-part="controls"]');
+    expect(within(controls as HTMLElement).getByText('Live')).toBeTruthy();
+    expect(
+      within(controls as HTMLElement).getByRole('button', { name: 'Switch to light theme' }),
+    ).toBeTruthy();
+    expect(within(nav).queryByText('Live')).toBeNull();
+  });
+
+  it('keeps the tab order wordmark, Projects, How it’s tested, theme toggle', () => {
+    const { getByRole } = render(<SiteHeader projects={PROJECTS} connected />);
+    // The closed project list is hidden, so its links are not in the tab order.
+    const focusable = [...getByRole('banner').querySelectorAll('a, button')]
+      .filter((element) => !element.closest('[hidden]'))
+      .map((element) => element.textContent?.trim() || element.getAttribute('aria-label'));
+    expect(focusable).toEqual([
+      'testpulse',
+      'Projects',
+      'How it’s tested',
+      'Switch to light theme',
+    ]);
+  });
+
+  it('below 560 px lays out two rows: wordmark with Live and the toggle, then the nav', () => {
+    expect(ruleFor(CSS, '.header', PHONE)).toMatchObject({
+      display: 'grid',
+      'grid-template-columns': 'minmax(0, 1fr) auto',
+      'grid-template-areas': "'mark controls' 'nav nav'",
+      gap: '4px 8px',
+      padding: '12px 0px',
+    });
+    expect(ruleFor(CSS, '.wordmark', PHONE)).toMatchObject({
+      'grid-area': 'mark',
+      'font-size': '22px',
+    });
+    expect(ruleFor(CSS, '.controls', PHONE)).toMatchObject({
+      'grid-area': 'controls',
+      gap: 'var(--space-1)',
+    });
+    expect(ruleFor(CSS, '.nav', PHONE)).toMatchObject({ 'grid-area': 'nav' });
+    expect(ruleFor(LIVE_CSS, '.indicator', PHONE)).toEqual({ padding: '0px 8px' });
   });
 
   it('shows the disconnected state of the live indicator', () => {
@@ -47,12 +95,12 @@ describe('SiteHeader', () => {
   // "Offline · reconnecting" would both be untrue, so the indicator waits for a connection.
   it('has no live indicator when no connection state is given', () => {
     const { getByRole } = render(<SiteHeader projects={PROJECTS} />);
-    const nav = getByRole('navigation', { name: 'Site' });
+    const banner = getByRole('banner');
 
-    expect(within(nav).queryByText('Live')).toBeNull();
-    expect(within(nav).queryByText('Offline · reconnecting')).toBeNull();
-    expect(nav.querySelector('[data-part="dot"]')).toBeNull();
-    expect(within(nav).getByRole('button', { name: 'Switch to light theme' })).toBeTruthy();
+    expect(within(banner).queryByText('Live')).toBeNull();
+    expect(within(banner).queryByText('Offline · reconnecting')).toBeNull();
+    expect(banner.querySelector('[data-part="dot"]')).toBeNull();
+    expect(within(banner).getByRole('button', { name: 'Switch to light theme' })).toBeTruthy();
   });
 
   it('marks the current page on the matching link only', () => {

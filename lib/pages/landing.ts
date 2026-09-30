@@ -4,7 +4,8 @@ import type { FeedRun } from '../../components/RunFeedRow/RunFeedRow';
 import { formatTrendValue } from '../charts/format';
 import { formatCount, qty } from '../copy/count';
 import { projectsPassingTile } from '../copy/projects-passing';
-import { formatRunDuration, relativeLabel } from '../copy/time';
+import { joinNames } from '../copy/names';
+import { dateLabel, formatRunDuration, relativeLabel } from '../copy/time';
 import { layerSegments } from '../design/layers';
 import type { Landing, LandingProject } from '../queries/landing';
 import type { LandingHeadline } from '../stats/summary';
@@ -48,14 +49,15 @@ function passRateTile(
   const value = formatTrendValue(passRate.rate * 100, 'pct');
   const withRun = projects.filter((project) => project.latestRun !== null).length;
   const allCounted = passRate.counted.length === withRun;
-  const [onlyCounted] = passRate.counted;
+  // "{counted projects} only" is a name list (v9 item 6); only one counted project is drawn so
+  // far, and the other mixes come with the landing tiles' own PR.
   const lead =
     allCounted && passRate.failed > 0
       ? `${formatCount(passRate.passed)} of ${formatCount(passRate.passed + passRate.failed)}`
       : allCounted
         ? 'Latest runs'
-        : passRate.counted.length === 1 && passRate.failed === 0 && onlyCounted !== undefined
-          ? `${nameOf(onlyCounted)} only`
+        : passRate.counted.length === 1 && passRate.failed === 0
+          ? `${joinNames(passRate.counted.map(nameOf))} only`
           : null;
   if (lead === null) return { label: 'Pass rate', value };
   return {
@@ -111,7 +113,11 @@ function card(summary: LandingProject, now: Date): LandingCard {
         ? null
         : {
             status: run.status,
-            when: relativeLabel(run.finishedAt, now),
+            // A stale card shows its last run's date, not a relative time (design v8 item 14).
+            when:
+              summary.health.marker.health === 'stale'
+                ? dateLabel(run.finishedAt, now)
+                : relativeLabel(run.finishedAt, now),
             branch: run.branch,
             sha: run.commitSha,
             href: runHref(project.slug, run.id),
@@ -122,10 +128,7 @@ function card(summary: LandingProject, now: Date): LandingCard {
             duration: formatRunDuration(detail?.durationMs ?? 0),
           },
     layers: layerSegments(summary.layers),
-    // A module with no floor has no drawn row (13.2), so it is left out here as there.
-    coverage: summary.coverage.flatMap(({ module, pct, floor }) =>
-      floor === null ? [] : [{ module, pct, floor }],
-    ),
+    coverage: summary.coverage.map(({ module, pct, floor }) => ({ module, pct, floor })),
     reports: (detail?.reports ?? []).map((report) => ({
       key: `${report.job}/${report.module}/${report.platform}`,
       total: report.total,

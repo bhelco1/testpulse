@@ -8,10 +8,21 @@
 (function () {
   const R = new Proxy({}, { get: (_, k) => window.React[k] }); /* React may load after this script */
   const h = (...a) => window.React.createElement(...a);
-  const fmtFor = f => f === 'pct' ? (v, e) => (e ? v.toFixed(1) : String(Math.round(v * 10) / 10)) + '%'
-    : f === 'sec' ? (v, e) => (e ? v.toFixed(2) : String(+v.toFixed(2))) + ' s'
+  const down1 = v => Math.floor(v * 10 + 1e-9) / 10; /* v8 item 5: 99.96 → 99.9, never 100 */
+  const msStr = v => v < 0.0005 ? '<1 ms' : Math.round(v * 1000) + ' ms';
+  const fmtFor = f => f === 'pct' ? (v, e) => (e ? down1(v).toFixed(1) : String(down1(v))) + '%'
+    : f === 'ms' ? (v, e) => (e && v < 0.5 ? '<1' : Math.round(v)) + ' ms'
+    : f === 'sec' ? (v, e) => v < 0.01 && (e || v > 0) ? msStr(v) : /* v9 item 8: a stored 0 ms reads "<1 ms" */ (e ? v.toFixed(2) : String(+v.toFixed(2))) + ' s' /* v8 item 48: under 10 ms reads in ms */
     : f === 'dur' ? v => Math.round(v) + ' s'
     : v => Math.round(v).toLocaleString('en-US');
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const p2 = x => String(x).padStart(2, '0');
+  /* v9 item 1: "22 Sep, 04:37 UTC"; year added when not the current UTC year; title "22 Sep 2026, 04:37 UTC" */
+  const absTime = (iso, nowYear) => { const d = new Date(iso), y = d.getUTCFullYear(), day = d.getUTCDate() + ' ' + MON[d.getUTCMonth()], hm = p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()) + ' UTC';
+    return { date: day + (y === nowYear ? '' : ' ' + y) + ',', time: hm, title: day + ' ' + y + ', ' + hm }; };
+  if (typeof document !== 'undefined' && !document.getElementById('tpc-style')) { const st = document.createElement('style'); st.id = 'tpc-style';
+    st.textContent = '.tpc-row:hover{background:var(--raised)}.tpc-link{text-decoration:none}.tpc-link:hover{text-decoration:underline;text-decoration-color:currentColor}.tpc-link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:6px}';
+    document.head.appendChild(st); }
   const ago = (k, unit) => k === 0 ? 'Latest' : k + (unit === 'day' ? (k === 1 ? ' day ago' : ' days ago') : (k === 1 ? ' run ago' : ' runs ago'));
   const has = v => v != null && isFinite(v);
   let mctx = null;
@@ -50,9 +61,13 @@
     const [table, setTable] = R.useState(!!props.initialTable);
     const phone = W > 0 && W < 560;
     const H = props.height || (phone ? 200 : 250);
-    const series = props.series || [];
+    const allV = (props.series || []).flatMap(s => s.values).filter(has);
+    const msMode = props.format === 'sec' && allV.length > 0 && Math.max(...allV) < 0.01; /* whole chart under 10 ms: axis in whole ms */
+    const series = msMode ? props.series.map(s => Object.assign({}, s, { values: s.values.map(v => has(v) ? v * 1000 : v) })) : (props.series || []);
+    const fmt = msMode ? 'ms' : props.format;
     const n = series.length ? series[0].values.length : 0;
-    const f = fmtFor(props.format);
+    const f = fmtFor(fmt);
+    const gap = (s, i) => (s.gapLabels && s.gapLabels[i]) || 'Not run'; /* v8 item 17: e.g. "Skipped" */
     const labels = props.labels || [];
     let body;
     if (props.error) body = h('div', { role: 'alert', style: { height: H, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '0 16px', textAlign: 'center', borderRadius: 12, background: 'var(--inset)', border: '1px solid var(--line)' } },
@@ -76,10 +91,10 @@
       const L = phone ? 44 : 56, Rr = Math.max(phone ? 44 : 60, Math.ceil(8 + endW + 6)), T = 22, B = 30;
       const all = series.flatMap(s => s.values).filter(has).concat(props.floor != null ? [props.floor] : []);
       const zero = bar || props.zero;
-      const pct = props.format === 'pct';
+      const pct = fmt === 'pct';
       let lo = zero ? 0 : Math.min(...all), hi = Math.max(...all);
       if (!zero) { const pad = Math.max((hi - lo) * 0.12, pct ? 1 : (hi || 1) * 0.02); lo -= pad; hi += pad; }
-      const dom = nice(lo, hi, phone ? 2 : 3, pct, props.format === 'int' || props.format === 'dur', zero);
+      const dom = nice(lo, hi, phone ? 2 : 3, pct, fmt === 'int' || fmt === 'dur' || fmt === 'ms', zero);
       const X = bar ? (i => L + (i + 0.5) * (W - L - Rr) / n) : (i => L + i * (W - L - Rr) / (n - 1));
       const Y = v => T + (dom.max - v) / (dom.max - dom.min) * (H - T - B);
       const k = [];
@@ -108,7 +123,8 @@
             k.push(h('text', { key: 'sv', x: X(0) + 8, y: Y(s.values[0]) + (Y(s.values[0]) > H - B - 20 ? -10 : 18), fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, f(s.values[0], true)));
           }
         });
-        (props.marks || []).forEach(m => { const v = series[0].values[m.index]; k.push(h('rect', { key: 'm' + m.index, x: X(m.index) - 4, y: Y(v) - 4, width: 8, height: 8, fill: m.status === 'fail' ? 'var(--fail)' : 'var(--attn)', stroke: 'var(--surface)', strokeWidth: 2 })); });
+        (props.marks || []).forEach(m => { /* v9 item 13: mark sits on m.series (the platform it came from); if that series has no value there, on the first series that has one */
+          const si = has((series[m.series || 0] || series[0]).values[m.index]) ? (m.series || 0) : series.findIndex(s => has(s.values[m.index])); if (si < 0) return; const v = series[si].values[m.index]; k.push(h('rect', { key: 'm' + m.index, x: X(m.index) - 4, y: Y(v) - 4, width: 8, height: 8, fill: m.status === 'fail' ? 'var(--fail)' : 'var(--attn)', stroke: 'var(--surface)', strokeWidth: 2, transform: m.status === 'flaky' ? `rotate(45 ${X(m.index)} ${Y(v)})` : undefined })); }); /* flaky: amber diamond */
       }
       const xi = Array.from(new Set(phone || !labels.length ? [0, n - 1] : [0, Math.round((n - 1) / 3), Math.round((n - 1) * 2 / 3), n - 1]));
       xi.forEach((i, j) => k.push(h('text', { key: 'x' + j, x: X(i), y: H - 8, textAnchor: j === 0 ? 'start' : (j === xi.length - 1 ? 'end' : 'middle'), fill: 'var(--ink-3)', fontSize: 12 }, labels[i] || ago(n - 1 - i, props.unit))));
@@ -124,8 +140,8 @@
         const left = Math.min(Math.max(X(hover) - 90, 0), W - 180);
         tip = h('div', { role: 'status', style: { position: 'absolute', left, top: 0, width: 180, boxSizing: 'border-box', padding: '10px 12px', borderRadius: 12, background: 'var(--raised)', border: '1px solid var(--line-strong)', boxShadow: 'var(--shadow-menu)', font: '13px ' + font, pointerEvents: 'none' } },
           h('div', { style: { color: 'var(--ink-3)', fontSize: 12 } }, labels[hover] || ago(n - 1 - hover, props.unit)),
-          series.map((s, si) => h('div', { key: si, style: { display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 4 } }, h('span', { style: { color: 'var(--ink-2)' } }, s.name), has(s.values[hover]) ? h('b', { style: { fontWeight: 600, color: 'var(--ink)' } }, f(s.values[hover], true)) : h('span', { style: { color: 'var(--ink-3)' } }, 'Not run'))),
-          (props.marks || []).filter(m => m.index === hover).map(m => h('div', { key: 'mk', style: { marginTop: 4, color: m.status === 'fail' ? 'var(--fail)' : 'var(--attn)', fontWeight: 600 } }, m.status === 'fail' ? 'Run failed' : 'Run empty')));
+          series.map((s, si) => h('div', { key: si, style: { display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 4 } }, h('span', { style: { color: 'var(--ink-2)' } }, s.name), has(s.values[hover]) ? h('b', { style: { fontWeight: 600, color: 'var(--ink)' } }, f(s.values[hover], true)) : h('span', { style: { color: 'var(--ink-3)' } }, gap(s, hover)))),
+          (props.marks || []).filter(m => m.index === hover).map(m => h('div', { key: 'mk', style: { marginTop: 4, color: m.status === 'fail' ? 'var(--fail)' : 'var(--attn)', fontWeight: 600 } }, m.status === 'fail' ? 'Run failed' : m.status === 'flaky' ? 'Flaky run' : 'Run empty')));
       }
       body = h('div', { style: { position: 'relative' } }, svg, tip);
     } else body = h('div', { style: { height: H } });
@@ -133,13 +149,23 @@
       series.map((s, si) => h('span', { key: si, style: { display: 'flex', alignItems: 'center', gap: 8 } }, h('span', { style: { width: 20, height: 0, borderTop: (si ? '2px dashed var(--ink-3)' : '2.5px solid var(--ink)') } }), s.name))) : null;
     const canTable = n > 1 && !props.loading && !props.error;
     const btn = canTable ? h('div', { style: { display: 'flex', justifyContent: 'flex-end', marginTop: 8 } }, h('button', { onClick: () => setTable(t => !t), 'aria-expanded': table, style: { minHeight: 44, padding: '0 14px', borderRadius: 10, border: '1px solid var(--line-strong)', background: 'none', color: 'var(--ink)', font: '500 14px ' + font, cursor: 'pointer' } }, table ? 'Hide table' : 'Show table')) : null;
+    /* v9 items 1–2: "When" column (props.whens: ISO per point) and per-row run links (props.hrefs: URL or null for imported history) */
+    const whens = props.whens || [], hrefs = props.hrefs || [], nowYear = props.nowYear || new Date().getUTCFullYear(), showWhen = whens.length > 0 && props.unit !== 'day';
+    /* v9 fix: below 560 px the table is compact (13 px, cell padding 0 8, When always two lines) so Run + When + two series fit a 292 px frame */
+    const tight = W > 0 && W < 560, pad = tight ? '0 6px' : '0 14px', /* 6 px leaves ~9 px slack under a 273 px client width (classic scrollbar) */ cellS = x => Object.assign({}, td, { padding: pad }, x);
+    const runCell = i => { const txt = labels[i] || ago(n - 1 - i, props.unit), href = hrefs[i];
+      return h('td', { key: 'x', style: Object.assign({}, td, { padding: 0, whiteSpace: 'nowrap' }) }, href
+        ? h('a', { href, className: 'tpc-link', style: { display: 'flex', alignItems: 'center', minHeight: 44, padding: pad, color: 'var(--ink)', fontWeight: 500 } }, txt)
+        : h('span', { style: { display: 'flex', alignItems: 'center', minHeight: 44, padding: pad, color: 'var(--ink-2)' } }, txt)); };
+    const whenCell = i => { const w = whens[i]; if (!w) return h('td', { key: 'w', style: cellS({ color: 'var(--ink-3)' }) }, '—'); const a = absTime(w, nowYear);
+      return h('td', { key: 'w', style: cellS({ color: 'var(--ink-2)' }) }, h('time', { dateTime: w, title: a.title, style: { display: 'flex', flexWrap: 'wrap', flexDirection: tight ? 'column' : 'row', columnGap: 4, lineHeight: tight ? 1.3 : undefined } }, h('span', { style: { whiteSpace: 'nowrap' } }, a.date), h('span', { style: { whiteSpace: 'nowrap' } }, a.time))); };
     const tbl = table && canTable ? h('div', { style: { maxHeight: 320, overflow: 'auto', marginTop: 8, border: '1px solid var(--line)', borderRadius: 12 } },
-      h('table', { style: { width: '100%', borderCollapse: 'collapse', font: '14px ' + font, fontVariantNumeric: 'tabular-nums' } },
-        h('thead', null, h('tr', null, [h('th', { key: 'x', style: th }, props.unit === 'day' ? 'Day (UTC)' : 'Run')].concat(series.map((s, si) => h('th', { key: si, style: Object.assign({}, th, { textAlign: 'right' }) }, s.name))))),
-        h('tbody', null, Array.from({ length: n }, (_, i) => n - 1 - i).map(i => h('tr', { key: i }, [h('td', { key: 'x', style: td }, labels[i] || ago(n - 1 - i, props.unit))].concat(series.map((s, si) => (v => h('td', { key: si, style: Object.assign({}, td, { textAlign: 'right', fontWeight: has(v) ? 600 : 400, color: has(v) ? 'var(--ink)' : 'var(--ink-3)' }) }, has(v) ? f(v, true) : 'Not run'))(s.values[i])))))))) : null;
+      h('table', { style: { width: '100%', borderCollapse: 'collapse', font: (tight ? '13px ' : '14px ') + font, fontVariantNumeric: 'tabular-nums' } },
+        h('thead', null, h('tr', null, [h('th', { key: 'x', style: Object.assign({}, th, { padding: tight ? '10px 6px' : th.padding }) }, props.unit === 'day' ? 'Day (UTC)' : 'Run')].concat(showWhen ? [h('th', { key: 'w', style: Object.assign({}, th, { padding: tight ? '10px 6px' : th.padding }) }, 'When')] : [], series.map((s, si) => h('th', { key: si, style: Object.assign({}, th, { textAlign: 'right', padding: tight ? '10px 6px' : th.padding }) }, s.name))))),
+        h('tbody', null, Array.from({ length: n }, (_, i) => n - 1 - i).map(i => h('tr', { key: i, className: hrefs[i] ? 'tpc-row' : undefined }, [runCell(i)].concat(showWhen ? [whenCell(i)] : [], series.map((s, si) => (v => h('td', { key: si, style: cellS({ textAlign: 'right', whiteSpace: 'nowrap', fontWeight: has(v) ? 600 : 400, color: has(v) ? 'var(--ink)' : 'var(--ink-3)' }) }, has(v) ? f(v, true) : gap(s, i)))(s.values[i])))))))) : null;
     return h('div', { ref, style: { width: '100%', minWidth: 0 } }, legend, body, btn, tbl);
   }
   const th = { position: 'sticky', top: 0, background: 'var(--surface)', textAlign: 'left', padding: '10px 14px', borderBottom: '1px solid var(--line)', font: "600 12px 'JetBrains Mono',monospace", letterSpacing: '.04em', color: 'var(--ink-3)' };
-  const td = { padding: '8px 14px', borderBottom: '1px solid var(--line)', color: 'var(--ink)' };
+  const td = { padding: '0 14px', height: 44, boxSizing: 'border-box', verticalAlign: 'middle', borderBottom: '1px solid var(--line)', color: 'var(--ink)' };
   window.TPCharts = { Trend };
 })();

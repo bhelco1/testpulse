@@ -210,7 +210,7 @@ describe('runPageView: a public passing run', () => {
       commit: { text: '0e2d0b4', href: `https://github.com/bhelco1/Ostomate2/commit/${SHA}` },
       event: 'push',
       started: {
-        text: '5 Oct, 09:25',
+        text: '5 Oct, 09:25 UTC',
         datetime: '2026-10-05T09:25:47.312Z',
         title: '5 Oct 2026, 09:25 UTC',
       },

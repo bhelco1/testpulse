@@ -23,9 +23,19 @@ interface RunBase {
 }
 
 type RunCounts =
-  | { status: Extract<RunStatus, 'passed'>; total: number; duration: string }
-  | { status: Extract<RunStatus, 'failed'>; failed: number; passed: number; total: number }
-  | { status: Extract<RunStatus, 'empty'>; reports: number };
+  | { status: Extract<RunStatus, 'passed'>; total: number; duration: string; pruned?: false }
+  | {
+      status: Extract<RunStatus, 'failed'>;
+      failed: number;
+      passed: number;
+      total: number;
+      pruned?: false;
+    }
+  | { status: Extract<RunStatus, 'empty'>; reports: number; pruned?: false }
+  // Per-test results removed after 180 days (spec 5.12): no distinct tests are left to count,
+  // so the count gives way to "Results pruned" (design v7 item 16, v9 item 14). An empty run
+  // needs no per-test rows and keeps its own count.
+  | { status: Extract<RunStatus, 'passed' | 'failed'>; pruned: true; duration: string };
 
 // The caller titles the run with runTitle (lib/runs/title) from runs.event and runs.branch. A
 // private project's row shows no title.
@@ -65,6 +75,20 @@ export function RunFeedRow(props: RunFeedRowProps) {
 }
 
 function Count({ run }: { run: RunCounts }) {
+  if (run.pruned) {
+    return (
+      <span className={styles.count}>
+        {run.status === 'failed' && (
+          <span className={styles.countFailed} data-part="count-lead">
+            Failed
+          </span>
+        )}
+        <span className={styles.countRest} data-part="count-rest">
+          {`${run.status === 'failed' ? '· ' : ''}Results pruned · ${run.duration}`}
+        </span>
+      </span>
+    );
+  }
   const [lead, rest, tone] =
     run.status === 'passed'
       ? [qty(run.total, 'test'), `· ${run.duration}`, styles.countPassed]

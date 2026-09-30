@@ -279,3 +279,11 @@
 .errorRetry {
   margin-top: 8px;
 }
+
+/* Without JavaScript the plot is never drawn and "Show table" does nothing, so neither the held
+   plot area nor the button shows; the table stands open in their place (design v8 item 32). */
+@media (scripting: none) {
+  .scriptOnly {
+    display: none;
+  }
+}

@@ -6,6 +6,7 @@ import {
   dateLabel,
   dateTimeLabel,
   formatRunDuration,
+  formatTestTime,
   fullTimestamp,
   relativeLabel,
   relativeTime,
@@ -60,6 +61,14 @@ describe('relativeTime', () => {
     expect(relativeTime(new Date('2026-10-04T23:59:00.000Z'), justAfterMidnight)).toBe('2 min ago');
     expect(relativeTime(new Date('2026-10-04T20:00:00.000Z'), justAfterMidnight)).toBe('4 h ago');
     expect(relativeTime(new Date('2026-10-04T00:01:00.000Z'), justAfterMidnight)).toBe('yesterday');
+  });
+
+  // components.md "Relative time" (v9 item 17), its worked examples word for word.
+  it('reads v9’s examples: 25 h across one midnight is yesterday, 30 h across two is 2 days', () => {
+    const early = new Date('2026-10-05T02:00:00.000Z');
+    expect(relativeTime(new Date('2026-10-05T00:00:00.000Z'), early)).toBe('2 h ago');
+    expect(relativeTime(new Date('2026-10-04T01:00:00.000Z'), early)).toBe('yesterday');
+    expect(relativeTime(new Date('2026-10-03T20:00:00.000Z'), early)).toBe('2 days ago');
   });
 
   it('reads the latest instant of the previous UTC day as yesterday once 24 hours have passed', () => {
@@ -140,6 +149,17 @@ describe('clockLabel', () => {
   });
 });
 
+// The run page's rows and the test history panel print a test's time as the Run Detail and Test
+// History mocks do (M.fmt, "0.41 s"); only the chart reads milliseconds (v8 item 48).
+describe('formatTestTime', () => {
+  it('reads seconds to two places, 0.00 s included', () => {
+    expect(formatTestTime(410)).toBe('0.41 s');
+    expect(formatTestTime(3)).toBe('0.00 s');
+    expect(formatTestTime(0)).toBe('0.00 s');
+    expect(formatTestTime(1_125)).toBe('1.13 s');
+  });
+});
+
 describe('formatRunDuration', () => {
   it('reads whole seconds, as the charts do', () => {
     expect(formatRunDuration(35_604)).toBe('36 s');
@@ -149,11 +169,12 @@ describe('formatRunDuration', () => {
 });
 
 // The run page's absolute times (docs/spec.md section 13.5): "Started" as the one date format
-// with the time of day, and a report's "Received" as the Run Detail mock's "14:03:41", in UTC.
+// with the time of day and "UTC" (design v8 item 2, components.md "Relative time"), and a report's
+// "Received" as the Run Detail mock's "14:03:41", in UTC.
 describe('dateTimeLabel', () => {
-  it('reads "5 Oct, 09:25" in now’s year, with the full timestamp as its title', () => {
+  it('reads "5 Oct, 09:25 UTC" in now’s year, with the full timestamp as its title', () => {
     expect(dateTimeLabel(new Date('2026-10-05T09:25:47.312Z'), NOW)).toEqual({
-      text: '5 Oct, 09:25',
+      text: '5 Oct, 09:25 UTC',
       datetime: '2026-10-05T09:25:47.312Z',
       title: '5 Oct 2026, 09:25 UTC',
     });
@@ -161,9 +182,9 @@ describe('dateTimeLabel', () => {
 
   it('adds the year in another year, and reads the UTC day at midnight', () => {
     expect(dateTimeLabel(new Date('2025-12-31T23:59:59.999Z'), NOW).text).toBe(
-      '31 Dec 2025, 23:59',
+      '31 Dec 2025, 23:59 UTC',
     );
-    expect(dateTimeLabel(new Date('2026-10-05T00:00:00.000Z'), NOW).text).toBe('5 Oct, 00:00');
+    expect(dateTimeLabel(new Date('2026-10-05T00:00:00.000Z'), NOW).text).toBe('5 Oct, 00:00 UTC');
   });
 });
 

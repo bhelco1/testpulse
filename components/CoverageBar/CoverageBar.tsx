@@ -5,7 +5,9 @@ import styles from './CoverageBar.module.css';
 export interface CoverageBarProps {
   module: string;
   pct: number;
-  floor: number;
+  // Null for a module missing from coverage_floors: no marker, no floor text, never amber
+  // (design v8 item 15).
+  floor: number | null;
   // kiosk: the kiosk ProjectCard row, drawn with the figure only; its legend row explains the
   // floor marker.
   variant?: 'web' | 'kiosk';
@@ -21,7 +23,7 @@ const clamp = (n: number) => Math.min(100, Math.max(0, n));
 
 // The scale always runs 0 to 100, so small headroom looks small.
 export function CoverageBar({ module, pct, floor, variant = 'web' }: CoverageBarProps) {
-  const state = pct < floor ? 'below' : pct === floor ? 'at' : 'above';
+  const state = floor === null ? 'none' : pct < floor ? 'below' : pct === floor ? 'at' : 'above';
   const kiosk = variant === 'kiosk';
   const below = state === 'below';
   return (
@@ -37,14 +39,16 @@ export function CoverageBar({ module, pct, floor, variant = 'web' }: CoverageBar
       </span>
       <div className={styles.track} data-part="track" aria-hidden="true">
         <div className={styles.fill} data-part="fill" style={{ width: `${clamp(pct)}%` }} />
-        <div className={styles.floor} data-part="floor" style={{ left: `${clamp(floor)}%` }} />
+        {floor !== null && (
+          <div className={styles.floor} data-part="floor" style={{ left: `${clamp(floor)}%` }} />
+        )}
       </div>
       <span className={styles.value} data-part="value">
         {below && (
           <ArrowDownIcon size={kiosk ? 22 : 13} strokeWidth={2.8} className={styles.arrow} />
         )}
         <b className={styles.figure}>{formatPct(pct)}</b>
-        {!kiosk && (
+        {!kiosk && floor !== null && (
           <span className={styles.floorLabel}>
             {below ? `below floor ${floor}%` : `floor ${floor}%`}
           </span>

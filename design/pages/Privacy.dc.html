@@ -36,9 +36,37 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <main id="main" style="max-width:720px;padding:56px 0 72px">
 <div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Privacy</div>
 <h1 style="margin:14px 0 0;font:500 clamp(38px,5vw,58px)/1.06 'Source Serif 4',serif;letter-spacing:-.03em;text-wrap:balance">What this site records about you</h1>
-<p style="margin:22px 0 0;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">Which pages you view and for how long. That’s it. There are no accounts, no raw IP addresses, and no third-party analytics.</p>
+<sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+<p style="margin:22px 0 0;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">Nothing. There are no accounts, no cookies and no analytics, and this site keeps no record of who visits.</p>
+</sc-if>
+<sc-if value="{{ isPhase6 }}" hint-placeholder-val="{{ false }}">
+<p style="margin:22px 0 0;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">Which pages you view and for how long. There are no accounts and no third-party analytics, and this site stores a hash of your IP address, never the address itself.</p>
+</sc-if>
+<div style="display:flex;gap:6px;margin-top:14px;font-size:14px;color:var(--ink-3)"><span>Updated</span><time datetime="{{ updatedIso }}" title="{{ updatedTitle }}">{{ updated }}</time></div>
 
 <sc-if value="{{ showSummary }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:36px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
+<div style="font:500 20px 'Source Serif 4',serif">What your browser does here</div>
+<ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Loads the pages</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Opens one live connection to Supabase Realtime for new results</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Saves your theme in localStorage, only if you press the toggle</li>
+</ul>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
+<div style="font:500 20px 'Source Serif 4',serif">What this site doesn’t do</div>
+<ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Set cookies</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Log page views or visits</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Track links</li>
+<li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Load analytics or ad scripts</li>
+</ul>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ isPhase6 }}" hint-placeholder-val="{{ false }}">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:36px">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
 <div style="font:500 20px 'Source Serif 4',serif">Recorded per page view</div>
@@ -51,7 +79,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </ul>
 </div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
-<div style="font:500 20px 'Source Serif 4',serif">Never recorded</div>
+<div style="font:500 20px 'Source Serif 4',serif">Never stored by this site</div>
 <ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Your IP address itself</li>
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Your name or email</li>
@@ -61,7 +89,9 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </div>
 </div>
 </sc-if>
+</sc-if>
 
+<sc-if value="{{ isPhase6 }}" hint-placeholder-val="{{ false }}">
 <section style="margin-top:48px;padding-top:32px;border-top:1px solid var(--line)">
 <h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">How a visit is recorded</h2>
 <div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
@@ -70,14 +100,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <p style="margin:0">Your IP address is combined with a secret value and hashed before it is stored. The hash can’t be turned back into an address; it is used only to count how many different visitors opened a link.</p>
 </div>
 </section>
-
 <section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
 <h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">The cookie</h2>
 <div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
 <p style="margin:0">One cookie, set by this site only, holding the session identifier. It is marked httpOnly, so scripts on the page can’t read it, and it is never shared with another site.</p>
 </div>
 </section>
-
 <section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
 <h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">If someone sent you a link</h2>
 <div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
@@ -92,12 +120,41 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </ul>
 </div>
 </section>
+</sc-if>
+
+<section style="margin-top:48px;padding-top:32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">Live updates</h2>
+<div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
+<p style="margin:0">Pages that update live open one WebSocket connection from your browser straight to Supabase Realtime, the database service behind this site. It only receives new test results; nothing about you is sent over it.</p>
+<p style="margin:0">Like any server your browser connects to, Supabase sees your IP address. That is covered by Supabase’s own privacy policy, not by this site. Pages work without the connection: with JavaScript off, none is opened.</p>
+</div>
+</section>
+<section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">Your theme choice</h2>
+<div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
+<p style="margin:0">If you press the theme toggle, your choice (light or dark) is saved in your browser’s localStorage so the next page opens the same way. It never leaves your browser. Until you press the toggle, nothing is saved; clearing this site’s data removes it.</p>
+</div>
+</section>
+<section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">Hosting</h2>
+<div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
+<p style="margin:0">The site runs on Vercel and its data lives on Supabase. Both keep their own server logs, which this site doesn’t read or control; see each provider’s privacy policy.</p>
+</div>
+</section>
+<sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+<section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
+<h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">If this changes</h2>
+<div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
+<p style="margin:0">A later version will count visits to links sent with job applications. This page will be rewritten, and its date updated, before that ships.</p>
+</div>
+</section>
+</sc-if>
 </main>
 
-<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" aria-current="page" style="min-height:44px;display:flex;align-items:center;padding-right:16px;color:var(--ink);text-decoration-color:var(--ink)">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 minutes ago</span></footer>
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" aria-current="page" style="min-height:44px;display:flex;align-items:center;padding-right:16px;color:var(--ink);text-decoration-color:var(--ink)">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;summary&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;phase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;today&quot;,&quot;after Phase 6&quot;],&quot;default&quot;:&quot;today&quot;,&quot;tsType&quot;:&quot;'today' | 'after Phase 6'&quot;},&quot;summary&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null };
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
@@ -111,6 +168,9 @@ class Component extends DCLogic {
     return {
       themeVars: tv, liveDot,
       showSummary: this.props.summary ?? true,
+      /* v9 item 3: "today" is true now; "after Phase 6" replaces it when tracked links ship */
+      isToday: (this.props.phase ?? 'today') === 'today', isPhase6: (this.props.phase ?? 'today') !== 'today',
+      updated: '30 Sep', updatedIso: '2026-09-30', updatedTitle: '30 Sep 2026, 00:00 UTC',
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
     };

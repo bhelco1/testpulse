@@ -4,12 +4,12 @@ import type {
   ResultRow,
 } from '../../components/ResultsTable/ResultsTable';
 import type { RunReportRow } from '../../components/RunReportTable/RunReportTable';
-import { formatTrendValue } from '../charts/format';
 import { formatCount } from '../copy/count';
 import {
   clockSecondsLabel,
   dateTimeLabel,
   formatRunDuration,
+  formatTestTime,
   relativeLabel,
   type TimeLabel,
 } from '../copy/time';
@@ -69,7 +69,6 @@ const projectHref = (slug: string) => `/p/${encodeURIComponent(slug)}`;
 const sha7 = (sha: string) => sha.slice(0, 7);
 
 // One test's time, as the design writes it: "0.41 s" (tp-charts.js, a test's duration).
-const testSeconds = (ms: number): string => formatTrendValue(ms / 1000, 'sec', true);
 
 function reportRow(report: RunReport): RunReportRow {
   const { total, passed, failed } = report;
@@ -103,7 +102,7 @@ const failuresOf = (row: RunTestRow): FailureDetail[] =>
             {
               platform,
               status: failure.status,
-              duration: testSeconds(failure.durationMs),
+              duration: formatTestTime(failure.durationMs),
               message: failure.message,
               detail: failure.detail,
             },
@@ -122,7 +121,7 @@ function resultRow(slug: string, row: RunTestRow, isPrivate: boolean): ResultRow
     layer: row.layer,
     flaky: row.flaky,
     platforms: row.platforms.map(({ platform, status }) => ({ platform, status })),
-    time: duration === null ? '—' : testSeconds(duration),
+    time: duration === null ? '—' : formatTestTime(duration),
     historyHref: testHref(slug, row.testKey),
     // Row-level security returns no failure text for a private project (section 9); none is
     // passed on even if some arrived, so the page cannot print it.

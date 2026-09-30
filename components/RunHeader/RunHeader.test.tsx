@@ -21,7 +21,7 @@ const PUBLIC: RunHeaderProps = {
     commit: { text: '0e2d0b4', href: `https://github.com/bhelco1/Ostomate2/commit/${SHA}` },
     event: 'push',
     started: {
-      text: '5 Oct, 09:25',
+      text: '5 Oct, 09:25 UTC',
       datetime: '2026-10-05T09:25:47.312Z',
       title: '5 Oct 2026, 09:25 UTC',
     },
@@ -70,7 +70,7 @@ describe('RunHeader', () => {
       ['Branch', 'main'],
       ['Commit', '0e2d0b4'],
       ['Event', 'push'],
-      ['Started', '5 Oct, 09:25'],
+      ['Started', '5 Oct, 09:25 UTC'],
       ['CI', 'GitHub Actions'],
     ]);
     expect(getByRole('link', { name: '0e2d0b4' }).getAttribute('href')).toBe(
@@ -93,7 +93,7 @@ describe('RunHeader', () => {
       ['Branch', 'main'],
       ['Commit', '5f0a2c9'],
       ['Event', 'push'],
-      ['Started', '5 Oct, 09:25'],
+      ['Started', '5 Oct, 09:25 UTC'],
     ]);
     expect(queryByRole('link')).toBeNull();
   });

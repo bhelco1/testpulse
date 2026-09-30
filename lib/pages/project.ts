@@ -128,7 +128,7 @@ export interface ProjectPageView {
 }
 
 const projectHref = (slug: string) => `/p/${encodeURIComponent(slug)}`;
-const testHref = (slug: string, testKey: string) => `${projectHref(slug)}/tests/${testKey}`;
+export const testHref = (slug: string, testKey: string) => `${projectHref(slug)}/tests/${testKey}`;
 const sha7 = (sha: string) => sha.slice(0, 7);
 
 /** The run list's URL: the default branch and 10 runs are the defaults and are left out. */

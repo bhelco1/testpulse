@@ -1,0 +1,125 @@
+.box {
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+/* A real table laid out as the mock's grid rows, 760 px at least, scrolling inside the box. */
+.table {
+  display: block;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.group {
+  display: block;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1.4fr) minmax(0, 1fr) 90px 120px 90px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  text-align: left;
+}
+
+/* The box's own border closes the last row; the mock's footer line is not drawn (13.5). */
+.group:last-child .row:last-child {
+  border-bottom: none;
+}
+
+.cell {
+  padding: 0;
+  font: inherit;
+  text-align: inherit;
+}
+
+/* Typed in sentence case and uppercased here, as the results table's headers are. */
+.head {
+  padding: 12px 18px;
+  font: 600 12px var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.failing {
+  background: var(--fail-tint);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.pass {
+  color: var(--pass);
+}
+
+.fail {
+  color: var(--fail);
+}
+
+.key {
+  font: 13.5px var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bar {
+  display: flex;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--raised);
+}
+
+.barPass {
+  background: var(--pass);
+}
+
+.barFail {
+  background: var(--fail);
+  min-width: 4px;
+}
+
+.result {
+  font-size: 12.5px;
+  white-space: nowrap;
+  color: var(--ink-3);
+}
+
+.resultFail {
+  color: var(--fail);
+}
+
+.right {
+  text-align: right;
+}
+
+.tests {
+  text-align: right;
+  font-weight: 600;
+}
+
+.received {
+  text-align: right;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.time {
+  text-align: right;
+  color: var(--ink-2);
+}

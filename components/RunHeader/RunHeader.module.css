@@ -1,0 +1,91 @@
+.header {
+  padding: 36px 0 40px;
+}
+
+.lead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  font-size: 14px;
+}
+
+.when {
+  color: var(--ink-3);
+}
+
+.heading {
+  margin: 16px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font: 500 clamp(34px, 4.5vw, 52px)/1.08 var(--font-serif);
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+
+.lock {
+  display: flex;
+  color: var(--ink-3);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 36px;
+  margin: 20px 0 0;
+  font-size: 14px;
+}
+
+.term {
+  color: var(--ink-3);
+}
+
+.value {
+  margin: 3px 0 0;
+}
+
+.sha {
+  font: 13.5px var(--font-mono);
+}
+
+.ci {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+
+.tileLabel {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.tileValue {
+  font: 500 40px/1.1 var(--font-serif);
+  margin-top: 6px;
+}
+
+.tileFail {
+  background: var(--fail-tint);
+  border-color: var(--fail);
+}
+
+.tileFail .tileLabel,
+.tileFail .tileValue {
+  color: var(--fail);
+}

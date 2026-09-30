@@ -22,7 +22,13 @@ describe('public read boundary (spec section 15)', () => {
     const listed = entries.map((file) => relative(ROOT, file));
 
     expect(listed).toEqual(
-      expect.arrayContaining(['app/layout.tsx', 'app/page.tsx', 'lib/queries/projects.ts']),
+      expect.arrayContaining([
+        'app/layout.tsx',
+        'app/page.tsx',
+        'app/p/[slug]/runs/[id]/page.tsx',
+        'app/p/[slug]/runs/[id]/not-found.tsx',
+        'lib/queries/projects.ts',
+      ]),
     );
     expect(listed.filter((file) => file.startsWith('app/api/'))).toEqual([]);
     expect(listed.filter((file) => /\.test(-support)?\.tsx?$/.test(file))).toEqual([]);

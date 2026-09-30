@@ -87,5 +87,19 @@ export const dateLabel = (instant: Date, now: Date): TimeLabel =>
 export const clockLabel = (instant: Date): TimeLabel =>
   label(`${pad2(instant.getUTCHours())}:${pad2(instant.getUTCMinutes())}`, instant);
 
+/** "5 Oct, 09:25": the one date format with the UTC time of day, as the run page's "Started". */
+export const dateTimeLabel = (instant: Date, now: Date): TimeLabel =>
+  label(
+    `${shortDate(instant, now)}, ${pad2(instant.getUTCHours())}:${pad2(instant.getUTCMinutes())}`,
+    instant,
+  );
+
+/** "14:03:41": the UTC time of day to the second, as the run page dates each report. */
+export const clockSecondsLabel = (instant: Date): TimeLabel =>
+  label(
+    `${pad2(instant.getUTCHours())}:${pad2(instant.getUTCMinutes())}:${pad2(instant.getUTCSeconds())}`,
+    instant,
+  );
+
 /** A run's duration as the charts and run rows read it: whole seconds, "36 s". */
 export const formatRunDuration = (ms: number): string => formatTrendValue(ms / SECOND, 'dur');

@@ -261,6 +261,25 @@
   color: var(--ink-3);
 }
 
+.failures {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.failureHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font: 600 13px var(--font-sans);
+  color: var(--fail);
+}
+
+.failureIcon {
+  flex: none;
+}
+
 .message {
   font: 600 13.5px/1.5 var(--font-mono);
   margin-bottom: 8px;

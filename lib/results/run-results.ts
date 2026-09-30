@@ -33,12 +33,21 @@ export interface ResultFailure {
   readonly detail: string;
 }
 
+/** One failed or error result's text, with that result's own status and time. */
+export interface ResultFailureEntry extends ResultFailure {
+  readonly status: TestStatus;
+  readonly durationMs: number;
+}
+
 export interface PlatformOutcome {
   readonly platform: string;
   readonly status: TestStatus;
   readonly durationMs: number;
-  /** Failure text of this platform's failing results; none where RLS returned none. */
-  readonly failures: readonly ResultFailure[];
+  /**
+   * Failure text of this platform's failing results, one entry per result (design/data-map.md,
+   * "Failure detail (several)"); none where RLS returned none.
+   */
+  readonly failures: readonly ResultFailureEntry[];
 }
 
 export interface RunTestRow {
@@ -108,7 +117,9 @@ export function runTestRows(
       durationMs: group.reduce((total, result) => total + result.durationMs, 0),
       failures: group.flatMap((result) => {
         const failure = failures.get(result.resultId);
-        return failure === undefined ? [] : [failure];
+        return failure === undefined
+          ? []
+          : [{ ...failure, status: result.status, durationMs: result.durationMs }];
       }),
     }));
     const row: RunTestRow = {
@@ -126,4 +137,15 @@ export function runTestRows(
     return [row];
   });
   return orderResults(rows);
+}
+
+/**
+ * A row's time (design v7 item 2; components.md, ResultsTable "Time column"): the slowest
+ * platform's, each platform's time already the sum of its repeated results (section 11, "Run
+ * page"). A platform that skipped the test did not run it, so it has no time; with none left the
+ * row has none, which the table prints as "—".
+ */
+export function rowDurationMs(platforms: readonly PlatformOutcome[]): number | null {
+  const ran = platforms.filter((platform) => platform.status !== 'skipped');
+  return ran.length === 0 ? null : Math.max(...ran.map((platform) => platform.durationMs));
 }

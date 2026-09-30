@@ -925,6 +925,8 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         reports: 3,
         resultsPrunedAt: null,
       });
+      // The header counts distinct tests (decision 2026-09-29), not the 192 executions.
+      expect(detail?.run.tests).toEqual({ total: 142, passed: 142, failed: 0, skipped: 0 });
       expect(detail?.run.commitSha).toMatch(/^[0-9a-f]{40}$/);
       // 192 executions are 142 tests; the 50 composeApp tests on the simulator also ran on the
       // JVM, and passed on both, so no row has a mismatch.
@@ -942,6 +944,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       const [testpulseRun] = await runIdsOf('testpulse');
       const detail = await loadRunDetail('testpulse', testpulseRun ?? '', anon, NOW);
       expect(detail?.results?.map((row) => row.status)).toEqual(['failed', 'passed', 'skipped']);
+      expect(detail?.run.tests).toEqual({ total: 3, passed: 1, failed: 1, skipped: 1 });
       expect(detail?.results?.[0]?.platforms[0]?.failures[0]?.message).toBe(
         'expect(received).toBe(expected) // Object.is equality',
       );
@@ -1072,7 +1075,9 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
 
       it('in the run page of its failed latest run, which still shows the failing row', async () => {
         const detail = await loadRunDetail('routeserve', latestRunId, anon, NOW);
-        expect(detail?.run).toMatchObject({ status: 'failed', runUrl: null });
+        expect(detail?.run).toMatchObject({ status: 'failed', runUrl: null, total: 1045 });
+        // 1,045 executions are 1,041 distinct tests, one of them failing.
+        expect(detail?.run.tests).toEqual({ total: 1041, passed: 1040, failed: 1, skipped: 0 });
         expect(detail?.run.commitSha).toMatch(/^[0-9a-f]{7}$/);
         expect(detail?.results).toHaveLength(1041);
         expect(detail?.results?.[0]).toMatchObject({

@@ -103,3 +103,52 @@ describe('NotFound (project)', () => {
     });
   });
 });
+
+// design/components.md "NotFound (page)", run kind, as design/pages/NotFound.dc.html draws it.
+describe('NotFound (run)', () => {
+  const renderRun = () =>
+    render(
+      <NotFound
+        kind="run"
+        path="/p/ostomate2/runs/35600000000"
+        project={{ name: 'Ostomate 2.0', href: '/p/ostomate2' }}
+      />,
+    );
+
+  it('says the run isn’t in the project, shows the path and explains why', () => {
+    const { getByRole, container, queryByRole } = renderRun();
+    const main = getByRole('main');
+
+    expect(container.querySelector('[data-part="eyebrow"]')?.textContent).toBe('404 · Not found');
+    expect(getByRole('heading', { level: 1 }).textContent).toBe('This run isn’t in Ostomate 2.0');
+    expect(container.querySelector('[data-part="path"]')?.textContent).toBe(
+      '/p/ostomate2/runs/35600000000',
+    );
+    expect(main.querySelector('p')?.textContent).toBe(
+      'Run summaries are kept permanently, so this run was never recorded for this project. The ID may be mistyped, or the run may belong to another project.',
+    );
+    expect(queryByRole('list', { name: 'Projects' })).toBeNull();
+  });
+
+  it('offers the project’s runs as the primary link and the overview as a plain one', () => {
+    const { getByRole, queryByRole } = renderRun();
+    const runs = getByRole('link', { name: 'Ostomate 2.0 runs' });
+    const overview = getByRole('link', { name: 'Overview' });
+
+    expect(runs.getAttribute('href')).toBe('/p/ostomate2');
+    expect(runs.dataset.variant).toBe('primary');
+    expect(overview.getAttribute('href')).toBe('/');
+    expect(overview.dataset.variant).toBeUndefined();
+    expect(queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
+
+  it('sets the plain link 44 px tall, padding 0 8, 15 px', () => {
+    expect(ruleFor(CSS, '.link')).toEqual({
+      display: 'flex',
+      'align-items': 'center',
+      'min-height': 'var(--target-min)',
+      padding: '0 var(--space-2)',
+      'font-size': '15px',
+    });
+  });
+});

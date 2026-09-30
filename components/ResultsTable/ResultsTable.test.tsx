@@ -38,6 +38,7 @@ const row = (
   ],
   time: '0.08 s',
   historyHref: `/p/ostomate2/tests/${key}`,
+  failures: [],
   ...extra,
 });
 
@@ -74,20 +75,35 @@ const RESULTS: ResultRow[] = [
       { platform: 'ios-sim', status: 'failed' },
     ],
     time: '0.41 s',
-    failure: {
-      message: 'AssertionError: expected "2 changes today" but was "1 change today"',
-      detail: TRACE,
-    },
+    failures: [
+      {
+        platform: 'ios-sim',
+        status: 'failed',
+        duration: '0.41 s',
+        message: 'AssertionError: expected "2 changes today" but was "1 change today"',
+        detail: TRACE,
+      },
+    ],
   }),
   row('restores', {
     suite: 'com.ostomate.app.domain.BackupSerializerTest',
     name: 'restoresBackup',
     status: 'error',
+    // Errored on one platform only; it passed on the other.
+    platforms: [
+      { platform: 'jvm', status: 'error' },
+      { platform: 'ios-sim', status: 'passed' },
+    ],
     time: '0.02 s',
-    failure: {
-      message: 'IllegalStateException: Room database not initialised',
-      detail: 'at androidx.room.RoomDatabase.assertNotMainThread(RoomDatabase.kt:512)',
-    },
+    failures: [
+      {
+        platform: 'jvm',
+        status: 'error',
+        duration: '0.02 s',
+        message: 'IllegalStateException: Room database not initialised',
+        detail: 'at androidx.room.RoomDatabase.assertNotMainThread(RoomDatabase.kt:512)',
+      },
+    ],
   }),
   row('deletes', {
     suite: 'com.ostomate.app.data.ChangeEventDaoTest',
@@ -449,7 +465,15 @@ describe('ResultsTable rows', () => {
         { platform: 'jvm', status: 'skipped' },
         { platform: 'ios-sim', status: 'failed' },
       ],
-      failure: { message: 'AssertionError: expected 3 rows but was 2', detail: 'at ExportTest' },
+      failures: [
+        {
+          platform: 'ios-sim',
+          status: 'failed',
+          duration: '0.12 s',
+          message: 'AssertionError: expected 3 rows but was 2',
+          detail: 'at ExportTest',
+        },
+      ],
     });
     const { container } = renderTable({ results: [exports] });
     const [test] = testRows(container);
@@ -465,7 +489,8 @@ describe('ResultsTable rows', () => {
     );
   });
 
-  it('platform mismatch: an errored platform is marked ✕ and reads "errored on"', () => {
+  // Design v7 item 4 ("migratesSchema · SAMPLE"): glyph and word, both in --fail 600.
+  it('platform mismatch: an errored platform reads "! Error" and "errored on"', () => {
     const backup = row('backup', {
       suite: 'com.ostomate.app.domain.BackupSerializerTest',
       name: 'restoresBackup',
@@ -480,10 +505,113 @@ describe('ResultsTable rows', () => {
 
     expect(
       [...(test?.row.querySelectorAll('[data-part="platform"]') ?? [])].map((p) => p.textContent),
-    ).toEqual(['ios-sim ✕ errored', 'jvm ✓ passed']);
+    ).toEqual(['ios-sim ! Error', 'jvm ✓ passed']);
+    const [errored] = [
+      ...(test?.row.querySelectorAll<HTMLElement>('[data-part="platform"]') ?? []),
+    ];
+    expect(has(errored, 'platformFail')).toBe(true);
+    // The word is visible, so it is not repeated for assistive technology.
+    expect(errored?.querySelector(`.${styles.srOnly ?? 'missing'}`)).toBeNull();
+    expect(errored?.querySelector('[aria-hidden="true"]')?.textContent).toBe('!');
     expect(test?.body.querySelector('[data-part="mismatch"]')?.textContent).toBe(
       'Platform mismatchErrored on ios-sim, passed on jvm in the same run.',
     );
+  });
+
+  it('the fixture’s errored row reads "Errored on jvm, passed on ios-sim in the same run."', () => {
+    const { container } = renderTable();
+    const test = testRows(container).find((t) => t.name === 'restoresBackup');
+    expect(
+      [...(test?.row.querySelectorAll('[data-part="platform"]') ?? [])].map((p) => p.textContent),
+    ).toEqual(['jvm ! Error', 'ios-sim ✓ passed']);
+    expect(test?.body.querySelector('[data-part="mismatch"]')?.textContent).toBe(
+      'Platform mismatchErrored on jvm, passed on ios-sim in the same run.',
+    );
+  });
+
+  // Design v7 item 3 ("syncsOnReconnect · SAMPLE"): failing on both platforms is no mismatch,
+  // but each platform is still marked, and each failure has its own block with a head.
+  it('failed on two platforms: both marked, one block per failure, each with its head', () => {
+    const sync = row('sync', {
+      suite: 'com.ostomate.app.sync.SyncQueueTest',
+      name: 'syncsOnReconnect',
+      status: 'failed',
+      platforms: [
+        { platform: 'ios-sim', status: 'failed' },
+        { platform: 'jvm', status: 'error' },
+      ],
+      time: '0.88 s',
+      failures: [
+        {
+          platform: 'ios-sim',
+          status: 'failed',
+          duration: '0.88 s',
+          message: 'TimeoutCancellationException: timed out waiting for 500 ms',
+          detail: 'at kotlinx.coroutines.TimeoutKt.withTimeout(Timeout.kt:44)',
+        },
+        {
+          platform: 'jvm',
+          status: 'error',
+          duration: '0.52 s',
+          message: 'AssertionError: expected 3 pending changes but was 0',
+          detail: 'at com.ostomate.app.sync.SyncQueueTest.syncsOnReconnect(SyncQueueTest.kt:77)',
+        },
+      ],
+    });
+    const { container } = renderTable({ results: [sync] });
+    const [test] = testRows(container);
+    const platforms = [
+      ...(test?.row.querySelectorAll<HTMLElement>('[data-part="platform"]') ?? []),
+    ];
+
+    expect(platforms.map((p) => p.textContent)).toEqual(['ios-sim ✕ failed', 'jvm ! Error']);
+    expect(platforms.every((p) => has(p, 'platformFail'))).toBe(true);
+    const blocks = [...(test?.body.querySelectorAll<HTMLElement>('[data-part="failure"]') ?? [])];
+    expect(
+      blocks.map((block) => block.querySelector('[data-part="failure-head"]')?.textContent),
+    ).toEqual(['ios-sim · Failed · 0.88 s', 'jvm · Error · 0.52 s']);
+    expect(
+      blocks.map((block) => block.querySelector('[data-part="message"]')?.textContent),
+    ).toEqual([
+      'TimeoutCancellationException: timed out waiting for 500 ms',
+      'AssertionError: expected 3 pending changes but was 0',
+    ]);
+    expect(blocks.map((block) => block.querySelector('pre')?.textContent)).toEqual([
+      'at kotlinx.coroutines.TimeoutKt.withTimeout(Timeout.kt:44)',
+      'at com.ostomate.app.sync.SyncQueueTest.syncsOnReconnect(SyncQueueTest.kt:77)',
+    ]);
+    // The head's 14 px icon is the status's own: x-circle for failed, "!" for error.
+    const icons = blocks.map((block) =>
+      block.querySelector('[data-part="failure-head"] svg')?.getAttribute('width'),
+    );
+    expect(icons).toEqual(['14', '14']);
+    expect(test?.body.querySelector('[data-part="mismatch"]')?.textContent).toBe(
+      'Platform mismatchFailed on ios-sim, errored on jvm in the same run.',
+    );
+  });
+
+  it('one failure: its block has no head', () => {
+    const { container } = renderTable();
+    const body = testRows(container).find((t) => t.name === 'rendersToday')?.body;
+    expect(body?.querySelectorAll('[data-part="failure"]')).toHaveLength(1);
+    expect(body?.querySelector('[data-part="failure-head"]')).toBeNull();
+  });
+
+  it('private with failures on two platforms: the notice only, no heads (design v8 item 18)', () => {
+    const both = row('both', {
+      suite: 'apps/backend/src/routes/jobs.test.ts',
+      name: 'returns 409 when job overlaps',
+      status: 'failed',
+      platforms: [
+        { platform: 'node', status: 'failed' },
+        { platform: 'deno', status: 'failed' },
+      ],
+    });
+    const { container } = renderTable({ results: [both], visibility: 'private' });
+    const [test] = testRows(container);
+    expect(test?.body.textContent).toContain('Details hidden: private repository');
+    expect(test?.body.querySelector('[data-part="failure-head"]')).toBeNull();
+    expect(test?.body.querySelector('[data-part="failure"]')).toBeNull();
   });
 
   // Design v5 item 8: the line lives in the expanded detail, which only failed and error rows
@@ -508,13 +636,23 @@ describe('ResultsTable rows', () => {
     expect(test?.body.querySelector('[data-part="mismatch"]')).toBeNull();
   });
 
-  it('has no mismatch line or marks when every platform agrees', () => {
+  // The Run Detail mock and the Design System draw a test that passed on every platform with
+  // its platforms only; components.md marks the others.
+  it('has no mismatch line or marks when every platform passed', () => {
     const { container } = renderTable();
-    const test = testRows(container).find((t) => t.name === 'restoresBackup');
+    const test = testRows(container).find((t) => t.name === 'showsDaysOfSupply');
     expect(test?.body.querySelector('[data-part="mismatch"]')).toBeNull();
     expect(
       [...(test?.row.querySelectorAll('[data-part="platform"]') ?? [])].map((p) => p.textContent),
     ).toEqual(['jvm', 'ios-sim']);
+  });
+
+  it('shows a single platform by name only, whatever its status', () => {
+    const { container } = renderTable();
+    const test = testRows(container).find((t) => t.name === 'rendersDarkMode');
+    expect(
+      [...(test?.row.querySelectorAll('[data-part="platform"]') ?? [])].map((p) => p.textContent),
+    ).toEqual(['jvm']);
   });
 
   it('private: the private-details notice in place of failure text, the mismatch line kept', () => {
@@ -769,6 +907,25 @@ describe('ResultsTable styles', () => {
     // Design v7 (Design System section 10): a failing platform is --fail at 600.
     expect(ruleFor(CSS, '.platformFail')).toEqual({ color: 'var(--fail)', 'font-weight': '600' });
     expect(ruleFor(CSS, '.timeCell')).toEqual({ 'text-align': 'right', color: 'var(--ink-2)' });
+  });
+
+  // Design v7 item 3 (Design System section 10): blocks 14 apart, each head 13/600 --fail with a
+  // 14 px icon, gap 6, 6 above the message.
+  it('stacks failure blocks 14 apart, each head 13/600 --fail', () => {
+    expect(ruleFor(CSS, '.failures')).toEqual({
+      display: 'flex',
+      'flex-direction': 'column',
+      gap: '14px',
+    });
+    expect(ruleFor(CSS, '.failureHead')).toEqual({
+      display: 'flex',
+      'align-items': 'center',
+      gap: '6px',
+      'margin-bottom': '6px',
+      font: '600 13px var(--font-sans)',
+      color: 'var(--fail)',
+    });
+    expect(ruleFor(CSS, '.failureIcon')).toEqual({ flex: '0 0 auto' });
   });
 
   it('expands over --motion-base (200ms) by animating the row track', () => {

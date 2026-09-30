@@ -7,6 +7,7 @@ import { flakyTests } from '../stats/flaky.ts';
 import { PUBLIC_RUN_COLUMNS, PublicRunRowSchema, type PublicRun } from '../stats/input.ts';
 import { readAll, readByRunIds } from '../stats/load.ts';
 import { windowStart } from '../stats/rules.ts';
+import { testOutcomes, type RunTests } from '../stats/test-counts.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
 import { loadProject, type ProjectDetail } from './project-summary.ts';
 import {
@@ -31,6 +32,12 @@ export interface RunDetail {
     readonly ciRunId: string;
     readonly runAttempt: number;
     readonly resultsPrunedAt: Date | null;
+    /**
+     * The run's distinct tests (decision 2026-09-29), as the project page's run rows count them;
+     * total, passed, failed and skipped beside it are runs_public's executions. Null once the
+     * results were pruned, when no per-test rows are left to count.
+     */
+    readonly tests: RunTests | null;
   };
   readonly reports: readonly RunReport[];
   /** Null once the run's results were pruned (5.12); the run's totals stay. */
@@ -150,6 +157,13 @@ async function loadResultRows(
   );
 }
 
+// Each row is one test with its status already combined across platforms, as testOutcomes
+// combines them for the project page's rows.
+function distinctTests(rows: readonly RunTestRow[]): RunTests {
+  const outcomes = testOutcomes(rows.map((row) => ({ testId: row.testId, status: row.status })));
+  return { total: rows.length, ...outcomes };
+}
+
 export async function loadRunDetail(
   slug: string,
   runId: string,
@@ -170,6 +184,8 @@ export async function loadRunDetail(
   if (run === undefined) return null;
 
   const reports = await loadRunReports(client, run.id);
+  const results =
+    run.resultsPrunedAt === null ? await loadResultRows(client, project, run, at) : null;
   return {
     project,
     run: {
@@ -177,8 +193,9 @@ export async function loadRunDetail(
       ciRunId: run.ciRunId,
       runAttempt: run.runAttempt,
       resultsPrunedAt: run.resultsPrunedAt,
+      tests: results === null ? null : distinctTests(results),
     },
     reports,
-    results: run.resultsPrunedAt === null ? await loadResultRows(client, project, run, at) : null,
+    results,
   };
 }

@@ -2,6 +2,8 @@
 
 import type { KeyboardEvent } from 'react';
 
+import { formatCount } from '../../lib/copy/count';
+
 import styles from './SegmentedControl.module.css';
 
 export interface SegmentedOption<V extends string> {
@@ -76,7 +78,7 @@ export function SegmentedControl<V extends string>({
             {option.count !== undefined && (
               <>
                 {' '}
-                <span>{option.count}</span>
+                <span>{formatCount(option.count)}</span>
               </>
             )}
           </button>

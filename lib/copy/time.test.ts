@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   clockLabel,
+  clockSecondsLabel,
   dateLabel,
+  dateTimeLabel,
   formatRunDuration,
   fullTimestamp,
   relativeLabel,
@@ -143,5 +145,35 @@ describe('formatRunDuration', () => {
     expect(formatRunDuration(35_604)).toBe('36 s');
     expect(formatRunDuration(204_120)).toBe('204 s');
     expect(formatRunDuration(0)).toBe('0 s');
+  });
+});
+
+// The run page's absolute times (docs/spec.md section 13.5): "Started" as the one date format
+// with the time of day, and a report's "Received" as the Run Detail mock's "14:03:41", in UTC.
+describe('dateTimeLabel', () => {
+  it('reads "5 Oct, 09:25" in now’s year, with the full timestamp as its title', () => {
+    expect(dateTimeLabel(new Date('2026-10-05T09:25:47.312Z'), NOW)).toEqual({
+      text: '5 Oct, 09:25',
+      datetime: '2026-10-05T09:25:47.312Z',
+      title: '5 Oct 2026, 09:25 UTC',
+    });
+  });
+
+  it('adds the year in another year, and reads the UTC day at midnight', () => {
+    expect(dateTimeLabel(new Date('2025-12-31T23:59:59.999Z'), NOW).text).toBe(
+      '31 Dec 2025, 23:59',
+    );
+    expect(dateTimeLabel(new Date('2026-10-05T00:00:00.000Z'), NOW).text).toBe('5 Oct, 00:00');
+  });
+});
+
+describe('clockSecondsLabel', () => {
+  it('reads the UTC time of day to the second, rounded down', () => {
+    expect(clockSecondsLabel(new Date('2026-10-05T14:03:41.999Z'))).toEqual({
+      text: '14:03:41',
+      datetime: '2026-10-05T14:03:41.999Z',
+      title: '5 Oct 2026, 14:03 UTC',
+    });
+    expect(clockSecondsLabel(new Date('2026-10-05T00:00:00.000Z')).text).toBe('00:00:00');
   });
 });

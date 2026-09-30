@@ -1,0 +1,16 @@
+/* Section layouts from design/pages/Run Detail.dc.html; every value there is literal. */
+.section {
+  padding: 40px 0;
+  border-top: 1px solid var(--line);
+}
+
+.last {
+  padding-bottom: 64px;
+}
+
+/* The mock sets the Results heading 20 above the table. The reports heading has 8 and then a
+   per-project note, which is not drawn (section 13.5), so it takes the same 20. */
+.title {
+  margin: 0 0 20px;
+  font: 500 30px/1.2 var(--font-serif);
+}

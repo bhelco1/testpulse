@@ -21,7 +21,13 @@ import {
   type TableResult,
 } from '../../lib/results/table';
 import { Button } from '../Button/Button';
-import { ChevronRightIcon, ClockIcon, FlakyIcon } from '../icons/icons';
+import {
+  AlertCircleIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  FlakyIcon,
+  XCircleIcon,
+} from '../icons/icons';
 import { PrivateDetailsNotice } from '../PrivateDetailsNotice/PrivateDetailsNotice';
 import { SegmentedControl, type SegmentedOption } from '../SegmentedControl/SegmentedControl';
 import { Skeleton } from '../Skeleton/Skeleton';
@@ -38,8 +44,18 @@ export interface ResultRow extends TableResult {
   // Already formatted, such as "0.41 s", or "—" when the test did not run.
   time: string;
   historyHref: string;
-  // result_failures for a failed or error result. RLS returns none for private projects.
-  failure?: { message: string; detail: string };
+  // result_failures for each failed or error result, in platform data order (design v7 item 3,
+  // `ResultRow.failures`). RLS returns none for private projects.
+  failures: readonly FailureDetail[];
+}
+
+export interface FailureDetail {
+  platform: string;
+  status: 'failed' | 'error';
+  // Already formatted, such as "0.88 s".
+  duration: string;
+  message: string;
+  detail: string;
 }
 
 export interface PrunedTotals {
@@ -209,16 +225,23 @@ function Table({
   );
 }
 
-// Each platform's mark in a mismatch, a glyph for the eye and a word for assistive technology.
-const MARK: Readonly<Record<TestStatus, { glyph: string; word: string }>> = {
-  failed: { glyph: '✕', word: 'failed' },
-  error: { glyph: '✕', word: 'errored' },
-  passed: { glyph: '✓', word: 'passed' },
-  skipped: { glyph: '–', word: 'skipped' },
+// Each platform's mark: a glyph for the eye and a word for assistive technology. An errored
+// platform shows its word as well, "! Error", as design v7 item 4 draws it.
+const MARK: Readonly<Record<TestStatus, { glyph: string; word: string; visible: boolean }>> = {
+  failed: { glyph: '✕', word: 'failed', visible: false },
+  error: { glyph: '!', word: 'Error', visible: true },
+  passed: { glyph: '✓', word: 'passed', visible: false },
+  skipped: { glyph: '–', word: 'skipped', visible: false },
 };
+
+// components.md marks each platform of a test run on several; the Run Detail mock and the Design
+// System draw one that passed everywhere without marks, and a single platform is its name only.
+const marked = (platforms: readonly PlatformResult[]): boolean =>
+  platforms.length > 1 && platforms.some(({ status }) => status !== 'passed');
 
 function Platforms({ platforms, layer }: { platforms: readonly PlatformResult[]; layer: string }) {
   const mismatch = platformMismatch(platforms);
+  const marks = marked(platforms);
   // In a mismatch the list follows the sentence: failing platforms first.
   const listed: readonly PlatformResult[] = mismatch
     ? mismatch.flatMap(({ status, platforms: names }) =>
@@ -233,13 +256,13 @@ function Platforms({ platforms, layer }: { platforms: readonly PlatformResult[];
         ·
       </span>
       {listed.map(({ platform, status }) => {
-        const mark = mismatch ? MARK[status] : null;
+        const mark = marks ? MARK[status] : null;
         return (
           <span
             key={platform}
             className={cx(
               styles.platform,
-              mismatch !== null && isFailing(status) && styles.platformFail,
+              mark !== null && isFailing(status) && styles.platformFail,
             )}
             data-part="platform"
           >
@@ -248,7 +271,11 @@ function Platforms({ platforms, layer }: { platforms: readonly PlatformResult[];
               <>
                 {' '}
                 <span aria-hidden="true">{mark.glyph}</span>
-                <span className={styles.srOnly}> {mark.word}</span>
+                {mark.visible ? (
+                  <> {mark.word}</>
+                ) : (
+                  <span className={styles.srOnly}> {mark.word}</span>
+                )}
               </>
             )}
           </span>
@@ -358,20 +385,12 @@ function TestRows({
                   )}
                   {/* RLS already withholds failure text for private projects; the table never
                       prints it for them either. */}
+                  {/* A private project's heads are held back too: whether they show is design
+                      v8 item 18 (docs/spec.md section 13.5). */}
                   {isPrivate ? (
                     <PrivateDetailsNotice />
                   ) : (
-                    result.failure && (
-                      <>
-                        <div className={styles.message} data-part="message">
-                          {result.failure.message}
-                        </div>
-                        {/* Scrolls sideways in its own box, so it takes focus for the keyboard. */}
-                        <pre className={styles.trace} tabIndex={0}>
-                          {result.failure.detail}
-                        </pre>
-                      </>
-                    )
+                    result.failures.length > 0 && <Failures failures={result.failures} />
                   )}
                   <Link href={result.historyHref} className={styles.history}>
                     Test history
@@ -383,6 +402,40 @@ function TestRows({
         </tr>
       )}
     </tbody>
+  );
+}
+
+const HEAD_ICON = { failed: XCircleIcon, error: AlertCircleIcon } as const;
+const HEAD_WORD = { failed: 'Failed', error: 'Error' } as const;
+
+// One block per failed or error result (design v7 item 3). With one, the head is left out.
+function Failures({ failures }: { failures: readonly FailureDetail[] }) {
+  const heads = failures.length > 1;
+  return (
+    <div className={styles.failures}>
+      {failures.map((failure, index) => {
+        const Icon = HEAD_ICON[failure.status];
+        return (
+          <div key={`${failure.platform}-${index}`} data-part="failure">
+            {heads && (
+              <div className={styles.failureHead} data-part="failure-head">
+                <Icon size={14} strokeWidth={2.6} className={styles.failureIcon} />
+                <span>
+                  {failure.platform} · {HEAD_WORD[failure.status]} · {failure.duration}
+                </span>
+              </div>
+            )}
+            <div className={styles.message} data-part="message">
+              {failure.message}
+            </div>
+            {/* Scrolls sideways in its own box, so it takes focus for the keyboard. */}
+            <pre className={styles.trace} tabIndex={0}>
+              {failure.detail}
+            </pre>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

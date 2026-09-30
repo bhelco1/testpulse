@@ -1,0 +1,169 @@
+// @vitest-environment jsdom
+import { join } from 'node:path';
+
+import { cleanup, render, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import { ruleFor } from '../testing/stylesheet';
+import { RunReportTable, type RunReportRow } from './RunReportTable';
+
+afterEach(cleanup);
+
+const CSS = join(import.meta.dirname, 'RunReportTable.module.css');
+
+const received = (text: string) => ({
+  text,
+  datetime: `2026-10-05T${text}.000Z`,
+  title: `5 Oct 2026, ${text.slice(0, 5)} UTC`,
+});
+
+const REPORTS: RunReportRow[] = [
+  {
+    key: 'android/shared/jvm',
+    status: 'passed',
+    passedShare: 100,
+    failedShare: 0,
+    result: '82 passed',
+    tests: '82',
+    received: received('14:03:41'),
+    duration: '11 s',
+  },
+  {
+    key: 'ios/composeApp/ios-sim',
+    status: 'failed',
+    passedShare: 98,
+    failedShare: 2,
+    result: '1 failed · 49 passed',
+    tests: '50',
+    received: received('14:06:30'),
+    duration: '7 s',
+  },
+];
+
+// design/pages/Run Detail.dc.html, "Reports in this run".
+describe('RunReportTable', () => {
+  it('tables each report: status, key, results, tests, time received and duration', () => {
+    const { getByRole } = render(<RunReportTable reports={REPORTS} />);
+    const table = getByRole('table', { name: 'Reports in this run' });
+
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((cell) => cell.textContent),
+    ).toEqual(['Status', 'Job / module / platform', 'Results', 'Tests', 'Received', 'Time']);
+    const rows = within(table)
+      .getAllByRole('row')
+      .slice(1)
+      .map((row) =>
+        within(row)
+          .getAllByRole('cell')
+          .map((cell) => cell.textContent),
+      );
+    expect(rows).toEqual([
+      ['Passed', 'android/shared/jvm', '82 passed', '82', '14:03:41', '11 s'],
+      ['Failed', 'ios/composeApp/ios-sim', '1 failed · 49 passed', '50', '14:06:30', '7 s'],
+    ]);
+  });
+
+  it('dates each report as a <time> with its instant and full date', () => {
+    const { container } = render(<RunReportTable reports={REPORTS} />);
+    const time = container.querySelector('time');
+    expect(time?.getAttribute('datetime')).toBe('2026-10-05T14:03:41.000Z');
+    expect(time?.getAttribute('title')).toBe('5 Oct 2026, 14:03 UTC');
+  });
+
+  it('tints a failing report and draws its bar: green and red shares, red at least 4 px', () => {
+    const { container } = render(<RunReportTable reports={REPORTS} />);
+    const [passing, failing] = [...container.querySelectorAll<HTMLElement>('[data-part="report"]')];
+
+    expect(passing?.dataset.status).toBe('passed');
+    expect(failing?.dataset.status).toBe('failed');
+    const bar = (row: HTMLElement | undefined, part: string) =>
+      row?.querySelector<HTMLElement>(`[data-part="${part}"]`)?.style.width;
+    expect([bar(passing, 'bar-pass'), bar(passing, 'bar-fail')]).toEqual(['100%', '0%']);
+    expect([bar(failing, 'bar-pass'), bar(failing, 'bar-fail')]).toEqual(['98%', '2%']);
+    // The bar is drawn for the eye; the line beside it says the same in words.
+    expect(failing?.querySelector('[data-part="bar"]')?.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('draws neither status nor results line for a report with no tests', () => {
+    const { container } = render(
+      <RunReportTable
+        reports={[
+          { ...REPORTS[0], status: null, result: null, passedShare: 0, tests: '0' } as RunReportRow,
+        ]}
+      />,
+    );
+    const row = container.querySelector('[data-part="report"]');
+    expect(row?.querySelector('[data-status-word]')).toBeNull();
+    expect(row?.querySelector('[data-part="result"]')).toBeNull();
+  });
+
+  it('scrolls sideways inside its own box, which the keyboard can reach', () => {
+    const { getByRole } = render(<RunReportTable reports={REPORTS} />);
+    const region = getByRole('region', { name: 'Reports in this run' });
+    expect(region.getAttribute('tabindex')).toBe('0');
+  });
+
+  it('draws the box, the 760 px grid and the rows as the mock does', () => {
+    expect(ruleFor(CSS, '.box')).toEqual({
+      'overflow-x': 'auto',
+      background: 'var(--surface)',
+      border: '1px solid var(--line)',
+      'border-radius': 'var(--radius-lg)',
+    });
+    expect(ruleFor(CSS, '.table')).toEqual({
+      display: 'block',
+      'min-width': '760px',
+      'border-collapse': 'collapse',
+    });
+    expect(ruleFor(CSS, '.row')).toEqual({
+      display: 'grid',
+      'grid-template-columns': '120px minmax(0, 1.4fr) minmax(0, 1fr) 90px 120px 90px',
+      gap: '14px',
+      'align-items': 'center',
+      padding: '14px 18px',
+      'border-bottom': '1px solid var(--line)',
+      'font-size': '14px',
+      'text-align': 'left',
+    });
+    expect(ruleFor(CSS, '.head')).toEqual({
+      padding: '12px 18px',
+      font: '600 12px var(--font-mono)',
+      'letter-spacing': '0.04em',
+      'text-transform': 'uppercase',
+      color: 'var(--ink-3)',
+    });
+    expect(ruleFor(CSS, '.failing')).toEqual({ background: 'var(--fail-tint)' });
+    expect(ruleFor(CSS, '.status')).toEqual({
+      display: 'flex',
+      'align-items': 'center',
+      gap: '6px',
+      'font-weight': '600',
+    });
+    expect(ruleFor(CSS, '.key')).toEqual({
+      font: '13.5px var(--font-mono)',
+      'overflow-wrap': 'anywhere',
+    });
+    expect(ruleFor(CSS, '.bar')).toEqual({
+      display: 'flex',
+      height: '6px',
+      'border-radius': 'var(--radius-pill)',
+      overflow: 'hidden',
+      background: 'var(--raised)',
+    });
+    expect(ruleFor(CSS, '.barFail')).toEqual({ background: 'var(--fail)', 'min-width': '4px' });
+    expect(ruleFor(CSS, '.result')).toEqual({
+      'font-size': '12.5px',
+      'white-space': 'nowrap',
+      color: 'var(--ink-3)',
+    });
+    expect(ruleFor(CSS, '.tests')).toEqual({ 'text-align': 'right', 'font-weight': '600' });
+    expect(ruleFor(CSS, '.received')).toEqual({
+      'text-align': 'right',
+      color: 'var(--ink-3)',
+      'font-size': '13px',
+    });
+    expect(ruleFor(CSS, '.time')).toEqual({ 'text-align': 'right', color: 'var(--ink-2)' });
+  });
+});

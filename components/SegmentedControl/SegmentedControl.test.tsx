@@ -67,6 +67,19 @@ describe('SegmentedControl', () => {
     expect(radios.every((radio) => radio.getAttribute('type') === 'button')).toBe(true);
   });
 
+  // Every count on the site is grouped, as RouteServe's run reads "All 1,041".
+  it('groups a count’s thousands', () => {
+    const { getByRole } = render(
+      <SegmentedControl
+        label="Status"
+        options={[{ value: 'all', label: 'All', count: 1041 }]}
+        value="all"
+        onChange={() => {}}
+      />,
+    );
+    expect(getByRole('radio', { name: 'All 1,041' })).toBeTruthy();
+  });
+
   it('shows no count when an option has none', () => {
     const { getAllByRole } = render(
       <SegmentedControl

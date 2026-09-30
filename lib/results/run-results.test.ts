@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { combinedStatus, runTestRows, type RunResultInput } from './run-results.ts';
+import {
+  combinedStatus,
+  rowDurationMs,
+  runTestRows,
+  type PlatformOutcome,
+  type RunResultInput,
+} from './run-results.ts';
 
 // The run page's results, one row per test (design/components.md, ResultsTable): each test's
 // results across the run's report platforms, with section 11's per-run platform mismatch and
@@ -91,10 +97,45 @@ describe('runTestRows', () => {
         {
           platform: 'ios-sim',
           status: 'failed',
-          failures: [{ message: 'expected 3', detail: 'at HomeViewModelTest.kt:42' }],
+          failures: [
+            {
+              message: 'expected 3',
+              detail: 'at HomeViewModelTest.kt:42',
+              status: 'failed',
+              durationMs: 100,
+            },
+          ],
         },
       ],
     });
+  });
+
+  // design/data-map.md, "Failure detail (several)": one entry per failed or error result, with
+  // that result's own status and time, so a test repeated on one platform keeps each failure.
+  it('keeps each failing repeat’s own status and time beside its text', () => {
+    const [row] = runTestRows(
+      [
+        result('r1', 't1', 'node', 'failed', { job: 'test', durationMs: 30 }),
+        result('r2', 't1', 'node', 'passed', { job: 'test', durationMs: 20 }),
+        result('r3', 't1', 'node', 'error', { job: 'test', durationMs: 5 }),
+      ],
+      new Map([
+        ['r1', { message: 'expected 1', detail: 'at a.ts:1' }],
+        ['r3', { message: 'boom', detail: 'at a.ts:9' }],
+      ]),
+      new Set(),
+    );
+    expect(row?.platforms).toEqual([
+      {
+        platform: 'node',
+        status: 'failed',
+        durationMs: 55,
+        failures: [
+          { message: 'expected 1', detail: 'at a.ts:1', status: 'failed', durationMs: 30 },
+          { message: 'boom', detail: 'at a.ts:9', status: 'error', durationMs: 5 },
+        ],
+      },
+    ]);
   });
 
   it('counts failed on one platform and skipped on another as a mismatch', () => {
@@ -154,5 +195,46 @@ describe('runTestRows', () => {
       new Set(),
     );
     expect(rows.map((row) => row.testId)).toEqual(['c', 'a2', 'b', 'a']);
+  });
+});
+
+// Design v7 item 2 and components.md, ResultsTable "Time column": the slowest platform. A
+// platform's time already sums its repeated results (spec section 11, "Run page"), which is the
+// rule design v8 item 19 is asked to confirm over data-map's "max results.duration_ms".
+describe('rowDurationMs', () => {
+  const platform = (
+    status: PlatformOutcome['status'],
+    durationMs: number,
+    name = 'jvm',
+  ): PlatformOutcome => ({ platform: name, status, durationMs, failures: [] });
+
+  it('is the slowest platform’s time', () => {
+    expect(rowDurationMs([platform('passed', 410), platform('failed', 880, 'ios-sim')])).toBe(880);
+  });
+
+  it('takes a platform’s summed repeats, not its slowest single result', () => {
+    const [row] = runTestRows(
+      [
+        result('r1', 't1', 'jvm', 'passed', { durationMs: 300 }),
+        result('r2', 't1', 'ios-sim', 'passed', { durationMs: 200 }),
+        result('r3', 't1', 'ios-sim', 'passed', { durationMs: 200 }),
+      ],
+      new Map(),
+      new Set(),
+    );
+    // jvm 300, ios-sim 200 + 200 = 400: the row reads 400, where data-map's max result is 300.
+    expect(rowDurationMs(row?.platforms ?? [])).toBe(400);
+  });
+
+  it('leaves out a skipped platform, which did not run', () => {
+    expect(rowDurationMs([platform('skipped', 900), platform('passed', 12, 'ios-sim')])).toBe(12);
+  });
+
+  it('is null when every platform skipped the test', () => {
+    expect(rowDurationMs([platform('skipped', 0), platform('skipped', 0, 'ios-sim')])).toBeNull();
+  });
+
+  it('is 0 for a test that ran in no measurable time', () => {
+    expect(rowDurationMs([platform('passed', 0)])).toBe(0);
   });
 });

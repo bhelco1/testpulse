@@ -77,3 +77,11 @@
   gap: var(--space-3);
   margin-top: var(--space-5);
 }
+
+.link {
+  display: flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--space-2);
+  font-size: 15px;
+}

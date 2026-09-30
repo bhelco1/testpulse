@@ -195,10 +195,23 @@ describe('loadRunDetail', () => {
       durationMs: 26_000,
       reports: 1,
       resultsPrunedAt: null,
+      tests: { total: 3, passed: 1, failed: 1, skipped: 1 },
     });
     expect(detail?.reports).toEqual([
       expect.objectContaining({ job: 'android', module: 'composeApp', platform: 'jvm', total: 3 }),
     ]);
+  });
+
+  // Decision 2026-09-29: a run's counts are distinct tests, as the project page's run rows read.
+  // The fixture's four executions are three tests: t-mismatch failed on one platform and passed
+  // on the other, so it is one failed test.
+  it('counts the run’s distinct tests beside its executions', async () => {
+    const { client } = fakeClient(answering({}));
+
+    const detail = await loadRunDetail('ostomate2', RUN_ID, client, NOW);
+
+    expect(detail?.run.tests).toEqual({ total: 3, passed: 1, failed: 1, skipped: 1 });
+    expect(detail?.run).toMatchObject({ total: 4, passed: 2, failed: 1, skipped: 1 });
   });
 
   it('makes one row per test with its platforms, mismatch and the failure text RLS returned', async () => {
@@ -283,6 +296,8 @@ describe('loadRunDetail', () => {
 
     expect(detail?.run.resultsPrunedAt).toEqual(new Date('2026-09-01T03:00:00Z'));
     expect(detail?.results).toBeNull();
+    // No per-test rows are left to count, so the run keeps its executions (section 5.12).
+    expect(detail?.run.tests).toBeNull();
     expect(detail?.run).toMatchObject({ total: 4, passed: 2, failed: 1 });
     expect(queries.some((query) => query.table === 'results')).toBe(false);
     expect(queries.some((query) => query.table === 'result_failures')).toBe(false);

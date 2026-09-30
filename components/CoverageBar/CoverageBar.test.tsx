@@ -56,6 +56,62 @@ describe('CoverageBar', () => {
     expect(parts(container).value?.textContent).toBe('100%floor 80%');
   });
 
+  // Decision 2026-09-29 (spec section 19): percentages round down to the tenth, as pass rates do.
+  describe('rounds the figure down to the tenth', () => {
+    it('79.96% beside an 80% floor reads 79.9% and stays below the floor', () => {
+      const { container } = render(<CoverageBar module="shared" pct={79.96} floor={80} />);
+      const { row, value } = parts(container);
+      expect(value?.textContent).toBe('79.9%below floor 80%');
+      expect(row.dataset.state).toBe('below');
+      expect(value?.querySelector('svg')).not.toBeNull();
+    });
+
+    it('the kiosk row rounds down the same way', () => {
+      const { container } = render(
+        <CoverageBar module="shared" pct={79.96} floor={80} variant="kiosk" />,
+      );
+      expect(parts(container).value?.textContent).toBe('79.9%');
+    });
+
+    it('80.0% exactly meets an 80% floor', () => {
+      const { container } = render(<CoverageBar module="shared" pct={80.0} floor={80} />);
+      const { row, value } = parts(container);
+      expect(value?.textContent).toBe('80.0%floor 80%');
+      expect(row.dataset.state).toBe('at');
+    });
+
+    it('94.35% and 94.39% both read 94.3%', () => {
+      const { container } = render(<CoverageBar module="composeApp" pct={94.35} floor={93} />);
+      expect(parts(container).value?.textContent).toBe('94.3%floor 93%');
+      cleanup();
+      const { container: high } = render(
+        <CoverageBar module="composeApp" pct={94.39} floor={93} />,
+      );
+      expect(parts(high).value?.textContent).toBe('94.3%floor 93%');
+    });
+
+    it('99.96% reads 99.9%, never 100%', () => {
+      const { container } = render(<CoverageBar module="shared" pct={99.96} floor={80} />);
+      expect(parts(container).value?.textContent).toBe('99.9%floor 80%');
+    });
+
+    it('0% reads 0.0%', () => {
+      const { container } = render(<CoverageBar module="shared" pct={0} floor={80} />);
+      const { row, value } = parts(container);
+      expect(value?.textContent).toBe('0.0%below floor 80%');
+      expect(row.dataset.state).toBe('below');
+    });
+
+    // Section 11: below floor is strictly under the floor, judged on the stored value. 80.04%
+    // displays as 80.0% like an exact 80%, but it is over the floor, not at it.
+    it('judges the floor on the raw value, not the displayed one', () => {
+      const { container } = render(<CoverageBar module="shared" pct={80.04} floor={80} />);
+      const { row, value } = parts(container);
+      expect(value?.textContent).toBe('80.0%floor 80%');
+      expect(row.dataset.state).toBe('above');
+    });
+  });
+
   it('keeps the fill on the track for out-of-range input', () => {
     const { container } = render(<CoverageBar module="shared" pct={104} floor={80} />);
     expect(parts(container).fill?.style.width).toBe('100%');

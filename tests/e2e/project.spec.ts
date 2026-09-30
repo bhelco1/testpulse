@@ -95,7 +95,7 @@ test.describe('Ostomate2 (public)', () => {
     // 497 / 527 and 457 / 490.
     await expect(coverage.locator('[data-state]')).toHaveText([
       'composeApp94.3%floor 93%',
-      'shared93.3%floor 91%',
+      'shared93.2%floor 91%',
     ]);
     await expect(
       coverage.getByRole('table', { name: 'Reports per run' }).getByRole('row'),
@@ -249,7 +249,7 @@ test.describe('RouteServe (private)', () => {
       page.getByRole('region', { name: 'Coverage and reports' }).locator('[data-state]'),
     ).toHaveText([
       'apps/backend94.6%floor 80%',
-      'apps/mobile96.5%floor 80%',
+      'apps/mobile96.4%floor 80%',
       'packages/shared100%floor 80%',
     ]);
     const flaky = page.getByRole('region', { name: 'Flaky tests', exact: true }).getByRole('link');

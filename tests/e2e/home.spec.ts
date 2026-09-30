@@ -74,7 +74,7 @@ test.describe('the landing page', () => {
     );
     await expect(ostomate2.locator('[data-state]')).toHaveText([
       'composeApp94.3%floor 93%',
-      'shared93.3%floor 91%',
+      'shared93.2%floor 91%',
     ]);
     await expect(ostomate2.locator('[data-part="reports-head"]')).toHaveText(
       '3 reports in this run',
@@ -107,7 +107,7 @@ test.describe('the landing page', () => {
     );
     await expect(routeserve.locator('[data-state]')).toHaveText([
       'apps/backend94.6%floor 80%',
-      'apps/mobile96.5%floor 80%',
+      'apps/mobile96.4%floor 80%',
       'packages/shared100%floor 80%',
     ]);
     await expect(routeserve.locator('[data-part="reports-side"]')).toHaveText('node 1,045');

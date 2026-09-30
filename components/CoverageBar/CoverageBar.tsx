@@ -1,3 +1,4 @@
+import { formatTrendValue } from '../../lib/charts/format';
 import { ArrowDownIcon } from '../icons/icons';
 import styles from './CoverageBar.module.css';
 
@@ -10,8 +11,10 @@ export interface CoverageBarProps {
   variant?: 'web' | 'kiosk';
 }
 
+// The design writes full coverage as "100%"; anything else takes one decimal, rounded down by the
+// shared percentage rule so 79.96% under an 80% floor never reads "80.0%".
 function formatPct(pct: number): string {
-  return pct === 100 ? '100%' : `${pct.toFixed(1)}%`;
+  return pct === 100 ? '100%' : formatTrendValue(pct, 'pct', true);
 }
 
 const clamp = (n: number) => Math.min(100, Math.max(0, n));

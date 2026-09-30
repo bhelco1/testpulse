@@ -167,3 +167,13 @@ export function ExternalLinkIcon(props: IconProps) {
     </Svg>
   );
 }
+
+// A ring struck through: the "E2E reported green without ever passing" incident on How it’s tested.
+export function SlashCircleIcon(props: IconProps) {
+  return (
+    <Svg {...props} linecap="round">
+      <Ring />
+      <path d="M5 19 19 5" />
+    </Svg>
+  );
+}

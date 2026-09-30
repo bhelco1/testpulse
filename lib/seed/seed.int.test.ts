@@ -9,6 +9,7 @@ import { loadLanding, type Landing, type LandingProject } from '../queries/landi
 import { landingView } from '../pages/landing.ts';
 import { loadProjectPage, type ProjectPage } from '../queries/project.ts';
 import { loadRunDetail } from '../queries/run.ts';
+import { loadHowItsTested } from '../queries/how-its-tested.ts';
 import { loadTestHistory } from '../queries/test-history.ts';
 import { projectsPassingTile } from '../copy/projects-passing.ts';
 import { flakyTests } from '../stats/flaky.ts';
@@ -1015,6 +1016,22 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         1, 2, 1, 1, 2, 1, 2, 1, 1, 2,
       ]);
       expect(await loadTestHistory('ostomate2', key, anon, NOW)).toBeNull();
+    });
+
+    it('reads testpulse’s own results for /how-its-tested', async () => {
+      const { self } = await loadHowItsTested(anon, NOW);
+      // The Playwright fixture: 1 passed, 1 failed, 1 skipped, all E2E; 238 + 4 ms, its two
+      // testsuite times.
+      expect(self?.summary.latestRun).toMatchObject({
+        status: 'failed',
+        branch: 'main',
+        passed: 1,
+        failed: 1,
+        skipped: 1,
+      });
+      expect(self?.summary.totalTests).toBe(3);
+      expect(self?.summary.layers).toEqual({ e2e: 3 });
+      expect(self?.latestDurationMs).toBe(242);
     });
 
     describe('a private project’s pages hold no failure text, repository links or full SHAs', () => {

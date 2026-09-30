@@ -73,7 +73,6 @@ function Figure({ layers, declared, total, note }: PyramidData) {
       </figure>
     );
   }
-  const largest = Math.max(...layers.map((layer) => layer.count));
   return (
     <figure className={styles.pyramid}>
       <div className={styles.head} data-part="head">
@@ -87,42 +86,53 @@ function Figure({ layers, declared, total, note }: PyramidData) {
           </span>
         )}
       </div>
-      <ul className={styles.rows}>
-        {declaredRows(declared).map(({ layer, count }) => (
-          <li
-            key={`declared-${layer}`}
-            className={`${styles.row} ${styles.declared}`}
-            data-part="row"
-            data-declared="true"
-          >
-            <span className={styles.label}>{LAYER_LABEL[layer]}</span>
-            <span className={styles.declaredText}>
-              {qty(count, layer === 'e2e' ? 'flow' : 'test')} declared · not counted
-            </span>
-            <span />
-          </li>
-        ))}
-        {[...layers].reverse().map((layer) => (
-          <li key={layer.label} className={styles.row} data-part="row">
-            <span className={styles.label}>{layer.label}</span>
-            <div className={styles.barCell}>
-              <div
-                className={`${styles.bar} ${styles[`tone${layer.tone}`]}`}
-                style={{ width: `${(layer.count / largest) * 100}%` }}
-                data-part="bar"
-                data-tone={layer.tone}
-                aria-hidden="true"
-              />
-            </div>
-            <span className={styles.count}>
-              <b className={styles.figure}>{formatCount(layer.count)}</b>
-              <span className={styles.pct} data-part="pct">
-                {shareOf(layer.count, total)}
-              </span>
-            </span>
-          </li>
-        ))}
-      </ul>
+      <PyramidRows layers={layers} declared={declared} total={total} />
     </figure>
+  );
+}
+
+export type PyramidRowsProps = Pick<PyramidData, 'layers' | 'declared' | 'total'>;
+
+// The rows alone, tip first, for a card that states the total itself (design/pages/How Its
+// Tested.dc.html, "testpulse’s own results"). The narrow grid needs a container around them.
+export function PyramidRows({ layers, declared, total }: PyramidRowsProps) {
+  const largest = Math.max(...layers.map((layer) => layer.count));
+  return (
+    <ul className={styles.rows}>
+      {declaredRows(declared).map(({ layer, count }) => (
+        <li
+          key={`declared-${layer}`}
+          className={`${styles.row} ${styles.declared}`}
+          data-part="row"
+          data-declared="true"
+        >
+          <span className={styles.label}>{LAYER_LABEL[layer]}</span>
+          <span className={styles.declaredText}>
+            {qty(count, layer === 'e2e' ? 'flow' : 'test')} declared · not counted
+          </span>
+          <span />
+        </li>
+      ))}
+      {[...layers].reverse().map((layer) => (
+        <li key={layer.label} className={styles.row} data-part="row">
+          <span className={styles.label}>{layer.label}</span>
+          <div className={styles.barCell}>
+            <div
+              className={`${styles.bar} ${styles[`tone${layer.tone}`]}`}
+              style={{ width: `${(layer.count / largest) * 100}%` }}
+              data-part="bar"
+              data-tone={layer.tone}
+              aria-hidden="true"
+            />
+          </div>
+          <span className={styles.count}>
+            <b className={styles.figure}>{formatCount(layer.count)}</b>
+            <span className={styles.pct} data-part="pct">
+              {shareOf(layer.count, total)}
+            </span>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }

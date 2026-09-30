@@ -78,7 +78,7 @@ export async function capture(
     socket.on('framereceived', (frame) => frames.push(String(frame.payload)));
     socket.on('framesent', (frame) => frames.push(String(frame.payload)));
   });
-  await open(page, path);
+  const document = await open(page, path);
   await act(page);
   // Link prefetches start after load: wait until a second passes with no new response.
   for (let seen = -1; seen !== responses.length;) {
@@ -98,5 +98,11 @@ export async function capture(
     }),
   );
   const html = await page.content();
-  return { html, texts: [html, ...bodies, ...frames], responses: responses.length };
+  return {
+    html,
+    texts: [html, ...bodies, ...frames],
+    responses: responses.length,
+    frames: [...frames],
+    status: document?.status() ?? null,
+  };
 }

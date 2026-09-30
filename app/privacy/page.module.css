@@ -1,0 +1,19 @@
+/* Layout from design/pages/Privacy.dc.html; every value there is literal. */
+.main {
+  max-width: 720px;
+  padding: 56px 0 72px;
+}
+
+.eyebrow {
+  font: 600 12px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.h1 {
+  margin: 14px 0 0;
+  font: 500 clamp(38px, 5vw, 58px) / 1.06 var(--font-serif);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}

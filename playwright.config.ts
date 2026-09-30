@@ -48,6 +48,9 @@ const withoutJs = /@js|@visual/;
 // every page's header and footer, so it runs in a project of its own after every other project
 // has finished, and deletes what it wrote (tests/e2e/support/ingest.ts).
 const LIVE_SPEC = '**/live.spec.ts';
+// The private-data leak sweep visits every page that can show a private project, so it runs once,
+// in a project of its own, rather than in every viewport and theme (tests/e2e/leak-sweep.spec.ts).
+const SWEEP_SPEC = '**/leak-sweep.spec.ts';
 const PAGE_PROJECTS = ['desktop-dark', 'desktop-light', 'phone-dark', 'phone-light', 'no-js'];
 
 export default defineConfig({
@@ -73,25 +76,25 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop-dark',
-      testIgnore: ['**/harness/**', LIVE_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
     {
       name: 'desktop-light',
-      testIgnore: ['**/harness/**', LIVE_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'light' },
     },
     {
       name: 'phone-dark',
-      testIgnore: ['**/harness/**', LIVE_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'dark' },
     },
     {
       name: 'phone-light',
-      testIgnore: ['**/harness/**', LIVE_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'light' },
     },
@@ -99,7 +102,7 @@ export default defineConfig({
       // Static content must work without JavaScript (spec section 13). With scripts off the
       // page renders the same pixels as desktop-dark, so it takes no snapshot of its own.
       name: 'no-js',
-      testIgnore: ['**/harness/**', LIVE_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withoutJs,
       use: { ...chrome, viewport: DESKTOP, javaScriptEnabled: false },
     },
@@ -110,9 +113,17 @@ export default defineConfig({
       use: { ...chrome, viewport: DESKTOP },
     },
     {
+      // A light system theme gives the sweep its signal that a page's client code has run: the
+      // server renders the theme toggle for the dark default, and it relabels once hydrated.
+      name: 'leak-sweep',
+      testMatch: SWEEP_SPEC,
+      use: { ...chrome, viewport: DESKTOP, colorScheme: 'light' },
+    },
+    {
       name: 'live',
       testMatch: LIVE_SPEC,
-      dependencies: [...PAGE_PROJECTS, 'harness'],
+      // The live-feed spec writes reports and projects that would show on the swept pages.
+      dependencies: [...PAGE_PROJECTS, 'harness', 'leak-sweep'],
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
   ],

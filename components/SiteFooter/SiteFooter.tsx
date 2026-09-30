@@ -9,13 +9,20 @@ export interface SiteFooterProps {
   // any project has reported.
   lastReport?: TimeLabel;
   sourceHref: string;
+  // The page being shown, when the footer links to it.
+  current?: 'privacy';
 }
 
-export function SiteFooter({ lastReport, sourceHref }: SiteFooterProps) {
+export function SiteFooter({ lastReport, sourceHref, current }: SiteFooterProps) {
+  const onPrivacy = current === 'privacy';
   return (
     <footer className={styles.footer}>
       <div className={styles.links}>
-        <Link href="/privacy" className={`${styles.link} ${styles.privacy}`}>
+        <Link
+          href="/privacy"
+          className={`${styles.link} ${styles.privacy}${onPrivacy ? ` ${styles.current}` : ''}`}
+          aria-current={onPrivacy ? 'page' : undefined}
+        >
           Privacy
         </Link>
         <a href={sourceHref} className={styles.link}>

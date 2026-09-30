@@ -60,7 +60,7 @@ design/              Claude Design handoff bundle (do not edit by hand)
 docs/                spec, inventory, design brief
 ```
 
-Unit tests sit next to the code as `*.test.ts`; component tests are `components/<Name>/<Name>.test.tsx` and opt into jsdom with a `// @vitest-environment jsdom` docblock. Integration tests are `*.int.test.ts` and need local Supabase running. E2E specs are `tests/e2e/*.spec.ts`, one per page, tagged `@js`, `@no-js` or `@visual` to choose their Playwright projects (see `playwright.config.ts`); tests of the harness itself are in `tests/e2e/harness/`. Every page spec runs `expectNoSeriousAxeViolations` from `tests/e2e/support/axe.ts`.
+Unit tests sit next to the code as `*.test.ts`; component tests are `components/<Name>/<Name>.test.tsx` and opt into jsdom with a `// @vitest-environment jsdom` docblock. Integration tests are `*.int.test.ts` and need local Supabase running. E2E specs are `tests/e2e/*.spec.ts`, one per page, tagged `@js`, `@no-js` or `@visual` to choose their Playwright projects (see `playwright.config.ts`); tests of the harness itself are in `tests/e2e/harness/`, and `tests/e2e/leak-sweep.spec.ts`, which checks every page that can show a private project for hidden data, runs once in a project of its own. Every page spec runs `expectNoSeriousAxeViolations` from `tests/e2e/support/axe.ts`.
 
 Playwright never reuses a server: it builds and starts its own on 127.0.0.1:3000 with `TESTPULSE_FIXED_NOW` set to `SEED_NOW`, so stop anything on :3000 first. Visual snapshots are generated and compared only in the pinned Playwright image (`npm run test:e2e:docker`, `npm run test:e2e:update`); bump that image in `scripts/e2e-docker.sh` together with `@playwright/test` and regenerate.
 

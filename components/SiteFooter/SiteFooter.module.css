@@ -24,3 +24,8 @@
 .privacy {
   padding-right: var(--space-4);
 }
+
+.current {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}

@@ -59,6 +59,10 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: CI,
   retries: 0,
+  // A private repository's runners have 2 CPUs, where Playwright's default is 1 worker and the
+  // suite outgrew the job's time limit. The tests mostly wait on the browser and the server, so a
+  // second worker pays off even on 2 CPUs.
+  workers: CI ? 2 : undefined,
   // CI never writes a snapshot: a missing one is a failure, not a new baseline.
   updateSnapshots: CI ? 'none' : 'missing',
   reporter: [['list'], ['junit', { outputFile: 'test-results/e2e-junit.xml' }]],

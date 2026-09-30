@@ -5,6 +5,7 @@ Public dashboard showing live test results for Bobby Helco's projects. Each proj
 ## Read first
 
 - `docs/spec.md` is the source of truth: data model, API contract, stats definitions, phases, and acceptance criteria. Read the section for the current phase before proposing any work.
+- `docs/reporting-standard.md` is the rulebook reporting projects conform to; it is versioned, and the version lives only there. Changes to what a project must send, or to `projects/*.yaml`, are checked against it.
 - `docs/PROJECT_INVENTORY.md` describes the two projects that report first (Ostomate2, routeserve) and the exact files their CI produces.
 - `docs/design-brief.md` and the `design/` bundle define the visual design.
 

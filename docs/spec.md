@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.48, 2026-09-29. Status: Phases 0 to 4 and the design track complete; Phase 5 in progress. The project page, `/p/[slug]`, and the landing page, `/`, are built with the live feed, and the run page, `/p/[slug]/runs/[id]`, and the test history page, `/p/[slug]/tests/[testKey]`, without it (sections 13.2 to 13.6); the other public pages follow.
+Version 0.49, 2026-09-30. Status: Phases 0 to 4 and the design track complete; Phase 5 in progress. The project page, `/p/[slug]`, and the landing page, `/`, are built with the live feed, and the run page, `/p/[slug]/runs/[id]`, and the test history page, `/p/[slug]/tests/[testKey]`, without it (sections 13.2 to 13.6); the other public pages follow.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -261,6 +261,8 @@ A prune job runs daily (same scheduled function as the stale check). It deletes 
 
 ## 6. Ingestion API
 
+What a reporting project must send, and when, is set out for projects in `docs/reporting-standard.md`; this section is the contract it rests on.
+
 ### 6.1 Endpoint
 
 `POST /api/v1/reports`
@@ -406,6 +408,8 @@ Enforcement is in Postgres row-level security, so the publishable key used by th
 Initial settings: Ostomate2 `public`, routeserve `private`, testpulse `public`.
 
 ## 10. Adding a project
+
+The project-facing version of these steps, with the change checklist that follows onboarding, is in `docs/reporting-standard.md` (section 9).
 
 1. Create `projects/<slug>.yaml` (metadata, stacks, layer rules, declared suites, coverage floors).
 2. Run `npm run project:add <slug>`. It validates the YAML, inserts the row, generates an API key (32 random bytes, presented as `tp_` plus base64url), stores its SHA-256 hash, and prints the key once.
@@ -984,6 +988,7 @@ Design track complete 2026-09-28. Every page can be built from `design/`: v6 set
 | 2026-09-29 | A test history duration point where the test was skipped on one of the chart's platforms is left out of the chart. Pending design v8 item 17 | TrendChart prints "Not run" for a missing value, and whether a skipped result reads "Not run" or "Skipped" is undecided; leaving the point out asserts neither |
 | 2026-09-29 | `loadSiteChrome` returns each project's latest default-branch CI run id beside its status, for the NotFound test kind's "Latest {project} results" | The not-found boundary gets no props and knows only the slug; the site chrome already reads that run for the project switcher, so the link costs no extra query |
 | 2026-09-30 | Page heads (`generateMetadata`) read only the project and the run or test the URL names, never the page's data; the page and its head no longer share one cached read | Next.js prefetches a linked page's head for every link in view, four at a time. With the head sharing the page's read, each RouteServe run link on the project page cost a full run page load (the results of every default-branch CI run of 30 days, some 10,000 rows, for its flaky marks), each taking 4 to 5 seconds on a 2-CPU CI runner with two e2e workers; the branch filter's navigation competed with them for the server and took 5 seconds or more, so `project.spec.ts`'s private leak test failed intermittently in CI. A visitor scrolling the run list paid the same cost |
+| 2026-09-30 | One reporting standard, `docs/reporting-standard.md`, owned by testpulse and versioned (v1 now). It is the single source: reporting projects never copy it; each links to it, on GitHub and at `../testpulse/docs/reporting-standard.md`, and states the version it conforms to in its `CLAUDE.md`. Per-project facts stay in `projects/<slug>.yaml`. v1 rules decided by Bobby 2026-09-30: all reporting comes from the main CI workflow, and a suite in another workflow is a declared suite; on a failing run every test task still runs and writes its results (Gradle `--continue`, no Jest or Vitest `--bail`, no Playwright `maxFailures`, every Maestro flow); "Re-run all jobs" on the default branch, since a "Re-run failed jobs" attempt holds only the re-run jobs' reports and becomes the latest run; a Maestro flow is one test across platforms only under one title, and titles stay stable; the reporter still never fails the build; a tool with no fixture gets one before its reports are relied on. Documented: the latest run shows what it executed, so a scheduled run that skips a suite lowers the totals until the next push. Planned: job-summary lines for refused or unsent reports and for a passing job with no coverage file; expected reports per trigger in `projects/*.yaml`, with alerts on missing reports, refused reports and coverage no longer reported (Phase 6); carrying missing reports forward from the previous attempt; combining runs across workflows; the shared GitHub Action `bhelco1/testpulse/.github/actions/report@v1`, after testpulse is public, with projects keeping a byte-for-byte copy of `scripts/testpulse-report.sh` until then. Under consideration, to be decided with the Phase 6 expected-reports design: the reporter also sends the CI workflow's overall result On GitHub Actions (rule 2.4), a matrix of test jobs must set `fail-fast: false`; a test job that depends on another should still run after a failure, and a project may skip an expensive one on purpose. | Ostomate2's Maestro E2E jobs produced no JUnit output and had no report step, so a red E2E run left testpulse showing the run as passed. Nothing written told a project what it must do to report correctly; the rules were spread over sections 5 to 12 and Appendix A, written for testpulse's implementation rather than for the project changing its CI. One versioned rulebook that projects link to cannot drift the way copies would |
 ---
 
 ## Appendix A: reporter script and CI steps

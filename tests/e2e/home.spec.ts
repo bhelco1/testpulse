@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
 import { capture, FAILING, HIDDEN, leaksIn, ROUTESERVE_RUNS } from './support/leaks.ts';
-import { open } from './support/open.ts';
+import { expectLive, open } from './support/open.ts';
 
 // The landing page, / (spec section 13), against the seed (lib/seed/plan.ts) at SEED_NOW.
 // Figures are the seed's hand-computed values in lib/seed/seed.int.test.ts ("landing headline
@@ -149,11 +149,6 @@ test.describe('the landing page', () => {
     await expect(rows.nth(0)).toHaveAttribute('href', /^\/p\/ostomate2\/runs\/[0-9a-f-]{36}$/);
   });
 
-  // The live feed comes with Phase 5 PR 8; until then neither would be true (section 13.3).
-  test('shows neither “Live” nor “Offline”', async ({ page }) => {
-    await expect(page.getByText(/^Live$|Offline|Updates as reports arrive/)).toHaveCount(0);
-  });
-
   test('says what the site is and links to how it is tested', async ({ page }) => {
     const about = page.getByRole('region', { name: 'About this site' });
     await expect(about).toContainText('I’m Bobby Helco, a quality engineering leader.');
@@ -229,11 +224,32 @@ test(
   },
 );
 
+// The live feed (section 13.3). tests/e2e/live.spec.ts proves a report arriving and the offline
+// states; here the page is seen to connect.
+test(
+  'goes live: “Live” in the header and the feed’s live note',
+  { tag: '@js' },
+  async ({ page }) => {
+    await open(page, '/');
+    await expectLive(page);
+    await expect(page.locator('[data-part="live-note"]')).toHaveText('Updates as reports arrive');
+    await expect(page.getByText(/Offline/)).toHaveCount(0);
+    await expect(page.locator('[data-part="new"]')).toHaveCount(0);
+  },
+);
+
+// Without scripts nothing is live, so neither state would be true (section 13).
+test('shows neither “Live” nor “Offline” without scripts', { tag: '@no-js' }, async ({ page }) => {
+  await open(page, '/');
+  await expect(page.getByText(/^Live$|Offline|Updates as reports arrive/)).toHaveCount(0);
+});
+
 // @js because axe cannot run with scripts disabled: it schedules its work with timers, and
 // Chromium fires no timers then, so the check never finishes. The markup it checks here is the
 // same server-rendered HTML the no-JS project gets.
 test('has no serious or critical axe violations', { tag: '@js' }, async ({ page }) => {
   await open(page, '/');
+  await expectLive(page);
   await expectNoSeriousAxeViolations(page);
 });
 
@@ -256,8 +272,11 @@ test('renders its static content without running scripts', { tag: '@no-js' }, as
   await expect(page.getByRole('region', { name: 'About this site' })).toBeVisible();
 });
 
+// Taken live, the state a visitor sees (the Landing mock's healthy scenario); the pulse is an
+// infinite animation, which toHaveScreenshot stops at its first frame.
 test('matches its visual snapshot', { tag: '@visual' }, async ({ page }) => {
   await open(page, '/');
+  await expectLive(page);
   await expect(page).toHaveScreenshot('home.png', { fullPage: true });
 });
 

@@ -44,9 +44,17 @@ const phone = { ...chrome, viewport: PHONE, isMobile: true, hasTouch: true };
 const withJs = IN_IMAGE ? /@no-js/ : /@no-js|@visual/;
 const withoutJs = /@js|@visual/;
 
+// The live-feed spec writes reports while its pages are open, which changes the landing page and
+// every page's header and footer, so it runs in a project of its own after every other project
+// has finished, and deletes what it wrote (tests/e2e/support/ingest.ts).
+const LIVE_SPEC = '**/live.spec.ts';
+const PAGE_PROJECTS = ['desktop-dark', 'desktop-light', 'phone-dark', 'phone-light', 'no-js'];
+
 export default defineConfig({
   testDir: 'tests/e2e',
   testIgnore: '**/support/**',
+  // Pages go live as soon as they load; wait until Realtime is listening before any test runs.
+  globalSetup: './tests/e2e/support/realtime-ready.ts',
   outputDir: 'test-results/e2e',
   fullyParallel: true,
   forbidOnly: CI,
@@ -61,25 +69,25 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop-dark',
-      testIgnore: '**/harness/**',
+      testIgnore: ['**/harness/**', LIVE_SPEC],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
     {
       name: 'desktop-light',
-      testIgnore: '**/harness/**',
+      testIgnore: ['**/harness/**', LIVE_SPEC],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'light' },
     },
     {
       name: 'phone-dark',
-      testIgnore: '**/harness/**',
+      testIgnore: ['**/harness/**', LIVE_SPEC],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'dark' },
     },
     {
       name: 'phone-light',
-      testIgnore: '**/harness/**',
+      testIgnore: ['**/harness/**', LIVE_SPEC],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'light' },
     },
@@ -87,7 +95,7 @@ export default defineConfig({
       // Static content must work without JavaScript (spec section 13). With scripts off the
       // page renders the same pixels as desktop-dark, so it takes no snapshot of its own.
       name: 'no-js',
-      testIgnore: '**/harness/**',
+      testIgnore: ['**/harness/**', LIVE_SPEC],
       grepInvert: withoutJs,
       use: { ...chrome, viewport: DESKTOP, javaScriptEnabled: false },
     },
@@ -97,12 +105,20 @@ export default defineConfig({
       testDir: 'tests/e2e/harness',
       use: { ...chrome, viewport: DESKTOP },
     },
+    {
+      name: 'live',
+      testMatch: LIVE_SPEC,
+      dependencies: [...PAGE_PROJECTS, 'harness'],
+      use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
+    },
   ],
   webServer: {
     // The fixed clock is given to `next start` only, so the instant the server logs at startup
     // (instrumentation.ts) comes from the process that serves the pages, not from the build.
     command: `npm run build && ${FIXED_NOW_VAR}=${SEED_NOW} npm run start -- --hostname 127.0.0.1`,
-    env: supabaseEnv,
+    // The live-feed spec's writer holds the secret key; the server under test must not, so pages
+    // are proven to render as anon. An empty value also stops Next.js loading it from .env.local.
+    env: { ...supabaseEnv, SUPABASE_SECRET_KEY: '' },
     // Ready is printed when the server listens and register() runs just after it, so waiting for
     // both means requests will be served and the clock line was logged by that server. The
     // captured instant reaches tests as TESTPULSE_SERVER_FIXED_NOW.

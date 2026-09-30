@@ -267,6 +267,28 @@ describe('Realtime as the browser sees it, with the publishable key', () => {
       });
     }
     expect(ours()).toHaveLength(2);
+    // What anon receives of a report, public or private, is exactly the reports row (spec 5.3):
+    // counts, durations, times and the job, module and platform. None of it is hidden by
+    // section 9, which hides failure text, repository, commit and CI run links, and full SHAs;
+    // those live in result_failures, projects and runs, none of which is published.
+    for (const event of ours()) {
+      expect(Object.keys(event.new).sort(), 'columns of a reports INSERT sent to anon').toEqual([
+        'created_at',
+        'duration_ms',
+        'failed',
+        'finished_at',
+        'format',
+        'id',
+        'job',
+        'module',
+        'passed',
+        'platform',
+        'run_id',
+        'skipped',
+        'started_at',
+        'total',
+      ]);
+    }
     expect(
       otherEvents.map((event) => `${event.table} ${event.eventType}`),
       'unpublished tables must send the anon client nothing',

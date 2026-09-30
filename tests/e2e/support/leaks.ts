@@ -9,8 +9,9 @@ import { open } from './open.ts';
 // Spec section 17, Phase 5: for a private project, failure text, repository links and full SHAs
 // are absent from the rendered HTML and from every network response. The values are derived from
 // what the seed sends (lib/seed/plan.ts and the committed Jest fixture it posts), not read from
-// the database: the e2e container is never given the secret key. Each page spec proves the
-// derivation matches the seeded database with positive controls of its own.
+// the database: no page spec reads with the secret key, which only the live-feed spec's report
+// writer holds (tests/e2e/support/ingest.ts). Each page spec proves the derivation matches the
+// seeded database with positive controls of its own.
 
 export const ROUTESERVE_RUNS = planSeed(new Date(SEED_NOW)).runs.filter(
   (run) => run.slug === 'routeserve',

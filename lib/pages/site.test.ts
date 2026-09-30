@@ -32,6 +32,16 @@ describe('siteChromeView', () => {
     expect(siteChromeView({ projects: [], lastReportAt: null }, NOW).lastReport).toBeUndefined();
   });
 
+  // The live note's "Offline. Showing runs as of {HH:MM}; reconnecting": the page's data is as
+  // of the instant it was rendered, in UTC.
+  it('dates the page’s data at the render instant, as HH:MM UTC', () => {
+    expect(siteChromeView({ projects: [], lastReportAt: null }, NOW).asOf).toEqual({
+      text: '12:00',
+      datetime: '2026-10-05T12:00:00.000Z',
+      title: '5 Oct 2026, 12:00 UTC',
+    });
+  });
+
   it('points "Source on GitHub" at the testpulse repository', () => {
     expect(SOURCE_URL).toBe('https://github.com/bhelco1/testpulse');
   });

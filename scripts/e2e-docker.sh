@@ -26,7 +26,9 @@ fi
 # --platform: GitHub's runners are amd64, and an arm64 Mac would otherwise pull the arm64
 # variant, whose rendering is not guaranteed to match.
 # -e NAME forwards the host's value without printing it, and nothing if it is unset; locally
-# the Supabase variables come from .env.local instead, read by playwright.config.ts.
+# the Supabase variables come from .env.local instead, read by playwright.config.ts. The secret
+# key is for the live-feed spec's report writer only (tests/e2e/support/ingest.ts); the config
+# withholds it from the server under test.
 docker run --rm --init --ipc=host --network=host --platform=linux/amd64 \
   --volume "$PWD:/work" --workdir /work \
   --volume testpulse-e2e-node-modules:/work/node_modules \
@@ -34,6 +36,7 @@ docker run --rm --init --ipc=host --network=host --platform=linux/amd64 \
   --env CI \
   --env NEXT_PUBLIC_SUPABASE_URL \
   --env NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
+  --env SUPABASE_SECRET_KEY \
   --env TESTPULSE_E2E_IMAGE="$IMAGE" \
   "$IMAGE" \
   bash -c 'npm ci --no-audit --no-fund --loglevel=error && exec npx playwright test "$@"' e2e "$@"

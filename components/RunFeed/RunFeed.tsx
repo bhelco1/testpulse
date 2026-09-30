@@ -1,7 +1,9 @@
+import type { TimeLabel } from '../../lib/copy/time';
 import { Button } from '../Button/Button';
 import { ErrorState } from '../ErrorState/ErrorState';
 import { AlertCircleIcon } from '../icons/icons';
 import { LiveDot } from '../LiveIndicator/LiveIndicator';
+import { RelativeTime } from '../RelativeTime/RelativeTime';
 import { RunFeedRow, type FeedRun, type KioskFeedRun } from '../RunFeedRow/RunFeedRow';
 import { SegmentedControl } from '../SegmentedControl/SegmentedControl';
 import { Skeleton } from '../Skeleton/Skeleton';
@@ -12,11 +14,11 @@ export type FeedEntry = FeedRun & { isNew?: boolean };
 // The project page run list: default-branch runs (the default), or every branch (spec 18 Q4).
 export type BranchScope = 'default' | 'all';
 
-// asOf is when the shown runs were current, already formatted as HH:MM: components do not read
-// the clock.
-type Connection = { connected: true } | { connected: false; asOf: string };
+// asOf is when the shown runs were current, already formatted as HH:MM (clockLabel in
+// lib/copy/time.ts): components do not read the clock.
+type Connection = { connected: true } | { connected: false; asOf: TimeLabel };
 
-// A web feed before realtime reaches its page: with no connection there is no note.
+// A web feed while its connection is unknown (connecting, or no JavaScript): no note.
 type WebConnection = Connection | { connected?: undefined };
 
 // The project page run list's header: its branch filter, and the project named in its empty copy.
@@ -116,9 +118,13 @@ function LiveNote({ connection, project }: { connection: WebConnection; project:
     >
       <LiveDot connected={connection.connected} />
       <span>
-        {connection.connected
-          ? 'Updates as reports arrive'
-          : `Offline. Showing runs as of ${connection.asOf}; reconnecting`}
+        {connection.connected ? (
+          'Updates as reports arrive'
+        ) : (
+          <>
+            Offline. Showing runs as of <RelativeTime when={connection.asOf} />; reconnecting
+          </>
+        )}
       </span>
     </span>
   );
@@ -213,7 +219,9 @@ function KioskNote({ connection }: { connection: Connection }) {
   return (
     <span className={cx(styles.kioskNote, styles.kioskOffline)} data-part="kiosk-note">
       <span className={styles.kioskRing} data-part="kiosk-ring" aria-hidden="true" />
-      <span>Offline. As of {connection.asOf}</span>
+      <span>
+        Offline. As of <RelativeTime when={connection.asOf} />
+      </span>
     </span>
   );
 }

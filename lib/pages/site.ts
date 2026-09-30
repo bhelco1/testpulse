@@ -1,5 +1,5 @@
 import type { SwitcherProject } from '../../components/ProjectSwitcher/ProjectSwitcher';
-import { relativeLabel, type TimeLabel } from '../copy/time';
+import { clockLabel, relativeLabel, type TimeLabel } from '../copy/time';
 import type { SiteChrome } from '../queries/site';
 
 // The footer's "Source on GitHub": testpulse's own repository, the same as its
@@ -10,6 +10,8 @@ export interface SiteChromeView {
   readonly projects: readonly SwitcherProject[];
   /** "Last report received {relative}"; none before any project has reported. */
   readonly lastReport: TimeLabel | undefined;
+  /** When the page's data was read, for the live note's "Offline. Showing runs as of {HH:MM}". */
+  readonly asOf: TimeLabel;
 }
 
 export function siteChromeView(chrome: SiteChrome, now: Date): SiteChromeView {
@@ -20,5 +22,6 @@ export function siteChromeView(chrome: SiteChrome, now: Date): SiteChromeView {
       status: project.status,
     })),
     lastReport: chrome.lastReportAt === null ? undefined : relativeLabel(chrome.lastReportAt, now),
+    asOf: clockLabel(now),
   };
 }

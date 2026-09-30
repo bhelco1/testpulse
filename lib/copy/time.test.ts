@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  clockLabel,
   dateLabel,
   formatRunDuration,
   fullTimestamp,
@@ -118,6 +119,22 @@ describe('relativeLabel and dateLabel', () => {
       datetime: '2026-09-22T04:37:00.000Z',
       title: '22 Sep 2026, 04:37 UTC',
     });
+  });
+});
+
+// The feed's offline note, "Offline. Showing runs as of {HH:MM}; reconnecting" (components.md,
+// RunFeed), is an absolute time ("Relative time": "As of {HH:MM}" is unaffected), in UTC as every
+// other time the site prints (decision 2026-09-29).
+describe('clockLabel', () => {
+  it('reads HH:MM in UTC, 24-hour and zero-padded, with the instant and full timestamp', () => {
+    expect(clockLabel(new Date('2026-10-05T12:00:00.000Z'))).toEqual({
+      text: '12:00',
+      datetime: '2026-10-05T12:00:00.000Z',
+      title: '5 Oct 2026, 12:00 UTC',
+    });
+    expect(clockLabel(new Date('2026-10-05T09:05:59.999Z')).text).toBe('09:05');
+    expect(clockLabel(new Date('2026-10-05T00:00:00.000Z')).text).toBe('00:00');
+    expect(clockLabel(new Date('2026-10-05T23:59:00.000Z')).text).toBe('23:59');
   });
 });
 

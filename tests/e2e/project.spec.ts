@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
 import { capture, FAILING, formsOf, HIDDEN, leaksIn, ROUTESERVE_RUNS } from './support/leaks.ts';
-import { open } from './support/open.ts';
+import { expectLive, open } from './support/open.ts';
 
 // The project page, /p/[slug] (spec section 13), against the seed (lib/seed/plan.ts) at
 // SEED_NOW. Figures are the seed's hand-computed values in lib/seed/seed.int.test.ts. Tags route
@@ -342,8 +342,26 @@ for (const slug of ['ostomate2', 'routeserve']) {
 
   test(`${slug}: no serious or critical axe violations`, { tag: '@js' }, async ({ page }) => {
     await open(page, `/p/${slug}`);
+    await expectLive(page);
     await expectNoSeriousAxeViolations(page);
   });
+
+  // The live feed (section 13.2); tests/e2e/live.spec.ts proves a run arriving and going offline.
+  test(`${slug}: goes live, with the run list's note`, { tag: '@js' }, async ({ page }) => {
+    await open(page, `/p/${slug}`);
+    await expectLive(page);
+    await expect(page.locator('[data-part="live-note"]')).toHaveText('Updates as reports arrive');
+    await expect(page.locator('[data-part="new"]')).toHaveCount(0);
+  });
+
+  test(
+    `${slug}: shows neither “Live” nor “Offline” without scripts`,
+    { tag: '@no-js' },
+    async ({ page }) => {
+      await open(page, `/p/${slug}`);
+      await expect(page.getByText(/^Live$|Offline|Updates as reports arrive/)).toHaveCount(0);
+    },
+  );
 
   test(`${slug}: the page renders without running scripts`, { tag: '@no-js' }, async ({ page }) => {
     await open(page, `/p/${slug}`);
@@ -380,8 +398,10 @@ for (const slug of ['ostomate2', 'routeserve']) {
     expect(overflow).toBe(0);
   });
 
+  // Taken live, as a visitor sees it; toHaveScreenshot stops the pulse at its first frame.
   test(`${slug}: matches its visual snapshot`, { tag: '@visual' }, async ({ page }) => {
     await open(page, `/p/${slug}`);
+    await expectLive(page);
     await expect(page).toHaveScreenshot(`${slug}.png`, { fullPage: true });
   });
 }

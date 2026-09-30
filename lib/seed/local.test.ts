@@ -26,6 +26,16 @@ describe('assertLocalSupabaseUrl', () => {
     );
   });
 
+  // Other writers that must stay local (the e2e report writer) name themselves in the refusal.
+  it('names the caller it guards', () => {
+    expect(() =>
+      assertLocalSupabaseUrl('https://abcdefghijklmnopqrst.supabase.co', 'the e2e report writer'),
+    ).toThrow(/^the e2e report writer only writes to a local Supabase/);
+    expect(() => assertLocalSupabaseUrl(undefined, 'the e2e report writer')).toThrow(
+      'NEXT_PUBLIC_SUPABASE_URL is not set; the e2e report writer needs the local Supabase URL',
+    );
+  });
+
   it.each([undefined, '', '   '])('refuses a missing URL (%j)', (url) => {
     expect(() => assertLocalSupabaseUrl(url)).toThrow('NEXT_PUBLIC_SUPABASE_URL is not set');
   });
@@ -55,6 +65,18 @@ describe('createSeedClient', () => {
       SUPABASE_SECRET_KEY: secret,
     });
     expect(typeof client.rpc).toBe('function');
+  });
+
+  it('names the caller it guards in the refusal', () => {
+    expect(() =>
+      createSeedClient(
+        {
+          NEXT_PUBLIC_SUPABASE_URL: 'https://abcdefghijklmnopqrst.supabase.co',
+          SUPABASE_SECRET_KEY: secret,
+        },
+        'the e2e report writer',
+      ),
+    ).toThrow(/^the e2e report writer only writes to a local Supabase/);
   });
 
   it('still needs the secret key', () => {

@@ -86,18 +86,30 @@ describe('RunFeed (web, landing)', () => {
 
   it('disconnected: the ring and "Offline. Showing runs as of {HH:MM}; reconnecting" in --ink-2', () => {
     const { container } = render(
-      <RunFeed state="ready" list="recent" runs={RUNS} connected={false} asOf="10:42" />,
+      <RunFeed
+        state="ready"
+        list="recent"
+        runs={RUNS}
+        connected={false}
+        asOf={timeLabel('10:42')}
+      />,
     );
     const note = container.querySelector<HTMLElement>('[data-part="live-note"]');
 
     expect(note?.textContent).toBe('Offline. Showing runs as of 10:42; reconnecting');
+    // Every time a page prints is a <time> with its instant and full date (spec 11, "Project
+    // page view"); the HH:MM is UTC, as the title says.
+    const time = note?.querySelector('time');
+    expect(time?.textContent).toBe('10:42');
+    expect(time?.getAttribute('datetime')).toBe('2026-10-05T11:56:00.000Z');
+    expect(time?.getAttribute('title')).toBe('5 Oct 2026, 11:56 UTC');
     expect(note?.querySelector<HTMLElement>('[data-part="dot"]')?.dataset.state).toBe('off');
     expect(has(note, 'offline')).toBe(true);
     // No banner: the rows stay, under the inline note.
     expect(container.querySelectorAll('a')).toHaveLength(3);
   });
 
-  // Before realtime reaches the landing (Phase 5 PR 8) neither note would be true.
+  // While the channel is connecting, and without JavaScript, neither note would be true.
   it('has no live note when no connection state is given', () => {
     const { container, getByRole } = render(<RunFeed state="ready" list="recent" runs={RUNS} />);
 
@@ -254,7 +266,7 @@ describe('RunFeed (web, project page)', () => {
         branches="default"
         onBranchesChange={() => {}}
         connected={false}
-        asOf="10:42"
+        asOf={timeLabel('10:42')}
       />,
     );
     const note = container.querySelector<HTMLElement>('[data-part="live-note"]');
@@ -264,7 +276,7 @@ describe('RunFeed (web, project page)', () => {
     expect(has(note, 'offline')).toBe(true);
   });
 
-  // Before realtime reaches the page (Phase 5 PR 8) neither note would be true.
+  // While the channel is connecting, and without JavaScript, neither note would be true.
   it('has no live note when no connection state is given, ready or empty', () => {
     const list = {
       list: 'project',
@@ -396,7 +408,13 @@ describe('RunFeed (kiosk)', () => {
 
   it('disconnected: a 14px ring and "Offline. As of {HH:MM}" in --ink-2 (v4 item 41)', () => {
     const { container } = render(
-      <RunFeed variant="kiosk" state="ready" runs={KIOSK_RUNS} connected={false} asOf="10:42" />,
+      <RunFeed
+        variant="kiosk"
+        state="ready"
+        runs={KIOSK_RUNS}
+        connected={false}
+        asOf={timeLabel('10:42')}
+      />,
     );
     const note = container.querySelector<HTMLElement>('[data-part="kiosk-note"]');
 
@@ -477,7 +495,7 @@ describe('RunFeed (kiosk)', () => {
     for (const feed of states) {
       for (const connection of [
         { connected: true } as const,
-        { connected: false, asOf: '10:42' } as const,
+        { connected: false, asOf: timeLabel('10:42') } as const,
       ]) {
         const { container, getByRole, unmount } = render(
           <RunFeed variant="kiosk" {...feed} {...connection} />,

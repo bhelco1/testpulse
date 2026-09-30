@@ -83,5 +83,9 @@ export const relativeLabel = (then: Date, now: Date): TimeLabel =>
 export const dateLabel = (instant: Date, now: Date): TimeLabel =>
   label(shortDate(instant, now), instant);
 
+/** "12:00": an absolute time of day in UTC, as the feed's offline note gives it. */
+export const clockLabel = (instant: Date): TimeLabel =>
+  label(`${pad2(instant.getUTCHours())}:${pad2(instant.getUTCMinutes())}`, instant);
+
 /** A run's duration as the charts and run rows read it: whole seconds, "36 s". */
 export const formatRunDuration = (ms: number): string => formatTrendValue(ms / SECOND, 'dur');

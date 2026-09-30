@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="test" tests="1" failures="0" time="19.0">
+    <testcase id="Journey 1: Cold-start QR log" name="Journey 1: Cold-start QR log" classname="Journey 1: Cold-start QR log" file=".maestro/01_cold_start_qr_log.yaml" time="19.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

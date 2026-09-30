@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="test" tests="1" failures="0" time="16.0">
+    <testcase id="Journey 8: Biometric gate on Settings" name="Journey 8: Biometric gate on Settings" classname="Journey 8: Biometric gate on Settings" file=".maestro/08_biometric_gate.yaml" time="16.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

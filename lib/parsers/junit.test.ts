@@ -122,6 +122,83 @@ describe('parseJunit against Ostomate2 Gradle output (single testsuite root)', (
   });
 });
 
+// Maestro writes one file per flow, each a testsuites wrapper around one testsuite named "Test
+// Suite" holding one testcase, and Ostomate2's reporter posts a job's files in one request.
+describe('parseJunit against Ostomate2 Maestro output (one file per flow)', () => {
+  const android = parseJunit(readSuiteDir('ostomate2/junit/android-emulator/e2e'));
+  const ios = parseJunit(readSuiteDir('ostomate2/junit/ios-sim/e2e'));
+
+  it('merges the 7 Android flow files into 7 passed tests', () => {
+    expect(android.tests).toHaveLength(7);
+    expect(countBy(android.tests.map((test) => test.status))).toEqual({ passed: 7 });
+  });
+
+  it('merges the 5 iOS flow files into 4 passed tests and 1 failed', () => {
+    expect(ios.tests).toHaveLength(5);
+    expect(countBy(ios.tests.map((test) => test.status))).toEqual({ passed: 4, failed: 1 });
+  });
+
+  it('maps classname (the flow title) to suite and name, and seconds to milliseconds', () => {
+    expect(android.tests).toEqual(
+      [
+        ['Journey 1: Cold-start QR log', 19000],
+        ['Journey 2: Log + undo', 21000],
+        ['Journey 3: Edit/delete event from calendar day sheet', 34000],
+        ['Journey 4: Set on-hand inventory count via Settings → Manage Supplies', 33000],
+        ['Journey 5: Backup round-trip', 27000],
+        ['Journey 8: Biometric gate on Settings', 16000],
+        ['Store screenshots — phone', 22000],
+      ].map(([title, durationMs]) => ({ suite: title, name: title, status: 'passed', durationMs })),
+    );
+
+    expect(
+      ios.tests.map(({ suite, name, status, durationMs }) => ({ suite, name, status, durationMs })),
+    ).toEqual(
+      [
+        ['iOS Journey: Onboarding walkthrough', 'passed', 44000],
+        ['iOS Journey 1: Cold-start QR deep link', 'failed', 36000],
+        ['iOS Journey 2: Log + undo', 'passed', 19000],
+        ['iOS Journey 5: Backup export → share sheet', 'passed', 29000],
+        ['Journey 8: Biometric gate on Settings', 'passed', 16000],
+      ].map(([title, status, durationMs]) => ({ suite: title, name: title, status, durationMs })),
+    );
+  });
+
+  it('sums the per-flow testsuite times and has no startedAt, since Maestro writes no timestamp', () => {
+    expect(android.durationMs).toBe(172000);
+    expect(ios.durationMs).toBe(144000);
+    expect(android.startedAt).toBeUndefined();
+    expect(ios.startedAt).toBeUndefined();
+  });
+
+  // Maestro marks the crashed flow status="ERROR" on the testcase, but the parser reads only the
+  // child element (spec section 7), and the child is <failure>, so the flow is failed, not error.
+  it('maps the crashed flow by its <failure> child, taking the body as message and detail', () => {
+    const file = readFixture('ostomate2/junit/ios-sim/e2e/01_ios_deep_link_log.xml');
+    expect(file).toContain('status="ERROR"');
+    expect(file).not.toContain('<error');
+
+    const crashed = ios.tests.find((test) => test.status !== 'passed');
+    const text =
+      'App crashed or stopped while executing flow, please check diagnostic logs: ~/Library/Logs/DiagnosticReports directory';
+    expect(crashed).toEqual({
+      suite: 'iOS Journey 1: Cold-start QR deep link',
+      name: 'iOS Journey 1: Cold-start QR deep link',
+      status: 'failed',
+      durationMs: 36000,
+      failure: { message: text, detail: text },
+    });
+  });
+
+  it('ignores the testsuite device attribute and the testcase id, file and status attributes', () => {
+    const serialized = JSON.stringify([android, ios]);
+    expect(serialized).not.toContain('1D2D408B-3058-4C2C-8AA2-0204B97213EC');
+    expect(serialized).not.toContain('.maestro/');
+    expect(serialized).not.toContain('SUCCESS');
+    expect(serialized).not.toContain('Test Suite');
+  });
+});
+
 describe('parseJunit against Playwright output (testsuites wrapper)', () => {
   const report = parseJunit([readFixture('testpulse/junit/playwright-one-failure.xml')]);
 

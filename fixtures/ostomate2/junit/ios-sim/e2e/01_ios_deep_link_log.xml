@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="maestro-ios - iOS 26.5 - 1D2D408B-3058-4C2C-8AA2-0204B97213EC" tests="1" failures="1" time="36.0">
+    <testcase id="iOS Journey 1: Cold-start QR deep link" name="iOS Journey 1: Cold-start QR deep link" classname="iOS Journey 1: Cold-start QR deep link" file=".maestro/ios/01_ios_deep_link_log.yaml" time="36.0" status="ERROR">
+      <failure>App crashed or stopped while executing flow, please check diagnostic logs: ~/Library/Logs/DiagnosticReports directory</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

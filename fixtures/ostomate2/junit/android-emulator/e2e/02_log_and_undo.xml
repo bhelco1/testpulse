@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="test" tests="1" failures="0" time="21.0">
+    <testcase id="Journey 2: Log + undo" name="Journey 2: Log + undo" classname="Journey 2: Log + undo" file=".maestro/02_log_and_undo.yaml" time="21.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

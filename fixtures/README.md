@@ -39,6 +39,24 @@ git show origin/test-dashboard:history.json > <scratch>/Ostomate2-history.json
 
 No scrub was needed: the repo is public and the file holds only commit SHAs, branch names, Actions run URLs, timestamps, counts, statuses, and coverage percentages. routeserve's `qa-dashboard` history was not captured because it is not a backfill source.
 
+### Maestro E2E
+
+Maestro `--format junit` output from CI run 36662953449 (a `workflow_dispatch` of branch `ci/e2e-junit-artifacts-continue` at commit `8f3be43b4769d431df63aae97f95b05f9bc731f7`, jobs "Android E2E (Maestro)" and "iOS E2E (Maestro)", artifacts `e2e-junit-android` and `e2e-junit-ios`), captured 2026-09-29 (the run started 2026-09-30 03:07 UTC) with:
+
+```
+gh run download -R bhelco1/Ostomate2 36662953449 -n e2e-junit-android -D <dir>
+gh run download -R bhelco1/Ostomate2 36662953449 -n e2e-junit-ios -D <dir>
+```
+
+Each job runs `maestro test --format junit --output e2e-results/<flow>.xml` once per flow and posts `e2e-results/*.xml` in one request as module `e2e` (jobs `android-e2e` and `ios-e2e`, platforms `android-emulator` and `ios-sim`), which is why the files sit under `junit/<platform>/e2e/`. Every file is a `testsuites` wrapper around one `testsuite name="Test Suite"` with one `testcase`, and no `timestamp`. The testcase carries the flow title as both `name` and `classname`, plus Maestro's own `id`, `file` and `status` attributes.
+
+| Path | Source | Counts |
+|---|---|---|
+| `ostomate2/junit/android-emulator/e2e/*.xml` (7 files) | `e2e-junit-android` artifact, `e2e-results/` | 7 flows, 7 passed |
+| `ostomate2/junit/ios-sim/e2e/*.xml` (5 files) | `e2e-junit-ios` artifact, `e2e-results/` | 5 flows, 4 passed, 1 failed |
+
+The failed iOS flow, `01_ios_deep_link_log.xml`, has `status="ERROR"` on the testcase and a `<failure>` child (no `message` attribute) whose text is Maestro's crash notice. No scrub was needed: the repo is public, and the only machine detail is the iOS testsuite's `device` attribute, the name, OS version and UDID of a simulator created on the CI runner (`maestro-ios - iOS 26.5 - 1D2D408B-…`), which identifies nothing outside that run. The Android files carry `device="test"`. The files were re-downloaded and compared byte for byte before commit.
+
 ## routeserve
 
 Private repo, captured from its `main` as of 2026-07-18. Its commit SHAs are left out here because the project is private. CI does not upload Jest JSON, so all three workspaces were run locally on 2026-09-21 with `--ci`. The backend ran with the `corridor.postgis` suite excluded (it needs a live PostGIS database) and `DATABASE_URL` pointed at a closed port; `SENTRY_DSN` was unset. Coverage was written outside the repo with `--coverageReporters=json-summary`, so no lcov or HTML was produced. No `.env*` file was read.
@@ -109,5 +127,5 @@ The failure stack and the attachment paths contain the absolute path of the loca
 ## Known gaps
 
 - No fixture contains a JUnit `<error>` element or a Jest `pending`/`todo`/`skipped` result. The parser tests for those branches rewrite one of the captured files in the test itself and say so in a comment; no hand-written result sample exists.
-- Ostomate2 has never produced a failing JUnit file in CI: the nearest failed run (35643254905) failed in `xcodebuild` and Maestro, not in JUnit. The failing JUnit fixture above comes from Playwright instead.
+- Ostomate2's Gradle JUnit has never failed in CI: the nearest failed run (35643254905) failed in `xcodebuild` and Maestro, not in JUnit. The failing JUnit fixtures are Playwright's and the one crashed iOS Maestro flow, which uses `<failure>` despite its `status="ERROR"` attribute, so it adds no `<error>` element.
 - Ostomate2 `shared` iOS-simulator results were not captured: the local copy was stale (July, 79 tests) and did not match HEAD.

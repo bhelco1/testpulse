@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="maestro-ios - iOS 26.5 - 1D2D408B-3058-4C2C-8AA2-0204B97213EC" tests="1" failures="0" time="44.0">
+    <testcase id="iOS Journey: Onboarding walkthrough" name="iOS Journey: Onboarding walkthrough" classname="iOS Journey: Onboarding walkthrough" file=".maestro/ios/00_ios_onboarding.yaml" time="44.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

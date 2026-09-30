@@ -14,6 +14,7 @@ import {
   LayerSchema,
   type LayerTarget,
 } from './layer-rules';
+import { parseJunit } from '../parsers';
 import { loadProjectFile, projectFilePath } from '../projects/files';
 
 // Wrap the real picomatch so the tests can count how often globs are compiled.
@@ -385,6 +386,24 @@ describe('Ostomate2 acceptance against projects/ostomate2.yaml', () => {
       ['ios-e2e', 'ios-sim'],
     ] as const) {
       expect(resolve(target({ job, module: 'e2e', platform, suite: 'Log a change' }))).toBe('e2e');
+    }
+  });
+
+  it('resolves every captured Maestro flow to e2e: 7 Android, 5 iOS', () => {
+    for (const [job, platform, cases] of [
+      ['android-e2e', 'android-emulator', 7],
+      ['ios-e2e', 'ios-sim', 5],
+    ] as const) {
+      const dir = fixture(`ostomate2/junit/${platform}/e2e`);
+      const files = readdirSync(dir)
+        .filter((file) => file.endsWith('.xml'))
+        .sort()
+        .map((file) => readFileSync(`${dir}/${file}`, 'utf8'));
+      const flows = parseJunit(files).tests.map((test) => ({
+        ...target({ job, module: 'e2e', platform, suite: test.suite }),
+        cases: 1,
+      }));
+      expect(countByLayer(resolve, flows)).toEqual({ e2e: cases });
     }
   });
 

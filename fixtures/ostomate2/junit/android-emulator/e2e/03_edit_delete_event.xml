@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="test" tests="1" failures="0" time="34.0">
+    <testcase id="Journey 3: Edit/delete event from calendar day sheet" name="Journey 3: Edit/delete event from calendar day sheet" classname="Journey 3: Edit/delete event from calendar day sheet" file=".maestro/03_edit_delete_event.yaml" time="34.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

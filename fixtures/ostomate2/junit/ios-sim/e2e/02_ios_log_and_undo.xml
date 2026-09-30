@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="maestro-ios - iOS 26.5 - 1D2D408B-3058-4C2C-8AA2-0204B97213EC" tests="1" failures="0" time="19.0">
+    <testcase id="iOS Journey 2: Log + undo" name="iOS Journey 2: Log + undo" classname="iOS Journey 2: Log + undo" file=".maestro/ios/02_ios_log_and_undo.yaml" time="19.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

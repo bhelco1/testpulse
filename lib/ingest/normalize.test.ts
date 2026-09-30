@@ -520,3 +520,77 @@ describe('name normalization (spec section 7)', () => {
     expect(fieldOf(run)).toBe('name');
   });
 });
+
+// Ostomate2's Maestro jobs post as module e2e. test_key hashes module, suite and name (5.4) and
+// not platform, so a flow is one test across platforms only when both platforms title it alike.
+describe('normalizeReport with the Ostomate2 Maestro fixtures (test identity across platforms)', () => {
+  const project: IngestProject = {
+    id: PROJECT_ID,
+    layer_rules: ostomate2.layer_rules,
+    name_normalization: ostomate2.name_normalization,
+  };
+  const payloadFor = (job: string, platform: string) =>
+    normalizeReport(
+      meta({
+        ci_run_id: '36662953449',
+        job,
+        module: 'e2e',
+        platform,
+        commit_sha: '8f3be43b4769d431df63aae97f95b05f9bc731f7',
+        branch: 'ci/e2e-junit-artifacts-continue',
+        event: 'workflow_dispatch',
+        run_url: 'https://github.com/bhelco1/Ostomate2/actions/runs/36662953449',
+      }),
+      project,
+      { format: 'junit', report: parseJunit(readSuiteDir(`ostomate2/junit/${platform}/e2e`)) },
+      [],
+      RECEIVED_AT,
+    );
+  const android = payloadFor('android-e2e', 'android-emulator');
+  const ios = payloadFor('ios-e2e', 'ios-sim');
+
+  it('counts the Android report green and the iOS report red with one failure', () => {
+    expect(android.report).toMatchObject({ total: 7, passed: 7, failed: 0, skipped: 0 });
+    expect(ios.report).toMatchObject({ total: 5, passed: 4, failed: 1, skipped: 0 });
+  });
+
+  it('keys the flows by title: 12 executions are 11 tests, and only Journey 8 is shared', () => {
+    const androidKeys = new Set(android.tests.map((test) => test.test_key));
+    const iosKeys = new Set(ios.tests.map((test) => test.test_key));
+    expect(androidKeys.size).toBe(7);
+    expect(iosKeys.size).toBe(5);
+    expect(new Set([...androidKeys, ...iosKeys]).size).toBe(11);
+
+    const shared = ios.tests.filter((test) => androidKeys.has(test.test_key));
+    expect(shared.map((test) => test.name)).toEqual(['Journey 8: Biometric gate on Settings']);
+    expect(shared[0]?.test_key).toBe(
+      sha256(
+        'e2e\u0000Journey 8: Biometric gate on Settings\u0000Journey 8: Biometric gate on Settings',
+      ),
+    );
+  });
+
+  // The same journey titled per platform ("Journey 2: Log + undo" on Android, "iOS Journey 2:
+  // Log + undo" on iOS) is two tests with separate histories; name normalization is literal
+  // affixes on JUnit suite and name, and Ostomate2's list does not cover an "iOS " prefix.
+  it('keeps differently titled counterparts as distinct tests', () => {
+    const keyOf = (tests: typeof android.tests, name: string): string | undefined =>
+      tests.find((test) => test.name === name)?.test_key;
+    const androidLogUndo = keyOf(android.tests, 'Journey 2: Log + undo');
+    const iosLogUndo = keyOf(ios.tests, 'iOS Journey 2: Log + undo');
+    expect(androidLogUndo).toBeDefined();
+    expect(iosLogUndo).toBeDefined();
+    expect(iosLogUndo).not.toBe(androidLogUndo);
+  });
+
+  it('resolves every flow to e2e and carries the crash text on the failed one only', () => {
+    expect(countBy([...android.tests, ...ios.tests].map((test) => test.layer))).toEqual({
+      e2e: 12,
+    });
+    const failures = [...android.tests, ...ios.tests].filter((test) => test.failure !== null);
+    expect(failures.map((test) => [test.name, test.status])).toEqual([
+      ['iOS Journey 1: Cold-start QR deep link', 'failed'],
+    ]);
+    expect(failures[0]?.failure?.message).toMatch(/^App crashed or stopped while executing flow/);
+  });
+});

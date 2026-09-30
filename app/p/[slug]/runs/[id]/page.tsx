@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { cache } from 'react';
 
 import { Breadcrumbs } from '../../../../../components/Breadcrumbs/Breadcrumbs';
 import { PageFrame } from '../../../../../components/PageFrame/PageFrame';
@@ -10,8 +9,9 @@ import { RunResults } from '../../../../../components/RunResults/RunResults';
 import { SiteFooter } from '../../../../../components/SiteFooter/SiteFooter';
 import { SiteHeader } from '../../../../../components/SiteHeader/SiteHeader';
 import { now } from '../../../../../lib/clock';
-import { runPageView } from '../../../../../lib/pages/run';
+import { runPageTitle, runPageView } from '../../../../../lib/pages/run';
 import { SOURCE_URL, siteChromeView } from '../../../../../lib/pages/site';
+import { loadRunHead } from '../../../../../lib/queries/heads';
 import { loadRunDetail } from '../../../../../lib/queries/run';
 import { loadSiteChrome } from '../../../../../lib/queries/site';
 import styles from './page.module.css';
@@ -25,28 +25,21 @@ interface RouteProps {
   params: Promise<{ slug: string; id: string }>;
 }
 
-// Metadata and the page ask for the same data; one request reads it once.
-const load = cache(async (slug: string, id: string) => {
+// The head reads only what the title needs (lib/queries/heads.ts): Next.js prefetches it for every
+// link to this page in view, so it must not cost a page load.
+export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
+  const { slug, id } = await params;
+  const head = await loadRunHead(slug, id);
+  return { title: head === null ? 'Not found · testpulse' : runPageTitle(head.project, head.run) };
+}
+
+export default async function RunPage({ params }: RouteProps) {
+  const { slug, id } = await params;
   const at = now();
   const [detail, chrome] = await Promise.all([
     loadRunDetail(slug, id, undefined, at),
     loadSiteChrome(undefined, at),
   ]);
-  return { at, detail, chrome };
-});
-
-async function read({ params }: RouteProps) {
-  const { slug, id } = await params;
-  return { slug, ...(await load(slug, id)) };
-}
-
-export async function generateMetadata(props: RouteProps): Promise<Metadata> {
-  const { detail, at } = await read(props);
-  return { title: detail === null ? 'Not found · testpulse' : runPageView(detail, at).title };
-}
-
-export default async function RunPage(props: RouteProps) {
-  const { slug, detail, chrome, at } = await read(props);
   if (detail === null) notFound();
   const view = runPageView(detail, at);
   const site = siteChromeView(chrome, at);

@@ -130,16 +130,30 @@ function resultRow(slug: string, row: RunTestRow, isPrivate: boolean): ResultRow
   };
 }
 
+// A private project's run is headed "Run {id}", shown with a lock.
+function runHeading(
+  project: { readonly visibility: Visibility },
+  run: { readonly ciRunId: string; readonly title: string },
+): string {
+  return project.visibility === 'private' ? `Run ${run.ciRunId}` : run.title;
+}
+
+/** The page's title, which its head reads without the rest of the page (lib/queries/heads). */
+export const runPageTitle = (
+  project: { readonly name: string; readonly visibility: Visibility },
+  run: { readonly ciRunId: string; readonly title: string },
+) => `${runHeading(project, run)} · ${project.name} · testpulse`;
+
 export function runPageView(detail: RunDetail, now: Date): RunPageView {
   const { project, run } = detail;
   const isPrivate = project.visibility === 'private';
-  const heading = isPrivate ? `Run ${run.ciRunId}` : run.title;
+  const heading = runHeading(project, run);
   // Distinct tests (decision 2026-09-29); a pruned run has only its executions left (5.12).
   const counts = run.tests ?? run;
   const repoUrl = isPrivate ? null : project.repoUrl;
   const results = detail.results;
   return {
-    title: `${heading} · ${project.name} · testpulse`,
+    title: runPageTitle(project, run),
     crumbs: {
       items: [
         { label: 'Overview', href: '/' },

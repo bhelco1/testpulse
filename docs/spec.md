@@ -487,6 +487,8 @@ The scheduled function therefore does three things each day: write heartbeat, ru
 
 Requirements for all public pages: responsive, keyboard navigable, WCAG AA contrast, works with JavaScript disabled for the static content (realtime feed degrades to server-rendered list), Lighthouse performance and accessibility ≥ 90.
 
+A page's head reads only what its title needs (`lib/queries/heads.ts`): the project, and the run or test its URL names. Next.js prefetches the head of every linked page that scrolls into view, up to four at a time, and a head request runs `generateMetadata` alone, so a head that read its whole page would make every run or test link in view cost a full page load on the server. `app/p/[slug]/metadata.test.ts` pins each route's head to those reads and its title.
+
 ### 13.1 Visual design
 
 The look of the site is a first-class requirement (G9). A hiring manager forms an opinion in the first few seconds, before reading a single number.
@@ -981,6 +983,7 @@ Design track complete 2026-09-28. Every page can be built from `design/`: v6 set
 | 2026-09-29 | On a private project the test history timeline names each run "Private repository", with a lock in the panel, in place of its title | components.md gives the panel's "Run" title "per RunFeedRow", and RunFeedRow draws a private run that way; the project page's run list and the run page's heading already leave a private run untitled |
 | 2026-09-29 | A test history duration point where the test was skipped on one of the chart's platforms is left out of the chart. Pending design v8 item 17 | TrendChart prints "Not run" for a missing value, and whether a skipped result reads "Not run" or "Skipped" is undecided; leaving the point out asserts neither |
 | 2026-09-29 | `loadSiteChrome` returns each project's latest default-branch CI run id beside its status, for the NotFound test kind's "Latest {project} results" | The not-found boundary gets no props and knows only the slug; the site chrome already reads that run for the project switcher, so the link costs no extra query |
+| 2026-09-30 | Page heads (`generateMetadata`) read only the project and the run or test the URL names, never the page's data; the page and its head no longer share one cached read | Next.js prefetches a linked page's head for every link in view, four at a time. With the head sharing the page's read, each RouteServe run link on the project page cost a full run page load (the results of every default-branch CI run of 30 days, some 10,000 rows, for its flaky marks), each taking 4 to 5 seconds on a 2-CPU CI runner with two e2e workers; the branch filter's navigation competed with them for the server and took 5 seconds or more, so `project.spec.ts`'s private leak test failed intermittently in CI. A visitor scrolling the run list paid the same cost |
 ---
 
 ## Appendix A: reporter script and CI steps

@@ -70,15 +70,13 @@ const HistoryResultRowSchema = z
     durationMs: row.duration_ms,
   }));
 
-export async function loadTestHistory(
-  slug: string,
+/** The project's test with this key, or null; a key that is not one is not looked up. */
+export async function findTest(
+  client: PublicClient,
+  project: ProjectDetail,
   testKey: string,
-  client: PublicClient = createPublicClient(),
-  at: Date = now(),
-): Promise<TestHistoryPage | null> {
-  const project = await loadProject(client, slug);
-  if (project === null || !TEST_KEY.test(testKey)) return null;
-
+): Promise<{ readonly id: string; readonly test: HistoryTest } | null> {
+  if (!TEST_KEY.test(testKey)) return null;
   const [test] = await readAll('look up the test', TestRowSchema, () =>
     client
       .from('tests')
@@ -88,13 +86,38 @@ export async function loadTestHistory(
       .limit(1),
   );
   if (test === undefined) return null;
+  return {
+    id: test.id,
+    test: {
+      testKey: test.test_key,
+      module: test.module,
+      suite: test.suite,
+      name: test.name,
+      layer: test.layer,
+      firstSeenAt: test.first_seen_at,
+      lastSeenAt: test.last_seen_at,
+    },
+  };
+}
+
+export async function loadTestHistory(
+  slug: string,
+  testKey: string,
+  client: PublicClient = createPublicClient(),
+  at: Date = now(),
+): Promise<TestHistoryPage | null> {
+  const project = await loadProject(client, slug);
+  if (project === null) return null;
+  const found = await findTest(client, project, testKey);
+  if (found === null) return null;
+  const { id: testId, test } = found;
 
   // Every result the test still has (results are kept 180 days, 5.12), on any branch.
   const results = await readAll('load the test results', HistoryResultRowSchema, (from, to) =>
     client
       .from('results')
       .select('id, status, duration_ms, reports!inner(run_id, job, module, platform)')
-      .eq('test_id', test.id)
+      .eq('test_id', testId)
       .order('id')
       .range(from, to),
   );
@@ -138,15 +161,7 @@ export async function loadTestHistory(
 
   return {
     project,
-    test: {
-      testKey: test.test_key,
-      module: test.module,
-      suite: test.suite,
-      name: test.name,
-      layer: test.layer,
-      firstSeenAt: test.first_seen_at,
-      lastSeenAt: test.last_seen_at,
-    },
+    test,
     history: testHistory(allRuns, results, { defaultBranch: project.defaultBranch, now: at }),
   };
 }

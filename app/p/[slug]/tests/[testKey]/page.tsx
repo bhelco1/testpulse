@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { cache } from 'react';
 
 import { Breadcrumbs } from '../../../../../components/Breadcrumbs/Breadcrumbs';
 import { PageFrame } from '../../../../../components/PageFrame/PageFrame';
@@ -11,7 +10,8 @@ import { TestHeader } from '../../../../../components/TestHeader/TestHeader';
 import { TrendChart } from '../../../../../components/TrendChart/TrendChart';
 import { now } from '../../../../../lib/clock';
 import { SOURCE_URL, siteChromeView } from '../../../../../lib/pages/site';
-import { testHistoryView } from '../../../../../lib/pages/test-history';
+import { testHistoryTitle, testHistoryView } from '../../../../../lib/pages/test-history';
+import { loadTestHead } from '../../../../../lib/queries/heads';
 import { loadSiteChrome } from '../../../../../lib/queries/site';
 import { loadTestHistory } from '../../../../../lib/queries/test-history';
 import styles from './page.module.css';
@@ -25,30 +25,23 @@ interface RouteProps {
   params: Promise<{ slug: string; testKey: string }>;
 }
 
-// Metadata and the page ask for the same data; one request reads it once.
-const load = cache(async (slug: string, testKey: string) => {
+// The head reads only what the title needs (lib/queries/heads.ts): Next.js prefetches it for every
+// link to this page in view, so it must not cost a page load.
+export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
+  const { slug, testKey } = await params;
+  const head = await loadTestHead(slug, testKey);
+  return {
+    title: head === null ? 'Not found · testpulse' : testHistoryTitle(head.project, head.test),
+  };
+}
+
+export default async function TestHistoryPage({ params }: RouteProps) {
+  const { slug, testKey } = await params;
   const at = now();
   const [history, chrome] = await Promise.all([
     loadTestHistory(slug, testKey, undefined, at),
     loadSiteChrome(undefined, at),
   ]);
-  return { at, history, chrome };
-});
-
-async function read({ params }: RouteProps) {
-  const { slug, testKey } = await params;
-  return { slug, ...(await load(slug, testKey)) };
-}
-
-export async function generateMetadata(props: RouteProps): Promise<Metadata> {
-  const { history, at } = await read(props);
-  return {
-    title: history === null ? 'Not found · testpulse' : testHistoryView(history, at).title,
-  };
-}
-
-export default async function TestHistoryPage(props: RouteProps) {
-  const { slug, history, chrome, at } = await read(props);
   if (history === null) notFound();
   const view = testHistoryView(history, at);
   const site = siteChromeView(chrome, at);

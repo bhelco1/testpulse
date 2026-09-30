@@ -164,16 +164,14 @@ function distinctTests(rows: readonly RunTestRow[]): RunTests {
   return { total: rows.length, ...outcomes };
 }
 
-export async function loadRunDetail(
-  slug: string,
+/** The project's run with this ID, or null; an ID that is not a UUID is not looked up. */
+export async function findRun(
+  client: PublicClient,
+  project: ProjectDetail,
   runId: string,
-  client: PublicClient = createPublicClient(),
-  at: Date = now(),
-): Promise<RunDetail | null> {
-  const project = await loadProject(client, slug);
-  if (project === null || !RUN_ID.test(runId)) return null;
-
-  const [run] = await readAll('look up the run', PublicRunRowSchema, () =>
+): Promise<PublicRun | null> {
+  if (!RUN_ID.test(runId)) return null;
+  const [run = null] = await readAll('look up the run', PublicRunRowSchema, () =>
     client
       .from('runs_public')
       .select(PUBLIC_RUN_COLUMNS)
@@ -181,7 +179,19 @@ export async function loadRunDetail(
       .eq('project_id', project.id)
       .limit(1),
   );
-  if (run === undefined) return null;
+  return run;
+}
+
+export async function loadRunDetail(
+  slug: string,
+  runId: string,
+  client: PublicClient = createPublicClient(),
+  at: Date = now(),
+): Promise<RunDetail | null> {
+  const project = await loadProject(client, slug);
+  if (project === null) return null;
+  const run = await findRun(client, project, runId);
+  if (run === null) return null;
 
   const reports = await loadRunReports(client, run.id);
   const results =

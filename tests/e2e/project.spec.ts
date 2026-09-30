@@ -459,6 +459,8 @@ test.describe('a private project’s page leaks nothing', { tag: '@js' }, () => 
     page,
   }) => {
     const { html, texts, responses } = await capture(page, '/p/routeserve', async (current) => {
+      // "Live" shows only once the page's client code runs; a click before hydration is lost.
+      await expectLive(current);
       await current.getByRole('radio', { name: 'All branches' }).click();
       await expect(current).toHaveURL('/p/routeserve?branches=all');
       await current.getByRole('button', { name: 'Load 20 more' }).click();

@@ -103,11 +103,17 @@ function durationChart(
   };
 }
 
+/** The page's title, which its head reads without the rest of the page (lib/queries/heads). */
+export const testHistoryTitle = (
+  project: { readonly name: string },
+  test: { readonly name: string },
+) => `${test.name} · ${project.name} · testpulse`;
+
 export function testHistoryView(page: TestHistoryPage, now: Date): TestHistoryView {
   const { project, test, history } = page;
   const slug = project.slug;
   return {
-    title: `${test.name} · ${project.name} · testpulse`,
+    title: testHistoryTitle(project, test),
     crumbs: {
       items: [
         { label: 'Overview', href: '/' },

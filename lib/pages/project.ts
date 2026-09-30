@@ -337,6 +337,10 @@ function history(page: ProjectPage, now: Date): HistoryView {
   };
 }
 
+/** The page's title, which its head reads without the rest of the page (lib/queries/heads). */
+export const projectPageTitle = (project: { readonly name: string }) =>
+  `${project.name} · testpulse`;
+
 export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
   const { project, summary } = page;
   const stack = (groups: ProjectPage['project']['devStack']): StackGroup[] =>
@@ -354,7 +358,7 @@ export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
       }),
     }));
   return {
-    title: `${project.name} · testpulse`,
+    title: projectPageTitle(project),
     hero: hero(page, now),
     latestRun: latestRunView(page, now),
     built: stack(project.devStack),

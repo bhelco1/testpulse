@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { cache } from 'react';
 
 import { Breadcrumbs } from '../../../components/Breadcrumbs/Breadcrumbs';
 import { CoverageFloors } from '../../../components/CoverageFloors/CoverageFloors';
@@ -19,9 +18,10 @@ import { SiteFooter } from '../../../components/SiteFooter/SiteFooter';
 import { StackTagGroup } from '../../../components/StackTagGroup/StackTagGroup';
 import { TrendChart } from '../../../components/TrendChart/TrendChart';
 import { now } from '../../../lib/clock';
-import { projectPageOptions, projectPageView } from '../../../lib/pages/project';
+import { projectPageOptions, projectPageTitle, projectPageView } from '../../../lib/pages/project';
 import { SOURCE_URL, siteChromeView } from '../../../lib/pages/site';
-import { loadProjectPage, type BranchScope } from '../../../lib/queries/project';
+import { loadProjectHead } from '../../../lib/queries/heads';
+import { loadProjectPage } from '../../../lib/queries/project';
 import { loadSiteChrome } from '../../../lib/queries/site';
 import styles from './page.module.css';
 
@@ -35,29 +35,22 @@ interface RouteProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-// Metadata and the page ask for the same data; one request reads it once.
-const load = cache(async (slug: string, branches: BranchScope, runLimit: number | undefined) => {
+// The head reads only what the title needs (lib/queries/heads.ts): Next.js prefetches it for every
+// link to this page in view, so it must not cost a page load.
+export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
+  const { slug } = await params;
+  const project = await loadProjectHead(slug);
+  return { title: project === null ? 'Not found · testpulse' : projectPageTitle(project) };
+}
+
+export default async function ProjectPage({ params, searchParams }: RouteProps) {
+  const { slug } = await params;
+  const { branches, runLimit } = projectPageOptions(await searchParams);
   const at = now();
   const [page, chrome] = await Promise.all([
     loadProjectPage(slug, { branches, runLimit }, undefined, at),
     loadSiteChrome(undefined, at),
   ]);
-  return { at, page, chrome };
-});
-
-async function read({ params, searchParams }: RouteProps) {
-  const { slug } = await params;
-  const { branches, runLimit } = projectPageOptions(await searchParams);
-  return { slug, ...(await load(slug, branches, runLimit)) };
-}
-
-export async function generateMetadata(props: RouteProps): Promise<Metadata> {
-  const { page, at } = await read(props);
-  return { title: page === null ? 'Not found · testpulse' : projectPageView(page, at).title };
-}
-
-export default async function ProjectPage(props: RouteProps) {
-  const { slug, page, chrome, at } = await read(props);
   if (page === null) notFound();
   const view = projectPageView(page, at);
   const site = siteChromeView(chrome, at);

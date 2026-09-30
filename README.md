@@ -113,3 +113,8 @@ axe accessibility checks and visual snapshot comparisons.
 `scripts/testpulse-report.sh` is the canonical reporter (spec Appendix A): each reporting
 project copies it verbatim into its own repo and calls it from CI after every test run. Its
 contract with `POST /api/v1/reports` is proven by `scripts/testpulse-report.test.ts`.
+
+## License
+
+The code is under the [MIT License](LICENSE). The bundled fonts in `app/fonts/` (Source Serif 4,
+Public Sans, JetBrains Mono) keep their own SIL Open Font License, included beside each font.

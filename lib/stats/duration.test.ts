@@ -7,10 +7,10 @@ import { at, run } from './records.test-support.ts';
 // Spec section 11: "Suite duration: Sum of report durations per run, trended over CI runs only,
 // since backfilled runs have duration_ms 0." runs.duration_ms is that sum, rolled up at
 // ingestion (5.2), so the trend reads it as stored. Default branch only, per section 11's
-// opening line.
+// opening line, over the last 30 such runs however old (decision 2026-09-29).
 
 const now = at('2026-10-01T15:30:00Z');
-const options: TrendOptions = { defaultBranch: 'main', now, days: 30 };
+const options: TrendOptions = { defaultBranch: 'main', now };
 
 const timed = (
   id: string,
@@ -36,26 +36,34 @@ describe('durationTrend', () => {
     ]);
   });
 
-  it('keeps default-branch CI runs in the window, oldest first, and nothing else', () => {
+  it('keeps default-branch CI runs, oldest first, and nothing else', () => {
     const runs = [
       timed('later', '2026-09-20T09:00:00Z', 30_000),
       timed('earlier', '2026-09-10T09:00:00Z', 28_000),
       // Imported history records no durations: 0 would read as an instant suite.
       timed('backfill', '2026-09-15T09:00:00Z', 0, { source: 'backfill' }),
       timed('pull-request', '2026-09-16T09:00:00Z', 31_000, { branch: 'feature/x' }),
-      // 2026-10-01 minus 29 days is 2026-09-02, the window's first day.
-      timed('too-old', '2026-09-01T23:59:59.999Z', 27_000),
       timed('future', '2026-10-01T15:30:00.001Z', 29_000),
     ];
     expect(durationTrend(runs, options).map((point) => point.runId)).toEqual(['earlier', 'later']);
   });
 
-  it('opens the window at UTC midnight 29 days before today', () => {
+  it('keeps the last 30 CI runs of more, however old, and every run of fewer', () => {
+    // 32 CI runs a week apart from 2026-02-01 to 2026-09-06, most older than 90 days. The
+    // imported run after them does not take a place among the 30.
     const runs = [
-      timed('first-instant', '2026-09-02T00:00:00.000Z', 1_000),
-      timed('one-ms-before', '2026-09-01T23:59:59.999Z', 2_000),
+      ...Array.from({ length: 32 }, (_, i) =>
+        timed(`w${i}`, new Date(Date.UTC(2026, 1, 1) + i * 7 * 86_400_000).toISOString(), i),
+      ),
+      timed('backfill', '2026-09-30T00:00:00Z', 0, { source: 'backfill' }),
     ];
-    expect(durationTrend(runs, options).map((point) => point.runId)).toEqual(['first-instant']);
+    const kept = durationTrend(runs, options);
+    expect(kept).toHaveLength(30);
+    expect(kept.map((point) => point.durationMs)).toEqual(
+      Array.from({ length: 30 }, (_, i) => i + 2),
+    );
+    expect(kept[0]?.finishedAt).toEqual(at('2026-02-15T00:00:00Z'));
+    expect(durationTrend(runs.slice(0, 3), options)).toHaveLength(3);
   });
 
   it('keeps a run whose tests were all skipped or that ran none, with its status', () => {
@@ -85,17 +93,6 @@ describe('durationTrend', () => {
     expect(durationTrend(runs, options).map((point) => point.runId)).toEqual([
       'attempt-1',
       'attempt-2',
-    ]);
-  });
-
-  it('reads 90 days when asked', () => {
-    // 2026-10-01 minus 89 days is 2026-07-04.
-    const runs = [
-      timed('in-90', '2026-07-04T00:00:00Z', 5_000),
-      timed('before-90', '2026-07-03T23:59:59.999Z', 6_000),
-    ];
-    expect(durationTrend(runs, { ...options, days: 90 }).map((point) => point.runId)).toEqual([
-      'in-90',
     ]);
   });
 });

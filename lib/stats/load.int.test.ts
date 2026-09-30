@@ -122,17 +122,20 @@ describe('loadStatsInput over backfilled history and a CI run (spec section 17, 
   });
 
   it('puts the backfilled runs and the CI run in every trend', () => {
-    const options = { defaultBranch: input.defaultBranch, now: NOW, days: 90 } as const;
+    const options = { defaultBranch: input.defaultBranch, now: NOW };
 
+    // The last 30 runs on main: all 14.
     const passRate = passRateTrend(input.runs, options);
-    expect(passRate.runs).toHaveLength(14);
-    expect(passRate.runs.filter((point) => point.source === 'backfill')).toHaveLength(13);
-    expect(passRate.runs.filter((point) => point.source === 'ci')).toEqual([
+    expect(passRate).toHaveLength(14);
+    expect(passRate.filter((point) => point.source === 'backfill')).toHaveLength(13);
+    expect(passRate.filter((point) => point.source === 'ci')).toEqual([
       expect.objectContaining({ passed: 82, failed: 0, passRate: 1 }),
     ]);
 
+    // Runs per UTC day over the 30 days from 2026-09-02: the 6 main entries of 2026-09-21 and
+    // 2026-09-22 and the CI run; the 7 July entries are older.
     const counts = runCountTrend(input.runs, options);
-    expect(counts.reduce((sum, day) => sum + day.runs, 0)).toBe(14);
+    expect(counts.reduce((sum, day) => sum + day.runs, 0)).toBe(7);
 
     const coverage = coverageTrend(input.runs, input.coverage, options);
     expect(coverage.map((trend) => trend.module)).toEqual(['composeApp', 'shared']);

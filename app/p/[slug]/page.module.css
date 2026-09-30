@@ -19,3 +19,19 @@
 .pair > * {
   min-width: 0;
 }
+
+/* History: the charts in 520 px minimum columns, then the "Last 40 runs" card below them. */
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.charts > * {
+  min-width: 0;
+}
+
+.strip {
+  margin-top: var(--space-4);
+}

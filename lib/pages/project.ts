@@ -1,5 +1,13 @@
 import type { StackGroup } from '../../components/StackTagGroup/StackTagGroup';
 import type { FeedRun } from '../../components/RunFeedRow/RunFeedRow';
+import type { RunsTimelineRun } from '../../components/StatusTimeline/StatusTimeline';
+import type { TrendData, TrendMark } from '../../components/TrendChart/TrendChart';
+import {
+  durationCaption,
+  passRateCaption,
+  testCountCaption,
+  TREND_SCOPE,
+} from '../charts/captions';
 import { formatTrendValue } from '../charts/format';
 import { formatCount, qty } from '../copy/count';
 import {
@@ -14,6 +22,7 @@ import type { DeclaredSuite } from '../projects/schema';
 import { declaredStatusFor } from '../projects/stack-match';
 import type { BranchScope, ProjectPage, ProjectPageOptions } from '../queries/project';
 import { shortSuite } from '../results/short-suite';
+import { runTitle } from '../runs/title';
 import { feedRun, runHref } from './feed';
 import type { PublicHealth } from '../stats/health';
 import type { GreenStreak } from '../stats/streak';
@@ -70,9 +79,26 @@ export interface FlakyView {
   readonly testKey: string;
   readonly name: string;
   readonly suite: string;
+  /** "Failed {n} of last {m} runs"; held back (null) when n is 0, which the design does not draw. */
+  readonly rate: string | null;
   readonly layer: string;
   readonly platforms: string;
   readonly href: string;
+}
+
+/** One History chart, as TrendChart takes it. */
+export type HistoryChart = { readonly title: string; readonly scope: string } & TrendData;
+
+export interface HistoryView {
+  /** Pass rate, tests per run and run duration; the coverage chart is held back (13.2). */
+  readonly charts: readonly HistoryChart[];
+  /** The "Last 40 runs" strip; none before the first CI run on the default branch. */
+  readonly strip: {
+    readonly runs: readonly RunsTimelineRun[];
+    readonly defaultBranch: string;
+    /** "All {n} passed."; the design draws no other note, so any other strip has none. */
+    readonly note: string | null;
+  } | null;
 }
 
 export interface ProjectPageView {
@@ -97,6 +123,7 @@ export interface ProjectPageView {
     /** The same list with 20 more runs; none when every run is shown. */
     readonly loadMoreHref: string | null;
   };
+  readonly history: HistoryView;
   readonly flaky: readonly FlakyView[];
 }
 
@@ -188,7 +215,7 @@ function latestRunView(page: ProjectPage, now: Date): LatestRunView | null {
   const duration = formatRunDuration(detail.durationMs);
   const stale = page.summary.health.marker.health === 'stale';
   const [firstFailing] = detail.failing;
-  const rate = page.trends[30].windowPassRate.passRate;
+  const rate = page.windowPassRate.passRate;
 
   const figure =
     run.status === 'passed'
@@ -228,6 +255,85 @@ function latestRunView(page: ProjectPage, now: Date): LatestRunView | null {
       greenStreak: page.summary.greenStreak,
       timeToGreen: page.summary.timeToGreen,
     },
+  };
+}
+
+type RunStatus = ProjectPage['recentRuns'][number]['status'];
+
+// Design components.md TrendChart, "Marks": an 8 px square at each failed or empty run.
+const marksOf = (points: readonly { readonly status: RunStatus }[]): TrendMark[] =>
+  points.flatMap((point, index): TrendMark[] =>
+    point.status === 'failed'
+      ? [{ index, status: 'fail' }]
+      : point.status === 'empty'
+        ? [{ index, status: 'empty' }]
+        : [],
+  );
+
+const allPresent = (values: readonly (number | null)[]): values is readonly number[] =>
+  values.every((value) => value !== null);
+
+// Each chart covers the last 30 default-branch runs its source rule admits (section 11). A run
+// with no value is a gap in the line; the pass-rate and test-count captions are written for
+// runs that all have a value, so with a gap they are held back (13.2). The duration caption
+// already leaves missing values out of its min, max and median (design v7 item 9).
+function history(page: ProjectPage, now: Date): HistoryView {
+  const { passRate, testCount, duration } = page.trends;
+  const rates = passRate.map((point) => (point.passRate === null ? null : point.passRate * 100));
+  const counts = testCount.map((point) => point.totalTests);
+  const seconds = duration.map((point) => point.durationMs / 1000);
+  const failedRuns = passRate.filter((point) => point.status === 'failed').length;
+  const slug = page.project.slug;
+  const runs = page.recentRuns;
+  return {
+    charts: [
+      {
+        title: 'Pass rate',
+        scope: TREND_SCOPE.passRate,
+        series: [{ name: 'Pass rate', values: rates }],
+        marks: marksOf(passRate),
+        format: 'pct',
+        unit: 'run',
+        caption: allPresent(rates) ? passRateCaption(rates, failedRuns) : null,
+      },
+      {
+        title: 'Tests per run',
+        scope: TREND_SCOPE.testCount,
+        series: [{ name: 'Tests', values: counts }],
+        marks: marksOf(testCount),
+        format: 'int',
+        unit: 'run',
+        caption: allPresent(counts) ? testCountCaption(counts) : null,
+      },
+      {
+        title: 'Run duration',
+        scope: TREND_SCOPE.duration,
+        series: [{ name: 'Duration', values: seconds }],
+        marks: marksOf(duration),
+        format: 'dur',
+        unit: 'run',
+        caption: durationCaption([seconds], 'dur'),
+      },
+    ],
+    strip:
+      runs.length === 0
+        ? null
+        : {
+            runs: runs.map((run) => ({
+              title: runTitle(run.event, run.branch),
+              branch: run.branch,
+              sha: run.commitSha,
+              when: relativeLabel(run.finishedAt, now),
+              href: runHref(slug, run.id),
+              status: run.status,
+            })),
+            defaultBranch: page.project.defaultBranch,
+            // The Project Page mock's "All 40 passed.", for as many runs as there are.
+            note:
+              runs.length > 1 && runs.every((run) => run.status === 'passed')
+                ? `All ${runs.length} passed.`
+                : null,
+          },
   };
 }
 
@@ -280,10 +386,15 @@ export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
           })
         : null,
     },
+    history: history(page, now),
     flaky: page.flaky.tests.map((test) => ({
       testKey: test.testKey,
       name: test.name,
       suite: test.suite,
+      rate:
+        test.failures.failed === 0
+          ? null
+          : `Failed ${test.failures.failed} of last ${qty(test.failures.runs, 'run')}`,
       layer: LAYER_LABEL[test.layer],
       platforms: test.platforms.join(', '),
       href: testHref(project.slug, test.testKey),

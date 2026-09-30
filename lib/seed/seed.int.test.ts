@@ -351,10 +351,9 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
     const passRate = passRateTrend(ostomate2.runs, {
       defaultBranch: ostomate2.defaultBranch,
       now: NOW,
-      days: 90,
     });
-    expect(passRate.runs.filter((point) => point.source === 'backfill')).toHaveLength(13);
-    expect(passRate.runs.filter((point) => point.source === 'ci')).toHaveLength(8);
+    expect(passRate.filter((point) => point.source === 'backfill')).toHaveLength(13);
+    expect(passRate.filter((point) => point.source === 'ci')).toHaveLength(8);
   });
 
   describe('landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13)', () => {
@@ -783,54 +782,41 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       ]);
     });
 
-    it('trends Ostomate2 over CI and imported history, and duration and test count over CI', () => {
-      // 30 days from 2026-09-06: 6 imported runs (3 on 09-21, 3 on 09-22) and 8 CI runs on main.
-      const month = ostomate2.trends[30];
-      expect(month.passRate.runs.map((point) => point.source)).toEqual([
-        ...Array<string>(6).fill('backfill'),
+    it('trends Ostomate2 over its last 30 runs on main: 21, CI and imported, 8 of them CI', () => {
+      // Every run on main is among the last 30: the 13 imported (7 on 2026-07-13 and 07-14, more
+      // than 30 days back, 3 on 09-21 and 3 on 09-22) and the 8 CI runs, oldest first.
+      expect(ostomate2.trends.passRate.map((point) => point.source)).toEqual([
+        ...Array<string>(13).fill('backfill'),
         ...Array<string>(8).fill('ci'),
       ]);
+      expect(ostomate2.trends.passRate.every((point) => point.passRate === 1)).toBe(true);
+      expect(ostomate2.trends.passRate.every((point) => point.status === 'passed')).toBe(true);
+      // "Pass rate, 30 days" stays the 30 days from 2026-09-06: 6 imported and 8 CI runs,
       // 6 x 142 + 8 x 192 = 852 + 1536 = 2388 passed, none failed.
-      expect(month.windowPassRate).toEqual({
+      expect(ostomate2.windowPassRate).toEqual({
         runs: 14,
         passed: 2388,
         failed: 0,
         skipped: 0,
         passRate: 1,
       });
-      expect(month.runCount.filter((day) => day.runs > 0)).toEqual([
-        { day: '2026-09-21', runs: 3 },
-        { day: '2026-09-22', runs: 3 },
-        { day: '2026-09-24', runs: 1 },
-        { day: '2026-09-25', runs: 1 },
-        { day: '2026-09-27', runs: 1 },
-        { day: '2026-09-29', runs: 1 },
-        { day: '2026-10-01', runs: 1 },
-        { day: '2026-10-02', runs: 1 },
-        { day: '2026-10-04', runs: 1 },
-        { day: '2026-10-05', runs: 1 },
-      ]);
-      expect(month.coverage.map(({ module, points }) => [module, points.length])).toEqual([
-        ['composeApp', 14],
-        ['shared', 14],
-      ]);
-      expect(month.coverage[1]?.points.at(-1)?.linesPct).toBe((457 / 490) * 100);
       // The imported runs have no durations and no per-test rows: 8 CI points each.
-      expect(month.duration.map((point) => point.durationMs)).toEqual(
+      expect(ostomate2.trends.duration.map((point) => point.durationMs)).toEqual(
         Array<number>(8).fill(OSTOMATE2_RUN_MS),
       );
-      expect(month.testCount.map((point) => point.totalTests)).toEqual(Array<number>(8).fill(142));
-
-      // 90 days from 2026-07-08 hold all 13 imported runs: 126 + 3 x 129 + 3 x 139 + 6 x 142
-      // = 1782 passed, and 1536 from CI.
-      expect(ostomate2.trends[90].windowPassRate).toMatchObject({ runs: 21, passed: 3318 });
+      expect(ostomate2.trends.testCount.map((point) => point.totalTests)).toEqual(
+        Array<number>(8).fill(142),
+      );
+      // The strip holds the 8 CI runs, all passed.
+      expect(ostomate2.recentRuns.map((run) => run.status)).toEqual(
+        Array<string>(8).fill('passed'),
+      );
     });
 
     it('trends routeserve over its ten CI runs on main, red four times', () => {
-      const month = routeserve.trends[30];
       // P F P P F P(attempt 2) F P P F, each run 1 min 55 s of reports summed.
       const [G, R] = [ROUTESERVE_GREEN_MS, ROUTESERVE_RED_MS];
-      expect(month.duration.map((point) => point.durationMs)).toEqual([
+      expect(routeserve.trends.duration.map((point) => point.durationMs)).toEqual([
         G,
         R,
         G,
@@ -842,13 +828,20 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         G,
         R,
       ]);
-      expect(month.duration.filter((point) => point.status === 'failed')).toHaveLength(4);
+      const statuses = ['passed', 'failed', 'passed', 'passed', 'failed'];
+      const tenStatuses = [...statuses, 'passed', 'failed', 'passed', 'passed', 'failed'];
+      expect(routeserve.trends.duration.map((point) => point.status)).toEqual(tenStatuses);
+      expect(routeserve.recentRuns.map((run) => run.status)).toEqual(tenStatuses);
       // 1041 tests every run: 498 + 424 + 119, apps/mobile running one name five times.
-      expect(month.testCount.map((point) => point.totalTests)).toEqual(
+      expect(routeserve.trends.testCount.map((point) => point.totalTests)).toEqual(
         Array<number>(10).fill(1041),
       );
+      // Executions per run: 1045 of 1045 passed green, 1044 of 1045 red.
+      expect(routeserve.trends.passRate.map((point) => point.passRate)).toEqual(
+        tenStatuses.map((status) => (status === 'passed' ? 1 : 1044 / 1045)),
+      );
       // 6 x 1045 + 4 x 1044 = 10446 passed, 4 failed.
-      expect(month.windowPassRate).toEqual({
+      expect(routeserve.windowPassRate).toEqual({
         runs: 10,
         passed: 10_446,
         failed: 4,
@@ -865,6 +858,8 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
             ...ROUTESERVE_TEST,
             layer: 'unit',
             platforms: ['node'],
+            // It has a result in all 10 CI runs on main and failed in the 4 red ones.
+            failures: { failed: 4, runs: 10 },
           },
         ],
         totalTests: 1041,

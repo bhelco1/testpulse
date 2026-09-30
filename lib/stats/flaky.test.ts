@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { flakyPlatforms, flakyResultIds, flakyTests, type FlakyOptions } from './flaky.ts';
+import {
+  FLAKY_RATE_RUNS,
+  flakyFailures,
+  flakyPlatforms,
+  flakyResultIds,
+  flakyTests,
+  type FlakyOptions,
+} from './flaky.ts';
 import { at, result, run } from './records.test-support.ts';
 
 // Spec section 11: "A test with both a passing and a failing result on the same commit_sha
@@ -262,5 +269,114 @@ describe('flakyPlatforms and flakyResultIds', () => {
   it('marks nothing with no runs or no results', () => {
     expect(flakyPlatforms([], [], options)).toEqual([]);
     expect(flakyResultIds(runs, [], options).size).toBe(0);
+  });
+});
+
+// Design v7 item 6 (components.md StatusTimeline, data-map.md "Flaky list"): "Failed {n} of last
+// {m} runs", where m is the last 40 default-branch CI runs in which the test has a result and n
+// those in which it failed or errored on any platform.
+describe('flakyFailures', () => {
+  // n CI runs on main an hour apart, oldest first, ending before now.
+  const hourly = (n: number) =>
+    Array.from({ length: n }, (_, i) =>
+      run(`h${i}`, new Date(Date.UTC(2026, 8, 1) + i * 3_600_000).toISOString()),
+    );
+
+  it('reads the last 40 runs', () => {
+    expect(FLAKY_RATE_RUNS).toBe(40);
+  });
+
+  it('has nothing to count with no runs or no results', () => {
+    expect(flakyFailures([], [], ['t'], options)).toEqual([{ testId: 't', failed: 0, runs: 0 }]);
+    expect(flakyFailures(hourly(3), [], ['t'], options)).toEqual([
+      { testId: 't', failed: 0, runs: 0 },
+    ]);
+  });
+
+  it('counts a single run', () => {
+    const runs = hourly(1);
+    expect(flakyFailures(runs, [result('r', 'h0', 't', 'failed')], ['t'], options)).toEqual([
+      { testId: 't', failed: 1, runs: 1 },
+    ]);
+  });
+
+  it('counts a run once when the test failed or errored on any of its platforms', () => {
+    const runs = hourly(3);
+    const results = [
+      // h0: failed on ios-sim, passed on jvm; h1: errored on jvm; h2: passed on both.
+      result('a', 'h0', 't', 'passed', 'jvm'),
+      result('b', 'h0', 't', 'failed', 'ios-sim'),
+      result('c', 'h1', 't', 'error', 'jvm'),
+      result('d', 'h2', 't', 'passed', 'jvm'),
+      result('e', 'h2', 't', 'passed', 'ios-sim'),
+    ];
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 2, runs: 3 },
+    ]);
+  });
+
+  it('counts a run where the test was only skipped as a run, not a failure', () => {
+    const runs = hourly(2);
+    const results = [result('a', 'h0', 't', 'skipped'), result('b', 'h1', 't', 'failed')];
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 1, runs: 2 },
+    ]);
+  });
+
+  it('takes the last 40 runs with a result for the test, passing over runs without one', () => {
+    // 45 runs. The test failed in h0 and h1, which fall outside its last 40, and has no result in
+    // h44; its last 40 are h4 to h43, of which it failed in h4.
+    const runs = hourly(45);
+    const results = runs
+      .filter((r) => r.id !== 'h44')
+      .map((r, i) =>
+        result(`x${i}`, r.id, 't', ['h0', 'h1', 'h4'].includes(r.id) ? 'failed' : 'passed'),
+      );
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 1, runs: 40 },
+    ]);
+  });
+
+  it('counts fewer than 40 when the test has results in fewer runs', () => {
+    const runs = hourly(12);
+    const results = [result('a', 'h3', 't', 'passed'), result('b', 'h7', 't', 'error')];
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 1, runs: 2 },
+    ]);
+  });
+
+  it('reads default-branch CI runs finished by now, however old', () => {
+    const runs = [
+      run('old', '2025-01-01T00:00:00Z'),
+      run('bf', '2026-09-20T00:00:00Z', { source: 'backfill' }),
+      run('pr', '2026-09-21T00:00:00Z', { branch: 'feature/x' }),
+      run('future', '2026-10-01T12:00:00.001Z'),
+    ];
+    const results = ['old', 'bf', 'pr', 'future'].map((id) => result(`r-${id}`, id, 't', 'failed'));
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 1, runs: 1 },
+    ]);
+  });
+
+  it('counts no failures when every failing run is older than the last 40', () => {
+    // A test flaky in the 30 days can read 0: its flip in h0 is behind 40 later passing runs.
+    const runs = hourly(41);
+    const results = runs.map((r, i) => result(`x${i}`, r.id, 't', i === 0 ? 'failed' : 'passed'));
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 0, runs: 40 },
+    ]);
+  });
+
+  it('answers each test asked for, in the order asked', () => {
+    const runs = hourly(2);
+    const results = [
+      result('a', 'h0', 't2', 'failed'),
+      result('b', 'h1', 't1', 'passed'),
+      result('c', 'h1', 't3', 'failed'),
+    ];
+    expect(flakyFailures(runs, results, ['t2', 't1'], options)).toEqual([
+      { testId: 't2', failed: 1, runs: 1 },
+      { testId: 't1', failed: 0, runs: 1 },
+    ]);
   });
 });

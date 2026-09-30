@@ -2,7 +2,7 @@ import type { Layer } from '../ingest/layer-rules.ts';
 import type { TestStatus } from '../parsers/types.ts';
 import { combinedStatus } from '../results/run-results.ts';
 import type { PublicRun, StatsResult, StatsRun } from './input.ts';
-import { byFinish, countsTowardCiOnlyStats, inWindow } from './rules.ts';
+import { countsTowardCiOnlyStats, lastRuns, TREND_RUNS } from './rules.ts';
 import type { TrendOptions } from './trends.ts';
 
 // Spec section 11: "Total tests: Distinct tests rows seen in the latest default-branch run ...
@@ -90,10 +90,12 @@ export function testOutcomesByRun(
 // Spec section 11: "Test count per run: The "Total tests" measure for each default-branch run
 // with source = ci, trended per run. Imported history is left out: it has no per-test rows. Not
 // runs.total, which counts executions." Read as follows, and pinned by the tests:
-// - A point per default-branch CI run in the window, oldest first by byFinish, counting the
-//   distinct tests among its results, skipped ones included, as Total tests does.
+// - A point per default-branch CI run over the last 30 such runs, however old (decision
+//   2026-09-29), oldest first by byFinish, counting the distinct tests among its results,
+//   skipped ones included, as Total tests does.
 // - An empty run has 0 tests. A run whose results were pruned (5.12) has no per-test rows left
-//   to count, so it has no point rather than a false 0.
+//   to count, so its point has no value (null) rather than a false 0: it keeps its place among
+//   the 30, and no older run is pulled in to fill it.
 
 export type TestCountRun = StatsRun & Pick<PublicRun, 'resultsPrunedAt'>;
 
@@ -101,7 +103,8 @@ export interface TestCountPoint {
   readonly runId: string;
   readonly finishedAt: Date;
   readonly status: StatsRun['status'];
-  readonly totalTests: number;
+  /** Null for a run whose results were pruned. */
+  readonly totalTests: number | null;
 }
 
 export function testCountTrend(
@@ -109,20 +112,18 @@ export function testCountTrend(
   results: readonly Pick<StatsResult, 'runId' | 'testId'>[],
   options: TrendOptions,
 ): TestCountPoint[] {
-  const included = runs
-    .filter(
-      (run) =>
-        run.resultsPrunedAt === null &&
-        countsTowardCiOnlyStats(run, options.defaultBranch) &&
-        inWindow(run.finishedAt, options.now, options.days),
-    )
-    .sort(byFinish);
+  const included = lastRuns(
+    runs,
+    TREND_RUNS,
+    (run) => countsTowardCiOnlyStats(run, options.defaultBranch),
+    options.now,
+  );
   const testsOf = new Map<string, Set<string>>(included.map((run) => [run.id, new Set()]));
   for (const { runId, testId } of results) testsOf.get(runId)?.add(testId);
   return included.map((run) => ({
     runId: run.id,
     finishedAt: run.finishedAt,
     status: run.status,
-    totalTests: testsOf.get(run.id)?.size ?? 0,
+    totalTests: run.resultsPrunedAt === null ? (testsOf.get(run.id)?.size ?? 0) : null,
   }));
 }

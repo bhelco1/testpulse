@@ -142,7 +142,7 @@ describe('testCounts', () => {
 // runs.total, which counts executions" (decision 2026-09-28).
 describe('testCountTrend', () => {
   const now = at('2026-10-01T15:30:00Z');
-  const options: TrendOptions = { defaultBranch: 'main', now, days: 30 };
+  const options: TrendOptions = { defaultBranch: 'main', now };
   const counted = (
     id: string,
     finishedAt: string,
@@ -178,20 +178,18 @@ describe('testCountTrend', () => {
     ]);
   });
 
-  it('keeps default-branch CI runs in the window, oldest first, one point each', () => {
+  it('keeps default-branch CI runs, oldest first, one point each', () => {
     const runs = [
       counted('b', '2026-09-20T09:00:00Z'),
       counted('a', '2026-09-10T09:00:00Z'),
       counted('backfill', '2026-09-15T09:00:00Z', { source: 'backfill' }),
       counted('pull-request', '2026-09-16T09:00:00Z', { branch: 'feature/x' }),
-      counted('too-old', '2026-09-01T23:59:59.999Z'),
       counted('future', '2026-10-01T15:30:00.001Z'),
     ];
     const results = [
       ...executed('a', 't1', 't2'),
       ...executed('b', 't1', 't2', 't3'),
       ...executed('pull-request', 't1', 't2', 't3', 't4'),
-      ...executed('too-old', 't1'),
       ...executed('future', 't1'),
     ];
     // a: 2 tests; b: 3 tests.
@@ -203,13 +201,47 @@ describe('testCountTrend', () => {
     ]);
   });
 
-  it('leaves out a run whose results were pruned, rather than plotting 0', () => {
+  it('keeps the last 30 CI runs of more, however old, and every run of fewer', () => {
+    // 31 CI runs a day apart ending 2026-09-01; the oldest is dropped and a run from 2025 among
+    // them is kept.
+    const runs = Array.from({ length: 31 }, (_, i) =>
+      counted(`r${i}`, new Date(Date.UTC(2026, 8, 1) - (30 - i) * 86_400_000).toISOString()),
+    );
+    const old = counted('old', '2025-05-01T00:00:00Z');
+    const kept = testCountTrend([old, ...runs.slice(2)], executed('old', 't1'), options);
+    expect(kept.map((point) => point.runId)).toEqual(['old', ...runs.slice(2).map((r) => r.id)]);
+    expect(kept[0]?.totalTests).toBe(1);
+    expect(testCountTrend(runs, [], options).map((point) => point.runId)).toEqual(
+      runs.slice(1).map((r) => r.id),
+    );
+  });
+
+  it('has no value for a run whose results were pruned, rather than plotting 0', () => {
     const runs = [
       counted('kept', '2026-09-20T09:00:00Z'),
       counted('pruned', '2026-09-21T09:00:00Z', { resultsPrunedAt: at('2026-09-30T00:00:00Z') }),
     ];
     expect(
-      testCountTrend(runs, executed('kept', 't1'), options).map((point) => point.runId),
-    ).toEqual(['kept']);
+      testCountTrend(runs, executed('kept', 't1'), options).map((point) => [
+        point.runId,
+        point.totalTests,
+      ]),
+    ).toEqual([
+      ['kept', 1],
+      ['pruned', null],
+    ]);
+  });
+
+  it('keeps a pruned run’s place among the 30 rather than pulling in an older run', () => {
+    // 31 CI runs; the newest was pruned.
+    const runs = Array.from({ length: 31 }, (_, i) =>
+      counted(`r${i}`, new Date(Date.UTC(2026, 8, 1) + i * 3_600_000).toISOString(), {
+        resultsPrunedAt: i === 30 ? at('2026-09-30T00:00:00Z') : null,
+      }),
+    );
+    const trend = testCountTrend(runs, [], options);
+    expect(trend).toHaveLength(30);
+    expect(trend[0]?.runId).toBe('r1');
+    expect(trend.at(-1)).toMatchObject({ runId: 'r30', totalTests: null });
   });
 });

@@ -1,45 +1,29 @@
 import type { RunSource, StatsCoverage, StatsRun } from './input.ts';
-import {
-  byFinish,
-  countsTowardTrends,
-  inWindow,
-  utcDay,
-  utcDays,
-  type WindowDays,
-} from './rules.ts';
+import { countsTowardTrends, inWindow, lastRuns, TREND_RUNS, utcDay, utcDays } from './rules.ts';
 
 // Spec section 11 trends that read backfilled runs as well as CI runs: pass rate, run count and
-// coverage. Each has a point per run; pass rate and run count also have a bucket per UTC day.
+// coverage. Pass rate and coverage have a point per run over the last 30 default-branch runs,
+// however old (decision 2026-09-29, design v7 item 5). "Pass rate, 30 days" and runs per UTC day
+// keep the 30-day window.
 
 export interface TrendOptions {
   readonly defaultBranch: string;
   readonly now: Date;
-  readonly days: WindowDays;
 }
+
+const WINDOW_DAYS = 30;
 
 export interface PassRateRunPoint {
   readonly runId: string;
   readonly finishedAt: Date;
   readonly source: RunSource;
+  /** For the chart's marks at failed and empty runs. */
+  readonly status: StatsRun['status'];
   readonly passed: number;
   readonly failed: number;
   readonly skipped: number;
   /** passed / (passed + failed), 0 to 1; null when nothing passed or failed. */
   readonly passRate: number | null;
-}
-
-export interface PassRateDayPoint {
-  readonly day: string;
-  readonly runs: number;
-  readonly passed: number;
-  readonly failed: number;
-  readonly skipped: number;
-  readonly passRate: number | null;
-}
-
-export interface PassRateTrend {
-  readonly runs: readonly PassRateRunPoint[];
-  readonly days: readonly PassRateDayPoint[];
 }
 
 export interface RunCountDayPoint {
@@ -62,57 +46,38 @@ export interface ModuleCoverageTrend {
   readonly points: readonly CoveragePoint[];
 }
 
-/** Default-branch runs in the window that the trend rule admits, oldest first. */
-function trendRuns(runs: readonly StatsRun[], options: TrendOptions): StatsRun[] {
-  return runs
-    .filter(
-      (run) =>
-        countsTowardTrends(run, options.defaultBranch) &&
-        inWindow(run.finishedAt, options.now, options.days),
-    )
-    .sort(byFinish);
-}
+const admitted = (options: TrendOptions) => (run: StatsRun) =>
+  countsTowardTrends(run, options.defaultBranch);
+
+/** The last 30 default-branch runs the trend rule admits, oldest first. */
+const trendRuns = (runs: readonly StatsRun[], options: TrendOptions): StatsRun[] =>
+  lastRuns(runs, TREND_RUNS, admitted(options), options.now);
+
+/** Default-branch runs the trend rule admits that finished in the 30 days. */
+const windowRuns = (runs: readonly StatsRun[], options: TrendOptions): StatsRun[] =>
+  runs.filter(
+    (run) => admitted(options)(run) && inWindow(run.finishedAt, options.now, WINDOW_DAYS),
+  );
 
 // Section 5.2 rolls JUnit errors into failed, so this is section 11's passed / (passed +
 // failed + error) with skipped excluded.
 export const passRate = (passed: number, failed: number): number | null =>
   passed + failed === 0 ? null : passed / (passed + failed);
 
-export function passRateTrend(runs: readonly StatsRun[], options: TrendOptions): PassRateTrend {
-  const included = trendRuns(runs, options);
-  const byDay = new Map<string, StatsRun[]>();
-  for (const run of included) {
-    const day = utcDay(run.finishedAt);
-    byDay.set(day, [...(byDay.get(day) ?? []), run]);
-  }
-  return {
-    runs: included.map((run) => ({
-      runId: run.id,
-      finishedAt: run.finishedAt,
-      source: run.source,
-      passed: run.passed,
-      failed: run.failed,
-      skipped: run.skipped,
-      passRate: passRate(run.passed, run.failed),
-    })),
-    // A day's rate pools its counts, so a run of 500 tests outweighs a run of 5, as it would
-    // if both had run as one.
-    days: utcDays(options.now, options.days).map((day) => {
-      const dayRuns = byDay.get(day) ?? [];
-      const sum = (pick: (run: StatsRun) => number) =>
-        dayRuns.reduce((total, run) => total + pick(run), 0);
-      const passed = sum((run) => run.passed);
-      const failed = sum((run) => run.failed);
-      return {
-        day,
-        runs: dayRuns.length,
-        passed,
-        failed,
-        skipped: sum((run) => run.skipped),
-        passRate: passRate(passed, failed),
-      };
-    }),
-  };
+export function passRateTrend(
+  runs: readonly StatsRun[],
+  options: TrendOptions,
+): PassRateRunPoint[] {
+  return trendRuns(runs, options).map((run) => ({
+    runId: run.id,
+    finishedAt: run.finishedAt,
+    source: run.source,
+    status: run.status,
+    passed: run.passed,
+    failed: run.failed,
+    skipped: run.skipped,
+    passRate: passRate(run.passed, run.failed),
+  }));
 }
 
 export function runCountTrend(
@@ -120,11 +85,11 @@ export function runCountTrend(
   options: TrendOptions,
 ): RunCountDayPoint[] {
   const counts = new Map<string, number>();
-  for (const run of trendRuns(runs, options)) {
+  for (const run of windowRuns(runs, options)) {
     const day = utcDay(run.finishedAt);
     counts.set(day, (counts.get(day) ?? 0) + 1);
   }
-  return utcDays(options.now, options.days).map((day) => ({ day, runs: counts.get(day) ?? 0 }));
+  return utcDays(options.now, WINDOW_DAYS).map((day) => ({ day, runs: counts.get(day) ?? 0 }));
 }
 
 /** Section 11: lines_covered / lines_total when the counts are present, else lines_pct. */
@@ -144,7 +109,7 @@ export function coverageTrend(
   for (const row of coverage) {
     const found = position.get(row.runId);
     const value = linesPct(row.lines);
-    // A row whose run the trend rule left out, or a module with no lines to cover, has no point.
+    // A row whose run is not among the 30, or a module with no lines to cover, has no point.
     if (found === undefined || value === null) continue;
     const { index, run } = found;
     byModule.set(row.module, [
@@ -178,19 +143,20 @@ export interface WindowPassRate {
 }
 
 /**
- * The pass rate over a whole window ("Pass rate, 30 days" on the project page), pooled from the
- * window's runs the way a day's rate is, so a large run outweighs a small one.
+ * "Pass rate, 30 days" on the project page: the default-branch runs, CI and imported, that
+ * finished in the 30 days, their counts added up so a large run outweighs a small one.
  */
-export function windowPassRate(trend: PassRateTrend): WindowPassRate {
-  const sum = (pick: (point: PassRateRunPoint) => number) =>
-    trend.runs.reduce((total, point) => total + pick(point), 0);
-  const passed = sum((point) => point.passed);
-  const failed = sum((point) => point.failed);
+export function windowPassRate(runs: readonly StatsRun[], options: TrendOptions): WindowPassRate {
+  const included = windowRuns(runs, options);
+  const sum = (pick: (run: StatsRun) => number) =>
+    included.reduce((total, run) => total + pick(run), 0);
+  const passed = sum((run) => run.passed);
+  const failed = sum((run) => run.failed);
   return {
-    runs: trend.runs.length,
+    runs: included.length,
     passed,
     failed,
-    skipped: sum((point) => point.skipped),
+    skipped: sum((run) => run.skipped),
     passRate: passRate(passed, failed),
   };
 }

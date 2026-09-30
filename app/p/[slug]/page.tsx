@@ -13,9 +13,11 @@ import { ProjectHero } from '../../../components/ProjectHero/ProjectHero';
 import { ProjectRuns } from '../../../components/ProjectRuns/ProjectRuns';
 import { Pyramid } from '../../../components/Pyramid/Pyramid';
 import { RunReports } from '../../../components/RunReports/RunReports';
+import { RunStrip } from '../../../components/RunStrip/RunStrip';
 import { SiteFooter } from '../../../components/SiteFooter/SiteFooter';
 import { SiteHeader } from '../../../components/SiteHeader/SiteHeader';
 import { StackTagGroup } from '../../../components/StackTagGroup/StackTagGroup';
+import { TrendChart } from '../../../components/TrendChart/TrendChart';
 import { now } from '../../../lib/clock';
 import { projectPageOptions, projectPageView } from '../../../lib/pages/project';
 import { SOURCE_URL, siteChromeView } from '../../../lib/pages/site';
@@ -84,7 +86,19 @@ export default async function ProjectPage(props: RouteProps) {
             <RunReports reports={view.reports} />
           </div>
         </PageSection>
-        <PageSection number={4} title="Runs and flaky tests" last>
+        <PageSection number={4} title="History">
+          <div className={styles.charts}>
+            {view.history.charts.map((chart) => (
+              <TrendChart key={chart.title} {...chart} />
+            ))}
+          </div>
+          {view.history.strip !== null && (
+            <div className={styles.strip}>
+              <RunStrip {...view.history.strip} />
+            </div>
+          )}
+        </PageSection>
+        <PageSection number={5} title="Runs and flaky tests" last>
           <div className={styles.pair}>
             <ProjectRuns project={view.hero.name} runs={view.runs} />
             <FlakyList tests={view.flaky} />

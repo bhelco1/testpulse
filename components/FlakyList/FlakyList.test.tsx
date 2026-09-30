@@ -16,6 +16,7 @@ const FLAKY: FlakyView = {
   testKey: 'key-1',
   name: 'assetCreateSchema accepts a minimal valid asset',
   suite: 'packages/shared/src/schemas/asset.test.ts',
+  rate: 'Failed 4 of last 10 runs',
   layer: 'Unit',
   platforms: 'node',
   href: '/p/routeserve/tests/key-1',
@@ -39,6 +40,18 @@ describe('FlakyList', () => {
     expect(link.querySelector('[data-part="flaky"]')?.textContent).toBe('Flaky');
     expect(link.querySelector('[data-part="flaky"] svg')?.getAttribute('width')).toBe('12');
     const meta = [...(link.querySelector('[data-part="meta"]')?.children ?? [])];
+    expect(meta.map((span) => span.textContent)).toEqual([
+      'Failed 4 of last 10 runs',
+      'Unit',
+      'node',
+    ]);
+  });
+
+  // Design v8 item 20: "Failed 0 of last 40 runs" is not drawn, so that row shows no rate.
+  it('leaves the rate out of a row that has none', () => {
+    const { container } = render(<FlakyList tests={[{ ...FLAKY, rate: null }]} />);
+
+    const meta = [...(container.querySelector('[data-part="meta"]')?.children ?? [])];
     expect(meta.map((span) => span.textContent)).toEqual(['Unit', 'node']);
   });
 

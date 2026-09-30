@@ -1,0 +1,33 @@
+/* The "Last 40 runs" card from design/pages/Project Page.dc.html; every value there is literal. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 22px var(--space-6);
+  box-shadow: var(--shadow-card);
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0;
+  font: 500 20px var(--font-serif);
+}
+
+.scope {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.note {
+  font-size: 14px;
+  color: var(--ink-2);
+}

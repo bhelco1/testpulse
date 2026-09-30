@@ -1,12 +1,16 @@
 import { qty } from '../copy/count';
 import { formatTrendValue } from './format';
 
-// The line under each chart title naming which runs it reads (spec section 11).
+// The line under each chart title naming which runs it reads (spec section 11,
+// design/components.md "Scope line"). The project page's per-run charts cover the last 30
+// default-branch runs their source rule admits (design v7 item 5); testDuration is Test
+// History's duration chart.
 export const TREND_SCOPE = {
-  passRate: 'Default branch · CI and imported history',
-  testCount: 'Default branch · CI runs only',
-  coverage: 'Default branch · CI and imported history',
-  duration: 'Default branch · CI runs only (imported history has no durations)',
+  passRate: 'Default branch · last 30 runs · CI and imported history',
+  testCount: 'Default branch · last 30 CI runs',
+  coverage: 'Default branch · last 30 runs · CI and imported history',
+  duration: 'Default branch · last 30 CI runs (imported history has no durations)',
+  testDuration: 'Default branch · CI runs only (imported history has no durations)',
   runsPerDay: 'Default branch · CI and imported history',
 } as const;
 

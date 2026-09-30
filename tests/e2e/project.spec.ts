@@ -10,6 +10,16 @@ import { open } from './support/open.ts';
 // @visual in the four viewport × theme projects inside the Playwright image.
 
 const runsLog = (page: Page) => page.getByRole('log');
+const history = (page: Page) => page.getByRole('region', { name: 'History' });
+const charts = (page: Page) => history(page).getByRole('figure');
+const runStrip = (page: Page) => history(page).getByRole('region', { name: 'Last 40 runs' });
+
+// Design v7 item 5: each chart's scope line names the last 30 runs its source rule admits.
+const SCOPES = [
+  'Default branch · last 30 runs · CI and imported history',
+  'Default branch · last 30 CI runs',
+  'Default branch · last 30 CI runs (imported history has no durations)',
+];
 
 test.describe('Ostomate2 (public)', () => {
   test.beforeEach(async ({ page }) => {
@@ -101,6 +111,30 @@ test.describe('Ostomate2 (public)', () => {
     ]);
   });
 
+  test('charts its last 30 runs on main: 21 for pass rate, its 8 CI runs for the rest', async ({
+    page,
+  }) => {
+    await expect(charts(page).getByRole('heading', { level: 3 })).toHaveText([
+      'Pass rate',
+      'Tests per run',
+      'Run duration',
+    ]);
+    await expect(charts(page).locator('[data-part="scope"]')).toHaveText(SCOPES);
+    // 13 imported runs and 8 CI runs, none failed; 142 tests in each CI run; each CI run's
+    // reports sum to 35,604 ms. No coverage chart: which module it shows is still open (13.2).
+    await expect(charts(page).locator('[data-part="caption"]')).toHaveText([
+      'All 21 runs passed.',
+      'Held at 142 for the last 8 runs.',
+      'Between 36 s and 36 s over the last 8 runs. Median 36 s.',
+    ]);
+    await expect(runStrip(page).getByRole('img')).toHaveAttribute(
+      'aria-label',
+      'Last 8 runs on main: 8 passed.',
+    );
+    await expect(runStrip(page).locator('[data-part="cell"][data-status="passed"]')).toHaveCount(8);
+    await expect(runStrip(page).locator('[data-part="note"]')).toHaveText('All 8 passed.');
+  });
+
   test('lists the 8 CI runs on main, newest first, and no flaky tests', async ({ page }) => {
     const rows = runsLog(page).getByRole('link');
     await expect(rows).toHaveCount(8);
@@ -165,6 +199,43 @@ test.describe('RouteServe (private)', () => {
     ]);
   });
 
+  test('charts its ten CI runs on main, four of them red, and the strip of all ten', async ({
+    page,
+  }) => {
+    await expect(charts(page).locator('[data-part="scope"]')).toHaveText(SCOPES);
+    // A red run passed 1,044 of 1,045 executions, 99.90%. Every run has 1,041 tests. Green runs
+    // take 206,735 ms and red ones 204,120 ms; six green make the median 207 s.
+    await expect(charts(page).locator('[data-part="caption"]')).toHaveText([
+      '99.9% on the latest run. 4 of the last 10 runs failed.',
+      'Held at 1,041 for the last 10 runs.',
+      'Between 204 s and 207 s over the last 10 runs. Median 207 s.',
+    ]);
+    await expect(runStrip(page).getByRole('img')).toHaveAttribute(
+      'aria-label',
+      'Last 10 runs on main: 6 passed, 4 failed.',
+    );
+    await expect(runStrip(page).locator('[data-part="cell"]')).toHaveText([
+      '',
+      '✕',
+      '',
+      '',
+      '✕',
+      '',
+      '✕',
+      '',
+      '',
+      '✕',
+    ]);
+    // The design draws a note for a strip that all passed only.
+    await expect(runStrip(page).locator('[data-part="note"]')).toHaveCount(0);
+  });
+
+  test('marks the four red runs on each chart', { tag: '@js' }, async ({ page }) => {
+    for (const chart of await charts(page).all()) {
+      await expect(chart.locator('[data-part="mark"]')).toHaveCount(4);
+    }
+  });
+
   test('shows its pyramid, three floors and the flaky test', async ({ page }) => {
     await expect(page.locator('figure [data-part="row"]')).toHaveText([
       'E2E13 flows declared · not counted',
@@ -185,7 +256,10 @@ test.describe('RouteServe (private)', () => {
     const flaky = page.getByRole('region', { name: 'Flaky tests', exact: true }).getByRole('link');
     await expect(flaky).toHaveCount(1);
     await expect(flaky).toContainText('assetCreateSchema accepts a minimal valid asset');
-    await expect(flaky.locator('[data-part="meta"]')).toHaveText('Unitnode');
+    // It has a result in all 10 CI runs on main and failed in the 4 red ones.
+    await expect(flaky.locator('[data-part="meta"]')).toHaveText(
+      'Failed 4 of last 10 runsUnitnode',
+    );
   });
 
   test('lists 10 untitled runs on main', async ({ page }) => {
@@ -240,6 +314,7 @@ for (const slug of ['ostomate2', 'routeserve']) {
         /^Switch to (light|dark) theme$/,
         'Overview',
         'View this run →',
+        'Show table',
         'Default branch',
         'Privacy',
         'Source on GitHub',
@@ -251,6 +326,11 @@ for (const slug of ['ostomate2', 'routeserve']) {
         expect(found, `Tab reaches ${String(name)}`).toBe(true);
       }
       expect(runRowsReached).toBe(await runsLog(page).getByRole('link').count());
+      // Each chart is one stop, named by its title and caption, with its "Show table" button.
+      expect(reached.filter((name) => name === 'Show table')).toHaveLength(3);
+      expect(
+        reached.filter((name) => /^(Pass rate|Tests per run|Run duration)\. /.test(name)),
+      ).toHaveLength(3);
       if (slug === 'routeserve') {
         // The failing test on the latest run card and the flaky test's row.
         expect(reached.filter((name) => name.includes('assetCreateSchema accepts'))).toHaveLength(
@@ -274,6 +354,16 @@ for (const slug of ['ostomate2', 'routeserve']) {
     await expect(
       page.getByRole('region', { name: 'Coverage and reports' }).locator('[data-state]').first(),
     ).toBeVisible();
+    // Without scripts no chart is drawn; each chart's table stands in for it, newest run first.
+    const table = page.getByRole('region', { name: 'Pass rate, table' }).getByRole('row');
+    await expect(table).toHaveCount(slug === 'ostomate2' ? 22 : 11);
+    await expect(table.nth(1)).toHaveText(slug === 'ostomate2' ? 'Latest100.0%' : 'Latest99.9%');
+    await expect(runStrip(page).getByRole('img')).toHaveAttribute(
+      'aria-label',
+      slug === 'ostomate2'
+        ? 'Last 8 runs on main: 8 passed.'
+        : 'Last 10 runs on main: 6 passed, 4 failed.',
+    );
   });
 
   test(`${slug}: the page follows the system theme`, { tag: '@js' }, async ({ page }) => {
@@ -365,6 +455,10 @@ test.describe('a private project’s page leaks nothing', { tag: '@js' }, () => 
     for (const run of ROUTESERVE_RUNS)
       expect(texts.join('\n')).toContain(run.commitSha.slice(0, 7));
     expect(html).toContain(String(FAILING[0]?.name));
+    // The History section and the flaky rate are in what was captured.
+    expect(html).toContain('Last 10 runs on main: 6 passed, 4 failed.');
+    expect(html).toContain('99.9% on the latest run. 4 of the last 10 runs failed.');
+    expect(html).toContain('Failed 4 of last 10 runs');
 
     expect(leaksIn(texts, HIDDEN)).toEqual([]);
   });

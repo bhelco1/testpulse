@@ -9,6 +9,12 @@ export type RunScope = Pick<StatsRun, 'branch' | 'source'>;
 /** The two windows section 11 names. */
 export type WindowDays = 30 | 90;
 
+/**
+ * The project page's per-run charts cover the last 30 default-branch runs their source rule
+ * admits, however old, fewer when there are fewer (decision 2026-09-29, design v7 item 5).
+ */
+export const TREND_RUNS = 30;
+
 /** Sources the pass-rate, run-count and coverage trends read. */
 export const TREND_SOURCES: readonly RunSource[] = ['ci', 'backfill'];
 
@@ -83,4 +89,22 @@ export function latestRun<R extends StatsRun>(
     if (latest === null || byFinish(run, latest) > 0) latest = run;
   }
   return latest;
+}
+
+/**
+ * The last `count` runs that `admits` accepts and that finished at or before now, oldest first by
+ * byFinish. No day window: the oldest may be any age. A run kept here that turns out to have no
+ * value for a stat keeps its place; older runs are never pulled in to fill it.
+ */
+export function lastRuns<R extends StatsRun>(
+  runs: readonly R[],
+  count: number,
+  admits: (run: R) => boolean,
+  now: Date,
+): R[] {
+  if (count <= 0) return [];
+  return runs
+    .filter((run) => admits(run) && run.finishedAt.getTime() <= now.getTime())
+    .sort(byFinish)
+    .slice(-count);
 }

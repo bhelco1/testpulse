@@ -163,13 +163,15 @@ describe('runsPerDayCaption', () => {
 });
 
 describe('TREND_SCOPE', () => {
-  // Design v5 item 7: test count reads CI runs only.
+  // Design v5 item 7: test count reads CI runs only. Design v7 item 5: the project page's
+  // per-run charts cover the last 30 runs; Test History's duration and runs per day keep theirs.
   it('names the runs each chart reads, as the design words it', () => {
     expect(TREND_SCOPE).toEqual({
-      passRate: 'Default branch · CI and imported history',
-      testCount: 'Default branch · CI runs only',
-      coverage: 'Default branch · CI and imported history',
-      duration: 'Default branch · CI runs only (imported history has no durations)',
+      passRate: 'Default branch · last 30 runs · CI and imported history',
+      testCount: 'Default branch · last 30 CI runs',
+      coverage: 'Default branch · last 30 runs · CI and imported history',
+      duration: 'Default branch · last 30 CI runs (imported history has no durations)',
+      testDuration: 'Default branch · CI runs only (imported history has no durations)',
       runsPerDay: 'Default branch · CI and imported history',
     });
   });

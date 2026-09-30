@@ -3,22 +3,23 @@ import { z } from 'zod';
 import { now } from '../clock.ts';
 import { LayerSchema } from '../ingest/layer-rules.ts';
 import { durationTrend, type DurationPoint } from '../stats/duration.ts';
-import { flakyPlatforms, flakyTests } from '../stats/flaky.ts';
+import { FLAKY_RATE_RUNS, flakyFailures, flakyPlatforms, flakyTests } from '../stats/flaky.ts';
 import {
-  COVERAGE_COLUMNS,
-  CoverageRowSchema,
   PUBLIC_RUN_COLUMNS,
   PublicRunRowSchema,
+  RESULT_COLUMNS,
+  ResultRowSchema,
   type PublicRun,
   type StatsResult,
 } from '../stats/input.ts';
 import { readByRunIds } from '../stats/load.ts';
 import {
+  byFinish,
   countsTowardCiOnlyStats,
-  countsTowardTrends,
   inWindow,
+  lastRuns,
   latestRun,
-  type WindowDays,
+  TREND_RUNS,
 } from '../stats/rules.ts';
 import { projectSummary, type ProjectSummary } from '../stats/summary.ts';
 import {
@@ -28,13 +29,9 @@ import {
   type TestCountPoint,
 } from '../stats/test-counts.ts';
 import {
-  coverageTrend,
   passRateTrend,
-  runCountTrend,
   windowPassRate,
-  type ModuleCoverageTrend,
-  type PassRateTrend,
-  type RunCountDayPoint,
+  type PassRateRunPoint,
   type WindowPassRate,
 } from '../stats/trends.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
@@ -65,13 +62,14 @@ export interface ProjectPageOptions {
   readonly runLimit?: number;
 }
 
+/**
+ * The History section's per-run charts, each over the last 30 default-branch runs its source rule
+ * admits (section 11). The coverage chart is held back (section 13.2), so it is not read.
+ */
 export interface ProjectTrends {
-  readonly passRate: PassRateTrend;
-  readonly windowPassRate: WindowPassRate;
-  readonly runCount: readonly RunCountDayPoint[];
-  readonly coverage: readonly ModuleCoverageTrend[];
-  readonly duration: readonly DurationPoint[];
+  readonly passRate: readonly PassRateRunPoint[];
   readonly testCount: readonly TestCountPoint[];
+  readonly duration: readonly DurationPoint[];
 }
 
 export interface FlakyListTest {
@@ -81,6 +79,8 @@ export interface FlakyListTest {
   readonly name: string;
   readonly layer: z.output<typeof LayerSchema>;
   readonly platforms: readonly string[];
+  /** "Failed {n} of last {m} runs": its last 40 default-branch CI runs with a result. */
+  readonly failures: { readonly failed: number; readonly runs: number };
 }
 
 /** A run list row: the run, and its distinct tests unless its results were pruned (5.12). */
@@ -95,7 +95,11 @@ export interface ProjectPage {
   readonly lastReportAt: Date | null;
   /** The latest default-branch CI run's reports, failing tests and duration; null before the first. */
   readonly latestRun: LatestRunDetail | null;
-  readonly trends: Readonly<Record<WindowDays, ProjectTrends>>;
+  readonly trends: ProjectTrends;
+  /** "Pass rate, 30 days" on the latest-run card. */
+  readonly windowPassRate: WindowPassRate;
+  /** The "Last 40 runs" strip: the last 40 default-branch CI runs, oldest first. */
+  readonly recentRuns: readonly PublicRun[];
   readonly flaky: {
     readonly tests: readonly FlakyListTest[];
     readonly totalTests: number;
@@ -118,7 +122,8 @@ export function runListLimit(requested: number | undefined): number {
   if (requested === undefined || !Number.isFinite(requested)) return DEFAULT_RUN_LIMIT;
   return Math.min(MAX_RUN_LIMIT, Math.max(1, Math.trunc(requested)));
 }
-const LONGEST_WINDOW: WindowDays = 90;
+const RUN_STRIP_RUNS = 40;
+const FLAKY_DAYS = 30;
 
 const TEST_COLUMNS = 'id, test_key, module, suite, name, layer';
 
@@ -189,6 +194,45 @@ async function loadRunList(
   };
 }
 
+/**
+ * The flaky tests' results in default-branch CI runs, read newest runs first, 40 runs at a time,
+ * until each test has results in 40 runs or the runs run out: its last 40 runs with a result
+ * (flakyFailures) can reach past the 30 days and past runs it has no result in.
+ */
+async function loadFlakyHistory(
+  client: PublicClient,
+  testIds: readonly string[],
+  ciRuns: readonly PublicRun[],
+): Promise<StatsResult[]> {
+  if (testIds.length === 0) return [];
+  const newestFirst = ciRuns
+    .filter((run) => run.resultsPrunedAt === null)
+    .sort((a, b) => byFinish(b, a))
+    .map((run) => run.id);
+  const rows: StatsResult[] = [];
+  const runsOf = new Map<string, Set<string>>(testIds.map((id) => [id, new Set()]));
+  for (let start = 0; start < newestFirst.length; start += FLAKY_RATE_RUNS) {
+    const chunk = newestFirst.slice(start, start + FLAKY_RATE_RUNS);
+    const read = await readByRunIds(
+      'load the flaky tests’ runs',
+      ResultRowSchema,
+      chunk,
+      (ids, from, to) =>
+        client
+          .from('results')
+          .select(RESULT_COLUMNS)
+          .in('test_id', [...testIds])
+          .in('reports.run_id', [...ids])
+          .order('id')
+          .range(from, to),
+    );
+    rows.push(...read);
+    for (const row of read) runsOf.get(row.testId)?.add(row.runId);
+    if ([...runsOf.values()].every((seen) => seen.size >= FLAKY_RATE_RUNS)) break;
+  }
+  return rows;
+}
+
 export async function loadProjectPage(
   slug: string,
   options: ProjectPageOptions = {},
@@ -203,49 +247,36 @@ export async function loadProjectPage(
   const input = await loadSummaryInput(client, project, at);
   const summary = projectSummary(input, at);
   const { runs } = input;
-  const inLongest = (run: PublicRun) => inWindow(run.finishedAt, at, LONGEST_WINDOW);
+  const stats = { defaultBranch: project.defaultBranch, now: at };
+  const ci = (run: PublicRun) => countsTowardCiOnlyStats(run, project.defaultBranch);
 
-  const coverage = await readByRunIds(
-    'load coverage',
-    CoverageRowSchema,
-    runs
-      .filter((run) => countsTowardTrends(run, project.defaultBranch) && inLongest(run))
-      .map((run) => run.id),
-    (ids, from, to) =>
-      client
-        .from('coverage')
-        .select(COVERAGE_COLUMNS)
-        .in('reports.run_id', [...ids])
-        .order('id')
-        .range(from, to),
-  );
-
-  // Test count per run and flakiness both read CI results; 90 days is the longer window.
-  const resultRunIds = runs
-    .filter((run) => countsTowardCiOnlyStats(run, project.defaultBranch) && inLongest(run))
+  // Test count per run reads the last 30 CI runs, however old; flakiness the CI runs of the 30
+  // days. A pruned run has no results left to read.
+  const resultRunIds = [
+    ...new Set([
+      ...lastRuns(runs, TREND_RUNS, ci, at),
+      ...runs.filter((run) => ci(run) && inWindow(run.finishedAt, at, FLAKY_DAYS)),
+    ]),
+  ]
+    .filter((run) => run.resultsPrunedAt === null)
     .map((run) => run.id);
   const results = await loadResults(client, resultRunIds);
 
-  const stats = { defaultBranch: project.defaultBranch, now: at };
-  const trends = (days: WindowDays): ProjectTrends => {
-    const options = { ...stats, days };
-    const passRate = passRateTrend(runs, options);
-    return {
-      passRate,
-      windowPassRate: windowPassRate(passRate),
-      runCount: runCountTrend(runs, options),
-      coverage: coverageTrend(runs, coverage, options),
-      duration: durationTrend(runs, options),
-      testCount: testCountTrend(runs, results, options),
-    };
-  };
-
   const flaky = flakyTests(runs, results, stats);
   const flakyByTest = flakyPlatforms(runs, results, stats);
+  const flakyIds = flakyByTest.map((test) => test.testId);
+  const failures = new Map(
+    flakyFailures(
+      runs,
+      await loadFlakyHistory(client, flakyIds, runs.filter(ci)),
+      flakyIds,
+      stats,
+    ).map((counted) => [counted.testId, counted]),
+  );
   const tests = await readByRunIds(
     'load the flaky tests',
     TestRowSchema,
-    flakyByTest.map((test) => test.testId),
+    flakyIds,
     (ids, from, to) =>
       client
         .from('tests')
@@ -262,11 +293,18 @@ export async function loadProjectPage(
     summary,
     lastReportAt: input.lastReportAt,
     latestRun: latest === null ? null : await loadLatestRunDetail(client, latest),
-    trends: { 30: trends(30), 90: trends(90) },
+    trends: {
+      passRate: passRateTrend(runs, stats),
+      testCount: testCountTrend(runs, results, stats),
+      duration: durationTrend(runs, stats),
+    },
+    windowPassRate: windowPassRate(runs, stats),
+    recentRuns: lastRuns(runs, RUN_STRIP_RUNS, ci, at),
     flaky: {
       tests: flakyByTest.flatMap(({ testId, platforms }) => {
         const test = testById.get(testId);
-        return test === undefined
+        const counted = failures.get(testId);
+        return test === undefined || counted === undefined
           ? []
           : [
               {
@@ -276,6 +314,7 @@ export async function loadProjectPage(
                 name: test.name,
                 layer: test.layer,
                 platforms,
+                failures: { failed: counted.failed, runs: counted.runs },
               },
             ];
       }),

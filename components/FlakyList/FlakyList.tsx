@@ -9,9 +9,9 @@ export interface FlakyListProps {
   tests: readonly FlakyView[];
 }
 
-// The project page's flaky tests (design/pages/Project Page.dc.html, spec section 11). The
-// design's "Failed n of last 40 runs" line has no definition yet, so each row shows the test's
-// layer and platforms only.
+// The project page's flaky tests (design/pages/Project Page.dc.html, spec section 11). Each row
+// shows "Failed {n} of last {m} runs" (design v7 item 6), its layer and its platforms; a row whose
+// test failed in none of its last runs has no rate, which the design does not draw (13.2).
 export function FlakyList({ tests }: FlakyListProps) {
   const titleId = useId();
   return (
@@ -50,6 +50,7 @@ export function FlakyList({ tests }: FlakyListProps) {
                   {test.suite}
                 </span>
                 <span className={styles.meta} data-part="meta">
+                  {test.rate !== null && <span>{test.rate}</span>}
                   <span>{test.layer}</span>
                   <span>{test.platforms}</span>
                 </span>

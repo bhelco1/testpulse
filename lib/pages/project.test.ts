@@ -93,14 +93,7 @@ const windowRate = (passRate: number | null) => ({
   passRate,
 });
 
-const trends = (passRate: number | null): ProjectPage['trends'][30] => ({
-  passRate: { runs: [], days: [] },
-  windowPassRate: windowRate(passRate),
-  runCount: [],
-  coverage: [],
-  duration: [],
-  testCount: [],
-});
+const NO_TRENDS: ProjectPage['trends'] = { passRate: [], testCount: [], duration: [] };
 
 const LATEST_RUN: NonNullable<ProjectPage['latestRun']> = {
   reports: [
@@ -117,7 +110,9 @@ const page = (overrides: Partial<ProjectPage> = {}): ProjectPage => ({
   summary,
   lastReportAt: ago(2 * HOUR + 34 * MINUTE),
   latestRun: LATEST_RUN,
-  trends: { 30: trends(1), 90: trends(1) },
+  trends: NO_TRENDS,
+  windowPassRate: windowRate(1),
+  recentRuns: [],
   flaky: { tests: [], totalTests: 142, flakeRate: 0 },
   runs: { branches: 'default', items: [listed()], hasMore: false },
   ...overrides,
@@ -290,7 +285,7 @@ describe('projectPageView', () => {
             { testKey: 'k2', suite: 'z', name: 'later', platform: 'node', status: 'error' },
           ],
         },
-        trends: { 30: trends(10_446 / 10_450), 90: trends(1) },
+        windowPassRate: windowRate(10_446 / 10_450),
       });
 
       expect(projectPageView(failedPage, NOW).latestRun).toMatchObject({
@@ -320,19 +315,19 @@ describe('projectPageView', () => {
     });
 
     it('shows a pass rate to one decimal place', () => {
-      const view = projectPageView(page({ trends: { 30: trends(0.999), 90: trends(1) } }), NOW);
+      const view = projectPageView(page({ windowPassRate: windowRate(0.999) }), NOW);
       expect(view.latestRun?.passRate30).toBe('99.9%');
     });
 
     it('never shows a failing window as 100%', () => {
       // RouteServe's seeded 30 days: 10,446 of 10,450 is 99.96%.
       const rate = 10_446 / 10_450;
-      const view = projectPageView(page({ trends: { 30: trends(rate), 90: trends(1) } }), NOW);
+      const view = projectPageView(page({ windowPassRate: windowRate(rate) }), NOW);
       expect(view.latestRun?.passRate30).toBe('99.9%');
     });
 
     it('has no pass rate when the 30 days hold nothing passed or failed', () => {
-      const view = projectPageView(page({ trends: { 30: trends(null), 90: trends(1) } }), NOW);
+      const view = projectPageView(page({ windowPassRate: windowRate(null) }), NOW);
       expect(view.latestRun?.passRate30).toBeNull();
     });
 
@@ -550,8 +545,8 @@ describe('projectPageView', () => {
     });
   });
 
-  it('lists flaky tests with their layer and the platforms they flipped on', () => {
-    const view = projectPageView(
+  describe('flaky list', () => {
+    const flakyPage = (failures: { failed: number; runs: number }) =>
       page({
         flaky: {
           totalTests: 1041,
@@ -564,23 +559,268 @@ describe('projectPageView', () => {
               name: 'assetCreateSchema accepts a minimal valid asset',
               layer: 'unit',
               platforms: ['node', 'ios-sim'],
+              failures,
             },
           ],
         },
-      }),
-      NOW,
-    );
+      });
 
-    expect(view.flaky).toEqual([
-      {
-        testKey: 'key-1',
-        name: 'assetCreateSchema accepts a minimal valid asset',
-        suite: 'packages/shared/src/schemas/asset.test.ts',
-        layer: 'Unit',
-        platforms: 'node, ios-sim',
-        href: '/p/ostomate2/tests/key-1',
-      },
-    ]);
+    it('lists flaky tests with their rate, layer and the platforms they flipped on', () => {
+      expect(projectPageView(flakyPage({ failed: 4, runs: 10 }), NOW).flaky).toEqual([
+        {
+          testKey: 'key-1',
+          name: 'assetCreateSchema accepts a minimal valid asset',
+          suite: 'packages/shared/src/schemas/asset.test.ts',
+          rate: 'Failed 4 of last 10 runs',
+          layer: 'Unit',
+          platforms: 'node, ios-sim',
+          href: '/p/ostomate2/tests/key-1',
+        },
+      ]);
+    });
+
+    it('says run in the singular at one, and reads 40 as the design draws it', () => {
+      expect(projectPageView(flakyPage({ failed: 1, runs: 1 }), NOW).flaky[0]?.rate).toBe(
+        'Failed 1 of last 1 run',
+      );
+      expect(projectPageView(flakyPage({ failed: 2, runs: 40 }), NOW).flaky[0]?.rate).toBe(
+        'Failed 2 of last 40 runs',
+      );
+    });
+
+    it('holds the rate back when the test failed in none of its last runs (design v8 item 20)', () => {
+      expect(projectPageView(flakyPage({ failed: 0, runs: 40 }), NOW).flaky[0]?.rate).toBeNull();
+    });
+  });
+
+  describe('history', () => {
+    const passRatePoint = (
+      i: number,
+      status: 'passed' | 'failed' | 'empty',
+      passed: number,
+      failed: number,
+    ): ProjectPage['trends']['passRate'][number] => ({
+      runId: `r${i}`,
+      finishedAt: ago((30 - i) * DAY),
+      source: 'ci',
+      status,
+      passed,
+      failed,
+      skipped: 0,
+      passRate: passed + failed === 0 ? null : passed / (passed + failed),
+    });
+    const countPoint = (
+      i: number,
+      totalTests: number | null,
+      status: 'passed' | 'failed' | 'empty' = 'passed',
+    ): ProjectPage['trends']['testCount'][number] => ({
+      runId: `r${i}`,
+      finishedAt: ago((30 - i) * DAY),
+      status,
+      totalTests,
+    });
+    const durationPoint = (
+      i: number,
+      durationMs: number,
+      status: 'passed' | 'failed' | 'empty' = 'passed',
+    ): ProjectPage['trends']['duration'][number] => ({
+      runId: `r${i}`,
+      finishedAt: ago((30 - i) * DAY),
+      status,
+      durationMs,
+    });
+    // RouteServe's ten seeded CI runs on main: P F P P F P F P P F.
+    const RED = [1, 4, 6, 9];
+    const statusOf = (i: number) => (RED.includes(i) ? 'failed' : 'passed');
+    const TEN = Array.from({ length: 10 }, (_, i) => i);
+    const [GREEN_MS, RED_MS] = [206_735, 204_120];
+    const routeserveTrends: ProjectPage['trends'] = {
+      passRate: TEN.map((i) =>
+        RED.includes(i) ? passRatePoint(i, 'failed', 1044, 1) : passRatePoint(i, 'passed', 1045, 0),
+      ),
+      testCount: TEN.map((i) => countPoint(i, 1041, statusOf(i))),
+      duration: TEN.map((i) => durationPoint(i, RED.includes(i) ? RED_MS : GREEN_MS, statusOf(i))),
+    };
+    const marks = RED.map((index) => ({ index, status: 'fail' }));
+
+    it('draws pass rate, tests per run and duration, and no coverage chart (13.2)', () => {
+      const { charts } = projectPageView(page({ trends: routeserveTrends }), NOW).history;
+      expect(charts.map((chart) => [chart.title, chart.scope])).toEqual([
+        ['Pass rate', 'Default branch · last 30 runs · CI and imported history'],
+        ['Tests per run', 'Default branch · last 30 CI runs'],
+        ['Run duration', 'Default branch · last 30 CI runs (imported history has no durations)'],
+      ]);
+    });
+
+    it('plots each run’s pass rate as a percentage, marking the failed runs', () => {
+      const [passRate] = projectPageView(page({ trends: routeserveTrends }), NOW).history.charts;
+      expect(passRate).toEqual({
+        title: 'Pass rate',
+        scope: 'Default branch · last 30 runs · CI and imported history',
+        series: [
+          {
+            name: 'Pass rate',
+            values: TEN.map((i) => (RED.includes(i) ? (1044 / 1045) * 100 : 100)),
+          },
+        ],
+        marks,
+        format: 'pct',
+        unit: 'run',
+        // 1,044 of 1,045 is 99.90%, rounded down to a tenth.
+        caption: '99.9% on the latest run. 4 of the last 10 runs failed.',
+      });
+    });
+
+    it('says every run passed when none failed', () => {
+      const trends = {
+        ...NO_TRENDS,
+        passRate: Array.from({ length: 21 }, (_, i) => passRatePoint(i, 'passed', 142, 0)),
+      };
+      const [passRate] = projectPageView(page({ trends }), NOW).history.charts;
+      expect(passRate).toMatchObject({ marks: [], caption: 'All 21 runs passed.' });
+    });
+
+    it('leaves a gap and an empty mark for a run with no rate, and holds the caption back', () => {
+      const trends = {
+        ...NO_TRENDS,
+        passRate: [
+          passRatePoint(0, 'passed', 5, 0),
+          passRatePoint(1, 'empty', 0, 0),
+          passRatePoint(2, 'passed', 5, 0),
+        ],
+      };
+      const [passRate] = projectPageView(page({ trends }), NOW).history.charts;
+      expect(passRate).toMatchObject({
+        series: [{ name: 'Pass rate', values: [100, null, 100] }],
+        marks: [{ index: 1, status: 'empty' }],
+        caption: null,
+      });
+    });
+
+    it('counts tests per run, marking the failed runs', () => {
+      const [, tests] = projectPageView(page({ trends: routeserveTrends }), NOW).history.charts;
+      expect(tests).toEqual({
+        title: 'Tests per run',
+        scope: 'Default branch · last 30 CI runs',
+        series: [{ name: 'Tests', values: TEN.map(() => 1041) }],
+        marks,
+        format: 'int',
+        unit: 'run',
+        caption: 'Held at 1,041 for the last 10 runs.',
+      });
+    });
+
+    it('leaves a pruned run a gap in tests per run, and holds the caption back', () => {
+      const trends = {
+        ...NO_TRENDS,
+        testCount: [countPoint(0, 140), countPoint(1, null), countPoint(2, 142)],
+      };
+      const [, tests] = projectPageView(page({ trends }), NOW).history.charts;
+      expect(tests).toMatchObject({
+        series: [{ name: 'Tests', values: [140, null, 142] }],
+        caption: null,
+      });
+    });
+
+    it('plots each run’s duration in seconds with its range and median', () => {
+      const [, , duration] = projectPageView(page({ trends: routeserveTrends }), NOW).history
+        .charts;
+      expect(duration).toEqual({
+        title: 'Run duration',
+        scope: 'Default branch · last 30 CI runs (imported history has no durations)',
+        series: [
+          { name: 'Duration', values: TEN.map((i) => (RED.includes(i) ? 204.12 : 206.735)) },
+        ],
+        marks,
+        format: 'dur',
+        unit: 'run',
+        // 6 green runs of 206.7 s and 4 red of 204.1 s: the median is the mean of two green.
+        caption: 'Between 204 s and 207 s over the last 10 runs. Median 207 s.',
+      });
+    });
+
+    it('marks an empty run on every chart', () => {
+      const trends: ProjectPage['trends'] = {
+        passRate: [passRatePoint(0, 'passed', 1, 0), passRatePoint(1, 'empty', 0, 0)],
+        testCount: [countPoint(0, 1), countPoint(1, 0, 'empty')],
+        duration: [durationPoint(0, 1_000), durationPoint(1, 300, 'empty')],
+      };
+      const { charts } = projectPageView(page({ trends }), NOW).history;
+      expect(charts.map((chart) => ('marks' in chart ? chart.marks : undefined))).toEqual([
+        [{ index: 1, status: 'empty' }],
+        [{ index: 1, status: 'empty' }],
+        [{ index: 1, status: 'empty' }],
+      ]);
+    });
+
+    it('gives each chart no points before the first run', () => {
+      const { charts } = projectPageView(page(), NOW).history;
+      expect(
+        charts.map((chart) => ('series' in chart ? chart.series[0]?.values : undefined)),
+      ).toEqual([[], [], []]);
+    });
+
+    const stripRun = (
+      i: number,
+      status: 'passed' | 'failed' | 'empty',
+    ): ProjectPage['recentRuns'][number] => ({
+      id: `s${i}`,
+      ciRunId: `s${i}`,
+      runAttempt: 1,
+      commitSha: `${i}`.padStart(40, 'a'),
+      branch: 'main',
+      status,
+      passed: 1,
+      failed: 0,
+      skipped: 0,
+      startedAt: ago((10 - i) * DAY),
+      finishedAt: ago((10 - i) * DAY),
+      source: 'ci',
+      event: i === 0 ? 'schedule' : 'push',
+      runUrl: null,
+      total: 1,
+      durationMs: 1_000,
+      resultsPrunedAt: null,
+    });
+
+    it('lays the last 40 CI runs out as the strip, oldest first, named for the default branch', () => {
+      const runs = [stripRun(0, 'passed'), stripRun(1, 'failed'), stripRun(2, 'empty')];
+      const { strip } = projectPageView(page({ recentRuns: runs }), NOW).history;
+      expect(strip).toEqual({
+        defaultBranch: 'main',
+        runs: [
+          {
+            title: 'Scheduled run',
+            branch: 'main',
+            sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0',
+            when: expect.objectContaining({ text: '1 week ago' }),
+            href: '/p/ostomate2/runs/s0',
+            status: 'passed',
+          },
+          expect.objectContaining({ title: 'Push to main', status: 'failed' }),
+          expect.objectContaining({ href: '/p/ostomate2/runs/s2', status: 'empty' }),
+        ],
+        // Only "All {n} passed." is drawn; a mix has no note (13.2).
+        note: null,
+      });
+    });
+
+    it('notes when every run in the strip passed', () => {
+      const runs = Array.from({ length: 8 }, (_, i) => stripRun(i, 'passed'));
+      expect(projectPageView(page({ recentRuns: runs }), NOW).history.strip?.note).toBe(
+        'All 8 passed.',
+      );
+    });
+
+    it('has no note for a single run', () => {
+      expect(
+        projectPageView(page({ recentRuns: [stripRun(0, 'passed')] }), NOW).history.strip?.note,
+      ).toBeNull();
+    });
+
+    it('has no strip before the first run', () => {
+      expect(projectPageView(page(), NOW).history.strip).toBeNull();
+    });
   });
 });
 

@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
+import type { StatsRun } from './input.ts';
 import { at, run } from './records.test-support.ts';
 import {
   CI_ONLY_SOURCES,
   countsTowardCiOnlyStats,
   countsTowardTrends,
   inWindow,
+  lastRuns,
   latestRun,
+  TREND_RUNS,
   TREND_SOURCES,
   utcDays,
   windowStart,
@@ -95,5 +98,66 @@ describe('latestRun', () => {
     const second = run('a2', '2026-10-01T00:00:00Z', { ciRunId: '5', runAttempt: 2 });
     const first = run('a1', '2026-10-01T00:00:00Z', { ciRunId: '5', runAttempt: 1 });
     expect(latestRun([second, first], 'main', now)).toBe(second);
+  });
+});
+
+// Decision 2026-09-29 (design v7 item 5): the project page's per-run charts read the last 30
+// runs their source rule admits, however old, rather than a day window.
+describe('lastRuns', () => {
+  const now = at('2026-10-01T12:00:00Z');
+  const ci = (candidate: StatsRun) => countsTowardCiOnlyStats(candidate, 'main');
+
+  it('reads 30 runs for the per-run charts', () => {
+    expect(TREND_RUNS).toBe(30);
+  });
+
+  it('is empty with no runs', () => {
+    expect(lastRuns([], 30, ci, now)).toEqual([]);
+  });
+
+  it('keeps a single run', () => {
+    const only = run('only', '2026-09-30T00:00:00Z');
+    expect(lastRuns([only], 30, ci, now)).toEqual([only]);
+  });
+
+  it('takes every run when there are fewer than asked, oldest first', () => {
+    const runs = [run('b', '2026-09-20T00:00:00Z'), run('a', '2026-09-10T00:00:00Z')];
+    expect(lastRuns(runs, 30, ci, now).map((r) => r.id)).toEqual(['a', 'b']);
+  });
+
+  it('keeps the newest runs of more than asked, however old the oldest kept one is', () => {
+    // One run every 10 days through 2025, all long before now.
+    const runs = Array.from({ length: 35 }, (_, i) =>
+      run(`r${i}`, new Date(Date.UTC(2025, 0, 1) + i * 10 * 86_400_000).toISOString()),
+    );
+    const kept = lastRuns(runs, 30, ci, now);
+    expect(kept).toHaveLength(30);
+    expect(kept[0]?.id).toBe('r5');
+    expect(kept.at(-1)?.id).toBe('r34');
+    // 2025-02-20, more than 90 days before now.
+    expect(kept[0]?.finishedAt).toEqual(at('2025-02-20T00:00:00Z'));
+  });
+
+  it('counts only the runs the rule admits, and none finished after now', () => {
+    const runs = [
+      run('ci-1', '2026-09-01T00:00:00Z'),
+      run('ci-2', '2026-09-02T00:00:00Z'),
+      run('bf', '2026-09-03T00:00:00Z', { source: 'backfill' }),
+      run('pr', '2026-09-04T00:00:00Z', { branch: 'feature/x' }),
+      run('future', '2026-10-01T12:00:00.001Z'),
+    ];
+    expect(lastRuns(runs, 2, ci, now).map((r) => r.id)).toEqual(['ci-1', 'ci-2']);
+  });
+
+  it('orders by finish, then start, run ID and attempt, as byFinish does', () => {
+    const runs = [
+      run('attempt-2', '2026-09-20T00:00:00Z', { ciRunId: 'r', runAttempt: 2 }),
+      run('attempt-1', '2026-09-20T00:00:00Z', { ciRunId: 'r', runAttempt: 1 }),
+    ];
+    expect(lastRuns(runs, 1, ci, now).map((r) => r.id)).toEqual(['attempt-2']);
+  });
+
+  it('is empty when asked for none', () => {
+    expect(lastRuns([run('a', '2026-09-20T00:00:00Z')], 0, ci, now)).toEqual([]);
   });
 });

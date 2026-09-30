@@ -117,6 +117,59 @@ export function flakyPlatforms(
     .map(([testId, platforms]) => ({ testId, platforms: [...platforms].sort(compareText) }));
 }
 
+// Design v7 item 6 (components.md StatusTimeline, data-map.md "Flaky list"): the flaky list's
+// "Failed {n} of last {m} runs". m is the last 40 default-branch CI runs in which the test has a
+// result, of any status and on any platform, fewer when it has fewer; n is those in which it
+// failed or errored on any platform. Unlike the flaky flag, this has no day window, so a test
+// flaky in the 30 days can count no failures when its failing runs are behind 40 later ones.
+
+export const FLAKY_RATE_RUNS = 40;
+
+export interface FlakyFailures {
+  readonly testId: string;
+  /** n: runs among them in which the test failed or errored on any platform. */
+  readonly failed: number;
+  /** m: the test's last runs with a result, at most 40. */
+  readonly runs: number;
+}
+
+export function flakyFailures(
+  runs: readonly StatsRun[],
+  results: readonly StatsResult[],
+  testIds: readonly string[],
+  options: FlakyOptions,
+): FlakyFailures[] {
+  const counted = new Map(
+    runs
+      .filter(
+        (run) =>
+          countsTowardCiOnlyStats(run, options.defaultBranch) &&
+          run.finishedAt.getTime() <= options.now.getTime(),
+      )
+      .map((run) => [run.id, run]),
+  );
+  // Per test, each run it has a result in and whether any of them failed.
+  const failedIn = new Map<string, Map<string, boolean>>(testIds.map((id) => [id, new Map()]));
+  for (const result of results) {
+    const byRun = failedIn.get(result.testId);
+    if (byRun === undefined || !counted.has(result.runId)) continue;
+    const failing = result.status === 'failed' || result.status === 'error';
+    byRun.set(result.runId, (byRun.get(result.runId) ?? false) || failing);
+  }
+  return testIds.map((testId) => {
+    const byRun = failedIn.get(testId) ?? new Map<string, boolean>();
+    const last = [...byRun.keys()]
+      .flatMap((runId) => counted.get(runId) ?? [])
+      .sort(byFinish)
+      .slice(-FLAKY_RATE_RUNS);
+    return {
+      testId,
+      failed: last.filter((run) => byRun.get(run.id) === true).length,
+      runs: last.length,
+    };
+  });
+}
+
 /**
  * The results that make a test flaky: both sides of every commit and platform it flipped on.
  * These are the test history's flaky cells (design/data-map.md).

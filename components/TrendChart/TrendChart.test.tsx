@@ -126,7 +126,7 @@ const PASS_RATE: TrendChartProps = {
 
 const DURATION: TrendChartProps = {
   title: 'Duration, rendersToday',
-  scope: TREND_SCOPE.duration,
+  scope: TREND_SCOPE.testDuration,
   caption: 'Between 0.38 s and 0.64 s over the last 30 runs.',
   series: [
     { name: 'jvm', values: JVM_SECONDS },
@@ -178,7 +178,7 @@ describe('TrendChart heading', () => {
       'Line coverage, shared',
     );
     expect(caption?.querySelector('[data-part="scope"]')?.textContent).toBe(
-      'Default branch · CI and imported history',
+      'Default branch · last 30 runs · CI and imported history',
     );
     expect(caption?.querySelector('[data-part="caption"]')?.textContent).toBe(
       'Rose from 52.6% to 92.0% over 10 runs; above its 91% floor.',
@@ -820,7 +820,7 @@ describe('TrendChart tooltip', () => {
 describe('TrendChart with missing values', () => {
   const GAPS: TrendChartProps = {
     title: 'Duration, rendersToday',
-    scope: TREND_SCOPE.duration,
+    scope: TREND_SCOPE.testDuration,
     caption: durationCaption([JVM_GAP_SECONDS, IOS_GAP_SECONDS], 'sec'),
     series: [
       { name: 'jvm', values: JVM_GAP_SECONDS },
@@ -877,6 +877,43 @@ describe('TrendChart with missing values', () => {
     expect(lone[0]?.getAttribute('r')).toBe('3');
     expect(lone[0]?.getAttribute('fill')).toBe('var(--ink)');
     expect(num(lone[0], 'cx')).toBe(xAt(chartLayout(390, 5, 'line', '0.55 s'.length * 7), 2));
+  });
+
+  // tp-charts.js draws a series' hollow dots only for 0 < i < n − 1, and a lone 3 px dot only
+  // between its first and last points; the first point of series 0 has its own end dot.
+  it('draws a second series’ hollow dots only between its ends, as tp-charts.js does', () => {
+    const { container } = render(
+      <TrendChart
+        {...GAPS}
+        series={[
+          { name: 'jvm', values: [0.41, 0.4, 0.42, 0.43] },
+          { name: 'ios-sim', values: [0.6, 0.62, 0.61, 0.63], dashed: true },
+        ]}
+      />,
+    );
+    const layout = chartLayout(720, 4, 'line', '0.63 s'.length * 7);
+    const dotsOf = (stroke: string) =>
+      parts(container, 'dot')
+        .filter((dot) => dot.getAttribute('stroke') === stroke)
+        .map((dot) => Math.round(num(dot, 'cx')));
+    const between = [1, 2].map((i) => Math.round(xAt(layout, i)));
+    expect(dotsOf('var(--ink)')).toEqual(between);
+    expect(dotsOf('var(--ink-3)')).toEqual(between);
+  });
+
+  it('draws no lone dot at a second series’ first point, even with a gap after it', () => {
+    chartWidth = 390;
+    const { container } = render(
+      <TrendChart
+        {...GAPS}
+        series={[
+          { name: 'jvm', values: [0.5, 0.51, 0.52, 0.53, 0.55] },
+          { name: 'ios-sim', values: [0.6, null, 0.61, 0.62, 0.63], dashed: true },
+        ]}
+      />,
+    );
+    expect(parts(container, 'lone-dot')).toHaveLength(0);
+    expect(parts(container, 'dot')).toHaveLength(0);
   });
 
   it('gives a series whose latest value is missing no end dot or end label', () => {
@@ -1089,6 +1126,18 @@ describe('TrendChart one point', () => {
       'text-align': 'center',
       padding: '0px 16px',
     });
+  });
+
+  // Undesigned: tp-charts.js has no value to print for a lone point that is missing, and "0"
+  // would be a false figure, so the frame keeps only the one-run text (docs/spec.md 13.2).
+  it('prints no value or dot for a single point that has no value', () => {
+    const { container } = render(
+      <TrendChart {...ONE} series={[{ name: 'Tests', values: [null] }]} />,
+    );
+    const frame = container.querySelector('[data-part="one-point"]');
+    expect(frame?.textContent).toBe('One run so far. The trend appears after the next run.');
+    expect(container.querySelector(`.${styles.singleValue}`)).toBeNull();
+    expect(container.querySelector(`.${styles.singleDot}`)).toBeNull();
   });
 
   it('is 250 px tall on desktop and 200 px on a phone', () => {

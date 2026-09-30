@@ -229,12 +229,17 @@ function ChartBody({
       </div>
     );
   } else if (points === 1) {
+    // A lone point with no value is undesigned (docs/spec.md 13.2): printing 0 would be a false
+    // figure, so only the one-run text is shown.
+    const only = series[0]?.values[0];
     body = (
       <div className={styles.single} style={{ height }} data-part="one-point">
-        <span className={styles.singleValue}>
-          {formatTrendValue(series[0]?.values[0] ?? 0, data.format, true)}
-        </span>
-        <span className={styles.singleDot} aria-hidden="true" />
+        {isValue(only) && (
+          <>
+            <span className={styles.singleValue}>{formatTrendValue(only, data.format, true)}</span>
+            <span className={styles.singleDot} aria-hidden="true" />
+          </>
+        )}
         <span className={styles.singleText}>
           One run so far. The trend appears after the next run.
         </span>
@@ -571,7 +576,9 @@ function PointDot({
   const value = values[index];
   if (!isValue(value)) return <g />;
   const last = index === layout.count - 1;
-  if (last || (index === 0 && seriesIndex === 0)) {
+  // As tp-charts.js: only series 0 marks its first point; every other dot sits between the ends.
+  if (index === 0 && seriesIndex > 0) return <g />;
+  if (last || index === 0) {
     return (
       <g>
         <circle

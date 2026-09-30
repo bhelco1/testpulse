@@ -23,7 +23,7 @@ The `coverage-report` artifact also ships a JaCoCo HTML report; only the XML was
 
 The `shared` JVM results and `shared.xml` in this run were restored from Gradle's build cache rather than re-executed: they are byte-identical to the previous run's (35643254905), with the same XML timestamps and the same JaCoCo session id (`runnervmlun5p-a230f272`). Ingestion must therefore not assume that an uploaded file is a fresh execution.
 
-The iOS-simulator composeApp files did not come from CI, which does not upload them. They were copied from a local `:composeApp:iosSimulatorArm64Test` run on a developer machine (hence `hostname="Bobbys-MacBook-Pro.local"`) with mtimes preserved. The local checkout was at `14feb88` at copy time, but the run happened earlier that day, so the files may predate the repo's HEAD at capture time.
+The iOS-simulator composeApp files did not come from CI, which does not upload them. They were copied from a local `:composeApp:iosSimulatorArm64Test` run on a developer machine (hence `hostname="Bobbys-MacBook-Pro.local"`) with mtimes preserved. That hostname stays in the committed files because fixtures are never edited after capture; it names a developer machine and nothing else. The local checkout was at `14feb88` at copy time, but the run happened earlier that day, so the files may predate the repo's HEAD at capture time.
 
 ### Dashboard history
 
@@ -92,7 +92,7 @@ The six routeserve files contain absolute source paths. One plain string substit
 
 ### Failing run
 
-Captured 2026-09-21 from a detached git worktree of a later commit of `main` (the repo had moved on since the passing captures), so the main checkout stayed untouched. One existing expectation in the `packages/shared` asset schema tests was inverted (a `toBe(true)` on a case the schema accepts became `toBe(false)`) so that exactly one test fails. The JSON was written, the edit was reverted with `git checkout -- .`, the worktree was removed and pruned, and `git status --short` on the main checkout was empty afterwards.
+This failure is deliberately induced and synthetic: it is not a real routeserve defect. Captured 2026-09-21 from a detached git worktree of a later commit of `main` (the repo had moved on since the passing captures), so the main checkout stayed untouched. One existing expectation in the `packages/shared` asset schema tests was inverted (a `toBe(true)` on a case the schema accepts became `toBe(false)`) so that exactly one test fails. The JSON was written, the edit was reverted with `git checkout -- .`, the worktree was removed and pruned, and `git status --short` on the main checkout was empty afterwards.
 
 ```
 cd packages/shared && CI=1 npx jest --ci --json --outputFile=<scratch>/shared-one-failure.json
@@ -105,6 +105,8 @@ cd packages/shared && CI=1 npx jest --ci --json --outputFile=<scratch>/shared-on
 Scrub 1: the same single substitution, the worktree's absolute path (under the session scratch directory) replaced with `/home/runner/work/routeserve/routeserve/` (28 replacements). The file was re-parsed as JSON afterwards and the counts above are the same as in the raw output; a grep for `bobbyhelco`, `/Users/`, `/private/tmp` and `@gmail` finds nothing.
 
 Scrub 2 (2026-09-22): the first scrub left private source in the file. The failed suite's `testResults[].message` held Jest's console report for the failure, which ends in a code frame: six lines of `asset.test.ts` with ANSI colour codes, including the `describe`/`it` titles, the schema call and a literal test value. `message` was set to `""` on all 14 `testResults` entries and `failureDetails` to `[]` on all 119 `assertionResults` entries (only the failed one was non-empty; it held the matcher's `matcherResult`, not source, and was cleared so nothing outside `failureMessages` describes the failure). The file was rewritten as `JSON.stringify` output plus the trailing newline, exactly as Jest wrote it, so nothing else changed; the counts above are unchanged. The failed test's `failureMessages[0]` is what the parser reads: the matcher line, the `Expected`/`Received` pair, and 16 stack lines under the scrubbed path or Node internals, with no code frame. A grep for `\u001b` finds nothing.
+
+Because routeserve is private, this failure text is exactly what the site must never show. The end-to-end leak checks (`tests/e2e/support/leaks.ts`) take the failed test's message and detail, as the parser reads them from this file, as hidden values and prove that none of them appears in any page's rendered HTML or network responses.
 
 ## testpulse
 

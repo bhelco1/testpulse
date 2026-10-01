@@ -14,6 +14,7 @@ import {
   INCIDENTS,
   PRINCIPLES,
   SPEC_URL,
+  STRATEGY,
   TITLE,
 } from '../../lib/pages/how-its-tested';
 import { SOURCE_URL, siteChromeView } from '../../lib/pages/site';
@@ -127,11 +128,56 @@ export default async function HowItsTestedPage() {
                 {heading}
                 <p className={styles.intro}>
                   Parsers are tested against result files captured from Ostomate2 and RouteServe,
-                  not hand-written samples. Integration tests hit a real Postgres, including the
-                  row-level security that hides private projects.
+                  not hand-written samples. Integration tests run against a local Supabase,
+                  including the row-level security that hides private projects from the public.
                 </p>
               </div>
-              {/* The layer table is held back: it names Phase 6 work as tested today (13.7). */}
+              {/* Scrolls sideways at the mock's 760 px minimum, so the keyboard can reach it. */}
+              <div
+                role="region"
+                aria-label="What runs, by layer"
+                tabIndex={0}
+                className={styles.strategyBox}
+              >
+                <table role="table" aria-label="What runs, by layer" className={styles.strategy}>
+                  <thead role="rowgroup" className={styles.strategyGroup}>
+                    <tr role="row" className={`${styles.strategyRow} ${styles.strategyHeadRow}`}>
+                      {['Layer', 'Tool', 'Scope'].map((header) => (
+                        <th key={header} role="columnheader" scope="col" className={styles.cell}>
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody role="rowgroup" className={styles.strategyGroup}>
+                    {STRATEGY.map(({ name, tools, scope, tone }) => (
+                      <tr key={name} role="row" className={styles.strategyRow} data-part="layer">
+                        <td role="cell" className={`${styles.cell} ${styles.layerName}`}>
+                          <span
+                            className={styles.swatch}
+                            data-tone={tone ?? undefined}
+                            style={
+                              tone === null ? undefined : { background: `var(--layer-${tone})` }
+                            }
+                            aria-hidden="true"
+                          />
+                          {name}
+                        </td>
+                        <td role="cell" className={`${styles.cell} ${styles.tools}`}>
+                          {tools.map((tool) => (
+                            <span key={tool} className={styles.tool}>
+                              {tool}
+                            </span>
+                          ))}
+                        </td>
+                        <td role="cell" className={`${styles.cell} ${styles.scope}`}>
+                          {scope}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               <div className={styles.facts}>
                 <div className={styles.fact} data-part="fact">
                   <div className={styles.factLabel}>Coverage floor</div>
@@ -139,7 +185,7 @@ export default async function HowItsTestedPage() {
                     90% <span className={styles.factUnit}>lines</span>
                   </div>
                   <div className={styles.factSub}>
-                    Enforced by Vitest thresholds. Below it, CI fails.
+                    Enforced by Vitest thresholds in the unit job. Below it, CI fails.
                   </div>
                 </div>
                 <div className={styles.fact} data-part="fact">
@@ -165,7 +211,7 @@ export default async function HowItsTestedPage() {
               <div>
                 {heading}
                 <p className={`${styles.intro} ${styles.silenceIntro}`}>
-                  Two incidents from Ostomate2’s post-mortems shaped the alert rules. A green
+                  Two incidents from Ostomate2’s post-mortems shaped how results are shown. A green
                   dashboard means nothing if the pipeline behind it has stopped running, or if a
                   suite passes without executing anything.
                 </p>
@@ -204,7 +250,7 @@ export default async function HowItsTestedPage() {
                   other projects do.
                 </p>
               </div>
-              <SelfReport view={view.self} actionsHref={ACTIONS_URL} />
+              <SelfReport view={view.self} actionsHref={ACTIONS_URL} progress={view.progress} />
             </>
           )}
         </Section>

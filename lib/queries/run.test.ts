@@ -247,12 +247,15 @@ describe('loadRunDetail', () => {
     expect(argsOf(failures, 'in')).toEqual([['result_id', ['x2']]]);
   });
 
+  // The failing result keeps its status and time, which the private run page heads with
+  // (design v8 item 18); only the text RLS withheld is missing.
   it('has no failure text where RLS returns none, as for a private project', async () => {
     const { client } = fakeClient(answering({ failures: [] }));
 
     const detail = await loadRunDetail('ostomate2', RUN_ID, client, NOW);
 
-    expect(detail?.results?.[0]?.platforms.flatMap((platform) => platform.failures)).toEqual([]);
+    const failures = detail?.results?.[0]?.platforms.flatMap((platform) => platform.failures);
+    expect(failures).toEqual([{ status: 'failed', durationMs: 400, message: null, detail: null }]);
   });
 
   it('flags tests flaky over the 30 days before now, from default-branch CI runs', async () => {

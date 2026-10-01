@@ -23,6 +23,7 @@ const REPORTS: RunReportRow[] = [
     status: 'passed',
     passedShare: 100,
     failedShare: 0,
+    skippedShare: 0,
     result: '82 passed',
     tests: '82',
     received: received('14:03:41'),
@@ -33,6 +34,7 @@ const REPORTS: RunReportRow[] = [
     status: 'failed',
     passedShare: 98,
     failedShare: 2,
+    skippedShare: 0,
     result: '1 failed · 49 passed',
     tests: '50',
     received: received('14:06:30'),
@@ -86,17 +88,72 @@ describe('RunReportTable', () => {
     expect(failing?.querySelector('[data-part="bar"]')?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('draws neither status nor results line for a report with no tests', () => {
+  // Design v8 item 26: the bar runs passed, failed, skipped (--neutral), each at least 4 px when
+  // there is any.
+  it('draws a skipped share after the passed and failed ones', () => {
     const { container } = render(
       <RunReportTable
         reports={[
-          { ...REPORTS[0], status: null, result: null, passedShare: 0, tests: '0' } as RunReportRow,
+          {
+            ...REPORTS[1],
+            passedShare: 88,
+            failedShare: 2,
+            skippedShare: 10,
+            result: '1 failed · 44 passed · 5 skipped',
+          } as RunReportRow,
+          { ...REPORTS[0], skippedShare: 0 } as RunReportRow,
         ]}
       />,
     );
-    const row = container.querySelector('[data-part="report"]');
-    expect(row?.querySelector('[data-status-word]')).toBeNull();
-    expect(row?.querySelector('[data-part="result"]')).toBeNull();
+    const [skipping, none] = [...container.querySelectorAll<HTMLElement>('[data-part="report"]')];
+    const bar = skipping?.querySelector('[data-part="bar"]');
+    expect([...(bar?.children ?? [])].map((part) => part.getAttribute('data-part'))).toEqual([
+      'bar-pass',
+      'bar-fail',
+      'bar-skip',
+    ]);
+    const skip = skipping?.querySelector<HTMLElement>('[data-part="bar-skip"]');
+    expect(skip?.style.width).toBe('10%');
+    expect(skip?.className).toContain('barSkip');
+    expect(none?.querySelector('[data-part="bar-skip"]')?.className).not.toContain('barSkip');
+    expect(skipping?.querySelector('[data-part="result"]')?.textContent).toBe(
+      '1 failed · 44 passed · 5 skipped',
+    );
+  });
+
+  // Design v8 item 27: Empty status, a dashed --attn track, "No tests in this report", "0", "—".
+  it('reads Empty for a report with no tests: a dashed track and its line in --attn', () => {
+    const { container, getAllByRole } = render(
+      <RunReportTable
+        reports={[
+          {
+            key: 'ios/e2e/ios-sim',
+            received: received('14:03:41'),
+            status: 'empty',
+            passedShare: 0,
+            failedShare: 0,
+            skippedShare: 0,
+            result: 'No tests in this report',
+            tests: '0',
+            duration: '—',
+          },
+        ]}
+      />,
+    );
+    const row = container.querySelector<HTMLElement>('[data-part="report"]');
+    expect(row?.dataset.status).toBe('empty');
+    expect(row?.className).not.toContain('failing');
+    expect(
+      within(getAllByRole('row')[1] as HTMLElement)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent),
+    ).toEqual(['Empty', 'ios/e2e/ios-sim', 'No tests in this report', '0', '14:03:41', '—']);
+    expect(row?.querySelector('[data-status-word]')?.className).toContain('attn');
+    expect(row?.querySelector('[data-part="bar"]')).toBeNull();
+    expect(row?.querySelector('[data-part="empty-track"]')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    );
+    expect(row?.querySelector('[data-part="result"]')?.className).toContain('resultEmpty');
   });
 
   it('scrolls sideways inside its own box, which the keyboard can reach', () => {
@@ -153,6 +210,16 @@ describe('RunReportTable', () => {
       background: 'var(--raised)',
     });
     expect(ruleFor(CSS, '.barFail')).toEqual({ background: 'var(--fail)', 'min-width': '4px' });
+    expect(ruleFor(CSS, '.barSkip')).toEqual({ background: 'var(--neutral)', 'min-width': '4px' });
+    expect(ruleFor(CSS, '.emptyTrack')).toEqual({
+      display: 'block',
+      height: '6px',
+      'box-sizing': 'border-box',
+      'border-radius': 'var(--radius-pill)',
+      border: '1.5px dashed var(--attn)',
+    });
+    expect(ruleFor(CSS, '.attn')).toEqual({ color: 'var(--attn)' });
+    expect(ruleFor(CSS, '.resultEmpty')).toEqual({ color: 'var(--attn)' });
     expect(ruleFor(CSS, '.result')).toEqual({
       'font-size': '12.5px',
       'white-space': 'nowrap',

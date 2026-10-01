@@ -150,6 +150,48 @@ test('a private report arriving live leaks nothing, in any frame or response', a
   expect(leaksIn(texts, hidden)).toEqual([]);
 });
 
+// Design v8 item 18 and v9 item 12 (decision 2026-10-01): a private run's failure heads show,
+// "{platform} · {status} · {time}" with the bare platform key, since section 9 hides only the text.
+// No seeded run fails on two platforms, so this one is written: the captured failure on "node" and
+// again on "node-24", in one run older than the feed's three, so the landing pages stay as above.
+const PRIVATE_TWO_PLATFORMS = liveRun('private-2', '11:40:00', 'routeserve');
+
+test('a private run failing on two platforms shows each head, and no failure text', async ({
+  page,
+}) => {
+  await ingestLiveRun('live-private', PRIVATE_TWO_PLATFORMS);
+  const { runId } = await ingestLiveRun('live-private', PRIVATE_TWO_PLATFORMS, {
+    job: 'test-next',
+    platform: 'node-24',
+  });
+  const { html, texts } = await capture(page, `/p/live-private/runs/${runId}`);
+  const hidden = [...HIDDEN, PRIVATE_TWO_PLATFORMS.commitSha, PRIVATE_TWO_PLATFORMS.runUrl];
+
+  // Positive controls: the heads are there, the notice once after them, and the database holds
+  // the text the page leaves out, read with the secret key.
+  const failing = page.locator('[data-part="test"]').first();
+  await expect(failing.locator('[data-part="failure-head"]')).toHaveText([
+    /^node · Failed · \d+\.\d\d s$/,
+    /^node-24 · Failed · \d+\.\d\d s$/,
+  ]);
+  await expect(failing.locator('[data-part="private-notice"]')).toHaveCount(1);
+  expect(html).toContain('Details hidden: private repository');
+  // Both platforms failed, so there is no mismatch sentence.
+  await expect(page.locator('[data-part="banner"] [data-part="body"]')).toHaveText(
+    'In packages/shared, Unit layer. This repository is private, so failure messages and stack traces are hidden.',
+  );
+  const failures = await admin()
+    .from('result_failures')
+    .select('message, results!inner(reports!inner(run_id))')
+    .eq('results.reports.run_id', runId);
+  expect(failures.data?.length).toBe(2 * FAILING.length);
+
+  // Negative: no failure text, stack trace line, full SHA, run URL or repository link.
+  await expect(failing.locator('[data-part="message"], pre')).toHaveCount(0);
+  expect(leaksIn(texts, hidden)).toEqual([]);
+  await expectNoSeriousAxeViolations(page);
+});
+
 test('a new run appears in the project page’s run list without reload', async ({ page }) => {
   await open(page, '/p/live-public');
   await expectLive(page);

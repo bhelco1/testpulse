@@ -25,6 +25,8 @@ const PUBLIC: RunHeaderProps = {
       datetime: '2026-10-05T09:25:47.312Z',
       title: '5 Oct 2026, 09:25 UTC',
     },
+    reports: '3',
+    attempt: null,
     ciHref: 'https://github.com/bhelco1/Ostomate2/actions/runs/36100000009',
   },
   tiles: {
@@ -35,6 +37,7 @@ const PUBLIC: RunHeaderProps = {
     duration: '36 s',
     failTone: false,
   },
+  banner: null,
 };
 
 const PRIVATE: RunHeaderProps = {
@@ -43,6 +46,14 @@ const PRIVATE: RunHeaderProps = {
   heading: { text: 'Run 36200000011', private: true },
   meta: { ...PUBLIC.meta, commit: { text: '5f0a2c9', href: null }, ciHref: null },
   tiles: { ...PUBLIC.tiles, tests: '1,041', passed: '1,040', failed: '1', failTone: true },
+  banner: {
+    title: '1 test failed: asset.test.ts › assetCreateSchema accepts a minimal valid asset',
+    body:
+      'In packages/shared, Unit layer. This repository is private, so failure messages and ' +
+      'stack traces are hidden.',
+    action: 'Show failure',
+    filter: 'failed',
+  },
 };
 
 const terms = (container: HTMLElement) =>
@@ -71,6 +82,7 @@ describe('RunHeader', () => {
       ['Commit', '0e2d0b4'],
       ['Event', 'push'],
       ['Started', '5 Oct, 09:25 UTC'],
+      ['Reports', '3'],
       ['CI', 'GitHub Actions'],
     ]);
     expect(getByRole('link', { name: '0e2d0b4' }).getAttribute('href')).toBe(
@@ -94,8 +106,38 @@ describe('RunHeader', () => {
       ['Commit', '5f0a2c9'],
       ['Event', 'push'],
       ['Started', '5 Oct, 09:25 UTC'],
+      ['Reports', '3'],
     ]);
-    expect(queryByRole('link')).toBeNull();
+    // The banner's "Show failure" is the only link: the commit and CI run are not linked.
+    expect(queryByRole('link', { name: '5f0a2c9' })).toBeNull();
+    expect(queryByRole('link', { name: /GitHub Actions/ })).toBeNull();
+  });
+
+  // components.md, Run page: "Attempt {k}" only when run_attempt is above 1, before CI.
+  it('adds "Attempt {k}" after Reports on a re-run', () => {
+    const { container } = render(<RunHeader {...PUBLIC} meta={{ ...PUBLIC.meta, attempt: '2' }} />);
+    expect(terms(container).map(([term]) => term)).toEqual([
+      'Branch',
+      'Commit',
+      'Event',
+      'Started',
+      'Reports',
+      'Attempt',
+      'CI',
+    ]);
+    expect(terms(container)[5]).toEqual(['Attempt', '2']);
+  });
+
+  it('shows the failed-run banner under the tiles when there is one', () => {
+    const { container, getByRole, rerender } = render(<RunHeader {...PRIVATE} />);
+    const banner = container.querySelector<HTMLElement>('[data-part="banner"]');
+    expect(banner?.previousElementSibling?.className).toContain('tiles');
+    expect(banner?.querySelector('[data-part="title"]')?.textContent).toBe(
+      '1 test failed: asset.test.ts › assetCreateSchema accepts a minimal valid asset',
+    );
+    expect(getByRole('link', { name: 'Show failure' }).getAttribute('href')).toBe('#results');
+    rerender(<RunHeader {...PUBLIC} />);
+    expect(container.querySelector('[data-part="banner"]')).toBeNull();
   });
 
   it('shows the five tiles, the Failed tile tinted when the run failed', () => {
@@ -175,5 +217,7 @@ describe('RunHeader', () => {
     expect(ruleFor(CSS, '.tileFail .tileLabel, .tileFail .tileValue')).toEqual({
       color: 'var(--fail)',
     });
+    // The Run Detail mock's banner sits 16 px under the tiles.
+    expect(ruleFor(CSS, '.banner')).toEqual({ 'margin-top': '16px' });
   });
 });

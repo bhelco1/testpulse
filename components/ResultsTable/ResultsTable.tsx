@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { formatCount, qty } from '../../lib/copy/count';
+import type { TimeLabel } from '../../lib/copy/time';
 import { LAYER_LABEL } from '../../lib/design/layers';
 import type { TestStatus } from '../../lib/parsers/types';
 import type { Visibility } from '../../lib/projects/schema';
@@ -29,6 +30,7 @@ import {
   XCircleIcon,
 } from '../icons/icons';
 import { PrivateDetailsNotice } from '../PrivateDetailsNotice/PrivateDetailsNotice';
+import { RelativeTime } from '../RelativeTime/RelativeTime';
 import { SegmentedControl, type SegmentedOption } from '../SegmentedControl/SegmentedControl';
 import { Skeleton } from '../Skeleton/Skeleton';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
@@ -44,8 +46,8 @@ export interface ResultRow extends TableResult {
   // Already formatted, such as "0.41 s", or "—" when the test did not run.
   time: string;
   historyHref: string;
-  // result_failures for each failed or error result, in platform data order (design v7 item 3,
-  // `ResultRow.failures`). RLS returns none for private projects.
+  // Each failed or error result, in platform data order (design v7 item 3, `ResultRow.failures`),
+  // with result_failures' text where RLS returned it; never for a private project.
   failures: readonly FailureDetail[];
 }
 
@@ -54,8 +56,18 @@ export interface FailureDetail {
   status: 'failed' | 'error';
   // Already formatted, such as "0.88 s".
   duration: string;
-  message: string;
-  detail: string;
+  // Null where there is no text to show: always for a private project (section 9).
+  message: string | null;
+  detail: string | null;
+}
+
+/**
+ * A request from outside the table to set its status filter, as the run page's failed-run banner
+ * makes ("Show failures"): each new `seq` sets the filter again and focuses the first failing row.
+ */
+export interface FilterRequest {
+  status: StatusFilter;
+  seq: number;
 }
 
 export interface PrunedTotals {
@@ -68,19 +80,20 @@ export interface PrunedTotals {
 // "Load 50 more" asks. Filters, order and which rows are open are this table's own state.
 export type ResultsTableProps =
   | { loading: true }
-  | { pruned: PrunedTotals }
+  | { pruned: PrunedTotals; prunedOn?: TimeLabel }
   | {
       results: readonly ResultRow[];
       visibility: Visibility;
       limit: number;
       onLoadMore: () => void;
+      request?: FilterRequest | null;
     };
 
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
 export function ResultsTable(props: ResultsTableProps) {
   if ('loading' in props) return <LoadingTable />;
-  if ('pruned' in props) return <PrunedNote {...props.pruned} />;
+  if ('pruned' in props) return <PrunedNote {...props.pruned} prunedOn={props.prunedOn} />;
   return <Table {...props} />;
 }
 
@@ -97,12 +110,29 @@ function Table({
   visibility,
   limit,
   onLoadMore,
+  request = null,
 }: Extract<ResultsTableProps, { results: readonly ResultRow[] }>) {
-  const [status, setStatus] = useState<StatusFilter>('all');
+  const [status, setStatus] = useState<StatusFilter>(request?.status ?? 'all');
   const [layer, setLayer] = useState<LayerFilter>('all');
   // Failed and error rows start open, so this records the ones the reader closed.
   const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
   const baseId = useId();
+  const root = useRef<HTMLDivElement>(null);
+
+  // A new request sets the filter while rendering, so the rows it selects are what commits.
+  const [seenSeq, setSeenSeq] = useState(request?.seq ?? null);
+  if (request !== null && request.seq !== seenSeq) {
+    setSeenSeq(request.seq);
+    setStatus(request.status);
+  }
+  const requestSeq = request?.seq ?? null;
+  useEffect(() => {
+    if (requestSeq === null) return;
+    // The first failing row's toggle, which spans the row; the page has already scrolled.
+    root.current
+      ?.querySelector<HTMLButtonElement>('button[data-part="name"]')
+      ?.focus({ preventScroll: true });
+  }, [requestSeq]);
 
   const counts = statusCounts(results);
   const options: SegmentedOption<StatusFilter>[] = STATUS_LABELS.map(([value, label]) => ({
@@ -124,7 +154,7 @@ function Table({
   }
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} ref={root}>
       <div className={styles.toolbar}>
         <SegmentedControl
           label="Status"
@@ -384,14 +414,12 @@ function TestRows({
                     </div>
                   )}
                   {/* RLS already withholds failure text for private projects; the table never
-                      prints it for them either. */}
-                  {/* A private project's heads are held back too: whether they show is design
-                      v8 item 18 (docs/spec.md section 13.5). */}
-                  {isPrivate ? (
-                    <PrivateDetailsNotice />
-                  ) : (
-                    result.failures.length > 0 && <Failures failures={result.failures} />
+                      prints it for them either. Their heads show, then the notice once (design
+                      v8 item 18). */}
+                  {result.failures.length > 0 && (
+                    <Failures failures={result.failures} withText={!isPrivate} />
                   )}
+                  {isPrivate && <PrivateDetailsNotice />}
                   <Link href={result.historyHref} className={styles.history}>
                     Test history
                   </Link>
@@ -408,9 +436,17 @@ function TestRows({
 const HEAD_ICON = { failed: XCircleIcon, error: AlertCircleIcon } as const;
 const HEAD_WORD = { failed: 'Failed', error: 'Error' } as const;
 
-// One block per failed or error result (design v7 item 3). With one, the head is left out.
-function Failures({ failures }: { failures: readonly FailureDetail[] }) {
+// One block per failed or error result (design v7 item 3). With one, the head is left out, for a
+// private project too, whose blocks are heads only (no text: `withText` false).
+function Failures({
+  failures,
+  withText,
+}: {
+  failures: readonly FailureDetail[];
+  withText: boolean;
+}) {
   const heads = failures.length > 1;
+  if (!heads && !withText) return null;
   return (
     <div className={styles.failures}>
       {failures.map((failure, index) => {
@@ -425,13 +461,17 @@ function Failures({ failures }: { failures: readonly FailureDetail[] }) {
                 </span>
               </div>
             )}
-            <div className={styles.message} data-part="message">
-              {failure.message}
-            </div>
+            {withText && failure.message !== null && (
+              <div className={styles.message} data-part="message">
+                {failure.message}
+              </div>
+            )}
             {/* Scrolls sideways in its own box, so it takes focus for the keyboard. */}
-            <pre className={styles.trace} tabIndex={0}>
-              {failure.detail}
-            </pre>
+            {withText && failure.detail !== null && (
+              <pre className={styles.trace} tabIndex={0}>
+                {failure.detail}
+              </pre>
+            )}
           </div>
         );
       })}
@@ -454,7 +494,12 @@ function LoadingTable() {
   );
 }
 
-function PrunedNote({ total, passed, failed }: PrunedTotals) {
+function PrunedNote({
+  total,
+  passed,
+  failed,
+  prunedOn,
+}: PrunedTotals & { prunedOn?: TimeLabel | undefined }) {
   return (
     <div className={styles.pruned}>
       <ClockIcon size={22} strokeWidth={2.2} className={styles.prunedIcon} />
@@ -467,6 +512,12 @@ function PrunedNote({ total, passed, failed }: PrunedTotals) {
           small. Summary totals are permanent: {qty(total, 'test')}, {formatCount(passed)} passed,{' '}
           {formatCount(failed)} failed.
         </p>
+        {/* components.md, Run page: "Pruned on {date}" (design v8 item 31). */}
+        {prunedOn !== undefined && (
+          <div className={styles.prunedOn} data-part="pruned-on">
+            Pruned on <RelativeTime when={prunedOn} />
+          </div>
+        )}
       </div>
     </div>
   );

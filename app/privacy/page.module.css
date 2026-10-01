@@ -17,3 +17,87 @@
   letter-spacing: -0.03em;
   text-wrap: balance;
 }
+
+.lede {
+  margin: 22px 0 0;
+  font: 400 21px/1.5 var(--font-serif);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* "Updated {date}": the mock's flex gap of 6 px between the word and the date. */
+.updated {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+}
+
+.cardTitle {
+  margin: 0;
+  font: 500 20px var(--font-serif);
+}
+
+.list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.item {
+  display: flex;
+  gap: 10px;
+}
+
+.dash {
+  color: var(--ink-3);
+}
+
+.section {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+
+.first {
+  margin-top: 48px;
+}
+
+.h2 {
+  margin: 0 0 12px;
+  font: 500 28px/1.2 var(--font-serif);
+}
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.paragraph {
+  margin: 0;
+}

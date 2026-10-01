@@ -229,6 +229,48 @@ describe('ResultsTable filters', () => {
     expect(names(container)).toEqual([]);
   });
 
+  // The failed-run banner's "Show failures" (components.md, Run page): sets the status filter and
+  // focuses the first failing row.
+  it('takes a filter request: sets the status and focuses the first failing row', () => {
+    const view = render(
+      <ResultsTable
+        results={RESULTS}
+        visibility="public"
+        limit={50}
+        onLoadMore={() => {}}
+        request={null}
+      />,
+    );
+    expect(names(view.container)).toHaveLength(6);
+    view.rerender(
+      <ResultsTable
+        results={RESULTS}
+        visibility="public"
+        limit={50}
+        onLoadMore={() => {}}
+        request={{ status: 'failed', seq: 1 }}
+      />,
+    );
+    expect(view.getByRole('radio', { name: /^Failed/ }).getAttribute('aria-checked')).toBe('true');
+    expect(names(view.container)).toEqual(['rendersToday']);
+    expect(document.activeElement).toBe(view.getByRole('button', { name: 'rendersToday' }));
+  });
+
+  it('takes the same request again after the reader changed the filter', () => {
+    const props = { results: RESULTS, visibility: 'public' as const, limit: 50 };
+    const view = render(
+      <ResultsTable {...props} onLoadMore={() => {}} request={{ status: 'error', seq: 1 }} />,
+    );
+    expect(names(view.container)).toEqual(['restoresBackup']);
+    fireEvent.click(view.getByRole('radio', { name: /^All/ }));
+    expect(names(view.container)).toHaveLength(6);
+    view.rerender(
+      <ResultsTable {...props} onLoadMore={() => {}} request={{ status: 'error', seq: 2 }} />,
+    );
+    expect(names(view.container)).toEqual(['restoresBackup']);
+    expect(document.activeElement).toBe(view.getByRole('button', { name: 'restoresBackup' }));
+  });
+
   it('no match: "No tests match" and "Clear filters", which brings every row back', () => {
     const { getByRole, getByText, container } = renderTable();
 
@@ -597,21 +639,82 @@ describe('ResultsTable rows', () => {
     expect(body?.querySelector('[data-part="failure-head"]')).toBeNull();
   });
 
-  it('private with failures on two platforms: the notice only, no heads (design v8 item 18)', () => {
+  // Design v8 item 18 and v9 item 12 (the Design System's "EXPANDED ROW · private project · two
+  // failing platforms"): the heads show as for a public project, with no message or trace under
+  // them, and the private notice once after the last head.
+  it('private with failures on two platforms: a head for each, no text, then the notice once', () => {
     const both = row('both', {
       suite: 'apps/backend/src/routes/jobs.test.ts',
       name: 'returns 409 when job overlaps',
       status: 'failed',
       platforms: [
         { platform: 'node', status: 'failed' },
-        { platform: 'deno', status: 'failed' },
+        { platform: 'node-24', status: 'error' },
+      ],
+      failures: [
+        { platform: 'node', status: 'failed', duration: '0.42 s', message: null, detail: null },
+        { platform: 'node-24', status: 'error', duration: '0.61 s', message: null, detail: null },
       ],
     });
     const { container } = renderTable({ results: [both], visibility: 'private' });
     const [test] = testRows(container);
-    expect(test?.body.textContent).toContain('Details hidden: private repository');
+    const heads = [...(test?.body.querySelectorAll('[data-part="failure-head"]') ?? [])];
+    expect(heads.map((head) => head.textContent)).toEqual([
+      'node · Failed · 0.42 s',
+      'node-24 · Error · 0.61 s',
+    ]);
+    expect(test?.body.querySelector('[data-part="message"]')).toBeNull();
+    expect(test?.body.querySelector('pre')).toBeNull();
+    const notices = [...(test?.body.querySelectorAll('[data-part="private-notice"]') ?? [])];
+    expect(notices).toHaveLength(1);
+    // After the last head.
+    const lastHead = heads.at(-1);
+    expect(
+      lastHead && notices[0]
+        ? lastHead.compareDocumentPosition(notices[0]) & Node.DOCUMENT_POSITION_FOLLOWING
+        : 0,
+    ).toBeTruthy();
+  });
+
+  it('private with one failure: no head, as for a public project, and the notice', () => {
+    const one = row('one', {
+      suite: 'packages/shared/src/schemas/asset.test.ts',
+      name: 'assetCreateSchema accepts a minimal valid asset',
+      status: 'failed',
+      platforms: [{ platform: 'node', status: 'failed' }],
+      failures: [
+        { platform: 'node', status: 'failed', duration: '0.00 s', message: null, detail: null },
+      ],
+    });
+    const { container } = renderTable({ results: [one], visibility: 'private' });
+    const [test] = testRows(container);
     expect(test?.body.querySelector('[data-part="failure-head"]')).toBeNull();
-    expect(test?.body.querySelector('[data-part="failure"]')).toBeNull();
+    expect(test?.body.querySelectorAll('[data-part="private-notice"]')).toHaveLength(1);
+  });
+
+  it('public with a failure whose text is missing: the head, and no empty message or trace', () => {
+    const bare = row('bare', {
+      suite: 'com.ostomate.app.sync.SyncQueueTest',
+      name: 'syncsOnReconnect',
+      status: 'failed',
+      platforms: [
+        { platform: 'jvm', status: 'failed' },
+        { platform: 'ios-sim', status: 'failed' },
+      ],
+      failures: [
+        { platform: 'jvm', status: 'failed', duration: '0.10 s', message: 'boom', detail: 'at a' },
+        { platform: 'ios-sim', status: 'failed', duration: '0.20 s', message: null, detail: null },
+      ],
+    });
+    const { container } = renderTable({ results: [bare] });
+    const blocks = [
+      ...(testRows(container)[0]?.body.querySelectorAll('[data-part="failure"]') ?? []),
+    ];
+    expect(blocks.map((block) => block.querySelectorAll('[data-part="message"]').length)).toEqual([
+      1, 0,
+    ]);
+    expect(blocks.map((block) => block.querySelectorAll('pre').length)).toEqual([1, 0]);
+    expect(container.textContent).not.toContain('Details hidden');
   });
 
   // Design v5 item 8: the line lives in the expanded detail, which only failed and error rows
@@ -663,6 +766,7 @@ describe('ResultsTable rows', () => {
 
     expect(body.textContent).toContain('Details hidden: private repository');
     expect(body.textContent).not.toContain('AssertionError');
+    expect(body.textContent).not.toContain('Room database not initialised');
     expect(body.querySelector('pre')).toBeNull();
     expect(body.querySelector('[data-part="message"]')).toBeNull();
     expect(body.querySelector('[data-part="mismatch"]')?.textContent).toContain(
@@ -751,6 +855,29 @@ describe('ResultsTable states', () => {
     expect(clock?.querySelector('path')?.getAttribute('d')).toBe('M12 7v5l3 2');
     expect(queryByRole('table')).toBeNull();
     expect(queryByRole('radiogroup')).toBeNull();
+  });
+
+  // components.md, Run page: "Pruned on {date}" under the body, 13 --ink-3 (design v8 item 31).
+  it('pruned: "Pruned on {date}" under the note, as a <time>', () => {
+    const { container } = render(
+      <ResultsTable
+        pruned={{ total: 192, passed: 192, failed: 0 }}
+        prunedOn={{
+          text: '23 Mar 2027',
+          datetime: '2027-03-23T03:00:00.000Z',
+          title: '23 Mar 2027, 03:00 UTC',
+        }}
+      />,
+    );
+    const line = container.querySelector('[data-part="pruned-on"]');
+    expect(line?.textContent).toBe('Pruned on 23 Mar 2027');
+    expect(line?.querySelector('time')?.getAttribute('datetime')).toBe('2027-03-23T03:00:00.000Z');
+    expect(line?.previousElementSibling?.getAttribute('data-part')).toBe('pruned-text');
+    expect(ruleFor(CSS, '.prunedOn')).toEqual({
+      'margin-top': '12px',
+      'font-size': '13px',
+      color: 'var(--ink-3)',
+    });
   });
 
   it('pruned: "1 test" at one (design v4 item 50)', () => {

@@ -66,6 +66,10 @@
   color: var(--fail);
 }
 
+.attn {
+  color: var(--attn);
+}
+
 .key {
   font: 13.5px var(--font-mono);
   overflow-wrap: anywhere;
@@ -94,6 +98,20 @@
   min-width: 4px;
 }
 
+.barSkip {
+  background: var(--neutral);
+  min-width: 4px;
+}
+
+/* A report with no test cases (design v8 item 27): a dashed --attn track in place of the bar. */
+.emptyTrack {
+  display: block;
+  height: 6px;
+  box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  border: 1.5px dashed var(--attn);
+}
+
 .result {
   font-size: 12.5px;
   white-space: nowrap;
@@ -102,6 +120,10 @@
 
 .resultFail {
   color: var(--fail);
+}
+
+.resultEmpty {
+  color: var(--attn);
 }
 
 .right {

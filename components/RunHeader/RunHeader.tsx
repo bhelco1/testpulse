@@ -1,19 +1,23 @@
 import type { RunPageView } from '../../lib/pages/run';
+import { FailedRunBanner } from '../FailedRunBanner/FailedRunBanner';
 import { ExternalLinkIcon, LockIcon } from '../icons/icons';
 import { RelativeTime } from '../RelativeTime/RelativeTime';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
 import styles from './RunHeader.module.css';
 
-export type RunHeaderProps = Pick<RunPageView, 'status' | 'when' | 'heading' | 'meta' | 'tiles'>;
+export type RunHeaderProps = Pick<
+  RunPageView,
+  'status' | 'when' | 'heading' | 'meta' | 'tiles' | 'banner'
+>;
 
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
 // The run page's summary (design/pages/Run Detail.dc.html): status and when, the run's title (a
 // private project's run is "Run {id}" with a lock), its branch, commit, event, start and CI run,
-// and the five count tiles. A private project's commit arrives cut to 7 characters and its run
-// URL null (section 9), so neither is linked. The mock's "Reports {n} of {m}" entry and failed-run
-// summary are held back (docs/spec.md section 13.5).
-export function RunHeader({ status, when, heading, meta, tiles }: RunHeaderProps) {
+// reports, attempt (re-runs only) and CI run, the five count tiles, and the failed-run banner. A
+// private project's commit arrives cut to 7 characters and its run URL null (section 9), so
+// neither is linked.
+export function RunHeader({ status, when, heading, meta, tiles, banner }: RunHeaderProps) {
   const tileList: [string, string, boolean][] = [
     ['Tests', tiles.tests, false],
     ['Passed', tiles.passed, false],
@@ -62,6 +66,16 @@ export function RunHeader({ status, when, heading, meta, tiles }: RunHeaderProps
             <RelativeTime when={meta.started} />
           </dd>
         </div>
+        <div>
+          <dt className={styles.term}>Reports</dt>
+          <dd className={styles.value}>{meta.reports}</dd>
+        </div>
+        {meta.attempt !== null && (
+          <div>
+            <dt className={styles.term}>Attempt</dt>
+            <dd className={styles.value}>{meta.attempt}</dd>
+          </div>
+        )}
         {meta.ciHref !== null && (
           <div>
             <dt className={styles.term}>CI</dt>
@@ -87,6 +101,11 @@ export function RunHeader({ status, when, heading, meta, tiles }: RunHeaderProps
           </div>
         ))}
       </div>
+      {banner !== null && (
+        <div className={styles.banner} data-part="banner">
+          <FailedRunBanner banner={banner} />
+        </div>
+      )}
     </section>
   );
 }

@@ -5,6 +5,7 @@ import { Breadcrumbs } from '../../../../../components/Breadcrumbs/Breadcrumbs';
 import { PageFrame } from '../../../../../components/PageFrame/PageFrame';
 import { RunHeader } from '../../../../../components/RunHeader/RunHeader';
 import { RunReportTable } from '../../../../../components/RunReportTable/RunReportTable';
+import { RunFilterProvider } from '../../../../../components/RunResults/RunFilter';
 import { RunResults } from '../../../../../components/RunResults/RunResults';
 import { SiteFooter } from '../../../../../components/SiteFooter/SiteFooter';
 import { SiteHeader } from '../../../../../components/SiteHeader/SiteHeader';
@@ -49,20 +50,22 @@ export default async function RunPage({ params }: RouteProps) {
       <SiteHeader projects={site.projects} currentProject={`/p/${encodeURIComponent(slug)}`} />
       <Breadcrumbs items={view.crumbs.items} current={view.crumbs.current} />
       <main id="main">
-        <RunHeader
-          status={view.status}
-          when={view.when}
-          heading={view.heading}
-          meta={view.meta}
-          tiles={view.tiles}
-        />
-        <section className={styles.section} aria-labelledby="reports-heading">
-          <h2 id="reports-heading" className={styles.title}>
-            Reports in this run
-          </h2>
-          <RunReportTable reports={view.reports} />
-        </section>
-        {view.results !== null && (
+        {/* The banner's "Show failures" sets the results table's filter (components.md). */}
+        <RunFilterProvider>
+          <RunHeader
+            status={view.status}
+            when={view.when}
+            heading={view.heading}
+            meta={view.meta}
+            tiles={view.tiles}
+            banner={view.banner}
+          />
+          <section className={styles.section} aria-labelledby="reports-heading">
+            <h2 id="reports-heading" className={styles.title}>
+              Reports in this run
+            </h2>
+            <RunReportTable reports={view.reports} />
+          </section>
           <section
             id="results"
             className={`${styles.section} ${styles.last}`}
@@ -73,7 +76,7 @@ export default async function RunPage({ params }: RouteProps) {
             </h2>
             <RunResults results={view.results} />
           </section>
-        )}
+        </RunFilterProvider>
       </main>
       <SiteFooter lastReport={site.lastReport} sourceHref={SOURCE_URL} />
     </PageFrame>

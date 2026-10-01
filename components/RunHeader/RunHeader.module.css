@@ -89,3 +89,8 @@
 .tileFail .tileValue {
   color: var(--fail);
 }
+
+/* Run Detail: the failed-run banner sits 16 px under the tiles. */
+.banner {
+  margin-top: 16px;
+}

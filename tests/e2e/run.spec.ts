@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
 import { capture, FAILING, HIDDEN, leaksIn, ROUTESERVE_RUNS } from './support/leaks.ts';
-import { open } from './support/open.ts';
+import { expectHydrated, open } from './support/open.ts';
 
 // The run page, /p/[slug]/runs/[id] (spec section 13), against the seed (lib/seed/plan.ts) at
 // SEED_NOW. Three runs: Ostomate2's latest (public, passed, 142 tests on the JVM and 50 of them
@@ -27,6 +27,12 @@ const statusRadios = (page: Page) =>
 const testRows = (page: Page) => page.locator('[data-part="test"]');
 const showing = (page: Page) => page.locator('[data-part="showing"]');
 const meta = (page: Page) => page.locator('[data-part="meta"]');
+const banner = (page: Page) => page.locator('[data-part="banner"]');
+
+const TESTPULSE_FAILURE =
+  '1 test failed: zz-deliberate-failure.spec.ts › deliberately fails to capture a failing JUnit fixture';
+const PRIVATE_SENTENCE =
+  'This repository is private, so failure messages and stack traces are hidden.';
 
 test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => {
   let path = '';
@@ -54,11 +60,13 @@ test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => 
     await expect(lead.locator('[data-status]')).toHaveText('Passed');
     // Finished at 09:26:36 UTC, 2 hours 33 minutes before SEED_NOW.
     await expect(lead.locator('time')).toHaveText('2 h ago');
+    // "Reports {n}" counts the run's reports; no Attempt on a first attempt (components.md).
     await expect(meta(page).locator('dt')).toHaveText([
       'Branch',
       'Commit',
       'Event',
       'Started',
+      'Reports',
       'CI',
     ]);
     await expect(meta(page).locator('dd')).toHaveText([
@@ -66,8 +74,10 @@ test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => 
       'd8dbd9c',
       'push',
       /^5 Oct, 09:2\d UTC$/,
+      '3',
       'GitHub Actions',
     ]);
+    await expect(banner(page)).toHaveCount(0);
     // Public: the commit links to its full SHA, the CI entry to the run on GitHub (section 9).
     await expect(meta(page).getByRole('link', { name: 'd8dbd9c' })).toHaveAttribute(
       'href',
@@ -202,11 +212,40 @@ test.describe('testpulse’s run (public, failed, one platform)', () => {
     await expect(tiles(page).nth(2)).toHaveAttribute('data-tone', 'fail');
     await expect(reportRows(page)).toHaveCount(1);
     await expect(reportRows(page).first()).toHaveAttribute('data-status', 'failed');
-    // The skipped test has neither colour nor words in the design's report line (13.5).
+    // Design v8 item 26: the skipped test has its share of the bar and its words.
     await expect(reportRows(page).locator('[data-part="result"]')).toHaveText(
-      '1 failed · 1 passed',
+      '1 failed · 1 passed · 1 skipped',
+    );
+    await expect(reportRows(page).locator('[data-part="bar-skip"]')).toHaveAttribute(
+      'style',
+      /width: ?33\.3/,
     );
   });
+
+  test('names the failing test in the failed-run banner', async ({ page }) => {
+    await expect(banner(page).locator('[data-part="title"]')).toHaveText(TESTPULSE_FAILURE);
+    await expect(banner(page).locator('[data-part="body"]')).toHaveText('In e2e, E2E layer.');
+    await expect(banner(page).getByRole('link', { name: 'Show failure' })).toHaveAttribute(
+      'href',
+      '#results',
+    );
+  });
+
+  test(
+    '“Show failure” filters to Failed and focuses the failing row',
+    { tag: '@js' },
+    async ({ page }) => {
+      await expectHydrated(page, '[data-part="banner"] a');
+      await banner(page).getByRole('link', { name: 'Show failure' }).click();
+      await expect(page.getByRole('radio', { name: 'Failed 1' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      await expect(testRows(page)).toHaveCount(1);
+      await expect(testRows(page).first().getByRole('button')).toBeFocused();
+      await expect(page.locator('#results')).toBeInViewport();
+    },
+  );
 
   test('opens the failure with its message and stack trace, and no head', async ({ page }) => {
     await expect(statusRadios(page)).toHaveText([
@@ -255,11 +294,29 @@ test.describe('RouteServe’s latest run (private, failed)', () => {
     const heading = page.getByRole('heading', { level: 1 });
     await expect(heading).toHaveText('Run 36200000010');
     await expect(heading.getByRole('img', { name: 'Private repository' })).toBeVisible();
-    await expect(meta(page).locator('dt')).toHaveText(['Branch', 'Commit', 'Event', 'Started']);
+    await expect(meta(page).locator('dt')).toHaveText([
+      'Branch',
+      'Commit',
+      'Event',
+      'Started',
+      'Reports',
+    ]);
+    await expect(meta(page).locator('dd').nth(4)).toHaveText('3');
     await expect(meta(page).locator('dd').nth(1)).toHaveText(
       String(ROUTESERVE_RUNS.at(-1)?.commitSha.slice(0, 7)),
     );
     await expect(meta(page).getByRole('link')).toHaveCount(0);
+  });
+
+  test('says in the banner which test failed, where, and that its text is hidden', async ({
+    page,
+  }) => {
+    await expect(banner(page).locator('[data-part="title"]')).toHaveText(
+      `1 test failed: asset.test.ts › ${String(FAILING[0]?.name)}`,
+    );
+    await expect(banner(page).locator('[data-part="body"]')).toHaveText(
+      `In packages/shared, Unit layer. ${PRIVATE_SENTENCE}`,
+    );
   });
 
   test('counts 1,041 distinct tests, not the 1,045 executions', async ({ page }) => {
@@ -298,6 +355,8 @@ test.describe('RouteServe’s latest run (private, failed)', () => {
     await expect(failing.locator('[data-part="name"]')).toHaveText(String(FAILING[0]?.name));
     await expect(failing.locator('[data-part="flaky-wide"]')).toHaveText('Flaky');
     await expect(failing.getByText('Details hidden: private repository')).toBeVisible();
+    // One failure: no head, as on a public project (components.md, ResultsTable); the heads of a
+    // private run failing on two platforms are proven in tests/e2e/live.spec.ts.
     await expect(
       failing.locator('[data-part="message"], pre, [data-part="failure-head"]'),
     ).toHaveCount(0);
@@ -378,6 +437,7 @@ for (const slug of RUNS) {
         'Privacy',
       ];
       if (slug !== 'routeserve') expected.push('GitHub Actions', /^[0-9a-f]{7}$/);
+      if (slug !== 'ostomate2') expected.push('Show failure');
       if (slug !== 'testpulse') expected.push('Load 50 more');
       else expected.push('Test history');
       for (const name of expected) {
@@ -507,7 +567,8 @@ test.describe('a private run page leaks nothing', { tag: '@js' }, () => {
   }) => {
     const path = await latestRunPath(page, 'routeserve');
     const { html, texts, responses } = await capture(page, path, async (current) => {
-      await current.getByRole('radio', { name: 'Failed 1' }).click();
+      await expectHydrated(current, '[data-part="banner"] a');
+      await banner(current).getByRole('link', { name: 'Show failure' }).click();
       await expect(testRows(current)).toHaveCount(1);
       await current.getByRole('radio', { name: 'All 1,041' }).click();
       await current.getByRole('button', { name: 'Load 50 more' }).click();
@@ -521,6 +582,8 @@ test.describe('a private run page leaks nothing', { tag: '@js' }, () => {
     expect(html).toContain(String(ROUTESERVE_RUNS.at(-1)?.commitSha.slice(0, 7)));
     expect(html).toContain(String(FAILING[0]?.name));
     expect(html).toContain('Details hidden: private repository');
+    expect(html).toContain(`1 test failed: asset.test.ts › ${String(FAILING[0]?.name)}`);
+    expect(html).toContain(PRIVATE_SENTENCE);
 
     expect(leaksIn(texts, HIDDEN)).toEqual([]);
   });

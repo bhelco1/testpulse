@@ -131,10 +131,99 @@
   margin-bottom: 28px;
 }
 
+/* "What runs, and what it covers" (v9 item 4): the mock's grid rows, 760 px at least, scrolling
+   sideways inside the box below that. */
+.strategyBox {
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+}
+
+.strategy {
+  display: block;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.strategyGroup {
+  display: block;
+}
+
+.strategyRow {
+  display: grid;
+  grid-template-columns: 150px 200px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+  text-align: left;
+}
+
+.strategyGroup:last-child .strategyRow:last-child {
+  border-bottom: none;
+}
+
+/* Typed in sentence case and uppercased here, as the other tables' headers are. */
+.strategyHeadRow {
+  padding: 14px 24px;
+  font: 600 12px var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.cell {
+  padding: 0;
+  font: inherit;
+  text-align: inherit;
+}
+
+.layerName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+/* A section 8 layer's tone; a row counted under another layer is a bordered empty square. */
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
+  border: 1.5px solid var(--line-strong);
+}
+
+.swatch[data-tone] {
+  border: none;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tool {
+  padding: 3px 9px;
+  border-radius: var(--radius-tag);
+  border: 1px solid var(--line-strong);
+  font-size: 13.5px;
+}
+
+.scope {
+  line-height: 1.6;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 12px;
+  margin-top: 16px;
 }
 
 .fact {

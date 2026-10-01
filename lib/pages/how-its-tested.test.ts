@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import type { HowItsTested } from '../queries/how-its-tested';
 import type { ProjectSummary } from '../stats/summary';
-import { ACTIONS_URL, howItsTestedView, INCIDENTS, PRINCIPLES, SPEC_URL } from './how-its-tested';
+import {
+  ACTIONS_URL,
+  howItsTestedView,
+  INCIDENTS,
+  PRINCIPLES,
+  PYRAMID_NOTE,
+  SPEC_URL,
+  STRATEGY,
+} from './how-its-tested';
 import { SOURCE_URL } from './site';
 
 // /how-its-tested as its components take it (design/pages/How Its Tested.dc.html; docs/spec.md
@@ -60,30 +68,20 @@ describe('howItsTestedView', () => {
     expect(ACTIONS_URL).toBe('https://github.com/bhelco1/testpulse/actions');
   });
 
-  describe('the lede', () => {
-    it('says testpulse reports here only once it has reported', () => {
-      expect(howItsTestedView(seeded, NOW).lede).toEqual([
-        'A test dashboard that isn’t tested is just a claim.',
-        'testpulse is built test-first, its own CI runs the full suite on every pull request, and it reports its results here alongside everything else.',
-      ]);
-    });
-
-    it('holds the second sentence back while testpulse is not registered', () => {
-      expect(howItsTestedView(missing, NOW).lede).toEqual([
-        'A test dashboard that isn’t tested is just a claim.',
-      ]);
-    });
-
-    it('holds it back while testpulse is registered with no run', () => {
-      const view = howItsTestedView(
-        { self: { summary: summary({ latestRun: null }), latestDurationMs: null } },
-        NOW,
-      );
-      expect(view.lede).toHaveLength(1);
-    });
+  // Design v9 item 4: the hero no longer says testpulse reports itself, so the lede is the same
+  // in either state.
+  it('has the v9 lede, which does not claim testpulse reports here yet', () => {
+    const lede = [
+      'A test dashboard that isn’t tested is just a claim.',
+      'testpulse is built test-first, and its own CI runs every suite on every pull request.',
+      'From Phase 7 it will report its results here alongside everything else.',
+    ];
+    expect(howItsTestedView(seeded, NOW).lede).toEqual(lede);
+    expect(howItsTestedView(missing, NOW).lede).toEqual(lede);
   });
 
-  it('keeps the design’s five principles, without the claim of all-automated criteria', () => {
+  // Bobby's edit (decision 2026-09-30): section 17 marks some criteria as manual checks.
+  it('keeps the design’s five principles, 01 ending with a recorded manual check', () => {
     expect(PRINCIPLES.map(({ n, title }) => `${n} ${title}`)).toEqual([
       '01 Test-first',
       '02 Real fixtures',
@@ -92,24 +90,62 @@ describe('howItsTestedView', () => {
       '05 No swallowed failures',
     ]);
     expect(PRINCIPLES[0]?.body).toBe(
-      'Every phase starts with failing tests written from its acceptance criteria.',
+      'Every phase starts with failing tests written from its acceptance criteria. A phase is done when each criterion has a passing automated test or a recorded manual check.',
     );
-    expect(PRINCIPLES.map(({ body }) => body).join(' ')).not.toMatch(/automated test/);
   });
 
-  it('keeps each incident’s true sentence and holds back the Phase 6 alerts', () => {
+  it('has each incident’s v9 “Now:” line, with no daily check or alert', () => {
     expect(INCIDENTS).toEqual([
       {
         icon: 'clock',
         title: 'CI was silently dead for 11 days',
-        now: 'Now: each project has an expected cadence.',
+        now: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
       },
       {
         icon: 'slash',
         title: 'E2E reported green without ever passing',
-        now: 'Now: a run with zero tests executed is marked Empty and treated as a problem, never as a pass.',
+        now: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',
       },
     ]);
+    expect(JSON.stringify(INCIDENTS)).not.toMatch(/daily check|raises an alert/);
+  });
+
+  // v9 item 4's strategy table, with Bobby's edits: "the design’s token pairs", "walks every page
+  // that can show a private project", and the Component layer added.
+  it('lists what runs today, the three checks counted with E2E, and nothing from Phase 6', () => {
+    expect(STRATEGY.map(({ name, tools, tone }) => [name, tools.join(' + '), tone])).toEqual([
+      ['Unit', 'Vitest', 1],
+      ['Contract', 'Vitest', null],
+      ['Component', 'Vitest + Testing Library', 2],
+      ['Integration', 'Vitest + local Supabase', 3],
+      ['E2E', 'Playwright', 3],
+      ['Accessibility', 'axe + Playwright', null],
+      ['Visual', 'Playwright', null],
+      ['Leak sweep', 'Playwright', null],
+    ]);
+    const scope = (name: string) => STRATEGY.find((row) => row.name === name)?.scope;
+    expect(scope('Accessibility')).toBe(
+      'axe on every public page, and a contrast check of the design’s token pairs in both themes. Counted with E2E.',
+    );
+    expect(scope('Leak sweep')).toBe(
+      'Walks every page that can show a private project as a visitor and fails if any private project’s failure text, stack trace or source link appears anywhere. Counted with E2E.',
+    );
+    expect(scope('Contract')).toContain('Runs in the unit job; counted as Unit.');
+    const all = JSON.stringify(STRATEGY);
+    for (const phase6 of ['alert', 'bot classification', 'prune', 'tracked', 'admin', 'sign-in']) {
+      expect(all.toLowerCase()).not.toContain(phase6);
+    }
+  });
+
+  it('notes under the pyramid how the checks are counted', () => {
+    expect(PYRAMID_NOTE).toBe(
+      'Only spec §8 layers are counted. Accessibility, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.',
+    );
+  });
+
+  it('carries the build progress, dated by its data file', () => {
+    expect(howItsTestedView(missing, NOW).progress.asOf.text).toBe('1 Oct');
+    expect(howItsTestedView(missing, NOW).progress.phases).toHaveLength(8);
   });
 
   describe('testpulse’s own results', () => {

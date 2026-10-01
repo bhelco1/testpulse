@@ -56,3 +56,22 @@
 .title + .body {
   margin-top: 2px;
 }
+
+/* With an action (the failed-run banner, Design System section 10): the text takes the room
+   left, at least 260 px, and the action wraps below it when there is less. */
+.withAction {
+  flex-wrap: wrap;
+}
+
+.withAction .content {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.withAction .title {
+  overflow-wrap: anywhere;
+}
+
+.withAction .body {
+  text-wrap: pretty;
+}

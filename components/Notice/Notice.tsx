@@ -16,6 +16,9 @@ export interface NoticeProps {
   // Only for a Notice inserted after the page loaded, such as a project going stale while it is
   // open; one rendered with the page is not announced (design v4 item 1).
   live?: boolean;
+  // After the text, such as the failed-run banner's "Show failures" (the Design System's section
+  // 10); the banner then wraps it below the text on a narrow screen.
+  action?: ReactNode;
 }
 
 // Stroke widths as the design system draws each icon.
@@ -26,16 +29,18 @@ const ICONS: Record<NoticeIcon, { Icon: ComponentType<IconProps>; strokeWidth: n
 };
 
 // A page-level banner: stale project, private repository, failed-run summary. Never inside a card.
-export function Notice({ tone, icon, title, body, live = false }: NoticeProps) {
+export function Notice({ tone, icon, title, body, live = false, action }: NoticeProps) {
   const { Icon, strokeWidth } = ICONS[icon];
   return (
     <div
       role={live ? 'status' : undefined}
-      className={`${styles.notice} ${styles[tone]}`}
+      className={[styles.notice, styles[tone], action !== undefined && styles.withAction]
+        .filter(Boolean)
+        .join(' ')}
       data-tone={tone}
     >
       <Icon size={18} strokeWidth={strokeWidth} className={styles.icon} />
-      <div>
+      <div className={styles.content} data-part="content">
         {title !== undefined && (
           <div className={styles.title} data-part="title">
             {title}
@@ -45,6 +50,7 @@ export function Notice({ tone, icon, title, body, live = false }: NoticeProps) {
           {body}
         </div>
       </div>
+      {action}
     </div>
   );
 }

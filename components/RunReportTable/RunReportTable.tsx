@@ -1,18 +1,19 @@
 import type { TimeLabel } from '../../lib/copy/time';
-import { CheckCircleIcon, XCircleIcon } from '../icons/icons';
+import { CheckCircleIcon, EmptyIcon, XCircleIcon } from '../icons/icons';
 import { RelativeTime } from '../RelativeTime/RelativeTime';
 import styles from './RunReportTable.module.css';
 
 export interface RunReportRow {
   // "job/module/platform".
   key: string;
-  // Null for a report with no tests, which the design does not draw.
-  status: 'passed' | 'failed' | null;
-  // The bar's green and red shares of the report's tests, in percent.
+  // Empty for a report whose files held no test cases (design v8 item 27).
+  status: 'passed' | 'failed' | 'empty';
+  // The bar's passed, failed and skipped shares of the report's tests, in percent.
   passedShare: number;
   failedShare: number;
-  // "82 passed" or "1 failed · 49 passed"; null for a report with no tests.
-  result: string | null;
+  skippedShare: number;
+  // "82 passed", "1 failed · 44 passed · 5 skipped", or "No tests in this report".
+  result: string;
   tests: string;
   received: TimeLabel;
   duration: string;
@@ -23,10 +24,10 @@ const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).j
 const HEADERS = ['Status', 'Job / module / platform', 'Results', 'Tests', 'Received', 'Time'];
 const ALIGN_RIGHT = new Set(['Tests', 'Received', 'Time']);
 
-// The run page's "Reports in this run" (design/pages/Run Detail.dc.html): one row per report.
-// The box scrolls sideways on a narrow screen, as the mock's 760 px minimum makes it, so it is a
-// focusable region the keyboard can scroll. The per-project note above it and the footer below
-// are written for each project and have no data behind them, so they are not drawn.
+// The run page's "Reports in this run" (design/pages/Run Detail.dc.html, the Design System's
+// "REPORTS IN THIS RUN"): one row per report. The box scrolls sideways on a narrow screen, as the
+// mock's 760 px minimum makes it, so it is a focusable region the keyboard can scroll. There is no
+// note above it and no footer (design v8 item 25).
 export function RunReportTable({ reports }: { reports: readonly RunReportRow[] }) {
   return (
     <div role="region" aria-label="Reports in this run" tabIndex={0} className={styles.box}>
@@ -56,33 +57,44 @@ export function RunReportTable({ reports }: { reports: readonly RunReportRow[] }
               data-status={report.status ?? undefined}
             >
               <td role="cell" className={styles.cell}>
-                {report.status !== null && <ReportStatus status={report.status} />}
+                <ReportStatus status={report.status} />
               </td>
               <td role="cell" className={cx(styles.cell, styles.key)}>
                 {report.key}
               </td>
               <td role="cell" className={cx(styles.cell, styles.results)}>
-                <span className={styles.bar} data-part="bar" aria-hidden="true">
-                  <span
-                    className={styles.barPass}
-                    data-part="bar-pass"
-                    style={{ width: `${report.passedShare}%` }}
-                  />
-                  {/* The red share keeps 4 px when there is any, so one failure shows. */}
-                  <span
-                    className={report.failedShare > 0 ? styles.barFail : undefined}
-                    data-part="bar-fail"
-                    style={{ width: `${report.failedShare}%` }}
-                  />
-                </span>
-                {report.result !== null && (
-                  <span
-                    className={cx(styles.result, report.status === 'failed' && styles.resultFail)}
-                    data-part="result"
-                  >
-                    {report.result}
+                {report.status === 'empty' ? (
+                  <span className={styles.emptyTrack} data-part="empty-track" aria-hidden="true" />
+                ) : (
+                  <span className={styles.bar} data-part="bar" aria-hidden="true">
+                    <span
+                      className={styles.barPass}
+                      data-part="bar-pass"
+                      style={{ width: `${report.passedShare}%` }}
+                    />
+                    {/* The red and grey shares keep 4 px when there are any, so one shows. */}
+                    <span
+                      className={report.failedShare > 0 ? styles.barFail : undefined}
+                      data-part="bar-fail"
+                      style={{ width: `${report.failedShare}%` }}
+                    />
+                    <span
+                      className={report.skippedShare > 0 ? styles.barSkip : undefined}
+                      data-part="bar-skip"
+                      style={{ width: `${report.skippedShare}%` }}
+                    />
                   </span>
                 )}
+                <span
+                  className={cx(
+                    styles.result,
+                    report.status === 'failed' && styles.resultFail,
+                    report.status === 'empty' && styles.resultEmpty,
+                  )}
+                  data-part="result"
+                >
+                  {report.result}
+                </span>
               </td>
               <td role="cell" className={cx(styles.cell, styles.tests)}>
                 {report.tests}
@@ -101,15 +113,19 @@ export function RunReportTable({ reports }: { reports: readonly RunReportRow[] }
   );
 }
 
-function ReportStatus({ status }: { status: 'passed' | 'failed' }) {
-  const Icon = status === 'passed' ? CheckCircleIcon : XCircleIcon;
+const REPORT_STATUS = {
+  passed: { Icon: CheckCircleIcon, word: 'Passed', tone: 'pass' },
+  failed: { Icon: XCircleIcon, word: 'Failed', tone: 'fail' },
+  // The dashed ring, as StatusBadge's Empty.
+  empty: { Icon: EmptyIcon, word: 'Empty', tone: 'attn' },
+} as const;
+
+function ReportStatus({ status }: { status: RunReportRow['status'] }) {
+  const { Icon, word, tone } = REPORT_STATUS[status];
   return (
-    <span
-      className={cx(styles.status, status === 'passed' ? styles.pass : styles.fail)}
-      data-status-word
-    >
+    <span className={cx(styles.status, styles[tone])} data-status-word>
       <Icon size={14} strokeWidth={2.6} />
-      {status === 'passed' ? 'Passed' : 'Failed'}
+      {word}
     </span>
   );
 }

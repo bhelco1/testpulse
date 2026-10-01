@@ -164,10 +164,31 @@ describe('runTestRows', () => {
     });
   });
 
-  it('has no failure text where none was returned, as for a private project', () => {
-    const [row] = runTestRows([result('r1', 't1', 'node', 'failed')], new Map(), new Set());
+  // A private project's failing result still has its status and time, which section 9 does not
+  // hide and the run page heads with (design v8 item 18); only the text RLS withholds is null.
+  it('keeps a failing result’s status and time where no text was returned, as for a private project', () => {
+    const [row] = runTestRows(
+      [
+        result('r1', 't1', 'node', 'failed', { durationMs: 4 }),
+        result('r2', 't1', 'node-24', 'error', { durationMs: 7 }),
+        result('r3', 't1', 'node-24', 'passed', { durationMs: 2 }),
+      ],
+      new Map(),
+      new Set(),
+    );
     expect(row?.platforms).toEqual([
-      { platform: 'node', status: 'failed', durationMs: 100, failures: [] },
+      {
+        platform: 'node',
+        status: 'failed',
+        durationMs: 4,
+        failures: [{ message: null, detail: null, status: 'failed', durationMs: 4 }],
+      },
+      {
+        platform: 'node-24',
+        status: 'error',
+        durationMs: 9,
+        failures: [{ message: null, detail: null, status: 'error', durationMs: 7 }],
+      },
     ]);
   });
 

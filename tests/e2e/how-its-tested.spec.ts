@@ -42,9 +42,9 @@ test.describe('the page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'This dashboard is tested the same way as the projects it reports on.',
     );
-    // testpulse has reported in the seed, so the lede's second sentence is true and shown.
+    // Design v9 item 4: the hero no longer says testpulse reports itself.
     await expect(page.locator('[data-part="lede"]')).toHaveText(
-      'A test dashboard that isn’t tested is just a claim. testpulse is built test-first, its own CI runs the full suite on every pull request, and it reports its results here alongside everything else.',
+      'A test dashboard that isn’t tested is just a claim. testpulse is built test-first, and its own CI runs every suite on every pull request. From Phase 7 it will report its results here alongside everything else.',
     );
     const main = page.getByRole('main');
     await expect(main.getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
@@ -57,7 +57,7 @@ test.describe('the page', () => {
     );
   });
 
-  test('lists the five principles, holding back the untrue sentence', async ({ page }) => {
+  test('lists the five principles, 01 ending with a recorded manual check', async ({ page }) => {
     const principles = section(page, 'Principles');
     await expect(principles).toContainText(
       'Five rules from the specification. Each one exists because breaking it has cost real time on a real project.',
@@ -70,38 +70,56 @@ test.describe('the page', () => {
       'No swallowed failures',
     ]);
     await expect(principles.getByRole('listitem')).toHaveCount(5);
+    // Some criteria are manual checks (section 17); Bobby's edit of 2026-09-30.
     await expect(principles.getByRole('listitem').first()).toContainText(
-      'Every phase starts with failing tests written from its acceptance criteria.',
+      'Every phase starts with failing tests written from its acceptance criteria. A phase is done when each criterion has a passing automated test or a recorded manual check.',
     );
-    // Some Phase 5 to 7 criteria are manual checks (section 17), so it is held back.
-    await expect(principles).not.toContainText('passing automated test');
   });
 
-  test('says what runs, without the layer table held back', async ({ page }) => {
+  test('says what runs, layer by layer, with nothing from Phase 6', async ({ page }) => {
     const strategy = section(page, 'What runs, and what it covers');
     await expect(strategy).toContainText(
-      'Parsers are tested against result files captured from Ostomate2 and RouteServe, not hand-written samples. Integration tests hit a real Postgres, including the row-level security that hides private projects.',
+      'Parsers are tested against result files captured from Ostomate2 and RouteServe, not hand-written samples. Integration tests run against a local Supabase, including the row-level security that hides private projects from the public.',
     );
+    const table = strategy.getByRole('table', { name: 'What runs, by layer' });
+    await expect(table.getByRole('columnheader')).toHaveText(['Layer', 'Tool', 'Scope']);
+    await expect(table.locator('[data-part="layer"] td:first-child')).toHaveText([
+      'Unit',
+      'Contract',
+      'Component',
+      'Integration',
+      'E2E',
+      'Accessibility',
+      'Visual',
+      'Leak sweep',
+    ]);
+    await expect(table).toContainText(
+      'a contrast check of the design’s token pairs in both themes. Counted with E2E.',
+    );
+    await expect(table).toContainText('Walks every page that can show a private project');
+    await expect(table).toContainText('Runs in the unit job; counted as Unit.');
     await expect(strategy.locator('[data-part="fact"]')).toHaveText([
-      'Coverage floor90% linesEnforced by Vitest thresholds. Below it, CI fails.',
+      'Coverage floor90% linesEnforced by Vitest thresholds in the unit job. Below it, CI fails.',
       'On every pull requestLint, typecheck, unit, integration, E2E',
       'Failure maskingNoneNo || true, no continue-on-error on test steps.',
     ]);
-    // The table names Phase 6 work (alert rules, bot classification, the prune job, tracked
-    // links, admin sign-in) as tested today: held back (13.7).
-    await expect(strategy).not.toContainText('bot classification');
-    await expect(strategy).not.toContainText('prune');
+    for (const phase6 of ['bot classification', 'prune', 'tracked', 'admin', 'alert']) {
+      await expect(strategy).not.toContainText(phase6);
+    }
   });
 
-  test('tells the two incidents, holding back the Phase 6 alerts', async ({ page }) => {
+  test('tells the two incidents as the pages show them today', async ({ page }) => {
     const silence = section(page, 'Why it watches for silence');
     await expect(silence.getByRole('heading', { level: 3 })).toHaveText([
       'CI was silently dead for 11 days',
       'E2E reported green without ever passing',
     ]);
+    await expect(silence).toContainText(
+      'Two incidents from Ostomate2’s post-mortems shaped how results are shown.',
+    );
     await expect(silence.locator('[data-part="now"]')).toHaveText([
-      'Now: each project has an expected cadence.',
-      'Now: a run with zero tests executed is marked Empty and treated as a problem, never as a pass.',
+      'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
+      'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',
     ]);
     await expect(silence).not.toContainText('daily check');
     await expect(silence).not.toContainText('raises an alert');
@@ -127,7 +145,11 @@ test.describe('the page', () => {
       'href',
       '/p/testpulse',
     );
-    // Only the designed reporting state: no sample tags, no coverage card without data.
+    await expect(run.locator('[data-part="pyramid-note"]')).toHaveText(
+      'Only spec §8 layers are counted. Accessibility, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.',
+    );
+    // Only the designed reporting state: no sample tags, no coverage card without data, and
+    // build progress only in the not-reporting state, as the mock draws it.
     await expect(self).not.toContainText('Not reporting yet');
     await expect(self).not.toContainText('Build progress');
     await expect(page.getByRole('main')).not.toContainText('SAMPLE');
@@ -201,6 +223,7 @@ test(
       'How it’s tested',
       'Source on GitHub',
       'Read the specification',
+      'What runs, by layer',
       'Full project page →',
       'Privacy',
     ]) {

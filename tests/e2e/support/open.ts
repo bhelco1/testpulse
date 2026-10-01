@@ -21,3 +21,21 @@ export async function expectLive(page: Page) {
     timeout: LIVE_TIMEOUT_MS,
   });
 }
+
+/**
+ * Waits until React has hydrated `selector`'s element, for pages with no live feed to signal it.
+ * React attaches its fiber to each element it hydrates, under a key starting "__reactFiber"; a
+ * click before that would be the browser's default action alone (a link's jump, say).
+ */
+export async function expectHydrated(page: Page, selector: string) {
+  await expect
+    .poll(() =>
+      page.evaluate((query) => {
+        const element = document.querySelector(query);
+        return (
+          element !== null && Object.keys(element).some((key) => key.startsWith('__reactFiber'))
+        );
+      }, selector),
+    )
+    .toBe(true);
+}

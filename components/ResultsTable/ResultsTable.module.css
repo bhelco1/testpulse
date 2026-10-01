@@ -399,6 +399,12 @@
   color: var(--ink-2);
 }
 
+.prunedOn {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
 @container (width < 720px) {
   .head {
     position: absolute;

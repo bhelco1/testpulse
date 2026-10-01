@@ -5,7 +5,7 @@ import styles from './PrivateDetailsNotice.module.css';
 // tells the reader why nothing is there.
 export function PrivateDetailsNotice() {
   return (
-    <div className={styles.notice}>
+    <div className={styles.notice} data-part="private-notice">
       <LockIcon size={18} strokeWidth={2.2} className={styles.lock} />
       <div>
         <div className={styles.title}>Details hidden: private repository</div>

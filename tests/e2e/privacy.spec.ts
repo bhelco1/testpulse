@@ -3,19 +3,18 @@ import { expect, test, type Page } from '@playwright/test';
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
 import { open } from './support/open.ts';
 
-// The privacy page, /privacy (spec section 13.8), against the seed at SEED_NOW. Every sentence in
-// design/pages/Privacy.dc.html below its heading describes the visit logging of section 14, which
-// is Phase 6 and not built: nothing records a page view, no cookie is set, no tracked link
-// exists. Those claims would be false today, so the page draws the eyebrow and heading only, and
-// these tests hold that none of the held-back copy reaches it. Tags route tests to projects
+// The privacy page, /privacy (spec section 13.8), against the seed at SEED_NOW. It carries the
+// "today" copy of design/pages/Privacy.dc.html (v9 item 3) with Bobby's edits: nothing records a
+// visit, no cookie is set, no tracked link exists. The Phase 6 copy, which describes visit
+// logging that is not built, must not reach it. Tags route tests to projects
 // (playwright.config.ts): @js where scripts run, @no-js where they do not, @visual in the four
 // viewport × theme projects inside the Playwright image.
 
 const footer = (page: Page) => page.getByRole('contentinfo');
 
-// A phrase from each held-back block of the mock: the lede, both summary cards, "How a visit is
-// recorded", "The cookie" and "If someone sent you a link".
-const HELD_BACK = [
+// A phrase from each block of the mock's "after Phase 6" version: the lede, both summary cards,
+// "How a visit is recorded", "The cookie" and "If someone sent you a link".
+const PHASE_6 = [
   'Which pages you view and for how long',
   'no third-party analytics',
   'Recorded per page view',
@@ -42,11 +41,46 @@ test.describe('the privacy page', () => {
     );
   });
 
-  test('states nothing about visit logging, which is not built', async ({ page }) => {
+  test('says what is recorded today: nothing, dated by its copy', async ({ page }) => {
     await open(page, '/privacy');
-    await expect(page.getByRole('main')).toHaveText('PrivacyWhat this site records about you');
+    const main = page.getByRole('main');
+    await expect(main.locator('[data-part="lede"]')).toHaveText(
+      'Nothing. There are no accounts, no cookies and no analytics, and this site keeps no record of who visits.',
+    );
+    const updated = main.locator('[data-part="updated"]');
+    await expect(updated).toHaveText('Updated 1 Oct');
+    await expect(updated.locator('time')).toHaveAttribute('datetime', '2026-10-01T00:00:00.000Z');
+    await expect(updated.locator('time')).toHaveAttribute('title', '1 Oct 2026, 00:00 UTC');
+    await expect(main.getByRole('heading', { level: 2 })).toHaveText([
+      'What your browser does here',
+      'What this site doesn’t do',
+      'Live updates',
+      'Your theme choice',
+      'Hosting',
+      'If this changes',
+    ]);
+    await expect(main).toContainText('Opens one live connection to Supabase Realtime');
+    await expect(main).toContainText('with JavaScript off, none is opened.');
+    await expect(main).toContainText(
+      'Both keep their own server logs, which aren’t described here; see each provider’s privacy policy.',
+    );
+    await expect(main).toContainText(
+      'A later version will log every visit anonymously and count visits to links sent with job applications.',
+    );
+  });
+
+  test('states nothing of the Phase 6 visit logging, which is not built', async ({ page }) => {
+    await open(page, '/privacy');
     const body = page.locator('body');
-    for (const phrase of HELD_BACK) await expect(body).not.toContainText(phrase);
+    for (const phrase of PHASE_6) await expect(body).not.toContainText(phrase);
+  });
+
+  // What the copy says of the site, checked in the browser: no cookie after the visit, and
+  // nothing in localStorage until the toggle is pressed.
+  test('sets no cookie and stores nothing until the toggle', { tag: '@js' }, async ({ page }) => {
+    await open(page, '/privacy');
+    expect(await page.context().cookies()).toEqual([]);
+    expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
   });
 
   // The design gives the page no live behaviour, as on the run page (section 13.5).
@@ -141,6 +175,8 @@ test.describe('the privacy page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'What this site records about you',
     );
+    await expect(page.locator('[data-part="lede"]')).toContainText('Nothing.');
+    await expect(page.getByRole('heading', { name: 'If this changes' })).toBeVisible();
     await expect(footer(page).getByRole('link', { name: 'Privacy' })).toHaveAttribute(
       'aria-current',
       'page',

@@ -1,0 +1,28 @@
+/* An empty run's Results card, as the Design System draws it ("RESULTS · empty run"). */
+.empty {
+  max-width: 720px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.emptyIcon {
+  flex: none;
+  color: var(--attn);
+}
+
+.emptyTitle {
+  font: 500 22px var(--font-serif);
+}
+
+.emptyText {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}

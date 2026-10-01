@@ -120,6 +120,32 @@ describe('Notice', () => {
     expect(getByRole('status').dataset.tone).toBe('attn');
   });
 
+  // The run page's failed-run banner (the Design System's section 10): an action after the text,
+  // which wraps below it on a narrow screen.
+  it('takes an action after its text, and wraps when it has one', () => {
+    const { container } = render(
+      <Notice
+        tone="fail"
+        icon="x-circle"
+        title="3 tests failed"
+        body="In composeApp and shared. On ios-sim and jvm."
+        action={<a href="#results">Show failures</a>}
+      />,
+    );
+    const notice = container.firstElementChild as HTMLElement;
+    expect(notice.className).toContain('withAction');
+    const content = part(notice, 'content');
+    expect(content?.nextElementSibling?.textContent).toBe('Show failures');
+    expect(content?.className).toContain('content');
+    const plain = render(<Notice tone="attn" icon="clock" body="x" />).container
+      .firstElementChild as HTMLElement;
+    expect(plain.className).not.toContain('withAction');
+    expect(ruleFor(CSS, '.withAction')).toEqual({ 'flex-wrap': 'wrap' });
+    expect(ruleFor(CSS, '.withAction .content')).toEqual({ flex: '1 1 260px', 'min-width': '0px' });
+    expect(ruleFor(CSS, '.withAction .title')).toEqual({ 'overflow-wrap': 'anywhere' });
+    expect(ruleFor(CSS, '.withAction .body')).toEqual({ 'text-wrap': 'pretty' });
+  });
+
   it('is a 14 by 16 banner with the row radius and a 1px border in its tone', () => {
     expect(ruleFor(CSS, '.notice')).toEqual({
       display: 'flex',

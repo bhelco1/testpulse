@@ -111,10 +111,14 @@ export interface LiveRun {
   readonly startedAt: string;
 }
 
-/** Writes one report as a run of `slug` that started at `run.startedAt`; returns its ids. */
+/**
+ * Writes one report as a run of `slug` that started at `run.startedAt`; returns its ids. `report`
+ * renames the job and platform, so one run can hold the same fixture on a second platform.
+ */
 export async function ingestLiveRun(
   slug: LiveSlug,
   run: LiveRun,
+  report: { readonly job: string; readonly platform: string } | null = null,
 ): Promise<{ runId: string; reportId: string }> {
   const client = admin();
   const found = await client
@@ -124,7 +128,9 @@ export async function ingestLiveRun(
     .single();
   if (found.error) throw failed(`look up ${slug}`, found.error);
   const project = ProjectRowSchema.parse(found.data);
-  const { job, module, platform, parse } = FIXTURES[slug];
+  const fixture = FIXTURES[slug];
+  const { module, parse } = fixture;
+  const { job, platform } = report ?? fixture;
   const meta = ReportMetaSchema.parse({
     ci_run_id: run.ciRunId,
     job,

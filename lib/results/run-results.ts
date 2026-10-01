@@ -33,10 +33,15 @@ export interface ResultFailure {
   readonly detail: string;
 }
 
-/** One failed or error result's text, with that result's own status and time. */
-export interface ResultFailureEntry extends ResultFailure {
+/**
+ * One failed or error result, with its own status and time and its text, which is null where
+ * row-level security returned none (a private project, section 9).
+ */
+export interface ResultFailureEntry {
   readonly status: TestStatus;
   readonly durationMs: number;
+  readonly message: string | null;
+  readonly detail: string | null;
 }
 
 export interface PlatformOutcome {
@@ -44,8 +49,8 @@ export interface PlatformOutcome {
   readonly status: TestStatus;
   readonly durationMs: number;
   /**
-   * Failure text of this platform's failing results, one entry per result (design/data-map.md,
-   * "Failure detail (several)"); none where RLS returned none.
+   * This platform's failed and error results, one entry per result (design/data-map.md, "Failure
+   * detail (several)"), each with its text where RLS returned it.
    */
   readonly failures: readonly ResultFailureEntry[];
 }
@@ -115,11 +120,17 @@ export function runTestRows(
       platform,
       status: combinedStatus(group.map((result) => result.status)),
       durationMs: group.reduce((total, result) => total + result.durationMs, 0),
-      failures: group.flatMap((result) => {
+      failures: group.flatMap((result): ResultFailureEntry[] => {
+        if (result.status !== 'failed' && result.status !== 'error') return [];
         const failure = failures.get(result.resultId);
-        return failure === undefined
-          ? []
-          : [{ ...failure, status: result.status, durationMs: result.durationMs }];
+        return [
+          {
+            status: result.status,
+            durationMs: result.durationMs,
+            message: failure?.message ?? null,
+            detail: failure?.detail ?? null,
+          },
+        ];
       }),
     }));
     const row: RunTestRow = {

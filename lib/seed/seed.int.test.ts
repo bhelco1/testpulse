@@ -1106,7 +1106,15 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         expect(detail?.results?.[0]).toMatchObject({
           ...ROUTESERVE_TEST,
           status: 'failed',
-          platforms: [{ platform: 'node', status: 'failed', failures: [] }],
+          // The failing result's status and time, which the page heads with (design v8 item
+          // 18), and none of its text, which RLS withheld.
+          platforms: [
+            {
+              platform: 'node',
+              status: 'failed',
+              failures: [{ status: 'failed', durationMs: 2, message: null, detail: null }],
+            },
+          ],
         });
         expectNoneOf(detail);
       });

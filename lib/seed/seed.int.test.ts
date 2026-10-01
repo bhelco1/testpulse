@@ -650,7 +650,16 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         { projects: seeded, headline: landingHeadline(seeded), recentRuns: landing.recentRuns },
         NOW,
       );
+      if (view.kind !== 'ready') throw new Error('the seed registers projects');
       expect(view.heroTotal).toBe('1,186');
+      // Three projects with tests; RouteServe and testpulse failing 1 each; testpulse's skipped
+      // test; testpulse last reported at 04:37 on 22 Sep, 13 days before now.
+      expect(
+        view.heroNote.map((part) => (typeof part === 'string' ? part : part.text)).join(''),
+      ).toBe(
+        'automated tests across three projects. 2 failing across two projects’ latest runs, ' +
+          '1 skipped. testpulse hasn’t reported since 22 Sep.',
+      );
       expect(view.tiles).toEqual([
         // 1,183 / 1,185 = 99.83%, rounded down.
         { label: 'Pass rate', value: '99.8%', sub: '1,183 of 1,185 · 1 skipped, excluded' },

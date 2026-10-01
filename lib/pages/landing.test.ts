@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Landing, LandingProject, RecentRun } from '../queries/landing.ts';
 import type { LatestRunDetail } from '../queries/run-rows.ts';
 import { landingHeadline, type LatestRunSummary } from '../stats/summary.ts';
-import { landingView } from './landing.ts';
+import { landingView, type ReadyLandingView } from './landing.ts';
 
 // The landing page's view of the loader's output (design/pages/Landing.dc.html,
 // design/components.md, design/data-map.md "Landing"). Pure: the page passes the loader's result
@@ -71,6 +71,7 @@ const OSTOMATE2: LandingProject = {
   runsInLast30Days: 8,
   timeToGreen: { recoveries: [], medianMs: null, worstMs: null, stillRed: null },
   health: { daysSinceLastReport: 0, problems: [], marker: { health: 'healthy' } },
+  lastReportAt: ago(2 * HOUR + 33 * MINUTE + 42_253),
   latestRunDetail: {
     reports: [
       report('android', 'composeApp', 'jvm', 60),
@@ -140,6 +141,7 @@ const ROUTESERVE: LandingProject = {
     },
   },
   health: { daysSinceLastReport: 0, problems: [], marker: { health: 'healthy' } },
+  lastReportAt: ago(ROUTESERVE_RED_MS),
   latestRunDetail: {
     reports: [
       report('test', 'apps/backend', 'node', 498),
@@ -195,6 +197,7 @@ const TESTPULSE: LandingProject = {
     stillRed: { failedRunId: 't-1', failedAt: ago(TESTPULSE_RED_MS), elapsedMs: TESTPULSE_RED_MS },
   },
   health: { daysSinceLastReport: 13, problems: ['stale'], marker: { health: 'stale', days: 13 } },
+  lastReportAt: ago(TESTPULSE_RED_MS),
   latestRunDetail: {
     reports: [report('e2e', 'testpulse', 'chromium', 3)],
     failing: [
@@ -263,11 +266,21 @@ const SEEDED = landingOf(
   ],
 );
 
-const tile = (view: ReturnType<typeof landingView>, label: string) =>
+function readyView(landing: Landing): ReadyLandingView {
+  const view = landingView(landing, NOW);
+  if (view.kind !== 'ready') throw new Error('expected the landing page with projects');
+  return view;
+}
+
+const tile = (view: ReadyLandingView, label: string) =>
   view.tiles.find((candidate) => candidate.label === label);
 
+// The hero note as a screen reader reads it: its dates are <time> elements (TimedText).
+const noteText = (view: ReadyLandingView) =>
+  view.heroNote.map((part) => (typeof part === 'string' ? part : part.text)).join('');
+
 describe('landingView at the seed', () => {
-  const view = landingView(SEEDED, NOW);
+  const view = readyView(SEEDED);
 
   it('leads with the portfolio’s distinct tests: 142 + 1,041 + 3', () => {
     expect(view.heroTotal).toBe('1,186');
@@ -437,30 +450,84 @@ describe('landingView at the seed', () => {
   });
 });
 
+const silent = (project: LandingProject, days: number): LandingProject => ({
+  ...project,
+  health: { daysSinceLastReport: days, problems: ['stale'], marker: { health: 'stale', days } },
+  lastReportAt: ago(days * DAY + HOUR),
+});
+
+const unreported = (project: LandingProject): LandingProject => ({
+  ...project,
+  latestRun: null,
+  totalTests: 0,
+  layers: {},
+  coverage: [],
+  runsInLast30Days: 0,
+  health: { daysSinceLastReport: null, problems: [], marker: { health: 'not_reporting' } },
+  lastReportAt: null,
+  latestRunDetail: null,
+});
+
+// The latest run reported, but held no test cases: an empty run (data-map "empty").
+const emptied = (project: LandingProject): LandingProject => ({
+  ...project,
+  latestRun: latest({
+    id: `${project.project.slug}-empty`,
+    status: 'empty',
+    finishedAt: project.latestRun?.finishedAt ?? NOW,
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    passRate: null,
+  }),
+  totalTests: 0,
+  layers: {},
+});
+
+const named = (project: LandingProject, slug: string, name: string): LandingProject => ({
+  ...project,
+  project: { ...project.project, id: slug, slug, name },
+});
+
+const ROUTESERVE_GREEN: LandingProject = {
+  ...ROUTESERVE,
+  latestRun: latest({ id: 'r-12', commitSha: 'c238574', passed: 1041 }),
+  timeToGreen: { ...ROUTESERVE.timeToGreen, stillRed: null },
+};
+
+// testpulse's 3 tests, all skipped: the run has tests but no rate.
+const allSkipped: LandingProject = {
+  ...TESTPULSE,
+  latestRun: latest({
+    id: 't-4',
+    status: 'passed',
+    passed: 0,
+    failed: 0,
+    skipped: 3,
+    passRate: null,
+  }),
+  health: { daysSinceLastReport: 0, problems: [], marker: { health: 'healthy' } },
+  lastReportAt: ago(HOUR),
+};
+
 describe('landingView tiles in other states', () => {
-  const allPassing = landingOf([
-    OSTOMATE2,
-    {
-      ...ROUTESERVE,
-      latestRun: latest({ id: 'r-12', passed: 1041 }),
-      timeToGreen: { ...ROUTESERVE.timeToGreen, stillRed: null },
-    },
-  ]);
+  const allPassing = landingOf([OSTOMATE2, ROUTESERVE_GREEN]);
 
   it('reads “Latest runs” when nothing failed, as the design’s healthy state does', () => {
-    expect(tile(landingView(allPassing, NOW), 'Pass rate')).toEqual({
+    expect(tile(readyView(allPassing), 'Pass rate')).toEqual({
       label: 'Pass rate',
       value: '100%',
       sub: 'Latest runs · 0 skipped, excluded',
     });
   });
 
-  it('shows projects reporting as a bare count when none is silent, with no sub-line', () => {
-    expect(tile(landingView(allPassing, NOW), 'Projects reporting')).toEqual({
+  it('counts every project reporting “{r} of {n}”, within their expected cadence (v8 item 8)', () => {
+    expect(tile(readyView(allPassing), 'Projects reporting')).toEqual({
       label: 'Projects reporting',
-      value: '2',
+      value: '2 of 2',
+      sub: 'All within their expected cadence',
     });
-    expect(tile(landingView(allPassing, NOW), 'Projects passing')).toEqual({
+    expect(tile(readyView(allPassing), 'Projects passing')).toEqual({
       label: 'Projects passing',
       value: '2 of 2',
       sub: 'Latest default-branch runs',
@@ -472,7 +539,7 @@ describe('landingView tiles in other states', () => {
     const nearly = landingOf([
       { ...ROUTESERVE, latestRun: latest({ passed: 9_999, failed: 1, passRate: 0.9999 }) },
     ]);
-    expect(tile(landingView(nearly, NOW), 'Pass rate')).toMatchObject({
+    expect(tile(readyView(nearly), 'Pass rate')).toMatchObject({
       value: '99.9%',
       sub: '9,999 of 10,000 · 0 skipped, excluded',
     });
@@ -488,52 +555,83 @@ describe('landingView tiles in other states', () => {
       },
       allPassing.projects[1] as LandingProject,
     ]);
-    expect(tile(landingView(empty, NOW), 'Pass rate')).toEqual({
+    expect(tile(readyView(empty), 'Pass rate')).toEqual({
       label: 'Pass rate',
       value: '100%',
       sub: 'RouteServe only · 0 skipped, excluded',
     });
   });
 
-  it('holds back what the design does not draw', () => {
-    const silent = (project: LandingProject, days: number): LandingProject => ({
-      ...project,
-      health: { daysSinceLastReport: days, problems: ['stale'], marker: { health: 'stale', days } },
-    });
-    // Two silent projects: the value follows the one-silent rule; the sub-line is not drawn.
+  it('lists several silent projects longest first (v8 item 8)', () => {
     expect(
       tile(
-        landingView(landingOf([silent(OSTOMATE2, 9), silent(TESTPULSE, 13)]), NOW),
+        readyView(landingOf([silent(OSTOMATE2, 9), silent(TESTPULSE, 13)])),
         'Projects reporting',
       ),
     ).toEqual({
       label: 'Projects reporting',
       value: '0 of 2',
+      attention: { icon: 'stale', text: 'Silent: testpulse 13 days · Ostomate 2.0 9 days' },
     });
-    // A registered project that has never reported: the tile's denominator is not defined.
-    const unreported: LandingProject = {
-      ...TESTPULSE,
-      latestRun: null,
-      totalTests: 0,
-      layers: {},
-      health: { daysSinceLastReport: null, problems: [], marker: { health: 'not_reporting' } },
-      latestRunDetail: null,
-    };
+  });
+
+  it('counts a registered project that has never reported in n, and names it', () => {
     expect(
-      tile(landingView(landingOf([OSTOMATE2, unreported]), NOW), 'Projects reporting'),
-    ).toBeUndefined();
-    // Nothing passed or failed anywhere: there is no rate, and no drawn tile for it.
-    expect(tile(landingView(landingOf([unreported]), NOW), 'Pass rate')).toBeUndefined();
-    // Two failing and one uncounted project: the sub-line's lead is not drawn.
-    const emptyRun: LandingProject = {
-      ...TESTPULSE,
-      latestRun: latest({ id: 't-2', status: 'empty', passed: 0, passRate: null }),
-    };
+      tile(readyView(landingOf([OSTOMATE2, unreported(TESTPULSE)])), 'Projects reporting'),
+    ).toEqual({
+      label: 'Projects reporting',
+      value: '1 of 2',
+      attention: { icon: 'stale', text: 'testpulse not reporting yet' },
+    });
+  });
+
+  it('lists never-reported projects after the silent ones, as one name list', () => {
+    const projects = [
+      silent(ROUTESERVE, 12),
+      OSTOMATE2,
+      unreported(named(TESTPULSE, 'alpha', 'Alpha')),
+      unreported(named(TESTPULSE, 'beta', 'Beta')),
+    ];
+    expect(tile(readyView(landingOf(projects)), 'Projects reporting')).toEqual({
+      label: 'Projects reporting',
+      value: '1 of 4',
+      attention: {
+        icon: 'stale',
+        text: 'RouteServe silent 12 days · Alpha and Beta not reporting yet',
+      },
+    });
+  });
+
+  it('shows no rate when no latest run passed or failed anything (v8 item 9)', () => {
+    expect(tile(readyView(landingOf([unreported(TESTPULSE)])), 'Pass rate')).toEqual({
+      label: 'Pass rate',
+      value: '—',
+      sub: 'No tests passed or failed on the latest runs',
+    });
+    expect(tile(readyView(landingOf([allSkipped])), 'Pass rate')).toEqual({
+      label: 'Pass rate',
+      value: '—',
+      sub: 'No tests passed or failed on the latest runs',
+    });
+  });
+
+  it('names the counted projects when an empty run sits beside two counted ones (v8 item 9)', () => {
+    // (142 + 1,040) / (142 + 1,040 + 1) = 1,182 / 1,183 = 99.915...%, rounded down.
     expect(
-      tile(landingView(landingOf([OSTOMATE2, ROUTESERVE, emptyRun]), NOW), 'Pass rate'),
+      tile(readyView(landingOf([OSTOMATE2, ROUTESERVE, emptied(TESTPULSE)])), 'Pass rate'),
     ).toEqual({
       label: 'Pass rate',
       value: '99.9%',
+      sub: 'Ostomate 2.0 and RouteServe only · 0 skipped, excluded',
+    });
+  });
+
+  it('keeps “{project} only” when the one counted project is failing (v8 item 9)', () => {
+    // 1,040 / 1,041 = 99.903...%, rounded down.
+    expect(tile(readyView(landingOf([emptied(OSTOMATE2), ROUTESERVE])), 'Pass rate')).toEqual({
+      label: 'Pass rate',
+      value: '99.9%',
+      sub: 'RouteServe only · 0 skipped, excluded',
     });
   });
 
@@ -546,7 +644,7 @@ describe('landingView tiles in other states', () => {
       runsInLast30Days: 0,
       latestRunDetail: null,
     };
-    const view = landingView(landingOf([unreported]), NOW);
+    const view = readyView(landingOf([unreported]));
     expect(tile(view, 'Runs in last 30 days')).toEqual({
       label: 'Runs in last 30 days',
       value: '0',
@@ -564,10 +662,12 @@ describe('landingView tiles in other states', () => {
         { module: 'extra', runId: 'o-9', pct: 50, floor: null, belowFloor: false },
       ],
     };
-    expect(
-      landingView(landingOf([extra]), NOW).cards[0]?.coverage.map((row) => row.module),
-    ).toEqual(['composeApp', 'shared', 'extra']);
-    expect(landingView(landingOf([extra]), NOW).cards[0]?.coverage[2]).toEqual({
+    expect(readyView(landingOf([extra])).cards[0]?.coverage.map((row) => row.module)).toEqual([
+      'composeApp',
+      'shared',
+      'extra',
+    ]);
+    expect(readyView(landingOf([extra])).cards[0]?.coverage[2]).toEqual({
       module: 'extra',
       pct: 50,
       floor: null,
@@ -586,9 +686,154 @@ describe('landingView tiles in other states', () => {
       latestRunDetail: detail,
     };
     // TESTPULSE's marker is stale, so its card is dated (design v8 item 14).
-    expect(landingView(landingOf([empty]), NOW).cards[0]?.latestRun).toMatchObject({
+    expect(readyView(landingOf([empty])).cards[0]?.latestRun).toMatchObject({
       status: 'empty',
       when: expect.objectContaining({ text: '5 Oct' }),
     });
+  });
+});
+
+// components.md "Landing hero" (design v8 item 6, v9 item 6): the note beside the total, from
+// data. Sentence 1 counts the projects whose latest run has tests; sentence 2 is the first of
+// failing on one project, failing on several, or the pass rate; then one sentence each for
+// empty, stale and never-reported projects. Where v9's template is silent, the reading chosen is
+// the true and grammatical one (decision 2026-09-30, section 19).
+describe('landingView hero note', () => {
+  it('reads the seed: three projects, two failing, testpulse stale since 22 Sep', () => {
+    const view = readyView(SEEDED);
+    expect(noteText(view)).toBe(
+      'automated tests across three projects. 2 failing across two projects’ latest runs, ' +
+        '1 skipped. testpulse hasn’t reported since 22 Sep.',
+    );
+    // A date the page prints is a <time> with its instant and full date (section 11).
+    expect(view.heroNote).toContainEqual({
+      text: '22 Sep',
+      datetime: '2026-09-22T04:37:00.242Z',
+      title: '22 Sep 2026, 04:37 UTC',
+    });
+  });
+
+  it('reads the design’s healthy state: two projects, 100% passing', () => {
+    const view = readyView(landingOf([OSTOMATE2, ROUTESERVE_GREEN]));
+    expect(view.heroTotal).toBe('1,183');
+    expect(noteText(view)).toBe(
+      'automated tests across two projects. 100% passing on the latest runs, 0 skipped.',
+    );
+  });
+
+  it('names the one failing project', () => {
+    const failing: LandingProject = {
+      ...OSTOMATE2,
+      latestRun: latest({ status: 'failed', passed: 141, failed: 1, passRate: 141 / 142 }),
+    };
+    expect(noteText(readyView(landingOf([failing, ROUTESERVE_GREEN])))).toBe(
+      'automated tests across two projects. 1 failing on Ostomate 2.0’s latest run, 0 skipped.',
+    );
+  });
+
+  it('says “its latest run” of one counted project, and why the empty one isn’t counted', () => {
+    const view = readyView(landingOf([emptied(OSTOMATE2), ROUTESERVE_GREEN]));
+    expect(view.heroTotal).toBe('1,041');
+    expect(noteText(view)).toBe(
+      'automated tests across one project. 100% passing on its latest run, 0 skipped. ' +
+        'Ostomate 2.0’s latest run had no tests, so it isn’t counted.',
+    );
+  });
+
+  it('names several empty runs together, then the stale project', () => {
+    expect(
+      noteText(readyView(landingOf([emptied(OSTOMATE2), ROUTESERVE_GREEN, emptied(TESTPULSE)]))),
+    ).toBe(
+      'automated tests across one project. 100% passing on its latest run, 0 skipped. ' +
+        'Latest runs of Ostomate 2.0 and testpulse had no tests, so they aren’t counted. ' +
+        'testpulse hasn’t reported since 22 Sep.',
+    );
+  });
+
+  it('says several stale projects haven’t reported recently; their last runs still count', () => {
+    const view = readyView(landingOf([silent(OSTOMATE2, 9), ROUTESERVE_GREEN, TESTPULSE]));
+    expect(view.heroTotal).toBe('1,186');
+    expect(noteText(view)).toBe(
+      'automated tests across three projects. 1 failing on testpulse’s latest run, 1 skipped. ' +
+        'Ostomate 2.0 and testpulse haven’t reported recently.',
+    );
+  });
+
+  it('names a project that hasn’t reported yet, outside the count', () => {
+    expect(
+      noteText(readyView(landingOf([OSTOMATE2, ROUTESERVE_GREEN, unreported(TESTPULSE)]))),
+    ).toBe(
+      'automated tests across two projects. 100% passing on the latest runs, 0 skipped. ' +
+        'testpulse hasn’t reported yet.',
+    );
+  });
+
+  it('lists three names “A, B and C”, with no Oxford comma (v9 item 6)', () => {
+    const view = readyView(
+      landingOf([
+        OSTOMATE2,
+        unreported(named(TESTPULSE, 'alpha', 'Alpha')),
+        unreported(named(TESTPULSE, 'beta', 'Beta')),
+        unreported(named(TESTPULSE, 'gamma', 'Gamma')),
+      ]),
+    );
+    expect(noteText(view)).toBe(
+      'automated tests across one project. 100% passing on its latest run, 0 skipped. ' +
+        'Alpha, Beta and Gamma haven’t reported yet.',
+    );
+  });
+
+  it('counts nothing when every latest run is empty (v9 item 6)', () => {
+    const view = readyView(
+      landingOf([emptied(OSTOMATE2), emptied(ROUTESERVE_GREEN), emptied(TESTPULSE)]),
+    );
+    expect(view.heroTotal).toBe('0');
+    expect(noteText(view)).toBe(
+      'automated tests on the latest runs. The latest runs of Ostomate 2.0, RouteServe and ' +
+        'testpulse had no tests, so nothing is counted. testpulse hasn’t reported since 22 Sep.',
+    );
+  });
+
+  it('says “the latest run” when the one latest run is empty', () => {
+    const view = readyView(landingOf([emptied(OSTOMATE2)]));
+    expect(view.heroTotal).toBe('0');
+    expect(noteText(view)).toBe(
+      'automated tests on the latest run. Ostomate 2.0’s latest run had no tests, so nothing is ' +
+        'counted.',
+    );
+  });
+
+  it('says “so far” before any project has a latest run', () => {
+    const view = readyView(landingOf([unreported(TESTPULSE)]));
+    expect(view.heroTotal).toBe('0');
+    expect(noteText(view)).toBe('automated tests so far. testpulse hasn’t reported yet.');
+  });
+
+  it('says none passed or failed when the counted tests were all skipped', () => {
+    expect(noteText(readyView(landingOf([allSkipped])))).toBe(
+      'automated tests across one project. None passed or failed on its latest run, 3 skipped.',
+    );
+    expect(noteText(readyView(landingOf([allSkipped, named(allSkipped, 'alpha', 'Alpha')])))).toBe(
+      'automated tests across two projects. None passed or failed on the latest runs, 6 skipped.',
+    );
+  });
+
+  it('spells the count one to nine and writes digits from 10', () => {
+    const many = (count: number) =>
+      landingOf(
+        Array.from({ length: count }, (_, index) => named(OSTOMATE2, `p${index}`, `P${index}`)),
+      );
+    expect(noteText(readyView(many(9)))).toMatch(/^automated tests across nine projects\. /);
+    const ten = readyView(many(10));
+    expect(ten.heroTotal).toBe('1,420');
+    expect(noteText(ten)).toBe(
+      'automated tests across 10 projects. 100% passing on the latest runs, 0 skipped.',
+    );
+  });
+});
+
+describe('landingView with no projects registered', () => {
+  it('replaces the hero, tiles, cards and feed with the “No projects yet” card (v8 item 10)', () => {
+    expect(landingView(landingOf([]), NOW)).toEqual({ kind: 'none' });
   });
 });

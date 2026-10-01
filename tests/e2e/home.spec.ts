@@ -19,12 +19,31 @@ test.describe('the landing page', () => {
     await open(page, '/');
   });
 
-  test('leads with the lede and the portfolio’s 1,186 tests', async ({ page }) => {
+  test('leads with the lede as its h1 and the portfolio’s 1,186 tests', async ({ page }) => {
     await expect(page).toHaveTitle('testpulse');
     const main = page.getByRole('main');
-    await expect(main.getByText('Live test results for every project I build.')).toBeVisible();
+    // The lede is the page's one h1 (design v8 item 7).
+    await expect(main.getByRole('heading', { level: 1 })).toHaveText([
+      'Live test results for every project I build.',
+    ]);
     // 142 + 1,041 + 3 distinct tests in the three latest runs.
     await expect(main.locator('[data-part="hero-total"]')).toHaveText('1,186');
+  });
+
+  test('reads the total and its note as one sentence', async ({ page }) => {
+    // One <p>: the figure, then the note (components.md, Landing hero). Three projects' latest
+    // runs have tests; RouteServe's and testpulse's each fail 1; testpulse skips 1; testpulse
+    // last reported at 04:37 UTC on 22 Sep, 13 days before SEED_NOW against a cadence of 8.
+    const hero = page
+      .getByRole('main')
+      .locator('p', { has: page.locator('[data-part="hero-total"]') });
+    await expect(hero).toHaveText(
+      '1,186 automated tests across three projects. 2 failing across two projects’ latest ' +
+        'runs, 1 skipped. testpulse hasn’t reported since 22 Sep.',
+    );
+    const date = hero.locator('time');
+    await expect(date).toHaveAttribute('datetime', '2026-09-22T04:37:00.242Z');
+    await expect(date).toHaveAttribute('title', '22 Sep 2026, 04:37 UTC');
   });
 
   test('shows the four portfolio tiles', async ({ page }) => {
@@ -263,7 +282,14 @@ test('renders its static content without running scripts', { tag: '@no-js' }, as
   await open(page, '/');
   // The inline theme script sets data-theme whenever scripts run, so its absence shows none ran.
   await expect(page.locator('html')).not.toHaveAttribute('data-theme');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Live test results for every project I build.',
+  );
   await expect(page.locator('[data-part="hero-total"]')).toHaveText('1,186');
+  await expect(page.locator('[data-part="hero-note"]')).toHaveText(
+    'automated tests across three projects. 2 failing across two projects’ latest runs, ' +
+      '1 skipped. testpulse hasn’t reported since 22 Sep.',
+  );
   await expect(page.locator('[data-part="tiles"] > div')).toHaveCount(4);
   await expect(page.getByRole('article')).toHaveCount(3);
   // The recent runs degrade to the server-rendered list (spec section 13).

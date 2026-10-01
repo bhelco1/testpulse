@@ -30,6 +30,8 @@ import {
 export interface LandingProject extends ProjectSummary {
   /** The latest default-branch CI run's reports, failing tests and duration; null before the first. */
   readonly latestRunDetail: LatestRunDetail | null;
+  /** The latest finished_at of the project's CI runs on any branch: its last report (section 11). */
+  readonly lastReportAt: Date | null;
 }
 
 /** A row of the recent runs feed: the run, its project, and its distinct tests. */
@@ -91,6 +93,7 @@ export async function loadLanding(
     const latest = latestRun(input.runs, project.defaultBranch, at);
     projects.push({
       ...projectSummary(input, at),
+      lastReportAt: input.lastReportAt,
       latestRunDetail: latest === null ? null : await loadLatestRunDetail(client, latest),
     });
     const { slug, name, visibility } = project;

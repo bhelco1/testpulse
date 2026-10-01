@@ -9,17 +9,31 @@
   color: var(--ink-2);
 }
 
+.ledeAlone {
+  margin-bottom: 24px;
+}
+
 .hero {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 8px 36px;
-  margin-bottom: 32px;
+  margin: 0 0 32px;
 }
 
 .total {
   font: var(--text-hero);
   letter-spacing: -0.04em;
+}
+
+.note {
+  display: block;
+  margin: 0 0 14px;
+  max-width: 420px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
 }
 
 .tiles {
@@ -85,4 +99,38 @@
   margin: 0 0 20px;
   font: 400 19px / 1.5 var(--font-serif);
   text-wrap: pretty;
+}
+
+.none {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 28px 24px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+}
+
+.noneTitle {
+  margin: 0;
+  font: 500 24px var(--font-serif);
+}
+
+.noneText {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.noneLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  margin-top: 6px;
+  font-size: 15px;
 }

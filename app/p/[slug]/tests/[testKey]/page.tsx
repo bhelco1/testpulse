@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { Breadcrumbs } from '../../../../../components/Breadcrumbs/Breadcrumbs';
+import { HistoryTiles } from '../../../../../components/HistoryTiles/HistoryTiles';
 import { PageFrame } from '../../../../../components/PageFrame/PageFrame';
 import { SiteFooter } from '../../../../../components/SiteFooter/SiteFooter';
 import { SiteHeader } from '../../../../../components/SiteHeader/SiteHeader';
@@ -55,12 +56,21 @@ export default async function TestHistoryPage({ params }: RouteProps) {
       <SiteHeader projects={site.projects} currentProject={`/p/${encodeURIComponent(slug)}`} />
       <Breadcrumbs items={view.crumbs.items} current={view.crumbs.current} currentMono />
       <main id="main">
-        <TestHeader {...view.header} />
+        <TestHeader {...view.header}>
+          {view.tiles !== null && <HistoryTiles tiles={view.tiles} />}
+        </TestHeader>
         {view.timeline !== null && (
           <section className={timelineClass} aria-labelledby="timeline-heading">
-            <h2 id="timeline-heading" className={styles.title}>
-              Status by run
-            </h2>
+            <div className={styles.head}>
+              <h2 id="timeline-heading" className={styles.title}>
+                Status by run
+              </h2>
+              {view.stripNote !== null && (
+                <span className={styles.note} data-part="strip-note">
+                  {view.stripNote}
+                </span>
+              )}
+            </div>
             <div className={styles.card}>
               <StatusTimeline kind="results" {...view.timeline} />
             </div>

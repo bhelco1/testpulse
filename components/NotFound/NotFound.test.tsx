@@ -191,9 +191,18 @@ describe('NotFound (test)', () => {
     expect(queryByRole('button', { name: 'Try again' })).toBeNull();
   });
 
-  // A project with no run has no latest results to link to; the design does not draw it.
-  it('with no run to link to offers only the overview', () => {
-    const { getAllByRole } = renderTest(null);
-    expect(getAllByRole('link').map((link) => link.textContent)).toEqual(['Overview']);
+  // Design v9 item 12 (Design System section 14, NotFound "test, project has no runs"): a state of
+  // the test kind, not a kind of its own (owner decision 2026-09-30), whose primary goes to the
+  // project page.
+  it('with no run to link to goes to the project page as its primary', () => {
+    const { getAllByRole, getByRole } = renderTest(null);
+    expect(getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Go to Ostomate 2.0',
+      'Overview',
+    ]);
+    const primary = getByRole('link', { name: 'Go to Ostomate 2.0' });
+    expect(primary.getAttribute('href')).toBe('/p/ostomate2');
+    expect(primary.dataset.variant).toBe('primary');
+    expect(getByRole('heading', { level: 1 }).textContent).toBe('This test isn’t in Ostomate 2.0');
   });
 });

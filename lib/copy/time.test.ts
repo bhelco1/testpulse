@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  chartWhen,
   clockLabel,
   clockSecondsLabel,
   dateLabel,
@@ -196,5 +197,36 @@ describe('clockSecondsLabel', () => {
       title: '5 Oct 2026, 14:03 UTC',
     });
     expect(clockSecondsLabel(new Date('2026-10-05T00:00:00.000Z')).text).toBe('00:00:00');
+  });
+});
+
+// A chart table's "When" (components.md TrendChart, "Table"; design v9 item 1): the run's finish
+// time as "22 Sep, 04:37 UTC", the year added outside the current UTC year, in two pieces that a
+// narrow table wraps between and never inside. The chart is drawn in the browser, so the server
+// passes the current UTC year rather than the chart reading a clock.
+describe('chartWhen', () => {
+  it('splits "22 Sep, 04:37 UTC" into its date and time, titled with the full timestamp', () => {
+    expect(chartWhen('2026-09-22T04:37:59.999Z', 2026)).toEqual({
+      date: '22 Sep,',
+      time: '04:37 UTC',
+      title: '22 Sep 2026, 04:37 UTC',
+    });
+  });
+
+  it('adds the year to the date in another UTC year', () => {
+    expect(chartWhen('2025-12-12T04:37:00.000Z', 2026)).toEqual({
+      date: '12 Dec 2025,',
+      time: '04:37 UTC',
+      title: '12 Dec 2025, 04:37 UTC',
+    });
+  });
+
+  it('reads the UTC day and time, not the server’s', () => {
+    expect(chartWhen('2026-12-31T23:59:00.000+00:00', 2026).date).toBe('31 Dec,');
+    expect(chartWhen('2027-01-01T00:30:00.000+01:00', 2026)).toEqual({
+      date: '31 Dec,',
+      time: '23:30 UTC',
+      title: '31 Dec 2026, 23:30 UTC',
+    });
   });
 });

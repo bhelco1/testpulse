@@ -88,8 +88,30 @@ async function expectIdentity(page: Page, test: SeededTest, short: string, layer
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(test.name);
   await expect(page.locator('[data-part="suite"]')).toHaveText(test.suite);
   await expect(page.locator('[data-part="layer"]')).toHaveText(layer);
+  // The module tag comes first (design v9 item 16). Every seeded test was first seen 11 days or
+  // more before SEED_NOW and none ran on two platforms with differing results, so no New pill and
+  // no mismatch headline.
+  await expect(page.locator('[data-part="tags"] > *').first()).toHaveText(test.module);
+  await expect(page.locator('[data-part="module"]')).toHaveText(test.module);
+  await expect(page.locator('[data-part="new"]')).toHaveCount(0);
+  await expect(page.locator('[data-part="mismatch"]')).toHaveCount(0);
   await expect(timeline(page).getByRole('heading', { level: 2 })).toHaveText('Status by run');
 }
+
+// components.md, Test history page, "Tiles" (design v8 item 40, v9 item 5): label, figure and
+// sub-line of Runs, Failed, Flaky and Median time.
+async function expectTiles(page: Page, tiles: readonly (readonly [string, string, string])[]) {
+  const items = page.locator('[data-part="tiles"] > li');
+  await expect(items).toHaveCount(tiles.length);
+  for (const [index, [label, value, sub]] of tiles.entries()) {
+    const item = items.nth(index);
+    await expect(item.locator('[data-part="label"]')).toHaveText(label);
+    await expect(item.locator('[data-part="value"]')).toHaveText(value);
+    await expect(item.locator('[data-part="sub"]')).toHaveText(sub);
+  }
+}
+
+const stripNote = (page: Page) => timeline(page).locator('[data-part="strip-note"]');
 
 test.describe('an Ostomate2 test on one platform (public)', () => {
   test.beforeEach(async ({ page }) => {
@@ -99,6 +121,16 @@ test.describe('an Ostomate2 test on one platform (public)', () => {
   test('names the test, its suite, layer and breadcrumbs', async ({ page }) => {
     await expectIdentity(page, SINGLE, 'ChangeEventDaoTest', 'Integration');
     await expect(page.locator('[data-part="flaky"]')).toHaveCount(0);
+  });
+
+  test('tiles its 9 runs since 24 Sep, none failed or flaky, 68 ms each', async ({ page }) => {
+    await expectTiles(page, [
+      ['Runs', '9', 'since 24 Sep'],
+      ['Failed', '0', 'on any platform'],
+      ['Flaky', '0', 'none in 30 days'],
+      ['Median time', '0.07 s', 'last 30 CI runs'],
+    ]);
+    await expect(stripNote(page)).toHaveText('Oldest on the left');
   });
 
   test('draws one strip of its 9 runs, all passed, and opens on the latest', async ({ page }) => {
@@ -157,6 +189,15 @@ test.describe('an Ostomate2 test on two platforms (public)', () => {
     await expect(cells(page)).toHaveCount(18);
     // 25 ms on the JVM and 3 ms on the simulator, as the two JUnit files record them.
     await expect(fields(page)).toHaveText(['jvmPassed·0.03 s', 'ios-simPassed·0.00 s']);
+  });
+
+  test('tiles the JVM’s median with the simulator’s beside it', async ({ page }) => {
+    await expectTiles(page, [
+      ['Runs', '9', 'since 24 Sep'],
+      ['Failed', '0', 'on any platform'],
+      ['Flaky', '0', 'none in 30 days'],
+      ['Median time', '0.03 s', 'jvm · ios-sim 0.00 s'],
+    ]);
   });
 
   test('charts a line per platform, giving the range across both', async ({ page }) => {
@@ -226,6 +267,41 @@ test.describe('RouteServe’s flaky test (private)', () => {
     await expectIdentity(page, FLAKY, 'asset.test.ts', 'Unit');
     await expect(page.locator('[data-part="flaky"]')).toHaveText('Flaky');
   });
+
+  // The four red runs on main, the flip's failing side among them, as the project page's flaky
+  // row counts them ("Failed 4 of last 10 runs").
+  test('tiles 11 runs, 4 failed, 1 commit flipped', async ({ page }) => {
+    await expectTiles(page, [
+      ['Runs', '11', 'since 24 Sep'],
+      ['Failed', '4', '4 runs · node'],
+      ['Flaky', '1', 'commit in 30 days · node'],
+      ['Median time', '0.00 s', 'last 30 CI runs'],
+    ]);
+  });
+
+  // Design v9 item 13: the flip's two runs carry the amber diamond and the three failures the
+  // failed square, one mark per run.
+  test(
+    'marks the flip with diamonds and the failures with squares',
+    { tag: '@js' },
+    async ({ page }) => {
+      const marks = duration(page).locator('[data-part="mark"]');
+      await expect(marks).toHaveCount(5);
+      const looks = await marks.evaluateAll((all) =>
+        all.map((mark) => [
+          mark.getAttribute('fill'),
+          (mark.getAttribute('transform') ?? '') !== '',
+        ]),
+      );
+      expect(looks).toEqual([
+        ['var(--fail)', false],
+        ['var(--attn)', true],
+        ['var(--attn)', true],
+        ['var(--fail)', false],
+        ['var(--fail)', false],
+      ]);
+    },
+  );
 
   test('marks the flip of one commit on both of its cells and opens on the latest failure', async ({
     page,
@@ -310,6 +386,16 @@ test.describe('testpulse’s failing test (public, one run)', () => {
     await expect(panel(page).locator('[data-part="when"]')).toHaveText('1 week ago');
     // 4 ms, as the Playwright JUnit file records it.
     await expect(fields(page)).toHaveText(['ResultFailed·0.00 s']);
+  });
+
+  test('tiles its one failed run and notes it is the only one', async ({ page }) => {
+    await expectTiles(page, [
+      ['Runs', '1', 'since 22 Sep'],
+      ['Failed', '1', '1 run · chromium'],
+      ['Flaky', '0', 'none in 30 days'],
+      ['Median time', '0.00 s', 'last 30 CI runs'],
+    ]);
+    await expect(stripNote(page)).toHaveText('One run so far');
   });
 
   test('draws the duration chart’s one-run state, with no caption', async ({ page }) => {
@@ -411,11 +497,19 @@ test.describe('without scripts, the duration chart is its table', { tag: '@no-js
   test('lists the two-platform test’s 8 runs, newest first', async ({ page }) => {
     await open(page, pathOf(TWO_PLATFORMS));
     const table = duration(page).getByRole('table');
-    await expect(table.locator('thead th')).toHaveText(['Run', 'jvm', 'ios-sim']);
+    await expect(table.locator('thead th')).toHaveText(['Run', 'When', 'jvm', 'ios-sim']);
     await expect(table.locator('tbody tr')).toHaveCount(8);
-    // The simulator's 3 ms reads in whole ms (design v8 item 48).
-    await expect(table.locator('tbody tr').first()).toHaveText('Latest0.03 s3 ms');
-    await expect(table.locator('tbody tr').last()).toHaveText('7 runs ago0.03 s3 ms');
+    // The simulator's 3 ms reads in whole ms (design v8 item 48); each run's finish time in UTC
+    // (design v9 item 1), the oldest started 11 days before SEED_NOW at 14:05.
+    await expect(table.locator('tbody tr').first()).toHaveText('Latest5 Oct,09:26 UTC0.03 s3 ms');
+    await expect(table.locator('tbody tr').last()).toHaveText(
+      /^7 runs ago24 Sep,14:0\d UTC0\.03 s3 ms$/,
+    );
+    // Each run links to its page (design v9 item 2).
+    await expect(table.getByRole('link')).toHaveCount(8);
+    for (const link of await table.getByRole('link').all()) {
+      await expect(link).toHaveAttribute('href', RUN_HREF('ostomate2'));
+    }
     await expect(duration(page).getByRole('button', { name: 'Show table' })).toHaveCount(0);
   });
 });
@@ -557,15 +651,22 @@ test.describe('a private test history leaks nothing', { tag: '@js' }, () => {
         String(ROUTESERVE_SHAS[0]),
       );
       await current.keyboard.press('End');
+      // The duration chart's table, with its run links (design v9 items 1 and 2).
+      await duration(current).getByRole('button', { name: 'Show table' }).click();
+      await expect(duration(current).getByRole('table').getByRole('link')).toHaveCount(10);
     });
 
     // Positive controls: every seeded run's SHA shows cut to 7 characters in the cells' names,
-    // the test's name is the one the hidden failure text belongs to, and the capture holds the
-    // page's own data, not only static files.
+    // the test's name is the one the hidden failure text belongs to, the module, tiles and chart
+    // table are in what was captured, and the capture holds the page's own data, not only static
+    // files.
     expect(responses).toBeGreaterThan(3);
     for (const sha of ROUTESERVE_SHAS) expect(html).toContain(sha);
     expect(html).toContain(FLAKY.name);
     expect(html).toContain('Private repository');
+    expect(html).toContain(FLAKY.module);
+    expect(html).toContain('4 runs · node');
+    expect(html).toMatch(/href="\/p\/routeserve\/runs\/[0-9a-f-]{36}" class="[^"]*runLink/);
 
     expect(leaksIn(texts, HIDDEN)).toEqual([]);
   });

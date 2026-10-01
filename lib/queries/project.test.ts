@@ -348,6 +348,23 @@ describe('loadProjectPage', () => {
       ['ci-1', 2],
       ['ci-2', 3],
     ]);
+    // One chart per module over the same runs as pass rate (design v8 item 3): shared was
+    // reported by ci-2 alone, so bf and ci-1 are gaps.
+    expect(
+      page?.trends.coverage.map(({ module, points }) => [
+        module,
+        points.map((point) => [point.runId, point.linesPct]),
+      ]),
+    ).toEqual([
+      [
+        'shared',
+        [
+          ['bf', null],
+          ['ci-1', null],
+          ['ci-2', (457 / 490) * 100],
+        ],
+      ],
+    ]);
   });
 
   it('keeps "Pass rate, 30 days" a 30-day window over both sources', async () => {
@@ -466,6 +483,8 @@ describe('loadProjectPage', () => {
           platforms: ['jvm'],
           // Failed in a1 of a1 and a2.
           failures: { failed: 1, runs: 2 },
+          // a1 and a2 are one commit.
+          commits: 1,
         },
       ],
       // One test in the latest CI run (a2): 1 / 1.
@@ -695,7 +714,7 @@ describe('loadProjectPage', () => {
 
     expect(page?.summary.latestRun).toBeNull();
     expect(page?.latestRun).toBeNull();
-    expect(page?.trends).toEqual({ passRate: [], testCount: [], duration: [] });
+    expect(page?.trends).toEqual({ passRate: [], testCount: [], coverage: [], duration: [] });
     expect(page?.recentRuns).toEqual([]);
     expect(page?.runs).toEqual({ branches: 'default', items: [], hasMore: false });
     expect(queries.filter((query) => query.table === 'reports')).toEqual([]);

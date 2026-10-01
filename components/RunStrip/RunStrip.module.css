@@ -1,4 +1,5 @@
-/* The "Last 40 runs" card from design/pages/Project Page.dc.html; every value there is literal. */
+/* The "Last 40 runs" card from design/pages/Project Page.dc.html; every value there is literal.
+   The note follows components.md (13 px, --ink-3), where the mock writes 14 px --ink-2. */
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -28,6 +29,19 @@
 }
 
 .note {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+/* Design System section 11, "RUNS STRIP · no CI runs yet". */
+.empty {
+  height: 48px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1.5px dashed var(--line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }

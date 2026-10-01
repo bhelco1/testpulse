@@ -1,0 +1,42 @@
+/* The tiles from design/pages/Test History.dc.html; every value there is literal. They differ
+   from StatTile (no shadow, a 36 px figure in its tone), so they are their own block. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 12px;
+  margin-top: 28px;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+
+.label {
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.value {
+  font: 500 36px/1.1 var(--font-serif);
+  margin-top: 6px;
+  color: var(--ink);
+}
+
+.tile[data-tone='fail'] .value {
+  color: var(--fail);
+}
+
+.tile[data-tone='attn'] .value {
+  color: var(--attn);
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}

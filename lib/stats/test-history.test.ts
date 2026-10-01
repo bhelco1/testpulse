@@ -49,8 +49,12 @@ describe('testHistory', () => {
       runs: [],
       flaky: false,
       flakyPlatforms: [],
+      flakyCommits: 0,
       initialRun: null,
-      duration: { platforms: [], points: [] },
+      failedRuns: 0,
+      failedPlatforms: [],
+      mismatch: { runs: 0, latest: null },
+      duration: { platforms: [], points: [], medianMs: [] },
     });
   });
 
@@ -79,7 +83,7 @@ describe('testHistory', () => {
         ],
       },
     ]);
-    // One run: one point, a value per platform.
+    // One run: one point, a value per platform, and the cell each came from.
     expect(history.duration).toEqual({
       platforms: ['jvm', 'ios-sim'],
       points: [
@@ -88,8 +92,13 @@ describe('testHistory', () => {
           finishedAt: at('2026-09-30T10:00:00Z'),
           status: 'passed',
           durationsMs: [410, 630],
+          cells: [
+            { platform: 'jvm', status: 'passed', durationMs: 410, flaky: false },
+            { platform: 'ios-sim', status: 'failed', durationMs: 630, flaky: false },
+          ],
         },
       ],
+      medianMs: [410, 630],
     });
   });
 
@@ -304,7 +313,180 @@ describe('testHistory', () => {
     it('has no points when no default-branch CI run has been read', () => {
       const runs = [publicRun('pr', '2026-09-10T00:00:00Z', { branch: 'feature/x' })];
       const history = testHistory(runs, [result('a', 'pr', 'jvm', 'passed', 70)], options);
-      expect(history.duration).toEqual({ platforms: [], points: [] });
+      expect(history.duration).toEqual({ platforms: [], points: [], medianMs: [] });
+    });
+
+    // The chart says "Skipped" where the platform's result was skipped and "Not run" where it has
+    // none (v9 item 18), so each point carries the cell its value came from, or null.
+    it('carries each platform’s cell, null where the test has no result there', () => {
+      const runs = [main(0, '2026-09-28T10:00:00Z'), main(1, '2026-09-29T10:00:00Z')];
+      const history = testHistory(
+        runs,
+        [result('a', 'm0', 'jvm', 'skipped', 0), result('b', 'm0', 'ios-sim', 'passed', 40)],
+        options,
+      );
+      expect(history.duration.points.map((point) => point.cells)).toEqual([
+        [
+          { platform: 'jvm', status: 'skipped', durationMs: 0, flaky: false },
+          { platform: 'ios-sim', status: 'passed', durationMs: 40, flaky: false },
+        ],
+        [null, null],
+      ]);
+      expect(history.duration.points.map((point) => point.durationsMs)).toEqual([
+        [null, 40],
+        [null, null],
+      ]);
+    });
+
+    // components.md, Test history page: "Median time: value = median of the first platform (data
+    // order) over the last 30 default-branch CI runs", each other platform's beside it.
+    it('gives each platform’s median over the runs it has a value in', () => {
+      const runs = [0, 1, 2, 3].map((i) => main(i, `2026-09-2${i}T10:00:00Z`));
+      const history = testHistory(
+        runs,
+        [
+          result('a', 'm0', 'jvm', 'passed', 40),
+          result('b', 'm1', 'jvm', 'passed', 10),
+          result('c', 'm2', 'jvm', 'passed', 30),
+          result('d', 'm3', 'jvm', 'skipped', 0),
+          result('e', 'm0', 'ios-sim', 'passed', 60),
+          result('f', 'm1', 'ios-sim', 'passed', 70),
+          result('g', 'm3', 'ios-sim', 'skipped', 0),
+        ],
+        options,
+      );
+      // jvm: 10, 30, 40 → 30. ios-sim: 60, 70 → 65.
+      expect(history.duration.medianMs).toEqual([30, 65]);
+    });
+
+    it('has no median for a platform skipped in every run', () => {
+      const runs = [main(0, '2026-09-28T10:00:00Z'), main(1, '2026-09-29T10:00:00Z')];
+      const history = testHistory(
+        runs,
+        [
+          result('a', 'm0', 'jvm', 'skipped', 0),
+          result('b', 'm1', 'jvm', 'skipped', 0),
+          result('c', 'm1', 'ios-sim', 'passed', 40),
+        ],
+        options,
+      );
+      expect(history.duration.medianMs).toEqual([null, 40]);
+    });
+  });
+
+  // components.md, Test history page, "Tiles (over the strip's runs: the last 40 CI runs with a
+  // result for this test)" (design v8 item 40, v9 item 5).
+  describe('the strip and its tiles', () => {
+    const daily = (n: number) =>
+      Array.from({ length: n }, (_, i) =>
+        publicRun(`d${i}`, new Date(Date.UTC(2026, 7, 1 + i, 10)).toISOString(), {
+          commitSha: `c${i}`,
+        }),
+      );
+
+    it('holds the last 40 runs with a result', () => {
+      const runs = daily(42);
+      const history = testHistory(
+        runs,
+        runs.map((r, i) => result(`x${i}`, r.id, 'jvm', i === 0 ? 'failed' : 'passed')),
+        options,
+      );
+      expect(history.runs).toHaveLength(40);
+      expect(history.runs[0]?.id).toBe('d2');
+      // d0's failure is behind the 40, so it is neither counted nor opened on.
+      expect(history.failedRuns).toBe(0);
+      expect(history.initialRun).toBe(39);
+    });
+
+    it('counts the runs it failed or errored in on any platform, and on which platforms', () => {
+      const runs = daily(4);
+      const history = testHistory(
+        runs,
+        [
+          result('a', 'd0', 'jvm', 'passed'),
+          result('b', 'd0', 'ios-sim', 'failed'),
+          result('c', 'd1', 'jvm', 'error'),
+          result('d', 'd1', 'ios-sim', 'failed'),
+          result('e', 'd2', 'jvm', 'passed'),
+          result('f', 'd2', 'ios-sim', 'passed'),
+          result('g', 'd3', 'jvm', 'skipped'),
+        ],
+        options,
+      );
+      expect(history.failedRuns).toBe(2);
+      // Report order, as the strips are drawn.
+      expect(history.failedPlatforms).toEqual(['jvm', 'ios-sim']);
+    });
+
+    // "Runs where it failed or errored on any platform", as the flaky list's "Failed {n} of last
+    // {m} runs" counts them on the project page, so one test reads alike on both pages: the
+    // failing side of a flip is a run it failed in, though the strip draws its cell as Flaky.
+    it('counts the failing side of a flip as a failed run', () => {
+      const runs = [
+        publicRun('a1', '2026-09-20T10:00:00Z', { commitSha: 'c1' }),
+        publicRun('a2', '2026-09-20T11:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
+      ];
+      const history = testHistory(
+        runs,
+        [result('x1', 'a1', 'jvm', 'failed'), result('x2', 'a2', 'jvm', 'passed')],
+        options,
+      );
+      expect(history.failedRuns).toBe(1);
+      expect(history.failedPlatforms).toEqual(['jvm']);
+      expect(history.flakyCommits).toBe(1);
+    });
+
+    it('counts the commits it flipped on in 30 days', () => {
+      const runs = [
+        publicRun('a1', '2026-09-20T10:00:00Z', { commitSha: 'c1' }),
+        publicRun('a2', '2026-09-20T11:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
+        publicRun('b1', '2026-09-21T10:00:00Z', { commitSha: 'c2' }),
+        publicRun('b2', '2026-09-21T11:00:00Z', { commitSha: 'c2', runAttempt: 2 }),
+      ];
+      const history = testHistory(
+        runs,
+        [
+          result('x1', 'a1', 'jvm', 'failed'),
+          result('x2', 'a2', 'jvm', 'passed'),
+          result('x3', 'a1', 'ios-sim', 'failed'),
+          result('x4', 'a2', 'ios-sim', 'passed'),
+          result('x5', 'b1', 'jvm', 'error'),
+          result('x6', 'b2', 'jvm', 'passed'),
+        ],
+        options,
+      );
+      expect(history.flakyCommits).toBe(2);
+    });
+
+    // components.md: "Mismatch headline: shown when any run in the strip has a platform mismatch",
+    // a mismatch being statuses that differ across platforms in one run (ResultsTable).
+    it('counts the runs whose platforms disagree, and finds the latest', () => {
+      const runs = daily(4);
+      const history = testHistory(
+        runs,
+        [
+          result('a', 'd0', 'jvm', 'passed'),
+          result('b', 'd0', 'ios-sim', 'failed'),
+          result('c', 'd1', 'jvm', 'passed'),
+          result('d', 'd1', 'ios-sim', 'skipped'),
+          result('e', 'd2', 'jvm', 'failed'),
+          result('f', 'd2', 'ios-sim', 'failed'),
+          // One platform only: nothing to disagree with.
+          result('g', 'd3', 'jvm', 'error'),
+        ],
+        options,
+      );
+      expect(history.mismatch).toEqual({ runs: 2, latest: 1 });
+    });
+
+    it('finds no mismatch on one platform', () => {
+      const runs = daily(2);
+      const history = testHistory(
+        runs,
+        [result('a', 'd0', 'jvm', 'passed'), result('b', 'd1', 'jvm', 'failed')],
+        options,
+      );
+      expect(history.mismatch).toEqual({ runs: 0, latest: null });
     });
   });
 

@@ -865,6 +865,8 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
             platforms: ['node'],
             // It has a result in all 10 CI runs on main and failed in the 4 red ones.
             failures: { failed: 4, runs: 10 },
+            // The red first attempt and its green re-run share one commit.
+            commits: 1,
           },
         ],
         totalTests: 1041,

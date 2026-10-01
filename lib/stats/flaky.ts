@@ -32,6 +32,7 @@ const FLAKY_DAYS = 30;
 
 interface Outcome {
   readonly testId: string;
+  readonly commitSha: string;
   readonly platform: string;
   readonly seen: [passing: boolean, failing: boolean];
   readonly resultIds: string[];
@@ -61,6 +62,7 @@ function outcomes(
     const key = `${run.commitSha}\u0000${result.testId}\u0000${result.platform}`;
     const group = groups.get(key) ?? {
       testId: result.testId,
+      commitSha: run.commitSha,
       platform: result.platform,
       seen: [false, false],
       resultIds: [],
@@ -100,21 +102,33 @@ export interface FlakyTest {
   readonly testId: string;
   /** The platforms the test both passed and failed on, for one commit. */
   readonly platforms: readonly string[];
+  /**
+   * The commits it both passed and failed on, on one platform: "Flipped on {c} commits in 30 days"
+   * and the test history's Flaky tile (design v9 item 12).
+   */
+  readonly commits: number;
 }
 
-/** The flaky tests with the platforms each flipped on, for the project page's flaky list. */
+/** The flaky tests with the platforms and commits each flipped on, for the flaky list. */
 export function flakyPlatforms(
   runs: readonly StatsRun[],
   results: readonly StatsResult[],
   options: FlakyOptions,
 ): FlakyTest[] {
-  const platformsOf = new Map<string, Set<string>>();
+  const flipsOf = new Map<string, { platforms: Set<string>; commits: Set<string> }>();
   for (const group of outcomes(runs, results, options).groups.filter(flipped)) {
-    platformsOf.set(group.testId, (platformsOf.get(group.testId) ?? new Set()).add(group.platform));
+    const flips = flipsOf.get(group.testId) ?? { platforms: new Set(), commits: new Set() };
+    flips.platforms.add(group.platform);
+    flips.commits.add(group.commitSha);
+    flipsOf.set(group.testId, flips);
   }
-  return [...platformsOf.entries()]
+  return [...flipsOf.entries()]
     .sort(([a], [b]) => compareText(a, b))
-    .map(([testId, platforms]) => ({ testId, platforms: [...platforms].sort(compareText) }));
+    .map(([testId, { platforms, commits }]) => ({
+      testId,
+      platforms: [...platforms].sort(compareText),
+      commits: commits.size,
+    }));
 }
 
 // Design v7 item 6 (components.md StatusTimeline, data-map.md "Flaky list"): the flaky list's

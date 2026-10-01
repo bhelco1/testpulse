@@ -14,12 +14,16 @@ const history = (page: Page) => page.getByRole('region', { name: 'History' });
 const charts = (page: Page) => history(page).getByRole('figure');
 const runStrip = (page: Page) => history(page).getByRole('region', { name: 'Last 40 runs' });
 
-// Design v7 item 5: each chart's scope line names the last 30 runs its source rule admits.
-const SCOPES = [
-  'Default branch · last 30 runs · CI and imported history',
+// Design v7 item 5: each chart's scope line names the last 30 runs its source rule admits. Line
+// coverage has a chart per module (design v8 item 3), between tests per run and duration.
+const BOTH_SOURCES = 'Default branch · last 30 runs · CI and imported history';
+const scopes = (modules: number) => [
+  BOTH_SOURCES,
   'Default branch · last 30 CI runs',
+  ...Array.from({ length: modules }, () => BOTH_SOURCES),
   'Default branch · last 30 CI runs (imported history has no durations)',
 ];
+const RUN_HREF = (slug: string) => new RegExp(`^/p/${slug}/runs/[0-9a-f-]{36}$`);
 
 test.describe('Ostomate2 (public)', () => {
   test.beforeEach(async ({ page }) => {
@@ -113,14 +117,19 @@ test.describe('Ostomate2 (public)', () => {
     await expect(charts(page).getByRole('heading', { level: 3 })).toHaveText([
       'Pass rate',
       'Tests per run',
+      'Line coverage, composeApp',
+      'Line coverage, shared',
       'Run duration',
     ]);
-    await expect(charts(page).locator('[data-part="scope"]')).toHaveText(SCOPES);
+    await expect(charts(page).locator('[data-part="scope"]')).toHaveText(scopes(2));
     // 13 imported runs and 8 CI runs, none failed; 142 tests in each CI run; each CI run's
-    // reports sum to 35,604 ms. No coverage chart: which module it shows is still open (13.2).
+    // reports sum to 35,604 ms. Coverage over all 21: composeApp from the history's first 93.6%
+    // to 497 / 527 = 94.31%, shared from 93.2% to 457 / 490 = 93.27%, both read to the tenth.
     await expect(charts(page).locator('[data-part="caption"]')).toHaveText([
       'All 21 runs passed.',
       'Held at 142 for the last 8 runs.',
+      'Rose from 93.6% to 94.3% over 21 runs; above its 93% floor.',
+      'Held at 93.2% over 21 runs; above its 91% floor.',
       'Held at 36 s over the last 8 runs.',
     ]);
     await expect(runStrip(page).getByRole('img')).toHaveAttribute(
@@ -198,12 +207,18 @@ test.describe('RouteServe (private)', () => {
   test('charts its ten CI runs on main, four of them red, and the strip of all ten', async ({
     page,
   }) => {
-    await expect(charts(page).locator('[data-part="scope"]')).toHaveText(SCOPES);
-    // A red run passed 1,044 of 1,045 executions, 99.90%. Every run has 1,041 tests. Green runs
-    // take 206,735 ms and red ones 204,120 ms; six green make the median 207 s.
+    await expect(charts(page).locator('[data-part="scope"]')).toHaveText(scopes(3));
+    // A red run passed 1,044 of 1,045 executions, 99.90%. Every run has 1,041 tests. Every run
+    // covers apps/backend 1,862 / 1,968 = 94.61% and apps/mobile 1,496 / 1,551 = 96.45%; the four
+    // red runs post packages/shared without coverage, so it has 6 runs of 102 / 102, and the
+    // latest, red but not empty, adds no sentence. Green runs take 206,735 ms and red ones
+    // 204,120 ms; six green make the median 207 s.
     await expect(charts(page).locator('[data-part="caption"]')).toHaveText([
       '99.9% on the latest run. 4 of the last 10 runs failed.',
       'Held at 1,041 for the last 10 runs.',
+      'Held at 94.6% over 10 runs; above its 80% floor.',
+      'Held at 96.4% over 10 runs; above its 80% floor.',
+      'Held at 100.0% over 6 runs; above its 80% floor.',
       'Between 204 s and 207 s over the last 10 runs. Median 207 s.',
     ]);
     await expect(runStrip(page).getByRole('img')).toHaveAttribute(
@@ -222,15 +237,24 @@ test.describe('RouteServe (private)', () => {
       '',
       '✕',
     ]);
-    // The design draws a note for a strip that all passed only.
-    await expect(runStrip(page).locator('[data-part="note"]')).toHaveCount(0);
+    // Every run the server read, counted (owner decision 2026-09-30).
+    await expect(runStrip(page).locator('[data-part="note"]')).toHaveText('6 passed, 4 failed.');
   });
 
-  test('marks the four red runs on each chart', { tag: '@js' }, async ({ page }) => {
-    for (const chart of await charts(page).all()) {
-      await expect(chart.locator('[data-part="mark"]')).toHaveCount(4);
-    }
-  });
+  // A mark sits on a value (design v9 item 13): packages/shared has none at the red runs.
+  test(
+    'marks the four red runs on each chart that has a value there',
+    { tag: '@js' },
+    async ({ page }) => {
+      const all = await charts(page).all();
+      expect(all).toHaveLength(6);
+      for (const [index, chart] of all.entries()) {
+        // A chart is drawn once it has measured its width: wait for its first point's dot.
+        await expect(chart.locator('[data-part="end-dot"]').first()).toBeVisible();
+        await expect(chart.locator('[data-part="mark"]')).toHaveCount(index === 4 ? 0 : 4);
+      }
+    },
+  );
 
   test('shows its pyramid, declared suite, three floors and the flaky test', async ({ page }) => {
     await expect(page.locator('figure [data-part="row"]')).toHaveText([
@@ -326,10 +350,13 @@ for (const slug of ['ostomate2', 'routeserve']) {
       }
       expect(runRowsReached).toBe(await runsLog(page).getByRole('link').count());
       // Each chart is one stop, named by its title and caption, with its "Show table" button.
-      expect(reached.filter((name) => name === 'Show table')).toHaveLength(3);
+      const chartCount = slug === 'ostomate2' ? 5 : 6;
+      expect(reached.filter((name) => name === 'Show table')).toHaveLength(chartCount);
       expect(
-        reached.filter((name) => /^(Pass rate|Tests per run|Run duration)\. /.test(name)),
-      ).toHaveLength(3);
+        reached.filter((name) =>
+          /^(Pass rate|Tests per run|Line coverage, [^.]+|Run duration)\. /.test(name),
+        ),
+      ).toHaveLength(chartCount);
       if (slug === 'routeserve') {
         // The failing test on the latest run card and the flaky test's row.
         expect(reached.filter((name) => name.includes('assetCreateSchema accepts'))).toHaveLength(
@@ -377,14 +404,63 @@ for (const slug of ['ostomate2', 'routeserve']) {
     for (const placeholder of await page.locator('[data-part="placeholder"]').all()) {
       await expect(placeholder).toBeHidden();
     }
-    const table = page.getByRole('region', { name: 'Pass rate, table' }).getByRole('row');
+    const passRate = page.getByRole('region', { name: 'Pass rate, table' });
+    const table = passRate.getByRole('row');
     await expect(table).toHaveCount(slug === 'ostomate2' ? 22 : 11);
-    await expect(table.nth(1)).toHaveText(slug === 'ostomate2' ? 'Latest100.0%' : 'Latest99.9%');
+    // Each run's finish time in UTC (design v9 item 1): Ostomate2's latest run started at 09:26
+    // and RouteServe's at 08:12, whose slowest report took 204 s.
+    await expect(table.nth(1)).toHaveText(
+      slug === 'ostomate2' ? 'Latest5 Oct,09:26 UTC100.0%' : 'Latest5 Oct,08:13 UTC99.9%',
+    );
+    await expect(table.nth(0)).toHaveText('RunWhenPass rate');
+    // Its CI runs link to their run pages, a private project's alike; Ostomate2's 13 imported
+    // runs have none and read as plain text (design v9 item 2).
+    await expect(passRate.getByRole('link')).toHaveCount(slug === 'ostomate2' ? 8 : 10);
+    await expect(passRate.getByRole('link').first()).toHaveAttribute('href', RUN_HREF(slug));
+    await expect(passRate.getByRole('link').first()).toHaveText('Latest');
+    await expect(table.last()).toHaveText(
+      slug === 'ostomate2' ? /^20 runs ago.*%$/ : /^9 runs ago.*%$/,
+    );
+    await expect(table.last().getByRole('link')).toHaveCount(slug === 'ostomate2' ? 0 : 1);
     await expect(runStrip(page).getByRole('img')).toHaveAttribute(
       'aria-label',
       slug === 'ostomate2'
         ? 'Last 8 runs on main: 8 passed.'
         : 'Last 10 runs on main: 6 passed, 4 failed.',
+    );
+  });
+
+  // Design v9 items 1 and 2: rows 44 px tall, the Run cell a link to the run's page, and the
+  // table scrolling inside its frame rather than the page sideways.
+  test(`${slug}: a chart's table links each run to its page`, { tag: '@js' }, async ({ page }) => {
+    await open(page, `/p/${slug}`);
+    // A click before the page's client code runs is lost; "Live" shows once it has.
+    await expectLive(page);
+    const chart = charts(page).filter({ has: page.getByRole('heading', { name: 'Run duration' }) });
+    await chart.getByRole('button', { name: 'Show table' }).click();
+    const table = chart.getByRole('table');
+    await expect(table.locator('thead th')).toHaveText(['Run', 'When', 'Duration']);
+    // Each row is a 44 px target, the Run cell's link or text, over its 1 px rule, as
+    // tp-charts.js builds it (44 px cells, border-box, and a 44 px link inside).
+    const heights = await table
+      .locator('tbody tr')
+      .evaluateAll((rows) =>
+        rows.map((row) => [
+          row.querySelector('th > *')?.getBoundingClientRect().height,
+          row.getBoundingClientRect().height,
+        ]),
+      );
+    expect(heights.length).toBeGreaterThan(0);
+    expect(heights.every(([target, row]) => target === 44 && row === 45)).toBe(true);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
+    await table.getByRole('link', { name: 'Latest' }).click();
+    await expect(page).toHaveURL(new RegExp(`/p/${slug}/runs/[0-9a-f-]{36}$`));
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      // A private run is headed by its CI run ID (section 13.5).
+      slug === 'ostomate2' ? 'Push to main' : 'Run 36200000010',
     );
   });
 
@@ -470,6 +546,12 @@ test.describe('a private project’s page leaks nothing', { tag: '@js' }, () => 
       await expect(current).toHaveURL('/p/routeserve?branches=all');
       await current.getByRole('button', { name: 'Load 20 more' }).click();
       await expect(runsLog(current).getByRole('link')).toHaveCount(11);
+      // A chart's table, its runs linked as a public project's are (design v9 item 2).
+      const chart = charts(current).filter({
+        has: current.getByRole('heading', { name: 'Run duration' }),
+      });
+      await chart.getByRole('button', { name: 'Show table' }).click();
+      await expect(chart.getByRole('table').getByRole('link')).toHaveCount(10);
     });
 
     // Positive controls: the derived values are the seeded ones (each run's SHA shows cut to 7
@@ -483,6 +565,9 @@ test.describe('a private project’s page leaks nothing', { tag: '@js' }, () => 
     expect(html).toContain(String(FAILING[0]?.name));
     // The History section and the flaky rate are in what was captured.
     expect(html).toContain('Last 10 runs on main: 6 passed, 4 failed.');
+    expect(html).toContain('6 passed, 4 failed.');
+    expect(html).toContain('Held at 100.0% over 6 runs; above its 80% floor.');
+    expect(html).toMatch(/href="\/p\/routeserve\/runs\/[0-9a-f-]{36}" class="[^"]*runLink/);
     expect(html).toContain('99.9% on the latest run. 4 of the last 10 runs failed.');
     expect(html).toContain('Failed 4 of last 10 runs');
 

@@ -138,6 +138,34 @@ describe('coverageCaption', () => {
 
   it('is omitted with fewer than two runs', () => {
     expect(coverageCaption([92], 91)).toBeNull();
+    expect(coverageCaption([92, null], 91)).toBeNull();
+  });
+
+  // Design v8 item 34 (components.md TrendChart, "Captions with gaps"): n counts the runs with a
+  // value; first and last are the first and last of those.
+  it('counts only the runs with a value, from the first to the last of them', () => {
+    expect(coverageCaption([null, 90, null, 92, null], 91)).toBe(
+      'Rose from 90.0% to 92.0% over 2 runs; above its 91% floor.',
+    );
+  });
+
+  // "If the latest run has none, append 'The latest run had no tests.'": said only when the
+  // latest run was empty. A run with tests that sent no coverage for the module has no sentence:
+  // "had no tests" would be false there, and the design gives no other.
+  it('says the latest run had no tests only when it was empty', () => {
+    expect(coverageCaption([90, 92, null], 91, { latestEmpty: true })).toBe(
+      'Rose from 90.0% to 92.0% over 2 runs; above its 91% floor. The latest run had no tests.',
+    );
+    expect(coverageCaption([90, 92, null], 91)).toBe(
+      'Rose from 90.0% to 92.0% over 2 runs; above its 91% floor.',
+    );
+  });
+
+  // A module with no floor has no floor marker or text on the coverage card (design v8 item 15),
+  // so its caption ends with the movement.
+  it('says nothing of a floor for a module that has none', () => {
+    expect(coverageCaption([40, 45], null)).toBe('Rose from 40.0% to 45.0% over 2 runs.');
+    expect(coverageCaption([45, 45], null)).toBe('Held at 45.0% over 2 runs.');
   });
 });
 

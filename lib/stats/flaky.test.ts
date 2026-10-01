@@ -243,8 +243,31 @@ describe('flakyPlatforms and flakyResultIds', () => {
 
   it('lists each flaky test with the platforms it flipped on, in a stable order', () => {
     expect(flakyPlatforms(runs, results, options)).toEqual([
-      { testId: 't-both', platforms: ['ios-sim', 'jvm'] },
-      { testId: 't-jvm', platforms: ['jvm'] },
+      { testId: 't-both', platforms: ['ios-sim', 'jvm'], commits: 1 },
+      { testId: 't-jvm', platforms: ['jvm'], commits: 1 },
+    ]);
+  });
+
+  // components.md: "Flipped on {c} commits in 30 days", c = commits with both a pass and a fail on
+  // one platform (design v9 item 12), and the Test History Flaky tile's value.
+  it('counts the commits a test flipped on, once each however many platforms flipped', () => {
+    const more = [
+      ...runs,
+      run('b2', '2026-09-21T02:00:00Z', { commitSha: 'c2', runAttempt: 2 }),
+      run('old1', '2026-08-01T00:00:00Z', { commitSha: 'c0' }),
+      run('old2', '2026-08-01T01:00:00Z', { commitSha: 'c0', runAttempt: 2 }),
+    ];
+    const flips = [
+      ...results,
+      // t-both flips on c2 as well, now on the JVM only.
+      result('x6', 'b2', 't-both', 'failed', 'jvm'),
+      // An old flip, outside the 30 days, does not count.
+      result('x7', 'old1', 't-both', 'failed', 'jvm'),
+      result('x8', 'old2', 't-both', 'passed', 'jvm'),
+    ];
+    expect(flakyPlatforms(more, flips, options)).toEqual([
+      { testId: 't-both', platforms: ['ios-sim', 'jvm'], commits: 2 },
+      { testId: 't-jvm', platforms: ['jvm'], commits: 1 },
     ]);
   });
 

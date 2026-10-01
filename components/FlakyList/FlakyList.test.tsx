@@ -47,12 +47,19 @@ describe('FlakyList', () => {
     ]);
   });
 
-  // Design v8 item 20: "Failed 0 of last 40 runs" is not drawn, so that row shows no rate.
-  it('leaves the rate out of a row that has none', () => {
-    const { container } = render(<FlakyList tests={[{ ...FLAKY, rate: null }]} />);
+  // Design v9 item 12 (Design System section 11): the row stays when n is 0; only the rate text
+  // changes.
+  it('keeps the row with its "Flipped on" rate when it failed in none of its last runs', () => {
+    const { container } = render(
+      <FlakyList tests={[{ ...FLAKY, rate: 'Flipped on 2 commits in 30 days' }]} />,
+    );
 
     const meta = [...(container.querySelector('[data-part="meta"]')?.children ?? [])];
-    expect(meta.map((span) => span.textContent)).toEqual(['Unit', 'node']);
+    expect(meta.map((span) => span.textContent)).toEqual([
+      'Flipped on 2 commits in 30 days',
+      'Unit',
+      'node',
+    ]);
   });
 
   it('says so when nothing was flaky in the 30 days', () => {

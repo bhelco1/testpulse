@@ -34,6 +34,9 @@
   margin-top: 14px;
   width: 100%;
   min-width: 0;
+  /* The table is compact below 560 px of chart width (design v9 item 1), with or without
+     JavaScript, so it is sized by the chart's width rather than the viewport's. */
+  container-type: inline-size;
 }
 
 .legend {
@@ -191,6 +194,10 @@
   color: var(--attn);
 }
 
+.tipFlaky {
+  color: var(--attn);
+}
+
 .toggle {
   display: flex;
   justify-content: flex-end;
@@ -226,7 +233,10 @@
 
 .table tbody th,
 .table tbody td {
-  padding: 8px 14px;
+  padding: 0 14px;
+  height: 44px;
+  box-sizing: border-box;
+  vertical-align: middle;
   border-bottom: 1px solid var(--line);
   color: var(--ink);
   text-align: left;
@@ -236,12 +246,100 @@
 .table .value {
   text-align: right;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 /* After .table .value, which it overrides at the same specificity. */
 .table .notRun {
   color: var(--ink-3);
   font-weight: 400;
+}
+
+/* Design v9 item 2: only the Run cell links, filling the cell; imported history is plain text. */
+.table .runCell {
+  padding: 0;
+  white-space: nowrap;
+}
+
+.runLink,
+.runText {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+.runLink {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.runText {
+  color: var(--ink-2);
+}
+
+.linked:hover {
+  background: var(--raised);
+}
+
+.linked:hover .runLink {
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+/* Inset, so the table's scroll frame does not clip the ring. */
+.runLink:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+.table .when {
+  color: var(--ink-2);
+}
+
+.table .whenNone {
+  color: var(--ink-3);
+}
+
+.whenTime {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 4px;
+}
+
+.whenTime > span {
+  white-space: nowrap;
+}
+
+@container (width < 560px) {
+  .table {
+    font-size: 13px;
+  }
+
+  .table thead th {
+    padding: 10px 6px;
+  }
+
+  .table tbody th,
+  .table tbody td {
+    padding: 0 6px;
+  }
+
+  .table .runCell {
+    padding: 0;
+  }
+
+  .runLink,
+  .runText {
+    padding: 0 6px;
+  }
+
+  .whenTime {
+    flex-direction: column;
+    line-height: 1.3;
+  }
 }
 
 /* Design v5 item 3: the error state is an inset panel inside the chart card, not a card of its own. */

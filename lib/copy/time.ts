@@ -60,6 +60,23 @@ export function relativeTime(then: Date, now: Date): string {
   return shortDate(then, now);
 }
 
+/**
+ * A chart table's "When" (design v9 item 1): "22 Sep," and "04:37 UTC" as two pieces, so a narrow
+ * table wraps between them and never inside, with the year in the date outside nowYear. The chart
+ * is drawn in the browser, so the server passes the current UTC year instead of a clock.
+ */
+export function chartWhen(
+  iso: string,
+  nowYear: number,
+): { readonly date: string; readonly time: string; readonly title: string } {
+  const instant = new Date(iso);
+  return {
+    date: `${shortDate(instant, new Date(Date.UTC(nowYear, 0, 1)))},`,
+    time: `${pad2(instant.getUTCHours())}:${pad2(instant.getUTCMinutes())} UTC`,
+    title: fullTimestamp(instant),
+  };
+}
+
 /** A "when" as a <time> element shows it: its words, datetime, and full date and time as title. */
 export interface TimeLabel {
   readonly text: string;

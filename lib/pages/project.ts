@@ -3,6 +3,7 @@ import type { FeedRun } from '../../components/RunFeedRow/RunFeedRow';
 import type { RunsTimelineRun } from '../../components/StatusTimeline/StatusTimeline';
 import type { TrendData, TrendMark } from '../../components/TrendChart/TrendChart';
 import {
+  coverageCaption,
   durationCaption,
   passRateCaption,
   testCountCaption,
@@ -79,8 +80,8 @@ export interface FlakyView {
   readonly testKey: string;
   readonly name: string;
   readonly suite: string;
-  /** "Failed {n} of last {m} runs"; held back (null) when n is 0, which the design does not draw. */
-  readonly rate: string | null;
+  /** "Failed {n} of last {m} runs", or "Flipped on {c} commits in 30 days" when n is 0. */
+  readonly rate: string;
   readonly layer: string;
   readonly platforms: string;
   readonly href: string;
@@ -90,15 +91,15 @@ export interface FlakyView {
 export type HistoryChart = { readonly title: string; readonly scope: string } & TrendData;
 
 export interface HistoryView {
-  /** Pass rate, tests per run and run duration; the coverage chart is held back (13.2). */
+  /** Pass rate, tests per run, line coverage per module and run duration. */
   readonly charts: readonly HistoryChart[];
-  /** The "Last 40 runs" strip; none before the first CI run on the default branch. */
+  /** The "Last 40 runs" strip; with no runs, before the first CI run on the default branch. */
   readonly strip: {
     readonly runs: readonly RunsTimelineRun[];
     readonly defaultBranch: string;
-    /** "All {n} passed." or "1 run, {status}."; a mixed strip has none until its PR (13.2). */
+    /** Counts of every run the strip holds; none with no runs, which shows "No CI runs yet". */
     readonly note: string | null;
-  } | null;
+  };
 }
 
 export interface ProjectPageView {
@@ -260,6 +261,21 @@ function latestRunView(page: ProjectPage, now: Date): LatestRunView | null {
 
 type RunStatus = ProjectPage['recentRuns'][number]['status'];
 
+interface ChartRun {
+  readonly runId: string;
+  readonly finishedAt: Date;
+  // Imported history has no run page (design v9 item 2); a chart of CI runs only omits it.
+  readonly source?: 'ci' | 'backfill';
+}
+
+// Each chart's table (design v9 items 1 and 2): when each run finished, its run page or none for
+// imported history, and the year a When in another year is told apart from.
+const chartTable = (slug: string, points: readonly ChartRun[], now: Date) => ({
+  whens: points.map((point) => point.finishedAt.toISOString()),
+  hrefs: points.map((point) => (point.source === 'backfill' ? null : runHref(slug, point.runId))),
+  nowYear: now.getUTCFullYear(),
+});
+
 // Design components.md TrendChart, "Marks": an 8 px square at each failed or empty run.
 const marksOf = (points: readonly { readonly status: RunStatus }[]): TrendMark[] =>
   points.flatMap((point, index): TrendMark[] =>
@@ -274,7 +290,7 @@ const marksOf = (points: readonly { readonly status: RunStatus }[]): TrendMark[]
 // with no value is a gap in the line, and each caption counts only the runs with a value (design
 // v8 item 34).
 function history(page: ProjectPage, now: Date): HistoryView {
-  const { passRate, testCount, duration } = page.trends;
+  const { passRate, testCount, coverage, duration } = page.trends;
   const rates = passRate.map((point) => (point.passRate === null ? null : point.passRate * 100));
   const counts = testCount.map((point) => point.totalTests);
   const seconds = duration.map((point) => point.durationMs / 1000);
@@ -295,6 +311,7 @@ function history(page: ProjectPage, now: Date): HistoryView {
         caption: passRateCaption(rates, failedRuns, {
           latestAllSkipped: passRate.at(-1)?.status !== 'empty',
         }),
+        ...chartTable(slug, passRate, now),
       },
       {
         title: 'Tests per run',
@@ -304,7 +321,9 @@ function history(page: ProjectPage, now: Date): HistoryView {
         format: 'int',
         unit: 'run',
         caption: testCountCaption(counts),
+        ...chartTable(slug, testCount, now),
       },
+      ...coverage.map((trend): HistoryChart => coverageChart(page, trend, now)),
       {
         title: 'Run duration',
         scope: TREND_SCOPE.duration,
@@ -313,33 +332,63 @@ function history(page: ProjectPage, now: Date): HistoryView {
         format: 'dur',
         unit: 'run',
         caption: durationCaption([seconds], 'dur'),
+        ...chartTable(slug, duration, now),
       },
     ],
-    strip:
-      runs.length === 0
-        ? null
-        : {
-            runs: runs.map((run) => ({
-              title: runTitle(run.event, run.branch),
-              branch: run.branch,
-              sha: run.commitSha,
-              when: relativeLabel(run.finishedAt, now),
-              href: runHref(slug, run.id),
-              status: run.status,
-            })),
-            defaultBranch: page.project.defaultBranch,
-            note: stripNote(runs),
-          },
+    strip: {
+      runs: runs.map((run) => ({
+        title: runTitle(run.event, run.branch),
+        branch: run.branch,
+        sha: run.commitSha,
+        when: relativeLabel(run.finishedAt, now),
+        href: runHref(slug, run.id),
+        status: run.status,
+      })),
+      defaultBranch: page.project.defaultBranch,
+      note: stripNote(runs),
+    },
+  };
+}
+
+// "Line coverage, {module}" against the module's own floor (design v8 item 3), over the last 30
+// runs, CI and imported. A module with no floor is drawn without one (v8 item 15).
+function coverageChart(
+  page: ProjectPage,
+  trend: ProjectPage['trends']['coverage'][number],
+  now: Date,
+): HistoryChart {
+  const { module, points } = trend;
+  const floors = page.project.coverageFloors;
+  // Object.hasOwn, so a module named like an Object.prototype key has no floor.
+  const floor = Object.hasOwn(floors, module) ? (floors[module] ?? null) : null;
+  const values = points.map((point) => point.linesPct);
+  return {
+    title: `Line coverage, ${module}`,
+    scope: TREND_SCOPE.coverage,
+    series: [{ name: module, values }],
+    ...(floor === null ? {} : { floor }),
+    marks: marksOf(points),
+    format: 'pct',
+    unit: 'run',
+    caption: coverageCaption(values, floor, { latestEmpty: points.at(-1)?.status === 'empty' }),
+    ...chartTable(page.project.slug, points, now),
   };
 }
 
 // The "Last 40 runs" note over every run the server read, not the cells that fit (owner
-// decision 2026-09-30): "All {n} passed." and, for one run, "1 run, passed." (v9 item 15). The
-// mixed note ("{p} passed, {f} failed, {e} empty.") comes with the strip's other v8 states.
+// decision 2026-09-30): "1 run, {status}." (v9 item 15), "All {n} passed.", else each status's
+// count, zero counts left out (components.md StatusTimeline, "Runs strip note"). With no runs
+// the strip reads "No CI runs yet" and the note is hidden.
 function stripNote(runs: ProjectPage['recentRuns']): string | null {
   const [only] = runs;
+  if (runs.length === 0) return null;
   if (runs.length === 1 && only !== undefined) return `1 run, ${only.status}.`;
-  return runs.every((run) => run.status === 'passed') ? `All ${runs.length} passed.` : null;
+  const count = (status: RunStatus) => runs.filter((run) => run.status === status).length;
+  if (count('passed') === runs.length) return `All ${runs.length} passed.`;
+  const parts = (['passed', 'failed', 'empty'] as const)
+    .filter((status) => count(status) > 0)
+    .map((status) => `${count(status)} ${status}`);
+  return `${parts.join(', ')}.`;
 }
 
 /** The page's title, which its head reads without the rest of the page (lib/queries/heads). */
@@ -398,9 +447,11 @@ export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
       testKey: test.testKey,
       name: test.name,
       suite: test.suite,
+      // A test flaky in the 30 days whose failures are behind its last runs, or within one run's
+      // retries, says how many commits it flipped on instead (design v9 item 12).
       rate:
         test.failures.failed === 0
-          ? null
+          ? `Flipped on ${qty(test.commits, 'commit')} in 30 days`
           : `Failed ${test.failures.failed} of last ${qty(test.failures.runs, 'run')}`,
       layer: LAYER_LABEL[test.layer],
       platforms: test.platforms.join(', '),

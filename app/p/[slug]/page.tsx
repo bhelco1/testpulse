@@ -91,11 +91,9 @@ export default async function ProjectPage({ params, searchParams }: RouteProps) 
                 <TrendChart key={chart.title} {...chart} />
               ))}
             </div>
-            {view.history.strip !== null && (
-              <div className={styles.strip}>
-                <RunStrip {...view.history.strip} />
-              </div>
-            )}
+            <div className={styles.strip}>
+              <RunStrip {...view.history.strip} />
+            </div>
           </PageSection>
           <PageSection number={5} title="Runs and flaky tests" last>
             <div className={styles.pair}>

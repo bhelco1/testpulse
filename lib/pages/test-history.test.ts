@@ -70,12 +70,25 @@ function historyRun(
   };
 }
 
-const point = (run: HistoryRun, durationsMs: readonly (number | null)[]) => ({
-  runId: run.id,
-  finishedAt: run.finishedAt,
-  status: run.status,
-  durationsMs,
-});
+// A duration point as lib/stats/test-history.ts gives it: each platform's value (none where it
+// skipped or did not run) and the cell behind it.
+const point = (run: HistoryRun, platforms: readonly string[]) => {
+  const cells = platforms.map((p) => run.results.find((c) => c.platform === p) ?? null);
+  return {
+    runId: run.id,
+    finishedAt: run.finishedAt,
+    status: run.status,
+    durationsMs: cells.map((c) => (c === null || c.status === 'skipped' ? null : c.durationMs)),
+    cells,
+  };
+};
+
+const NO_TILES = {
+  flakyCommits: 0,
+  failedRuns: 0,
+  failedPlatforms: [],
+  mismatch: { runs: 0, latest: null },
+} as const;
 
 // Ostomate2's addEventForDateLogsAtNoon, reshaped: two platforms, a pull request that failed on
 // the simulator, a push that errored on the JVM and did not run on the simulator, and a push
@@ -105,18 +118,26 @@ const TWO_PLATFORMS: TestHistory = {
   runs: [R1, R2, R3, R4],
   flaky: false,
   flakyPlatforms: [],
+  flakyCommits: 0,
   // r3 errored on the JVM: the latest failing run.
   initialRun: 2,
+  // r2 failed on the simulator only and r4 skipped there: two runs whose platforms disagree, r4
+  // the latest. r3 ran on the JVM alone.
+  failedRuns: 2,
+  failedPlatforms: ['jvm', 'ios-sim'],
+  mismatch: { runs: 2, latest: 3 },
   // The last default-branch CI runs: the pull request is left out, g is a run in which the test
   // did not report (a gap on both platforms), and the skipped simulator result has no value.
   duration: {
     platforms: ['jvm', 'ios-sim'],
     points: [
-      point(R1, [25, 3]),
-      point(historyRun('g', '2026-10-04T12:00:00Z', [], { n: 9 }), [null, null]),
-      point(R3, [410, null]),
-      point(R4, [30, null]),
+      point(R1, ['jvm', 'ios-sim']),
+      point(historyRun('g', '2026-10-04T12:00:00Z', [], { n: 9 }), ['jvm', 'ios-sim']),
+      point(R3, ['jvm', 'ios-sim']),
+      point(R4, ['jvm', 'ios-sim']),
     ],
+    // jvm: 25, 410, 30 → 30. ios-sim: 3 alone.
+    medianMs: [30, 3],
   },
 };
 
@@ -153,13 +174,55 @@ describe('testHistoryView', () => {
     });
   });
 
-  it('names the test, its full suite and its layer; not flaky', () => {
+  // components.md, Test history page: "Header tags: module · layer · Flaky pill · mismatch
+  // headline · New pill" (design v9 items 10 and 16).
+  it('names the test, its full suite, module and layer, with the mismatch headline', () => {
     expect(view.header).toEqual({
       name: 'addEventForDateLogsAtNoon',
       suite: 'com.ostomate.app.ui.calendar.CalendarViewModelTest',
+      module: 'composeApp',
       layer: 'Unit',
       flaky: false,
+      // r4 is the latest run whose platforms disagree: passed on the JVM, skipped on the
+      // simulator, 2 h before now.
+      mismatch: {
+        text: 'Platform mismatch in 2 runs',
+        run: 'Push to main',
+        when: {
+          text: '2 h ago',
+          datetime: '2026-10-05T10:00:00.000Z',
+          title: '5 Oct 2026, 10:00 UTC',
+        },
+      },
+      // First seen 24 Sep, 11 days before now: not new.
+      firstSeen: null,
     });
+  });
+
+  // components.md: "Tiles (over the strip's runs: the last 40 CI runs with a result for this
+  // test; platform keys verbatim)" (design v8 item 40, v9 item 5).
+  it('tiles the runs, failures, flips and median time over the strip', () => {
+    expect(view.tiles).toEqual([
+      {
+        label: 'Runs',
+        value: '4',
+        // The oldest run, r1, on 3 Oct.
+        sub: [
+          'since ',
+          { text: '3 Oct', datetime: '2026-10-03T20:31:00.000Z', title: '3 Oct 2026, 20:31 UTC' },
+        ],
+        tone: 'ink',
+      },
+      { label: 'Failed', value: '2', sub: ['2 runs · jvm, ios-sim'], tone: 'fail' },
+      { label: 'Flaky', value: '0', sub: ['none in 30 days'], tone: 'ink' },
+      // The JVM's median, 30 ms, as a test's time reads; the simulator's 3 ms beside it.
+      { label: 'Median time', value: '0.03 s', sub: ['jvm · ios-sim 0.00 s'], tone: 'ink' },
+    ]);
+  });
+
+  // components.md: "Strip note: 'Oldest on the left' ... one run 'One run so far'" (v9 item 9).
+  it('notes that the oldest run is on the left', () => {
+    expect(view.stripNote).toBe('Oldest on the left');
   });
 
   it('gives the timeline every run, oldest first, timed per platform, opening on r3', () => {
@@ -233,26 +296,76 @@ describe('testHistoryView', () => {
     });
   });
 
-  it('charts duration per platform, with a gap for g and r4 held back for its skip', () => {
-    // r1, g and r3; the pull request r2 is not a default-branch run. g keeps its place as a gap
-    // on both platforms, where the tooltip reads "Not run", which is true. r4's simulator skipped, and
-    // whether a skipped result reads "Not run" or "Skipped" is undecided (design v8 item 17), so
-    // its point is left out rather than printed as "Not run". The caption counts only the runs
-    // with a value (design v8 item 34), so g is not among its 2.
+  // Design v9 item 18: the project's last 30 default-branch CI runs, each a point; a run where a
+  // platform skipped reads "Skipped" there and one where it has no result "Not run".
+  it('charts duration per platform at every run, a skip named as one, each run linked', () => {
+    // r1, g, r3 and r4; the pull request r2 is not a default-branch run. g keeps its place as a
+    // gap on both platforms ("Not run"); r4's simulator skipped. The caption counts only the runs
+    // with a value (design v8 item 34), so g is not among its 3.
     expect(view.duration).toEqual({
       title: 'Duration',
       scope: 'Default branch · last 30 CI runs (imported history has no durations)',
       series: [
-        { name: 'jvm', values: [0.025, null, 0.41] },
-        { name: 'ios-sim', values: [0.003, null, null] },
+        { name: 'jvm', values: [0.025, null, 0.41, 0.03], gapLabels: [null, null, null, null] },
+        {
+          name: 'ios-sim',
+          values: [0.003, null, null, null],
+          gapLabels: [null, null, null, 'Skipped'],
+        },
       ],
-      // r3 errored on the JVM: its point, the third, is marked.
-      marks: [{ index: 2, status: 'fail' }],
+      // r3 errored on the JVM: its point, the third, is marked there.
+      marks: [{ index: 2, status: 'fail', series: 0 }],
       format: 'sec',
       unit: 'run',
-      // Min 3 ms, max 410 ms over the three points, gaps left out; no median with two series.
-      caption: 'Between 3 ms and 0.41 s over the last 2 runs.',
+      // Min 3 ms, max 410 ms over the points, gaps left out; no median with two series.
+      caption: 'Between 3 ms and 0.41 s over the last 3 runs.',
+      whens: [
+        '2026-10-03T20:31:00.000Z',
+        '2026-10-04T12:00:00.000Z',
+        '2026-10-05T09:26:36.000Z',
+        '2026-10-05T10:00:00.000Z',
+      ],
+      hrefs: ['r1', 'g', 'r3', 'r4'].map((id) => `/p/ostomate2/runs/${id}`),
+      nowYear: 2026,
     });
+  });
+
+  // components.md TrendChart, "Marks" (design v9 item 13): one per run, failed or error over
+  // flaky, on the series of the platform that produced it.
+  it('marks a failure on the platform that failed, over a flip on another', () => {
+    const P1 = historyRun(
+      'p1',
+      '2026-10-05T10:30:00Z',
+      [cell('jvm', 'passed', 30, true), cell('ios-sim', 'failed', 60)],
+      { n: 7 },
+    );
+    const P2 = historyRun(
+      'p2',
+      '2026-10-05T11:00:00Z',
+      [cell('jvm', 'passed', 31), cell('ios-sim', 'passed', 62, true)],
+      { n: 8 },
+    );
+    const marked = testHistoryView(
+      page(
+        OSTOMATE2,
+        {},
+        {
+          ...TWO_PLATFORMS,
+          runs: [P1, P2],
+          initialRun: 0,
+          duration: {
+            platforms: ['jvm', 'ios-sim'],
+            points: [point(P1, ['jvm', 'ios-sim']), point(P2, ['jvm', 'ios-sim'])],
+            medianMs: [30.5, 61],
+          },
+        },
+      ),
+      NOW,
+    );
+    expect(marked.duration?.marks).toEqual([
+      { index: 0, status: 'fail', series: 1 },
+      { index: 1, status: 'flaky', series: 1 },
+    ]);
   });
 });
 
@@ -272,19 +385,19 @@ const FLAKY: TestHistory = {
   runs: F,
   flaky: true,
   flakyPlatforms: ['node'],
+  flakyCommits: 1,
   // f5 is the latest failure that is not one side of a flip.
   initialRun: 4,
+  // f2, the flip's failing side, and f5.
+  failedRuns: 2,
+  failedPlatforms: ['node'],
+  mismatch: { runs: 0, latest: null },
   duration: {
     platforms: ['node'],
-    // f4 skipped on its only platform: the loader gives it no point.
-    points: [
-      point(F[0], [100]),
-      point(F[1], [250]),
-      point(F[2], [120]),
-      point(F[3], [null]),
-      point(F[4], [300]),
-      point(F[5], [140]),
-    ],
+    // f4 skipped on its only platform: a gap that reads "Skipped".
+    points: F.map((run) => point(run, ['node'])),
+    // 100, 120, 140, 250, 300 → 140.
+    medianMs: [140],
   },
 };
 
@@ -306,7 +419,20 @@ describe('testHistoryView, a private project’s flaky test', () => {
     expect(view.crumbs.current).toBe(
       'asset.test.ts › assetCreateSchema accepts a minimal valid asset',
     );
-    expect(view.header).toMatchObject({ layer: 'Unit', flaky: true });
+    expect(view.header).toMatchObject({
+      module: 'packages/shared',
+      layer: 'Unit',
+      flaky: true,
+      mismatch: null,
+    });
+  });
+
+  it('tiles two failed runs, one flipped commit, and the one platform’s median', () => {
+    expect(view.tiles?.slice(1)).toEqual([
+      { label: 'Failed', value: '2', sub: ['2 runs · node'], tone: 'fail' },
+      { label: 'Flaky', value: '1', sub: ['commit in 30 days · node'], tone: 'attn' },
+      { label: 'Median time', value: '0.14 s', sub: ['last 30 CI runs'], tone: 'ink' },
+    ]);
   });
 
   it('draws both sides of the flip as Flaky, untitles the runs and opens on f5', () => {
@@ -325,15 +451,131 @@ describe('testHistoryView, a private project’s flaky test', () => {
     );
   });
 
-  it('marks only the failure that is not flaky, and gives the single-series median', () => {
-    expect(view.duration?.series).toEqual([{ name: 'node', values: [0.1, 0.25, 0.12, 0.3, 0.14] }]);
-    // f2's failing side of the flip would be an amber mark in the mock, which TrendChart can only
-    // name "Run empty"; it is held back. f5 (index 3) failed.
-    expect(view.duration?.marks).toEqual([{ index: 3, status: 'fail' }]);
+  it('marks both sides of the flip with the flaky diamond and the failure as failed', () => {
+    expect(view.duration?.series).toEqual([
+      {
+        name: 'node',
+        values: [0.1, 0.25, 0.12, null, 0.3, 0.14],
+        gapLabels: [null, null, null, 'Skipped', null, null],
+      },
+    ]);
+    // f2 and f3 are the flip's two sides (v9 item 13: "flaky runs marked with the flaky
+    // diamond"); f5 failed.
+    expect(view.duration?.marks).toEqual([
+      { index: 1, status: 'flaky', series: 0 },
+      { index: 2, status: 'flaky', series: 0 },
+      { index: 4, status: 'fail', series: 0 },
+    ]);
     // Sorted: 0.10, 0.12, 0.14, 0.25, 0.30: min 0.10, max 0.30, median 0.14.
     expect(view.duration?.caption).toBe(
       'Between 0.10 s and 0.30 s over the last 5 runs. Median 0.14 s.',
     );
+  });
+});
+
+const EMPTY: TestHistory = {
+  platforms: [],
+  runs: [],
+  flaky: false,
+  flakyPlatforms: [],
+  initialRun: null,
+  ...NO_TILES,
+  duration: { platforms: [], points: [], medianMs: [] },
+};
+
+describe('testHistoryView, new and one-run tests', () => {
+  const ONLY = historyRun('n1', '2026-10-05T11:56:00Z', [cell('jvm', 'passed', 410)], { n: 1 });
+  const ONE_RUN: TestHistory = {
+    ...EMPTY,
+    platforms: ['jvm'],
+    runs: [ONLY],
+    initialRun: 0,
+    duration: { platforms: ['jvm'], points: [point(ONLY, ['jvm'])], medianMs: [410] },
+  };
+
+  // components.md: "New pill: from tests.first_seen_at (kept through pruning), shown when it is
+  // within the last 7 days: 'New · first seen {relative time}'" (design v9 item 10).
+  it('says a test first seen within 7 days is new, and when', () => {
+    const view = testHistoryView(
+      page(OSTOMATE2, { firstSeenAt: new Date('2026-10-05T11:56:00Z') }, ONE_RUN),
+      NOW,
+    );
+    expect(view.header.firstSeen).toEqual({
+      text: '4 min ago',
+      datetime: '2026-10-05T11:56:00.000Z',
+      title: '5 Oct 2026, 11:56 UTC',
+    });
+  });
+
+  // Days are UTC calendar days, as relative time counts them (components.md, "Relative time"),
+  // so the pill never reads "1 week ago".
+  it('stops calling it new 7 UTC days after the day it was first seen', () => {
+    const at = (firstSeenAt: string) =>
+      testHistoryView(page(OSTOMATE2, { firstSeenAt: new Date(firstSeenAt) }, ONE_RUN), NOW).header
+        .firstSeen;
+    expect(at('2026-09-29T00:00:00Z')?.text).toBe('6 days ago');
+    expect(at('2026-09-28T23:59:59Z')).toBeNull();
+  });
+
+  it('notes "One run so far" for one run, with tiles for that run', () => {
+    const view = testHistoryView(page(OSTOMATE2, {}, ONE_RUN), NOW);
+    expect(view.stripNote).toBe('One run so far');
+    expect(view.tiles).toEqual([
+      {
+        label: 'Runs',
+        value: '1',
+        sub: [
+          'since ',
+          { text: '5 Oct', datetime: '2026-10-05T11:56:00.000Z', title: '5 Oct 2026, 11:56 UTC' },
+        ],
+        tone: 'ink',
+      },
+      { label: 'Failed', value: '0', sub: ['on any platform'], tone: 'ink' },
+      { label: 'Flaky', value: '0', sub: ['none in 30 days'], tone: 'ink' },
+      { label: 'Median time', value: '0.41 s', sub: ['last 30 CI runs'], tone: 'ink' },
+    ]);
+  });
+
+  it('says a single mismatched run in the singular', () => {
+    const MIXED = historyRun(
+      'm1',
+      '2026-10-04T05:17:00Z',
+      [cell('jvm', 'passed', 25), cell('ios-sim', 'failed', 630)],
+      { n: 2, event: 'pull_request', branch: 'fix-today-count' },
+    );
+    const view = testHistoryView(
+      page(
+        OSTOMATE2,
+        {},
+        { ...ONE_RUN, runs: [MIXED], initialRun: 0, mismatch: { runs: 1, latest: 0 } },
+      ),
+      NOW,
+    );
+    expect(view.header.mismatch).toMatchObject({
+      text: 'Platform mismatch in 1 run',
+      run: 'Pull request from fix-today-count',
+      when: { text: 'yesterday' },
+    });
+  });
+
+  // A private project's runs are untitled everywhere on the page (decision 2026-09-29): the
+  // headline names the run as the timeline does.
+  it('names a private project’s mismatched run "Private repository"', () => {
+    const MIXED = historyRun(
+      'm1',
+      '2026-10-04T05:17:00Z',
+      [cell('node', 'passed', 25), cell('ios-sim', 'failed', 630)],
+      { n: 2 },
+    );
+    const view = testHistoryView(
+      page(
+        ROUTESERVE,
+        {},
+        { ...ONE_RUN, runs: [MIXED], initialRun: 0, mismatch: { runs: 1, latest: 0 } },
+      ),
+      NOW,
+    );
+    expect(view.header.mismatch?.run).toBe('Private repository');
   });
 });
 
@@ -345,55 +587,40 @@ describe('testHistoryView, undrawn states held back', () => {
       branch: 'feature',
     });
     const view = testHistoryView(
-      page(
-        OSTOMATE2,
-        {},
-        {
-          platforms: ['jvm'],
-          runs: [onlyPullRequest],
-          flaky: false,
-          flakyPlatforms: [],
-          initialRun: 0,
-          duration: { platforms: [], points: [] },
-        },
-      ),
+      page(OSTOMATE2, {}, { ...EMPTY, platforms: ['jvm'], runs: [onlyPullRequest], initialRun: 0 }),
       NOW,
     );
     // "No runs yet" would be false beside a timeline with a run.
     expect(view.duration).toBeNull();
     expect(view.timeline?.runs).toHaveLength(1);
+    // With no default-branch CI run there is no median to give, so that tile is held back.
+    expect(view.tiles?.map((tile) => tile.label)).toEqual(['Runs', 'Failed', 'Flaky']);
   });
 
-  it('draws no chart when every point was held back, and no timeline with no runs', () => {
+  it('draws no chart when every run skipped, and no timeline or tiles with no runs', () => {
     const skippedOnly: TestHistory = {
       ...TWO_PLATFORMS,
       runs: [R4],
       initialRun: 0,
-      duration: { platforms: ['jvm', 'ios-sim'], points: [point(R4, [30, null])] },
+      duration: {
+        platforms: ['ios-sim'],
+        points: [point(R4, ['ios-sim'])],
+        medianMs: [null],
+      },
     };
-    expect(testHistoryView(page(OSTOMATE2, {}, skippedOnly), NOW).duration).toBeNull();
+    const skipped = testHistoryView(page(OSTOMATE2, {}, skippedOnly), NOW);
+    expect(skipped.duration).toBeNull();
+    expect(skipped.tiles?.map((tile) => tile.label)).toEqual(['Runs', 'Failed', 'Flaky']);
 
-    const none = testHistoryView(
-      page(
-        OSTOMATE2,
-        {},
-        {
-          platforms: [],
-          runs: [],
-          flaky: false,
-          flakyPlatforms: [],
-          initialRun: null,
-          duration: { platforms: [], points: [] },
-        },
-      ),
-      NOW,
-    );
+    const none = testHistoryView(page(OSTOMATE2, {}, EMPTY), NOW);
     expect(none.timeline).toBeNull();
     expect(none.duration).toBeNull();
+    expect(none.tiles).toBeNull();
+    expect(none.stripNote).toBeNull();
   });
 
   it('keeps a platform with a value somewhere, and drops one left with none', () => {
-    // Two points; the simulator's only value was in the held-back point.
+    // Two points; the simulator skipped in one and did not run in the other.
     const R5 = historyRun('r5', '2026-10-05T11:00:00Z', [cell('jvm', 'passed', 40)], { n: 5 });
     const history: TestHistory = {
       ...TWO_PLATFORMS,
@@ -401,12 +628,20 @@ describe('testHistoryView, undrawn states held back', () => {
       initialRun: 1,
       duration: {
         platforms: ['jvm', 'ios-sim'],
-        points: [point(R4, [30, null]), point(R5, [40, null])],
+        points: [point(R4, ['jvm', 'ios-sim']), point(R5, ['jvm', 'ios-sim'])],
+        medianMs: [35, null],
       },
     };
-    const onePoint = testHistoryView(page(OSTOMATE2, {}, history), NOW).duration;
-    expect(onePoint?.series).toEqual([{ name: 'jvm', values: [0.04] }]);
-    // One point: the chart's one-run text stands in for a caption.
-    expect(onePoint?.caption).toBeNull();
+    const view = testHistoryView(page(OSTOMATE2, {}, history), NOW);
+    expect(view.duration?.series).toEqual([
+      { name: 'jvm', values: [0.03, 0.04], gapLabels: [null, null] },
+    ]);
+    // The simulator has no median, so the tile names the JVM's alone.
+    expect(view.tiles?.at(-1)).toEqual({
+      label: 'Median time',
+      value: '0.04 s',
+      sub: ['last 30 CI runs'],
+      tone: 'ink',
+    });
   });
 });

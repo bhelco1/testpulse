@@ -5,7 +5,8 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { ruleFor } from '../testing/stylesheet';
-import { TestHeader } from './TestHeader';
+import { timeLabel } from '../testing/time';
+import { TestHeader, type TestHeaderProps } from './TestHeader';
 
 afterEach(cleanup);
 
@@ -14,16 +15,26 @@ const CSS = join(import.meta.dirname, 'TestHeader.module.css');
 const part = (root: ParentNode, name: string) =>
   root.querySelector<HTMLElement>(`[data-part="${name}"]`);
 
-// The top of design/pages/Test History.dc.html: the layer tag, the Flaky pill when section 11
-// flags the test, the test's name as the heading and its full suite below it.
+const BASE: TestHeaderProps = {
+  name: 'rendersToday',
+  suite: 'com.ostomate.app.ui.home.HomeViewModelTest',
+  module: 'composeApp',
+  layer: 'Unit',
+  flaky: false,
+  mismatch: null,
+  firstSeen: null,
+};
+
+// The top of design/pages/Test History.dc.html: the module and layer tags, the Flaky pill when
+// section 11 flags the test, the mismatch headline and the New pill, the test's name as the
+// heading and its full suite below it.
 describe('TestHeader', () => {
   it('heads the page with the test’s name, its suite and its layer', () => {
     const { getByRole, container } = render(
       <TestHeader
+        {...BASE}
         name="addEventForDateLogsAtNoon"
         suite="com.ostomate.app.ui.calendar.CalendarViewModelTest"
-        layer="Unit"
-        flaky={false}
       />,
     );
 
@@ -33,11 +44,92 @@ describe('TestHeader', () => {
     );
     expect(part(container, 'layer')?.textContent).toBe('Unit');
     expect(part(container, 'flaky')).toBeNull();
+    expect(part(container, 'mismatch')).toBeNull();
+    expect(part(container, 'new')).toBeNull();
+  });
+
+  // Design v9 item 16 (Design System section 11, "TEST HISTORY HEADER TAGS"): the module tag
+  // comes first, before the layer.
+  it('tags the test with its module, before its layer', () => {
+    const { container } = render(<TestHeader {...BASE} />);
+    const tags = [...(part(container, 'tags')?.children ?? [])];
+    expect(tags.map((tag) => tag.getAttribute('data-part'))).toEqual(['module', 'layer']);
+    expect(part(container, 'module')?.textContent).toBe('composeApp');
+    expect(ruleFor(CSS, '.module')).toEqual({
+      padding: '3px 10px',
+      'border-radius': 'var(--radius-tag)',
+      border: '1px solid var(--line-strong)',
+      color: 'var(--ink-2)',
+      font: '13px var(--font-mono)',
+    });
+  });
+
+  // components.md: "Mismatch headline (--fail 600, x-circle)" and "New pill" (design v9 item 10).
+  it('heads a mismatch in --fail with its latest run, and pills a new test, in order', () => {
+    const { container } = render(
+      <TestHeader
+        {...BASE}
+        flaky
+        mismatch={{
+          text: 'Platform mismatch in 1 run',
+          run: 'Pull request from fix-today-count',
+          when: timeLabel('yesterday'),
+        }}
+        firstSeen={timeLabel('4 min ago')}
+      />,
+    );
+    const tags = [...(part(container, 'tags')?.children ?? [])];
+    expect(tags.map((tag) => tag.getAttribute('data-part'))).toEqual([
+      'module',
+      'layer',
+      'flaky',
+      'mismatch',
+      'new',
+    ]);
+    const mismatch = part(container, 'mismatch') as HTMLElement;
+    expect(mismatch.textContent).toBe(
+      'Platform mismatch in 1 run· Pull request from fix-today-count, yesterday',
+    );
+    expect(mismatch.querySelector('svg')?.getAttribute('width')).toBe('14');
+    expect(mismatch.querySelector('time')?.textContent).toBe('yesterday');
+    expect(part(container, 'mismatch-run')?.textContent).toBe(
+      '· Pull request from fix-today-count, yesterday',
+    );
+    const pill = part(container, 'new') as HTMLElement;
+    expect(pill.textContent).toBe('New · first seen 4 min ago');
+    expect(pill.querySelector('time')?.textContent).toBe('4 min ago');
+    expect(ruleFor(CSS, '.mismatch')).toEqual({
+      display: 'inline-flex',
+      'align-items': 'center',
+      gap: '6px',
+      color: 'var(--fail)',
+      'font-weight': '600',
+    });
+    expect(ruleFor(CSS, '.mismatchRun')).toEqual({ 'font-weight': '400', color: 'var(--ink-3)' });
+    expect(ruleFor(CSS, '.new')).toEqual({
+      display: 'inline-flex',
+      'align-items': 'center',
+      gap: '6px',
+      padding: '4px 11px',
+      'border-radius': 'var(--radius-pill)',
+      background: 'var(--neutral-tint)',
+      color: 'var(--neutral)',
+      'font-weight': '600',
+    });
+  });
+
+  it('places what it is given below the suite: the page’s tiles', () => {
+    const { container } = render(
+      <TestHeader {...BASE}>
+        <p data-part="tiles">tiles</p>
+      </TestHeader>,
+    );
+    expect(part(container, 'suite')?.nextElementSibling?.getAttribute('data-part')).toBe('tiles');
   });
 
   it('marks a flaky test with the amber Flaky pill and its icon', () => {
     const { container } = render(
-      <TestHeader name="accepts a minimal valid asset" suite="asset.test.ts" layer="Unit" flaky />,
+      <TestHeader {...BASE} name="accepts a minimal valid asset" suite="asset.test.ts" flaky />,
     );
     const flaky = part(container, 'flaky') as HTMLElement;
 

@@ -18,6 +18,14 @@
   color: var(--ink-2);
 }
 
+.module {
+  padding: 3px 10px;
+  border-radius: var(--radius-tag);
+  border: 1px solid var(--line-strong);
+  color: var(--ink-2);
+  font: 13px var(--font-mono);
+}
+
 .flaky {
   display: inline-flex;
   align-items: center;
@@ -26,6 +34,30 @@
   border-radius: var(--radius-pill);
   background: var(--attn-tint);
   color: var(--attn);
+  font-weight: 600;
+}
+
+.mismatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fail);
+  font-weight: 600;
+}
+
+.mismatchRun {
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-tint);
+  color: var(--neutral);
   font-weight: 600;
 }
 

@@ -209,59 +209,69 @@ describe('coverageTrend', () => {
     countsCoverage('c8', 'not-loaded', 'shared', 1, 100),
   ];
 
-  it('plots each module over default-branch runs, from counts for CI and the recorded % for backfill', () => {
+  // Each module has a point at every one of the last 30 runs, so its chart's points line up with
+  // the runs: a run among them that did not report the module is a gap at its place (design v8
+  // item 3, v9 item 1; decision 2026-09-29).
+  it('plots each module at every default-branch run, from counts for CI and the recorded % for backfill', () => {
+    const slot = (
+      id: string,
+      finishedAt: string,
+      source: 'ci' | 'backfill',
+      status: StatsRun['status'],
+      value: { form: 'counts' | 'pct'; linesPct: number } | null,
+    ) => ({
+      runId: id,
+      finishedAt: at(finishedAt),
+      source,
+      status,
+      form: value?.form ?? null,
+      linesPct: value?.linesPct ?? null,
+    });
     expect(coverageTrend(runs, coverage, options)).toEqual([
       {
         module: 'composeApp',
         points: [
-          {
-            runId: 'bf-1',
-            finishedAt: at('2026-09-11T08:00:00Z'),
-            source: 'backfill',
+          slot('ci-1', '2026-09-10T08:00:00Z', 'ci', 'passed', null),
+          slot('bf-1', '2026-09-11T08:00:00Z', 'backfill', 'passed', {
             form: 'pct',
             linesPct: 93.6,
-          },
-          {
-            runId: 'ci-2',
-            finishedAt: at('2026-09-11T20:00:00Z'),
-            source: 'ci',
-            form: 'counts',
-            linesPct: 25,
-          },
+          }),
+          slot('ci-2', '2026-09-11T20:00:00Z', 'ci', 'failed', { form: 'counts', linesPct: 25 }),
         ],
       },
       {
         module: 'shared',
         points: [
-          {
-            runId: 'ci-1',
-            finishedAt: at('2026-09-10T08:00:00Z'),
-            source: 'ci',
+          slot('ci-1', '2026-09-10T08:00:00Z', 'ci', 'passed', {
             form: 'counts',
             linesPct: (457 / 490) * 100,
-          },
-          {
-            runId: 'bf-1',
-            finishedAt: at('2026-09-11T08:00:00Z'),
-            source: 'backfill',
+          }),
+          slot('bf-1', '2026-09-11T08:00:00Z', 'backfill', 'passed', {
             form: 'pct',
             linesPct: 93.2,
-          },
+          }),
+          slot('ci-2', '2026-09-11T20:00:00Z', 'ci', 'failed', null),
         ],
       },
     ]);
   });
 
-  it('reads the last 30 runs: a module a run among them did not report has no point there', () => {
+  it('reads the last 30 runs: a run among them that did not report a module is a gap there', () => {
     // 31 runs; the oldest (d0) falls outside the 30 and d10 reported no coverage.
     const many = daily(31);
     const rows = many
       .filter((r) => r.id !== 'd10')
       .map((r, i) => pctCoverage(`c${i}`, r.id, 'shared', 90));
     const [shared] = coverageTrend(many, rows, options);
-    expect(shared?.points).toHaveLength(29);
+    expect(shared?.points).toHaveLength(30);
     expect(shared?.points[0]?.runId).toBe('d1');
-    expect(shared?.points.map((point) => point.runId)).not.toContain('d10');
+    expect(shared?.points.find((point) => point.runId === 'd10')?.linesPct).toBeNull();
+    expect(shared?.points.filter((point) => point.linesPct === null)).toHaveLength(1);
+  });
+
+  it('has no chart for a module with no value in the last 30 runs', () => {
+    const many = daily(31);
+    expect(coverageTrend(many, [pctCoverage('old', 'd0', 'shared', 90)], options)).toEqual([]);
   });
 
   it('leaves out a counted row with no lines, which has no percentage', () => {

@@ -85,6 +85,32 @@ describe('RunStrip', () => {
       'font-size': '13px',
       color: 'var(--ink-3)',
     });
-    expect(ruleFor(CSS, '.note')).toEqual({ 'font-size': '14px', color: 'var(--ink-2)' });
+    // components.md StatusTimeline, "Runs strip note (right of the title, 13 --ink-3)", where the
+    // Project Page mock writes 14 --ink-2: components.md is followed where they differ.
+    expect(ruleFor(CSS, '.note')).toEqual({ 'font-size': '13px', color: 'var(--ink-3)' });
+  });
+
+  // Design v9 item 12 (Design System section 11, "RUNS STRIP · no CI runs yet"): the strip
+  // becomes a dashed frame and the note is hidden.
+  it('reads "No CI runs yet" in a dashed frame before the first CI run, with no note', () => {
+    const { getByRole, container } = render(
+      <RunStrip runs={[]} defaultBranch="main" note={null} />,
+    );
+    const card = getByRole('region', { name: 'Last 40 runs' });
+    const empty = container.querySelector('[data-part="no-runs"]');
+    expect(empty?.textContent).toBe('No CI runs yet');
+    expect(container.querySelector('[data-part="note"]')).toBeNull();
+    expect(within(card).queryByRole('img')).toBeNull();
+    expect(ruleFor(CSS, '.empty')).toEqual({
+      height: '48px',
+      'box-sizing': 'border-box',
+      'border-radius': '8px',
+      border: '1.5px dashed var(--line-strong)',
+      display: 'flex',
+      'align-items': 'center',
+      'justify-content': 'center',
+      'font-size': '14px',
+      color: 'var(--ink-3)',
+    });
   });
 });

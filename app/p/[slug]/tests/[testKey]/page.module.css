@@ -8,11 +8,23 @@
   padding-bottom: 64px;
 }
 
-/* The mock sets its note and per-test caption under "Status by run", which are held back
-   (section 13.6), so the heading takes the 20 px the mock's other section heading has. */
+/* "Status by run" and its note, "Oldest on the left" (design v9 item 9). */
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
 .title {
-  margin: 0 0 20px;
+  margin: 0;
   font: 500 30px/1.2 var(--font-serif);
+}
+
+.note {
+  font-size: 14px;
+  color: var(--ink-3);
 }
 
 /* The timeline card: components.md, StatusTimeline "card padding 22×24" (the Design System's

@@ -4,11 +4,12 @@ import { StatusTimeline, type RunsTimelineRun } from '../StatusTimeline/StatusTi
 import styles from './RunStrip.module.css';
 
 export interface RunStripProps {
-  // The last 40 default-branch CI runs, oldest first (design v7 item 7).
+  // The last 40 default-branch CI runs, oldest first (design v7 item 7); none before the first,
+  // which reads "No CI runs yet" (v9 item 12).
   runs: readonly RunsTimelineRun[];
   // projects.default_branch, which the strip's accessible name gives.
   defaultBranch: string;
-  // "All {n} passed.", the one note the design draws; null for any other strip.
+  // The runs' counts, such as "All 40 passed."; null with no runs, when it is hidden.
   note: string | null;
 }
 
@@ -33,7 +34,13 @@ export function RunStrip({ runs, defaultBranch, note }: RunStripProps) {
           </span>
         )}
       </div>
-      <StatusTimeline kind="runs" runs={runs} defaultBranch={defaultBranch} />
+      {runs.length === 0 ? (
+        <div className={styles.empty} data-part="no-runs">
+          No CI runs yet
+        </div>
+      ) : (
+        <StatusTimeline kind="runs" runs={runs} defaultBranch={defaultBranch} />
+      )}
     </section>
   );
 }

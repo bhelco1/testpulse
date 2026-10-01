@@ -1076,8 +1076,12 @@ describe('TrendChart table', () => {
       'letter-spacing': '0.04em',
       color: 'var(--ink-3)',
     });
+    // Rows are 44 px tall (design v9 item 1).
     expect(ruleFor(CSS, '.table tbody th, .table tbody td')).toMatchObject({
-      padding: '8px 14px',
+      padding: '0px 14px',
+      height: '44px',
+      'box-sizing': 'border-box',
+      'vertical-align': 'middle',
       'border-bottom': '1px solid var(--line)',
       color: 'var(--ink)',
       'text-align': 'left',
@@ -1086,6 +1090,7 @@ describe('TrendChart table', () => {
     expect(ruleFor(CSS, '.table .value')).toMatchObject({
       'text-align': 'right',
       'font-weight': '600',
+      'white-space': 'nowrap',
     });
   });
 });
@@ -1308,5 +1313,334 @@ describe('TrendChart without JavaScript, v8', () => {
     expect(placeholder?.classList.contains(String(styles.scriptOnly))).toBe(true);
     expect(toggle?.classList.contains(String(styles.scriptOnly))).toBe(true);
     expect(ruleFor(CSS, '.scriptOnly', '(scripting: none)')).toEqual({ display: 'none' });
+  });
+});
+
+// Design v9 item 13 (components.md TrendChart, "Marks"): at most one mark per run, failed or error
+// over flaky over empty, on the series of the platform that produced it; a flaky run is an amber
+// diamond, the square turned 45°, named "Flaky run".
+describe('TrendChart marks, v9', () => {
+  const TWO: TrendChartProps = {
+    ...DURATION,
+    series: [
+      { name: 'jvm', values: [0.4, null, 0.42, 0.41] },
+      { name: 'ios-sim', values: [0.6, 0.62, 0.61, 0.63], dashed: true },
+    ],
+  };
+  const layout = chartLayout(720, 4, 'line');
+  const scaleOf = (props: TrendChartProps) =>
+    trendYScale({
+      values: ('series' in props ? props.series : [])
+        .flatMap((s) => s.values)
+        .filter((v): v is number => v !== null),
+      percent: false,
+      integer: false,
+      zero: false,
+      steps: 3,
+    });
+
+  it('draws a flaky run as an amber diamond turned about its centre', () => {
+    const { container } = render(<TrendChart {...TWO} marks={[{ index: 2, status: 'flaky' }]} />);
+    const [mark] = parts(container, 'mark');
+    const x = xAt(layout, 2);
+    const y = yAt(layout, scaleOf(TWO), 0.42);
+    expect(mark?.getAttribute('fill')).toBe('var(--attn)');
+    expect(mark?.getAttribute('stroke')).toBe('var(--surface)');
+    expect(num(mark, 'x')).toBeCloseTo(x - 4, 6);
+    expect(num(mark, 'y')).toBeCloseTo(y - 4, 6);
+    const [cxText, cyText] = (mark?.getAttribute('transform') ?? '')
+      .replace(/^rotate\(45 /, '')
+      .replace(/\)$/, '')
+      .split(' ');
+    expect(mark?.getAttribute('transform')).toMatch(/^rotate\(45 /);
+    expect(Number(cxText)).toBeCloseTo(x, 6);
+    expect(Number(cyText)).toBeCloseTo(y, 6);
+  });
+
+  it('leaves failed and empty squares unturned', () => {
+    const { container } = render(
+      <TrendChart
+        {...TWO}
+        marks={[
+          { index: 0, status: 'fail' },
+          { index: 3, status: 'empty' },
+        ]}
+      />,
+    );
+    expect(parts(container, 'mark').map((mark) => mark.getAttribute('transform'))).toEqual([
+      null,
+      null,
+    ]);
+  });
+
+  it('sits on its platform’s series, or the first with a value when that has none', () => {
+    const { container } = render(
+      <TrendChart
+        {...TWO}
+        marks={[
+          { index: 0, status: 'fail', series: 1 },
+          { index: 1, status: 'fail', series: 0 },
+        ]}
+      />,
+    );
+    const scale = scaleOf(TWO);
+    const ys = parts(container, 'mark').map((mark) => num(mark, 'y') + 4);
+    expect(ys).toHaveLength(2);
+    expect(ys[0]).toBeCloseTo(yAt(layout, scale, 0.6), 6);
+    expect(ys[1]).toBeCloseTo(yAt(layout, scale, 0.62), 6);
+  });
+
+  it('draws one mark per run, by priority', () => {
+    const { container } = render(
+      <TrendChart
+        {...TWO}
+        marks={[
+          { index: 2, status: 'empty' },
+          { index: 2, status: 'flaky' },
+          { index: 2, status: 'fail', series: 1 },
+        ]}
+      />,
+    );
+    const marks = parts(container, 'mark');
+    expect(marks).toHaveLength(1);
+    expect(marks[0]?.getAttribute('fill')).toBe('var(--fail)');
+  });
+
+  it('names a flaky run "Flaky run" in the tooltip, in amber', () => {
+    const { container, getByRole } = render(
+      <TrendChart {...TWO} marks={[{ index: 3, status: 'flaky', series: 1 }]} />,
+    );
+    fireEvent.focus(surfaceOf(container));
+    const note = getByRole('status').querySelector('[data-part="tip-mark"]');
+    expect(note?.textContent).toBe('Flaky run');
+    expect(has(note, 'tipFlaky')).toBe(true);
+    expect(ruleFor(CSS, '.tipFlaky')).toEqual({ color: 'var(--attn)' });
+  });
+
+  it('names the run’s mark in the tooltip only when the run has one placed', () => {
+    const { container, getByRole } = render(
+      <TrendChart
+        {...TWO}
+        series={[
+          { name: 'jvm', values: [0.4, 0.41, 0.42, null] },
+          { name: 'ios-sim', values: [0.6, 0.62, 0.61, null], dashed: true },
+        ]}
+        marks={[{ index: 3, status: 'fail' }]}
+      />,
+    );
+    fireEvent.focus(surfaceOf(container));
+    expect(getByRole('status').querySelector('[data-part="tip-mark"]')).toBeNull();
+  });
+});
+
+// Design v9 items 1 and 2 (components.md TrendChart, "Table" and "Row links"): a When column of
+// each run's finish time, and the Run cell linking to the run's page; imported history has no run
+// page and reads as plain text.
+describe('TrendChart table, v9', () => {
+  const WHENS = [
+    '2025-12-12T04:37:00.000Z',
+    '2026-09-21T05:37:00.000Z',
+    '2026-09-22T06:37:00.000Z',
+    '2026-09-23T07:37:00.000Z',
+  ];
+  const LINKED: TrendChartProps = {
+    title: 'Pass rate',
+    scope: TREND_SCOPE.passRate,
+    series: [{ name: 'Pass rate', values: [100, 99.3, null, 100] }],
+    format: 'pct',
+    unit: 'run',
+    whens: WHENS,
+    hrefs: [null, '/p/ostomate2/runs/r1', '/p/ostomate2/runs/r2', '/p/ostomate2/runs/r3'],
+    nowYear: 2026,
+  };
+
+  const openTable = (props: TrendChartProps) => {
+    const view = render(<TrendChart {...props} />);
+    fireEvent.click(view.getByRole('button', { name: 'Show table' }));
+    return view.getByRole('table');
+  };
+
+  it('heads the columns Run, When, then each series', () => {
+    const table = openTable(LINKED);
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((th) => th.textContent),
+    ).toEqual(['Run', 'When', 'Pass rate']);
+  });
+
+  it('gives each run its finish time in a <time>, date and time as two pieces', () => {
+    const table = openTable(LINKED);
+    const times = [...table.querySelectorAll('tbody time')];
+    expect(times.map((time) => time.getAttribute('datetime'))).toEqual([...WHENS].reverse());
+    expect(times.map((time) => time.getAttribute('title'))).toEqual([
+      '23 Sep 2026, 07:37 UTC',
+      '22 Sep 2026, 06:37 UTC',
+      '21 Sep 2026, 05:37 UTC',
+      '12 Dec 2025, 04:37 UTC',
+    ]);
+    expect([...(times[0]?.children ?? [])].map((piece) => piece.textContent)).toEqual([
+      '23 Sep,',
+      '07:37 UTC',
+    ]);
+    expect([...(times[3]?.children ?? [])].map((piece) => piece.textContent)).toEqual([
+      '12 Dec 2025,',
+      '04:37 UTC',
+    ]);
+    const rows = within(table).getAllByRole('row').slice(1);
+    expect(rows.map((row) => row.textContent)).toEqual([
+      'Latest23 Sep,07:37 UTC100.0%',
+      '1 run ago22 Sep,06:37 UTCNot run',
+      '2 runs ago21 Sep,05:37 UTC99.3%',
+      '3 runs ago12 Dec 2025,04:37 UTC100.0%',
+    ]);
+  });
+
+  it('links the Run cell to the run’s page, and leaves imported history plain', () => {
+    const table = openTable(LINKED);
+    const rows = within(table).getAllByRole('row').slice(1);
+    const links = rows.map((row) => row.querySelector('th a'));
+    expect(links.map((link) => link?.getAttribute('href') ?? null)).toEqual([
+      '/p/ostomate2/runs/r3',
+      '/p/ostomate2/runs/r2',
+      '/p/ostomate2/runs/r1',
+      null,
+    ]);
+    expect(within(table).getByRole('link', { name: 'Latest' })).toBe(links[0]);
+    links.slice(0, 3).forEach((link) => expect(has(link, 'runLink')).toBe(true));
+    const plain = rows[3]?.querySelector('th span');
+    expect(plain?.textContent).toBe('3 runs ago');
+    expect(has(plain, 'runText')).toBe(true);
+    // Only a linked row takes the hover.
+    expect(rows.map((row) => has(row, 'linked'))).toEqual([true, true, true, false]);
+    rows.forEach((row) => expect(has(row.querySelector('th'), 'runCell')).toBe(true));
+    rows.forEach((row) => expect(has(row.children[1], 'when')).toBe(true));
+  });
+
+  it('dashes a run with no finish time, and drops the When column with no times at all', () => {
+    let table = openTable({ ...LINKED, whens: [WHENS[0] ?? '', '', ...WHENS.slice(2)] });
+    const rows = within(table).getAllByRole('row').slice(1);
+    expect(rows[2]?.children[1]?.textContent).toBe('—');
+    expect(has(rows[2]?.children[1], 'whenNone')).toBe(true);
+    cleanup();
+    table = openTable({ ...LINKED, whens: undefined, hrefs: undefined });
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((th) => th.textContent),
+    ).toEqual(['Run', 'Pass rate']);
+    expect(table.querySelector('a')).toBeNull();
+  });
+
+  it('has no When column for bars: the Day column is the date', () => {
+    const table = openTable({
+      ...RUNS_PER_DAY_CHART,
+      whens: Array.from({ length: 30 }, () => WHENS[1] ?? ''),
+      nowYear: 2026,
+    });
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((th) => th.textContent),
+    ).toEqual(['Day (UTC)', 'Runs']);
+  });
+
+  it('server-renders the same table, When and links included, without JavaScript', () => {
+    const html = renderToStaticMarkup(<TrendChart {...LINKED} />);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const rows = [...doc.querySelectorAll('noscript table tbody tr')];
+    expect(rows.map((row) => row.querySelector('a')?.getAttribute('href') ?? null)).toEqual([
+      '/p/ostomate2/runs/r3',
+      '/p/ostomate2/runs/r2',
+      '/p/ostomate2/runs/r1',
+      null,
+    ]);
+    expect(rows[0]?.querySelector('time')?.getAttribute('datetime')).toBe(WHENS[3]);
+  });
+
+  it('styles the link, its hover and focus, the plain text and the When cell as drawn', () => {
+    expect(ruleFor(CSS, '.table .runCell')).toEqual({ padding: '0px', 'white-space': 'nowrap' });
+    expect(ruleFor(CSS, '.runLink, .runText')).toEqual({
+      display: 'flex',
+      'align-items': 'center',
+      'min-height': '44px',
+      padding: '0px 14px',
+    });
+    expect(ruleFor(CSS, '.runLink')).toEqual({
+      color: 'var(--ink)',
+      'font-weight': '500',
+      'text-decoration': 'none',
+    });
+    expect(ruleFor(CSS, '.runText')).toEqual({ color: 'var(--ink-2)' });
+    expect(ruleFor(CSS, '.linked:hover')).toEqual({ background: 'var(--raised)' });
+    expect(ruleFor(CSS, '.linked:hover .runLink')).toEqual({
+      'text-decoration': 'underline',
+      'text-decoration-color': 'currentcolor',
+    });
+    expect(ruleFor(CSS, '.runLink:focus-visible')).toEqual({
+      outline: '2px solid var(--ink)',
+      'outline-offset': '-2px',
+      'border-radius': '6px',
+    });
+    expect(ruleFor(CSS, '.table .when')).toEqual({ color: 'var(--ink-2)' });
+    expect(ruleFor(CSS, '.table .whenNone')).toEqual({ color: 'var(--ink-3)' });
+    expect(ruleFor(CSS, '.whenTime')).toEqual({
+      display: 'flex',
+      'flex-wrap': 'wrap',
+      'column-gap': '4px',
+    });
+    expect(ruleFor(CSS, '.whenTime > span')).toEqual({ 'white-space': 'nowrap' });
+  });
+
+  it('is compact below 560 px wide: 13 px, cells padded 0 6, When on two lines', () => {
+    expect(ruleFor(CSS, '.body')).toMatchObject({ 'container-type': 'inline-size' });
+    const narrow = '(width < 560px)';
+    expect(ruleFor(CSS, '.table', narrow)).toEqual({ 'font-size': '13px' });
+    expect(ruleFor(CSS, '.table thead th', narrow)).toEqual({ padding: '10px 6px' });
+    expect(ruleFor(CSS, '.table tbody th, .table tbody td', narrow)).toEqual({
+      padding: '0px 6px',
+    });
+    expect(ruleFor(CSS, '.table .runCell', narrow)).toEqual({ padding: '0px' });
+    expect(ruleFor(CSS, '.runLink, .runText', narrow)).toEqual({ padding: '0px 6px' });
+    expect(ruleFor(CSS, '.whenTime', narrow)).toEqual({
+      'flex-direction': 'column',
+      'line-height': '1.3',
+    });
+  });
+});
+
+// Design v8 item 17, answered by v9 item 18 (components.md TrendChart, gapLabels): a series can
+// name its missing values; Test History says "Skipped" where the platform's result was skipped.
+describe('TrendChart gap labels', () => {
+  const SKIPS: TrendChartProps = {
+    ...DURATION,
+    series: [
+      { name: 'jvm', values: [0.4, null, null, 0.41], gapLabels: [null, 'Skipped', null, null] },
+      { name: 'ios-sim', values: [0.6, 0.62, 0.61, 0.63], dashed: true },
+    ],
+  };
+
+  it('reads the gap’s label in the table, "Not run" where it has none', () => {
+    const { getByRole } = render(<TrendChart {...SKIPS} />);
+    fireEvent.click(getByRole('button', { name: 'Show table' }));
+    const rows = within(getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows.map((row) => row.textContent)).toEqual([
+      'Latest0.41 s0.63 s',
+      '1 run agoNot run0.61 s',
+      '2 runs agoSkipped0.62 s',
+      '3 runs ago0.40 s0.60 s',
+    ]);
+    expect(has(rows[2]?.children[1], 'notRun')).toBe(true);
+  });
+
+  it('reads it in the tooltip too', () => {
+    const { container, getByRole } = render(<TrendChart {...SKIPS} />);
+    const surface = surfaceOf(container);
+    fireEvent.focus(surface);
+    fireEvent.keyDown(surface, { key: 'ArrowLeft' });
+    fireEvent.keyDown(surface, { key: 'ArrowLeft' });
+    expect(getByRole('status').querySelector('[data-part="tooltip"]')?.textContent).toBe(
+      '2 runs agojvmSkippedios-sim0.62 s',
+    );
   });
 });

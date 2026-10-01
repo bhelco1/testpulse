@@ -47,7 +47,7 @@ describe('TestNotFound', () => {
     expect(crumbs.querySelector('[aria-current="page"]')?.textContent).toBe('Not found');
   });
 
-  it('a known project with no run: the test kind without a latest-results link', () => {
+  it('a known project with no run: the test kind, going to the project page', () => {
     route.slug = 'testpulse';
     route.path = `/p/testpulse/tests/${KEY}`;
     const { getByRole, queryByRole } = render(
@@ -56,6 +56,9 @@ describe('TestNotFound', () => {
 
     expect(getByRole('heading', { level: 1 }).textContent).toBe('This test isn’t in testpulse');
     expect(queryByRole('link', { name: /^Latest/ })).toBeNull();
+    expect(getByRole('link', { name: 'Go to testpulse' }).getAttribute('href')).toBe(
+      '/p/testpulse',
+    );
   });
 
   it('an unknown project: the project kind, with no breadcrumbs', () => {

@@ -35,10 +35,15 @@ export interface CoveragePoint {
   readonly runId: string;
   readonly finishedAt: Date;
   readonly source: RunSource;
-  /** Which stored form the value came from: CI writes counts, backfill a recorded percentage. */
-  readonly form: 'counts' | 'pct';
-  /** Line coverage, 0 to 100, unrounded. */
-  readonly linesPct: number;
+  /** For the chart's marks at failed and empty runs. */
+  readonly status: StatsRun['status'];
+  /**
+   * Which stored form the value came from: CI writes counts, backfill a recorded percentage;
+   * null where the run has no value for the module.
+   */
+  readonly form: 'counts' | 'pct' | null;
+  /** Line coverage, 0 to 100, unrounded; null where the run did not report the module. */
+  readonly linesPct: number | null;
 }
 
 export interface ModuleCoverageTrend {
@@ -98,39 +103,41 @@ export function linesPct(lines: StatsCoverage['lines']): number | null {
   return lines.total === 0 ? null : (lines.covered / lines.total) * 100;
 }
 
+/**
+ * Line coverage per module over the last 30 default-branch runs, CI and imported, one point per
+ * run for every module that has a value in any of them, in module-key order: each module is its
+ * own chart (design v8 item 3). A run that did not report a module is a gap at its place, never
+ * refilled from an older run.
+ */
 export function coverageTrend(
   runs: readonly StatsRun[],
   coverage: readonly StatsCoverage[],
   options: TrendOptions,
 ): ModuleCoverageTrend[] {
   const included = trendRuns(runs, options);
-  const position = new Map(included.map((run, index) => [run.id, { index, run }]));
-  const byModule = new Map<string, Array<{ index: number; point: CoveragePoint }>>();
+  const position = new Map(included.map((run, index) => [run.id, index]));
+  const byModule = new Map<string, Map<number, StatsCoverage['lines']>>();
   for (const row of coverage) {
-    const found = position.get(row.runId);
-    const value = linesPct(row.lines);
+    const index = position.get(row.runId);
     // A row whose run is not among the 30, or a module with no lines to cover, has no point.
-    if (found === undefined || value === null) continue;
-    const { index, run } = found;
-    byModule.set(row.module, [
-      ...(byModule.get(row.module) ?? []),
-      {
-        index,
-        point: {
-          runId: run.id,
-          finishedAt: run.finishedAt,
-          source: run.source,
-          form: row.lines.form,
-          linesPct: value,
-        },
-      },
-    ]);
+    if (index === undefined || linesPct(row.lines) === null) continue;
+    byModule.set(row.module, (byModule.get(row.module) ?? new Map()).set(index, row.lines));
   }
   return [...byModule.entries()]
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-    .map(([module, entries]) => ({
+    .map(([module, values]) => ({
       module,
-      points: entries.sort((a, b) => a.index - b.index).map((entry) => entry.point),
+      points: included.map((run, index) => {
+        const lines = values.get(index);
+        return {
+          runId: run.id,
+          finishedAt: run.finishedAt,
+          source: run.source,
+          status: run.status,
+          form: lines?.form ?? null,
+          linesPct: lines === undefined ? null : linesPct(lines),
+        };
+      }),
     }));
 }
 

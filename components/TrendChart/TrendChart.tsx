@@ -41,7 +41,9 @@ import {
   type TrendKind,
   type TrendUnit,
 } from '../../lib/charts/layout';
+import { placeMarks, type PlacedMark, type TrendMark } from '../../lib/charts/marks';
 import { trendYScale } from '../../lib/charts/scale';
+import { chartWhen } from '../../lib/copy/time';
 import { Button } from '../Button/Button';
 import { AlertCircleIcon } from '../icons/icons';
 import styles from './TrendChart.module.css';
@@ -54,12 +56,12 @@ export interface TrendSeries {
   values: readonly (number | null)[];
   // The second series is always dashed; this dashes the first as well.
   dashed?: boolean;
+  // What each missing value is called in the tooltip and table, "Not run" where null or absent:
+  // Test History says "Skipped" where the platform's result was skipped (v9 item 18).
+  gapLabels?: readonly (string | null)[];
 }
 
-export interface TrendMark {
-  index: number;
-  status: 'fail' | 'empty';
-}
+export type { TrendMark };
 
 export interface TrendData {
   kind?: TrendKind;
@@ -74,6 +76,12 @@ export interface TrendData {
   unit: TrendUnit;
   // From lib/charts/captions. Not shown with fewer than two points.
   caption?: string | null;
+  // Each point's run finish time, ISO 8601, for the table's When column (v9 item 1).
+  whens?: readonly string[];
+  // Each point's run page; null for imported history, which has none (v9 item 2).
+  hrefs?: readonly (string | null)[];
+  // The current UTC year, from the server: a When in another year gives its year.
+  nowYear?: number;
 }
 
 export type TrendChartProps = {
@@ -86,6 +94,9 @@ export type TrendChartProps = {
 const SHIMMER = 'tp-shimmer 1.6s ease-in-out infinite';
 const NO_LABELS: readonly string[] = [];
 const NO_MARKS: readonly TrendMark[] = [];
+const NOT_RUN = 'Not run';
+
+const gapLabel = (series: TrendSeries, index: number) => series.gapLabels?.[index] ?? NOT_RUN;
 
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
@@ -324,7 +335,10 @@ function Plot({ data, layout, label }: { data: ShownData; layout: ChartLayout; l
   const [hover, setHover] = useState<number | null>(null);
   const { series, format, unit } = data;
   const labels = data.labels ?? NO_LABELS;
-  const marks = data.marks ?? NO_MARKS;
+  const marks = placeMarks(
+    data.marks ?? NO_MARKS,
+    series.map((s) => s.values),
+  );
   const bar = layout.kind === 'bar';
   const count = layout.count;
   // A shorter series arriving while a point is shown must not leave the index past the end.
@@ -497,27 +511,29 @@ function Plot({ data, layout, label }: { data: ShownData; layout: ChartLayout; l
           )}
         />
       ))}
-      {marks
-        .filter((mark) => isValue(series[0]?.values[mark.index]))
-        .map((mark) => (
-          <ReferenceDot
-            key={`mark-${mark.index}`}
-            x={mark.index}
-            y={series[0]?.values[mark.index] ?? undefined}
-            shape={(dot: { cx?: number; cy?: number }) => (
-              <rect
-                x={(dot.cx ?? 0) - 4}
-                y={(dot.cy ?? 0) - 4}
-                width={8}
-                height={8}
-                fill={mark.status === 'fail' ? 'var(--fail)' : 'var(--attn)'}
-                stroke="var(--surface)"
-                strokeWidth={2}
-                data-part="mark"
-              />
-            )}
-          />
-        ))}
+      {marks.map((mark) => (
+        <ReferenceDot
+          key={`mark-${mark.index}`}
+          x={mark.index}
+          y={mark.value}
+          shape={(dot: { cx?: number; cy?: number }) => (
+            <rect
+              x={(dot.cx ?? 0) - 4}
+              y={(dot.cy ?? 0) - 4}
+              width={8}
+              height={8}
+              fill={mark.status === 'fail' ? 'var(--fail)' : 'var(--attn)'}
+              stroke="var(--surface)"
+              strokeWidth={2}
+              // A flaky run is the square turned 45° about its centre: a diamond.
+              transform={
+                mark.status === 'flaky' ? `rotate(45 ${dot.cx ?? 0} ${dot.cy ?? 0})` : undefined
+              }
+              data-part="mark"
+            />
+          )}
+        />
+      ))}
       {hoverRule}
       {active !== null &&
         series.map((s, si) =>
@@ -650,7 +666,7 @@ function Tooltip({
 }: {
   data: ShownData;
   labels: readonly string[];
-  marks: readonly TrendMark[];
+  marks: readonly PlacedMark[];
   layout: ChartLayout;
   index: number;
 }) {
@@ -671,23 +687,26 @@ function Tooltip({
               <b className={styles.tipValue}>{formatTrendValue(value, data.format, true)}</b>
             ) : (
               <span className={styles.tipNotRun} data-part="not-run">
-                Not run
+                {gapLabel(s, index)}
               </span>
             )}
           </div>
         );
       })}
       {mark && (
-        <div
-          className={cx(styles.tipMark, mark.status === 'fail' ? styles.tipFail : styles.tipEmpty)}
-          data-part="tip-mark"
-        >
-          {mark.status === 'fail' ? 'Run failed' : 'Run empty'}
+        <div className={cx(styles.tipMark, MARK_TIP[mark.status].className)} data-part="tip-mark">
+          {MARK_TIP[mark.status].text}
         </div>
       )}
     </div>
   );
 }
+
+const MARK_TIP: Record<PlacedMark['status'], { text: string; className: string | undefined }> = {
+  fail: { text: 'Run failed', className: styles.tipFail },
+  flaky: { text: 'Flaky run', className: styles.tipFlaky },
+  empty: { text: 'Run empty', className: styles.tipEmpty },
+};
 
 function TableToggle({ data, title }: { data: ShownData; title: string }) {
   const [open, setOpen] = useState(false);
@@ -717,6 +736,9 @@ function DataTable({ data, title, id }: { data: ShownData; title: string; id?: s
   const count = data.series[0]?.values.length ?? 0;
   const labels = data.labels ?? NO_LABELS;
   const newestFirst = Array.from({ length: count }, (_, i) => count - 1 - i);
+  // Bars have no When column: their Day column is already the date (v9 item 1).
+  const whens = data.unit === 'day' ? undefined : data.whens;
+  const nowYear = data.nowYear ?? 0;
   return (
     // Focusable so a keyboard can scroll the 320 px box.
     <div
@@ -730,6 +752,7 @@ function DataTable({ data, title, id }: { data: ShownData; title: string; id?: s
         <thead>
           <tr>
             <th scope="col">{data.unit === 'day' ? 'Day (UTC)' : 'Run'}</th>
+            {whens && <th scope="col">When</th>}
             {data.series.map((s) => (
               <th key={s.name} scope="col" className={styles.value}>
                 {s.name}
@@ -738,25 +761,59 @@ function DataTable({ data, title, id }: { data: ShownData; title: string; id?: s
           </tr>
         </thead>
         <tbody>
-          {newestFirst.map((i) => (
-            <tr key={i}>
-              <th scope="row">{pointLabel(i, count, labels, data.unit)}</th>
-              {data.series.map((s) => {
-                const value = s.values[i];
-                return isValue(value) ? (
-                  <td key={s.name} className={styles.value}>
-                    {formatTrendValue(value, data.format, true)}
-                  </td>
-                ) : (
-                  <td key={s.name} className={cx(styles.value, styles.notRun)}>
-                    Not run
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+          {newestFirst.map((i) => {
+            const label = pointLabel(i, count, labels, data.unit);
+            const href = data.hrefs?.[i] ?? null;
+            const when = whens?.[i];
+            return (
+              <tr key={i} className={href === null ? undefined : styles.linked}>
+                {/* Only the Run cell links: a row cannot be one link without JavaScript, and the
+                    cell's text names the link (v9 item 2). */}
+                <th scope="row" className={styles.runCell}>
+                  {href === null ? (
+                    <span className={styles.runText}>{label}</span>
+                  ) : (
+                    <a href={href} className={styles.runLink}>
+                      {label}
+                    </a>
+                  )}
+                </th>
+                {whens &&
+                  (when ? (
+                    <td className={styles.when}>
+                      <WhenTime iso={when} nowYear={nowYear} />
+                    </td>
+                  ) : (
+                    <td className={styles.whenNone}>—</td>
+                  ))}
+                {data.series.map((s) => {
+                  const value = s.values[i];
+                  return isValue(value) ? (
+                    <td key={s.name} className={styles.value}>
+                      {formatTrendValue(value, data.format, true)}
+                    </td>
+                  ) : (
+                    <td key={s.name} className={cx(styles.value, styles.notRun)}>
+                      {gapLabel(s, i)}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
+  );
+}
+
+// "22 Sep," and "04:37 UTC" as two unbreakable pieces, so a narrow table wraps between them.
+function WhenTime({ iso, nowYear }: { iso: string; nowYear: number }) {
+  const when = chartWhen(iso, nowYear);
+  return (
+    <time dateTime={iso} title={when.title} className={styles.whenTime}>
+      <span>{when.date}</span>
+      <span>{when.time}</span>
+    </time>
   );
 }

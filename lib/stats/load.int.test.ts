@@ -140,8 +140,15 @@ describe('loadStatsInput over backfilled history and a CI run (spec section 17, 
     const coverage = coverageTrend(input.runs, input.coverage, options);
     expect(coverage.map((trend) => trend.module)).toEqual(['composeApp', 'shared']);
     const [composeApp, shared] = coverage;
-    expect(composeApp?.points).toHaveLength(13);
-    expect(composeApp?.points.every((p) => p.source === 'backfill' && p.form === 'pct')).toBe(true);
+    // Every module has a point at each of the 14 runs; the CI run reported no composeApp
+    // coverage, so it is a gap there.
+    expect(composeApp?.points).toHaveLength(14);
+    expect(
+      composeApp?.points.filter((p) => p.source === 'backfill' && p.form === 'pct'),
+    ).toHaveLength(13);
+    expect(composeApp?.points.filter((p) => p.source === 'ci')).toEqual([
+      expect.objectContaining({ form: null, linesPct: null }),
+    ]);
     expect(shared?.points).toHaveLength(14);
     expect(shared?.points.filter((p) => p.source === 'backfill' && p.form === 'pct')).toHaveLength(
       13,

@@ -93,7 +93,12 @@ const windowRate = (passRate: number | null) => ({
   passRate,
 });
 
-const NO_TRENDS: ProjectPage['trends'] = { passRate: [], testCount: [], duration: [] };
+const NO_TRENDS: ProjectPage['trends'] = {
+  passRate: [],
+  testCount: [],
+  coverage: [],
+  duration: [],
+};
 
 const LATEST_RUN: NonNullable<ProjectPage['latestRun']> = {
   reports: [
@@ -553,7 +558,7 @@ describe('projectPageView', () => {
   });
 
   describe('flaky list', () => {
-    const flakyPage = (failures: { failed: number; runs: number }) =>
+    const flakyPage = (failures: { failed: number; runs: number }, commits = 2) =>
       page({
         flaky: {
           totalTests: 1041,
@@ -567,6 +572,7 @@ describe('projectPageView', () => {
               layer: 'unit',
               platforms: ['node', 'ios-sim'],
               failures,
+              commits,
             },
           ],
         },
@@ -595,8 +601,15 @@ describe('projectPageView', () => {
       );
     });
 
-    it('holds the rate back when the test failed in none of its last runs (design v8 item 20)', () => {
-      expect(projectPageView(flakyPage({ failed: 0, runs: 40 }), NOW).flaky[0]?.rate).toBeNull();
+    // Design v9 item 12 (components.md StatusTimeline, "Flaky list rate"): a test flaky in the 30
+    // days that failed in none of its last runs says how many commits it flipped on instead.
+    it('says the commits it flipped on when it failed in none of its last runs', () => {
+      expect(projectPageView(flakyPage({ failed: 0, runs: 40 }), NOW).flaky[0]?.rate).toBe(
+        'Flipped on 2 commits in 30 days',
+      );
+      expect(projectPageView(flakyPage({ failed: 0, runs: 3 }, 1), NOW).flaky[0]?.rate).toBe(
+        'Flipped on 1 commit in 30 days',
+      );
     });
   });
 
@@ -638,6 +651,12 @@ describe('projectPageView', () => {
     });
     // RouteServe's ten seeded CI runs on main: P F P P F P F P P F.
     const RED = [1, 4, 6, 9];
+    // Each chart's table: every run's finish time and its run page (design v9 items 1 and 2).
+    const tableOf = (indices: readonly number[]) => ({
+      whens: indices.map((i) => ago((30 - i) * DAY).toISOString()),
+      hrefs: indices.map((i) => `/p/ostomate2/runs/r${i}`),
+      nowYear: 2026,
+    });
     const statusOf = (i: number) => (RED.includes(i) ? 'failed' : 'passed');
     const TEN = Array.from({ length: 10 }, (_, i) => i);
     const [GREEN_MS, RED_MS] = [206_735, 204_120];
@@ -646,17 +665,105 @@ describe('projectPageView', () => {
         RED.includes(i) ? passRatePoint(i, 'failed', 1044, 1) : passRatePoint(i, 'passed', 1045, 0),
       ),
       testCount: TEN.map((i) => countPoint(i, 1041, statusOf(i))),
+      coverage: [],
       duration: TEN.map((i) => durationPoint(i, RED.includes(i) ? RED_MS : GREEN_MS, statusOf(i))),
     };
     const marks = RED.map((index) => ({ index, status: 'fail' }));
 
-    it('draws pass rate, tests per run and duration, and no coverage chart (13.2)', () => {
+    it('draws pass rate, tests per run and duration, with no coverage chart without coverage', () => {
       const { charts } = projectPageView(page({ trends: routeserveTrends }), NOW).history;
       expect(charts.map((chart) => [chart.title, chart.scope])).toEqual([
         ['Pass rate', 'Default branch · last 30 runs · CI and imported history'],
         ['Tests per run', 'Default branch · last 30 CI runs'],
         ['Run duration', 'Default branch · last 30 CI runs (imported history has no durations)'],
       ]);
+    });
+
+    // Design v8 item 3, as the v9 Project Page draws it: one coverage chart per module, in
+    // module-key order, between tests per run and run duration, each against its own floor.
+    describe('coverage', () => {
+      const coveragePoint = (
+        i: number,
+        linesPct: number | null,
+        source: 'ci' | 'backfill' = 'ci',
+        status: 'passed' | 'failed' | 'empty' = 'passed',
+      ): ProjectPage['trends']['coverage'][number]['points'][number] => ({
+        runId: `r${i}`,
+        finishedAt: ago((30 - i) * DAY),
+        source,
+        status,
+        form: linesPct === null ? null : source === 'ci' ? 'counts' : 'pct',
+        linesPct,
+      });
+      const trends: ProjectPage['trends'] = {
+        ...NO_TRENDS,
+        coverage: [
+          {
+            module: 'composeApp',
+            points: [
+              coveragePoint(0, 93.6, 'backfill'),
+              coveragePoint(1, 94.31, 'backfill'),
+              coveragePoint(2, null, 'ci', 'empty'),
+            ],
+          },
+          {
+            module: 'extra',
+            points: [coveragePoint(0, 40), coveragePoint(1, 50), coveragePoint(2, 45)],
+          },
+          {
+            module: 'shared',
+            points: [
+              coveragePoint(0, 93.2, 'backfill'),
+              coveragePoint(1, 92.95, 'ci', 'failed'),
+              coveragePoint(2, 90.4, 'ci'),
+            ],
+          },
+        ],
+      };
+      const charts = () => projectPageView(page({ trends }), NOW).history.charts;
+
+      it('charts each module in module-key order, between tests per run and duration', () => {
+        expect(charts().map((chart) => chart.title)).toEqual([
+          'Pass rate',
+          'Tests per run',
+          'Line coverage, composeApp',
+          'Line coverage, extra',
+          'Line coverage, shared',
+          'Run duration',
+        ]);
+      });
+
+      it('plots a module’s line coverage against its floor, imported history unlinked', () => {
+        expect(charts()[4]).toEqual({
+          title: 'Line coverage, shared',
+          scope: 'Default branch · last 30 runs · CI and imported history',
+          series: [{ name: 'shared', values: [93.2, 92.95, 90.4] }],
+          floor: 91,
+          marks: [{ index: 1, status: 'fail' }],
+          format: 'pct',
+          unit: 'run',
+          caption: 'Fell from 93.2% to 90.4% over 3 runs; below its 91% floor.',
+          whens: [0, 1, 2].map((i) => ago((30 - i) * DAY).toISOString()),
+          hrefs: [null, '/p/ostomate2/runs/r1', '/p/ostomate2/runs/r2'],
+          nowYear: 2026,
+        });
+      });
+
+      it('leaves a run without the module a gap, saying so when the latest run had no tests', () => {
+        expect(charts()[2]).toMatchObject({
+          series: [{ name: 'composeApp', values: [93.6, 94.31, null] }],
+          floor: 93,
+          marks: [{ index: 2, status: 'empty' }],
+          caption:
+            'Rose from 93.6% to 94.3% over 2 runs; above its 93% floor. The latest run had no tests.',
+        });
+      });
+
+      it('draws a module with no floor without one, and says nothing of a floor', () => {
+        const extra = charts()[3];
+        expect(extra).toMatchObject({ caption: 'Rose from 40.0% to 45.0% over 3 runs.' });
+        expect(extra && 'floor' in extra).toBe(false);
+      });
     });
 
     it('plots each run’s pass rate as a percentage, marking the failed runs', () => {
@@ -675,6 +782,7 @@ describe('projectPageView', () => {
         unit: 'run',
         // 1,044 of 1,045 is 99.90%, rounded down to a tenth.
         caption: '99.9% on the latest run. 4 of the last 10 runs failed.',
+        ...tableOf(TEN),
       });
     });
 
@@ -732,6 +840,7 @@ describe('projectPageView', () => {
         format: 'int',
         unit: 'run',
         caption: 'Held at 1,041 for the last 10 runs.',
+        ...tableOf(TEN),
       });
     });
 
@@ -761,13 +870,28 @@ describe('projectPageView', () => {
         unit: 'run',
         // 6 green runs of 206.7 s and 4 red of 204.1 s: the median is the mean of two green.
         caption: 'Between 204 s and 207 s over the last 10 runs. Median 207 s.',
+        ...tableOf(TEN),
       });
+    });
+
+    // Imported history has no run page (design v9 item 2, data-map.md "Chart tables").
+    it('links each pass-rate run to its page, except imported history', () => {
+      const trends = {
+        ...NO_TRENDS,
+        passRate: [
+          { ...passRatePoint(0, 'passed', 8, 0), source: 'backfill' as const },
+          passRatePoint(1, 'passed', 142, 0),
+        ],
+      };
+      const [passRate] = projectPageView(page({ trends }), NOW).history.charts;
+      expect(passRate).toMatchObject({ hrefs: [null, '/p/ostomate2/runs/r1'] });
     });
 
     it('marks an empty run on every chart', () => {
       const trends: ProjectPage['trends'] = {
         passRate: [passRatePoint(0, 'passed', 1, 0), passRatePoint(1, 'empty', 0, 0)],
         testCount: [countPoint(0, 1), countPoint(1, 0, 'empty')],
+        coverage: [],
         duration: [durationPoint(0, 1_000), durationPoint(1, 300, 'empty')],
       };
       const { charts } = projectPageView(page({ trends }), NOW).history;
@@ -825,14 +949,34 @@ describe('projectPageView', () => {
           expect.objectContaining({ title: 'Push to main', status: 'failed' }),
           expect.objectContaining({ href: '/p/ostomate2/runs/s2', status: 'empty' }),
         ],
-        // Only "All {n} passed." is drawn; a mix has no note (13.2).
-        note: null,
+        // components.md StatusTimeline, "Runs strip note" (design v8 item 33), zero counts left
+        // out, over every run the server read (owner decision 2026-09-30).
+        note: '1 passed, 1 failed, 1 empty.',
       });
+    });
+
+    it('notes a mix of runs, leaving out the statuses no run had', () => {
+      const noteOf = (statuses: readonly ('passed' | 'failed' | 'empty')[]) =>
+        projectPageView(page({ recentRuns: statuses.map((st, i) => stripRun(i, st)) }), NOW).history
+          .strip.note;
+      expect(noteOf(['passed', 'failed', 'passed'])).toBe('2 passed, 1 failed.');
+      expect(noteOf(['empty', 'passed'])).toBe('1 passed, 1 empty.');
+      expect(noteOf(['failed', 'failed'])).toBe('2 failed.');
+      expect(noteOf(['empty', 'failed', 'empty'])).toBe('1 failed, 2 empty.');
+    });
+
+    // The note counts every run the server read, not the cells that fit (owner decision
+    // 2026-09-30): 40 runs read "39 passed, 1 failed." at every width, 390 px included.
+    it('counts all 40 runs the server read', () => {
+      const runs = Array.from({ length: 40 }, (_, i) => stripRun(i, i === 7 ? 'failed' : 'passed'));
+      expect(projectPageView(page({ recentRuns: runs }), NOW).history.strip.note).toBe(
+        '39 passed, 1 failed.',
+      );
     });
 
     it('notes when every run in the strip passed', () => {
       const runs = Array.from({ length: 8 }, (_, i) => stripRun(i, 'passed'));
-      expect(projectPageView(page({ recentRuns: runs }), NOW).history.strip?.note).toBe(
+      expect(projectPageView(page({ recentRuns: runs }), NOW).history.strip.note).toBe(
         'All 8 passed.',
       );
     });
@@ -841,14 +985,20 @@ describe('projectPageView', () => {
     // (owner decision 2026-09-30).
     it('reads "1 run, {status}." for a single run', () => {
       const noteOf = (status: 'passed' | 'failed' | 'empty') =>
-        projectPageView(page({ recentRuns: [stripRun(0, status)] }), NOW).history.strip?.note;
+        projectPageView(page({ recentRuns: [stripRun(0, status)] }), NOW).history.strip.note;
       expect(noteOf('passed')).toBe('1 run, passed.');
       expect(noteOf('failed')).toBe('1 run, failed.');
       expect(noteOf('empty')).toBe('1 run, empty.');
     });
 
-    it('has no strip before the first run', () => {
-      expect(projectPageView(page(), NOW).history.strip).toBeNull();
+    // Design v9 item 12 (Design System section 11): "No CI runs yet", with the note hidden;
+    // imported history alone does not fill the strip.
+    it('is the "No CI runs yet" strip, with no note, before the first CI run', () => {
+      expect(projectPageView(page(), NOW).history.strip).toEqual({
+        runs: [],
+        defaultBranch: 'main',
+        note: null,
+      });
     });
   });
 });

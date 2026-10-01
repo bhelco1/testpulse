@@ -25,7 +25,7 @@ export type NotFoundProps =
       path: ReactNode;
       project: { name: string; href: string };
       // The project's latest run page, "Latest {project} results"; null before it has a run,
-      // which the design does not draw, so only the overview link is offered.
+      // when the primary is "Go to {project}" (design v9 item 12), a state of this kind.
       latestRunHref: string | null;
     };
 
@@ -115,9 +115,13 @@ function NoTest({ path, project, latestRunHref }: Extract<NotFoundProps, { kind:
         its new name. Nothing has reported under this key.
       </p>
       <div className={styles.actions}>
-        {latestRunHref !== null && (
+        {latestRunHref !== null ? (
           <Button href={latestRunHref} variant="primary">
             Latest {project.name} results
+          </Button>
+        ) : (
+          <Button href={project.href} variant="primary">
+            Go to {project.name}
           </Button>
         )}
         <Link href="/" className={styles.link}>

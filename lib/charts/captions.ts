@@ -65,17 +65,30 @@ export function testCountCaption(counts: readonly (number | null)[]): string | n
   return withSuffix(`Held at ${to} for the last ${n} runs.`, suffix);
 }
 
-export function coverageCaption(pcts: readonly number[], floor: number): string | null {
-  const first = pcts[0];
-  const last = pcts.at(-1);
-  if (pcts.length < 2 || first === undefined || last === undefined) return null;
+export function coverageCaption(
+  pcts: readonly (number | null)[],
+  // Null for a module with no floor, which the coverage card draws without one (v8 item 15).
+  floor: number | null,
+  // The latest run was empty, so its gap is "no tests"; a run that had tests and sent no coverage
+  // for the module has no sentence the design gives.
+  { latestEmpty = false }: { latestEmpty?: boolean } = {},
+): string | null {
+  const counted = present(pcts);
+  const first = counted[0];
+  const last = counted.at(-1);
+  if (counted.length < 2 || first === undefined || last === undefined) return null;
   // Compared as displayed, at one decimal (design v5 item 1).
   const [from, to] = [formatTrendValue(first, 'pct', true), formatTrendValue(last, 'pct', true)];
-  const side = last < floor ? 'below' : 'above';
-  const against = `${side} its ${formatTrendValue(floor, 'pct')} floor.`;
-  if (from === to) return `Held at ${to} over ${pcts.length} runs; ${against}`;
-  const moved = last > first ? 'Rose' : 'Fell';
-  return `${moved} from ${from} to ${to} over ${pcts.length} runs; ${against}`;
+  const n = counted.length;
+  const moved =
+    from === to
+      ? `Held at ${to} over ${n} runs`
+      : `${last > first ? 'Rose' : 'Fell'} from ${from} to ${to} over ${n} runs`;
+  const against =
+    floor === null
+      ? `${moved}.`
+      : `${moved}; ${last < floor ? 'below' : 'above'} its ${formatTrendValue(floor, 'pct')} floor.`;
+  return withSuffix(against, pcts.at(-1) === null && latestEmpty ? NO_TESTS : null);
 }
 
 function median(values: readonly number[]): number {

@@ -29,8 +29,10 @@ import {
   type TestCountPoint,
 } from '../stats/test-counts.ts';
 import {
+  coverageTrend,
   passRateTrend,
   windowPassRate,
+  type ModuleCoverageTrend,
   type PassRateRunPoint,
   type WindowPassRate,
 } from '../stats/trends.ts';
@@ -64,11 +66,12 @@ export interface ProjectPageOptions {
 
 /**
  * The History section's per-run charts, each over the last 30 default-branch runs its source rule
- * admits (section 11). The coverage chart is held back (section 13.2), so it is not read.
+ * admits (section 11), coverage one chart per module (design v8 item 3).
  */
 export interface ProjectTrends {
   readonly passRate: readonly PassRateRunPoint[];
   readonly testCount: readonly TestCountPoint[];
+  readonly coverage: readonly ModuleCoverageTrend[];
   readonly duration: readonly DurationPoint[];
 }
 
@@ -81,6 +84,8 @@ export interface FlakyListTest {
   readonly platforms: readonly string[];
   /** "Failed {n} of last {m} runs": its last 40 default-branch CI runs with a result. */
   readonly failures: { readonly failed: number; readonly runs: number };
+  /** "Flipped on {c} commits in 30 days", shown when it failed in none of those runs. */
+  readonly commits: number;
 }
 
 /** A run list row: the run, and its distinct tests unless its results were pruned (5.12). */
@@ -296,12 +301,14 @@ export async function loadProjectPage(
     trends: {
       passRate: passRateTrend(runs, stats),
       testCount: testCountTrend(runs, results, stats),
+      // The summary's coverage walk reads the newest 50 trend runs first, so the last 30 are in it.
+      coverage: coverageTrend(runs, input.coverage, stats),
       duration: durationTrend(runs, stats),
     },
     windowPassRate: windowPassRate(runs, stats),
     recentRuns: lastRuns(runs, RUN_STRIP_RUNS, ci, at),
     flaky: {
-      tests: flakyByTest.flatMap(({ testId, platforms }) => {
+      tests: flakyByTest.flatMap(({ testId, platforms, commits }) => {
         const test = testById.get(testId);
         const counted = failures.get(testId);
         return test === undefined || counted === undefined
@@ -315,6 +322,7 @@ export async function loadProjectPage(
                 layer: test.layer,
                 platforms,
                 failures: { failed: counted.failed, runs: counted.runs },
+                commits,
               },
             ];
       }),

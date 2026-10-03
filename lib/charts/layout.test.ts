@@ -54,6 +54,16 @@ describe('chartLayout', () => {
     expect(chartLayout(342, 10, 'line', 40).right).toBe(54);
   });
 
+  // The y labels end 8 px left of the plot. At 390 Ostomate2's shared coverage chart has a tick at
+  // 92.5%, 39.7 px wide in tabular figures, which a 44 px margin cut to "2.5%".
+  it('widens the left margin to 8 + the widest y label, rounded up, so none is clipped', () => {
+    expect(chartLayout(294, 21, 'line', 0, 30).left).toBe(44);
+    expect(chartLayout(294, 21, 'line', 0, 36).left).toBe(44);
+    expect(chartLayout(294, 21, 'line', 0, 39.7).left).toBe(48);
+    expect(chartLayout(720, 21, 'line', 0, 39.7).left).toBe(56);
+    expect(chartLayout(720, 21, 'bar', 0, 52).left).toBe(60);
+  });
+
   it('leaves bars at the minimum right margin: they have no end labels', () => {
     expect(chartLayout(720, 10, 'bar', 80).right).toBe(60);
     expect(chartLayout(342, 10, 'bar', 80).right).toBe(44);
@@ -157,6 +167,28 @@ describe('startLabelDy', () => {
     const line = chartLayout(600, 4, 'line');
     expect(startLabelDy(line, 200)).toBe(18);
     expect(startLabelDy(line, 201)).toBe(-10);
+  });
+
+  // Ostomate2's "Line coverage, composeApp" starts at 93.6% over a 93% floor: below its point the
+  // label landed on "floor 93%" (Phase 5 design review; decision 2026-10-02).
+  it('puts it above its point when below it would overlap the floor label', () => {
+    const desktop = chartLayout(720, 21, 'line');
+    const desktopScale = { min: 92, max: 96, ticks: [92, 94, 96] };
+    expect(
+      startLabelDy(desktop, yAt(desktop, desktopScale, 93.6), yAt(desktop, desktopScale, 93)),
+    ).toBe(-10);
+    const phone = chartLayout(342, 21, 'line');
+    const phoneScale = { min: 92, max: 96, ticks: [92, 94, 96] };
+    expect(startLabelDy(phone, yAt(phone, phoneScale, 93.6), yAt(phone, phoneScale, 93))).toBe(-10);
+  });
+
+  it('keeps it below when the floor label is clear of it', () => {
+    const line = chartLayout(600, 4, 'line');
+    // Below, its 13 px text sits on a baseline at 118; the floor label's 12 px text sits on a
+    // baseline 6 above the floor line, so a floor line at 136 or lower leaves them touching at most.
+    expect(startLabelDy(line, 100, 136)).toBe(18);
+    expect(startLabelDy(line, 100, 60)).toBe(18);
+    expect(startLabelDy(line, 100, 135)).toBe(-10);
   });
 });
 

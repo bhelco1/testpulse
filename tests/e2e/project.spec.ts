@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
+import { expectReadableYAxes, expectValueLabelsClearOfFloor } from './support/charts.ts';
 import { capture, FAILING, formsOf, HIDDEN, leaksIn, ROUTESERVE_RUNS } from './support/leaks.ts';
 import { expectLive, open } from './support/open.ts';
 
@@ -468,6 +469,22 @@ for (const slug of ['ostomate2', 'routeserve']) {
     await open(page, `/p/${slug}`);
     const { colorScheme } = test.info().project.use;
     await expect(page.locator('html')).toHaveAttribute('data-theme', String(colorScheme));
+  });
+
+  // Phase 5 design review: at 390 Ostomate2's "Line coverage, shared" cut "92.5%" to "2.5%".
+  test(
+    `${slug}: every chart's y labels are whole and distinct`,
+    { tag: '@js' },
+    async ({ page }) => {
+      await open(page, `/p/${slug}`);
+      await expectReadableYAxes(page);
+    },
+  );
+
+  // Phase 5 design review: Ostomate2's composeApp coverage drew "93.6%" on "floor 93%".
+  test(`${slug}: no value label overlaps a floor label`, { tag: '@js' }, async ({ page }) => {
+    await open(page, `/p/${slug}`);
+    await expectValueLabelsClearOfFloor(page);
   });
 
   test(`${slug}: the page does not scroll sideways`, async ({ page }) => {

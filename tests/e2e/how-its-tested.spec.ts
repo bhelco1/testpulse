@@ -32,10 +32,20 @@ test.describe('the page', () => {
   test('is titled and marked current in the header', async ({ page }) => {
     await expect(page).toHaveTitle('How it’s tested · testpulse');
     const nav = page.getByRole('navigation', { name: 'Site' });
-    await expect(nav.getByRole('link', { name: 'How it’s tested' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+    const link = nav.getByRole('link', { name: 'How it’s tested' });
+    await expect(link).toHaveAttribute('aria-current', 'page');
+    // Underlined in --ink, 6 px below, as design/pages/How Its Tested.dc.html marks it.
+    await expect(link).toHaveCSS('text-decoration-line', 'underline');
+    await expect(link).toHaveCSS('text-underline-offset', '6px');
+    const ink = await page.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--ink)';
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    });
+    await expect(link).toHaveCSS('text-decoration-color', ink);
   });
 
   test('opens with the heading, the lede and the repository links', async ({ page }) => {

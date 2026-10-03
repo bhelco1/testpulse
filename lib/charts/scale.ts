@@ -15,6 +15,9 @@ export interface TrendScaleInput {
   integer: boolean;
   // How many steps the axis is divided into: 3 on desktop, 2 on a phone.
   steps: number;
+  // The finest step the labels print, such as 0.01 for seconds at two decimals: a finer step
+  // would repeat its neighbour's label, as a fractional step does for whole numbers.
+  precision?: number;
 }
 
 const MULTIPLES = [1, 2, 2.5, 5, 10];
@@ -23,12 +26,19 @@ const WHOLE_MULTIPLES = [1, 2, 5, 10];
 const MAX_TICKS = 20;
 // Tick arithmetic in tenths or hundredths drifts (0.1 * 3 is 0.30000000000000004).
 const tidy = (n: number) => Number(n.toFixed(6));
+const printable = (step: number, precision: number) =>
+  Math.abs(step / precision - Math.round(step / precision)) < 1e-6;
 
 export function niceScale(
   lo: number,
   hi: number,
   steps: number,
-  { percent, integer, zero = false }: { percent: boolean; integer: boolean; zero?: boolean },
+  {
+    percent,
+    integer,
+    zero = false,
+    precision,
+  }: { percent: boolean; integer: boolean; zero?: boolean; precision?: number },
 ): YScale {
   if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
     lo = 0;
@@ -48,9 +58,10 @@ export function niceScale(
   const magnitude = 10 ** Math.floor(Math.log10(raw));
   const fits = (integer ? WHOLE_MULTIPLES : MULTIPLES)
     .map((m) => m * magnitude)
+    .filter((step) => precision === undefined || printable(step, precision))
     .find((step) => step >= raw);
   const found = fits ?? 10 * magnitude;
-  const step = integer ? Math.max(1, Math.round(found)) : found;
+  const step = integer ? Math.max(1, Math.round(found)) : Math.max(precision ?? 0, found);
   let min = tidy(Math.floor(lo / step) * step);
   let max = tidy(Math.ceil(hi / step) * step);
   if (percent) {
@@ -71,6 +82,7 @@ export function trendYScale({
   percent,
   integer,
   steps,
+  precision,
 }: TrendScaleInput): YScale {
   const all = floor === undefined ? values : [...values, floor];
   let lo = zero ? 0 : Math.min(...all);
@@ -80,5 +92,5 @@ export function trendYScale({
     lo -= pad;
     hi += pad;
   }
-  return niceScale(lo, hi, steps, { percent, integer, zero });
+  return niceScale(lo, hi, steps, { percent, integer, zero, precision });
 }

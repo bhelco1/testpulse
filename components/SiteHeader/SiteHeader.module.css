@@ -60,6 +60,13 @@
   text-decoration: none;
 }
 
+/* design/pages/How Its Tested.dc.html: the page's own nav link is underlined. */
+.link[aria-current='page'] {
+  text-decoration: underline;
+  text-decoration-color: var(--ink);
+  text-underline-offset: 6px;
+}
+
 /* PHONE HEADER · 390 on the Design System (design v8 item 37): row 1 the wordmark, Live and the
    theme toggle; row 2 the nav, full width. */
 @media (max-width: 559px) {

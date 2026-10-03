@@ -1644,3 +1644,130 @@ describe('TrendChart gap labels', () => {
     );
   });
 });
+
+// From the Phase 5 design review, on the seed (lib/seed/plan.ts): y labels that were clipped at the
+// left edge or read twice. The browser measures each drawn label with getComputedTextLength, which
+// counts the tabular figures the axis uses; jsdom has none, so this stand-in gives every character
+// charWidth, as the canvas stand-in above does.
+describe('TrendChart y labels', () => {
+  // Ostomate2's "Line coverage, shared" over its 21 runs on main, as the seeded page sends it.
+  const SHARED: TrendChartProps = {
+    title: 'Line coverage, shared',
+    scope: TREND_SCOPE.coverage,
+    series: [
+      {
+        name: 'shared',
+        values: [
+          93.2,
+          ...Array<number>(12).fill(93.3),
+          ...Array<number>(8).fill(93.26530612244898),
+        ],
+      },
+    ],
+    floor: 91,
+    format: 'pct',
+    unit: 'run',
+  };
+
+  beforeEach(() => {
+    Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', {
+      configurable: true,
+      value(this: SVGElement) {
+        return (this.textContent?.length ?? 0) * charWidth;
+      },
+    });
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(SVGElement.prototype, 'getComputedTextLength');
+  });
+
+  it('widens the left margin at phone width so "92.5%" is not cut to "2.5%"', () => {
+    chartWidth = 342;
+    // "92.5%" is 40 px here: 8 + 40 = 48, past the phone's 44.
+    charWidth = 8;
+    const { container } = render(<TrendChart {...SHARED} />);
+    const ticks = parts(container, 'y-label');
+    expect(ticks.map((tick) => tick.textContent)).toEqual(['90%', '92.5%', '95%']);
+    ticks.forEach((tick) => {
+      expect(num(tick, 'x')).toBe(40);
+      expect(num(tick, 'x') - (tick.textContent?.length ?? 0) * charWidth).toBeGreaterThanOrEqual(
+        0,
+      );
+    });
+    expect(num(parts(container, 'end-dot')[0], 'cx')).toBe(48);
+  });
+
+  it('keeps the 44 px phone margin when every label fits it', () => {
+    chartWidth = 342;
+    charWidth = 7;
+    const { container } = render(<TrendChart {...SHARED} />);
+    expect(num(parts(container, 'y-label')[0], 'x')).toBe(36);
+    expect(num(parts(container, 'end-dot')[0], 'cx')).toBe(44);
+  });
+
+  // Measuring the labels redraws the plot; the marks must still sit over the dots and the line.
+  it('keeps the marks over the dots once the labels are measured', () => {
+    const { container } = render(<TrendChart {...PASS_RATE} />);
+    const all = [...container.querySelectorAll('path.recharts-line-curve, [data-part]')];
+    const marks = parts(container, 'mark');
+    expect(marks).toHaveLength(2);
+    const lastDot = parts(container, 'end-dot')[1];
+    marks.forEach((mark) => {
+      expect(all.indexOf(mark)).toBeGreaterThan(all.indexOf(lastDot as Element));
+    });
+  });
+
+  // Ostomate2's "Line coverage, composeApp" over its 21 runs on main, as the seeded page sends it.
+  const COMPOSE_APP: TrendChartProps = {
+    title: 'Line coverage, composeApp',
+    scope: TREND_SCOPE.coverage,
+    series: [
+      {
+        name: 'composeApp',
+        values: [
+          93.6,
+          ...Array<number>(3).fill(93.7),
+          ...Array<number>(9).fill(94.3),
+          ...Array<number>(8).fill(94.30740037950665),
+        ],
+      },
+    ],
+    floor: 93,
+    format: 'pct',
+    unit: 'run',
+  };
+
+  for (const width of [720, 342]) {
+    it(`lifts "93.6%" above its point, off "floor 93%", at ${width} px`, () => {
+      chartWidth = width;
+      const { container } = render(<TrendChart {...COMPOSE_APP} />);
+      const start = parts(container, 'value-label')[0];
+      expect(start?.textContent).toBe('93.6%');
+      expect(num(start, 'y')).toBeCloseTo(num(parts(container, 'end-dot')[0], 'cy') - 10, 6);
+      // The value label is 13 px text and the floor label 12 px, each sitting on its baseline.
+      const floor = parts(container, 'floor-label')[0];
+      expect(
+        num(start, 'y') <= num(floor, 'y') - 12 || num(start, 'y') - 13 >= num(floor, 'y'),
+      ).toBe(true);
+    });
+  }
+
+  // Ostomate2's fromTagsFindsSourceAmongOtherUserTags: 352 ms in each of its 8 seeded CI runs.
+  it('never prints two y labels alike for a duration that holds at 0.352 s', () => {
+    const { container } = render(
+      <TrendChart
+        title="Duration"
+        scope={TREND_SCOPE.testDuration}
+        series={[{ name: 'jvm', values: Array<number>(8).fill(0.352) }]}
+        format="sec"
+        unit="run"
+      />,
+    );
+    expect(parts(container, 'y-label').map((tick) => tick.textContent)).toEqual([
+      '0.34 s',
+      '0.35 s',
+      '0.36 s',
+    ]);
+  });
+});

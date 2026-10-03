@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { testKey } from '../../lib/ingest/normalize.ts';
 import { planSeed, SEED_NOW, type SeedSlug } from '../../lib/seed/plan.ts';
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
+import { expectReadableYAxes } from './support/charts.ts';
 import { capture, FAILING, formsOf, HIDDEN, leaksIn, ROUTESERVE_RUNS } from './support/leaks.ts';
 import { open } from './support/open.ts';
 
@@ -35,6 +36,15 @@ const TWO_PLATFORMS: SeededTest = {
   module: 'composeApp',
   suite: 'com.ostomate.app.ui.calendar.CalendarViewModelTest',
   name: 'addEventForDateLogsAtNoon',
+};
+// 352 ms in each of its 8 seeded CI runs: a flat line whose axis once read
+// "0.35 s, 0.35 s, 0.34 s, 0.34 s" (Phase 5 design review).
+const HELD_352_MS: SeededTest = {
+  slug: 'ostomate2',
+  project: 'Ostomate 2.0',
+  module: 'shared',
+  suite: 'com.ostomate.app.data.ChangeSourceTest',
+  name: 'fromTagsFindsSourceAmongOtherUserTags',
 };
 const FLAKY: SeededTest = {
   slug: 'routeserve',
@@ -492,6 +502,30 @@ for (const { id, test: seeded } of PAGES) {
     await expect(page).toHaveScreenshot(`${id}.png`, { fullPage: true });
   });
 }
+
+// testpulse's failing test has one run, so its chart draws no axis.
+for (const { id, test: seeded } of PAGES.filter((p) => p.test !== FAILING_TEST)) {
+  test(
+    `${id}: the duration chart's y labels are whole and distinct`,
+    { tag: '@js' },
+    async ({ page }) => {
+      await open(page, pathOf(seeded));
+      await expectReadableYAxes(page);
+    },
+  );
+}
+
+test.describe('an Ostomate2 test that holds at 352 ms', { tag: '@js' }, () => {
+  test('labels its duration axis 0.34 s, 0.35 s and 0.36 s, once each', async ({ page }) => {
+    await open(page, pathOf(HELD_352_MS));
+    await expect(duration(page).locator('[data-part="y-label"]')).toHaveText([
+      '0.34 s',
+      '0.35 s',
+      '0.36 s',
+    ]);
+    await expectReadableYAxes(page);
+  });
+});
 
 test.describe('without scripts, the duration chart is its table', { tag: '@no-js' }, () => {
   test('lists the two-platform test’s 8 runs, newest first', async ({ page }) => {

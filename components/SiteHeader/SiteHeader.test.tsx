@@ -117,6 +117,16 @@ describe('SiteHeader', () => {
     );
   });
 
+  // design/pages/How Its Tested.dc.html: the current nav link is underlined in --ink, 6 px below.
+  it('underlines the current nav link, and only it', () => {
+    expect(ruleFor(CSS, '.link')).toMatchObject({ 'text-decoration': 'none' });
+    expect(ruleFor(CSS, ".link[aria-current='page']")).toEqual({
+      'text-decoration': 'underline',
+      'text-decoration-color': 'var(--ink)',
+      'text-underline-offset': '6px',
+    });
+  });
+
   it('opens the project menu in place (menu open state)', () => {
     const { getByRole } = render(<SiteHeader projects={PROJECTS} connected />);
     const button = getByRole('button', { name: 'Projects' });

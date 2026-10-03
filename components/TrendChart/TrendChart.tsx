@@ -1,6 +1,8 @@
 'use client';
 
 import {
+  useCallback,
+  useEffect,
   useId,
   useLayoutEffect,
   useRef,
@@ -175,6 +177,39 @@ function useLabelWidth(ref: RefObject<HTMLDivElement | null>, labels: readonly s
   return key === '' ? 0 : width;
 }
 
+// The widest y label as the plot drew it, so the left margin can grow to fit it (lib/charts/layout
+// chartLayout). Measured from the drawn text rather than a canvas: the axis sets tabular figures,
+// which a canvas cannot, and they are wider ("92.5%" is 39.7 px drawn, 35.9 px on a canvas).
+// Recharts draws the ticks after its own first pass, so each tick asks for the measure as it is
+// drawn. Their width does not depend on the margin, so the redraw measures the same and stops.
+function useTickLabelWidth(ref: RefObject<HTMLDivElement | null>): [number, () => void] {
+  const [width, setWidth] = useState(0);
+  const measure = useCallback(() => {
+    const element = ref.current;
+    if (!element) return;
+    const labels = [...element.querySelectorAll<SVGTextElement>('[data-part="y-label"]')];
+    // jsdom draws no text, so has no getComputedTextLength; a browser always does.
+    const widths = labels.map((label) =>
+      'getComputedTextLength' in label ? label.getComputedTextLength() : 0,
+    );
+    const next = Math.max(0, ...widths);
+    setWidth((current) => (Math.abs(current - next) < 0.01 ? current : next));
+  }, [ref]);
+  // Until the web font has loaded the fallback font is what gets measured.
+  useEffect(() => {
+    let live = true;
+    if ('fonts' in document) {
+      void document.fonts.ready.then(() => {
+        if (live) measure();
+      });
+    }
+    return () => {
+      live = false;
+    };
+  }, [measure]);
+  return [width, measure];
+}
+
 export function TrendChart(props: TrendChartProps) {
   const loading = 'loading' in props;
   const data = 'series' in props ? props : undefined;
@@ -237,6 +272,7 @@ function ChartBody({
           .map((value) => formatTrendValue(value, shown.format, true))
       : [];
   const endLabelWidth = useLabelWidth(measured, endLabels);
+  const [tickLabelWidth, measureTickLabels] = useTickLabelWidth(measured);
 
   let body;
   if (onRetry) {
@@ -276,7 +312,12 @@ function ChartBody({
     );
   } else if (width > 0) {
     body = (
-      <Plot data={shown} layout={chartLayout(width, points, kind, endLabelWidth)} label={label} />
+      <Plot
+        data={shown}
+        layout={chartLayout(width, points, kind, endLabelWidth, tickLabelWidth)}
+        label={label}
+        onTickLabel={measureTickLabels}
+      />
     );
   } else {
     // The server and the first client render do not know the width yet: hold the space. Without
@@ -331,7 +372,18 @@ function Legend({ series }: { series: readonly TrendSeries[] }) {
 
 const strokeOf = (seriesIndex: number) => (seriesIndex === 0 ? 'var(--ink)' : 'var(--ink-3)');
 
-function Plot({ data, layout, label }: { data: ShownData; layout: ChartLayout; label: string }) {
+function Plot({
+  data,
+  layout,
+  label,
+  onTickLabel,
+}: {
+  data: ShownData;
+  layout: ChartLayout;
+  label: string;
+  // Called as each y label is drawn, to measure it.
+  onTickLabel: () => void;
+}) {
   const [hover, setHover] = useState<number | null>(null);
   const { series, format, unit } = data;
   const labels = data.labels ?? NO_LABELS;
@@ -351,6 +403,8 @@ function Plot({ data, layout, label }: { data: ShownData; layout: ChartLayout; l
     percent: format === 'pct',
     integer: format === 'int' || format === 'dur' || format === 'ms',
     steps: layout.phone ? 2 : 3,
+    // Seconds print to the hundredth, so a finer step would repeat its neighbour's label.
+    precision: format === 'sec' ? 0.01 : undefined,
   });
   const rows = Array.from({ length: count }, (_, i) =>
     Object.fromEntries([['i', i], ...series.map((s, si) => [`s${si}`, s.values[i]])]),
@@ -407,6 +461,9 @@ function Plot({ data, layout, label }: { data: ShownData; layout: ChartLayout; l
           textAnchor="end"
           className={styles.axisText}
           data-part="y-label"
+          ref={(element) => {
+            if (element) onTickLabel();
+          }}
         >
           {formatTrendValue(Number(tick.payload.value), format)}
         </text>
@@ -507,6 +564,7 @@ function Plot({ data, layout, label }: { data: ShownData; layout: ChartLayout; l
               seriesIndex={si}
               layout={layout}
               format={format}
+              floorY={data.floor === undefined ? undefined : yAt(layout, scale, data.floor)}
             />
           )}
         />
@@ -516,6 +574,12 @@ function Plot({ data, layout, label }: { data: ShownData; layout: ChartLayout; l
           key={`mark-${mark.index}`}
           x={mark.index}
           y={mark.value}
+          // The line's dots share the scatter layer and are ordered as they register, so a
+          // redraw (measuring the y labels makes one) could put them over the marks. A layer of
+          // Recharts' own above it, which a line chart leaves empty, keeps the marks on top and
+          // still under the hover rule and dots; a value of our own would get its layer only on a
+          // later render, so the first drawing would have no marks.
+          zIndex={DefaultZIndexes.activeBar}
           shape={(dot: { cx?: number; cy?: number }) => (
             <rect
               x={(dot.cx ?? 0) - 4}
@@ -600,12 +664,15 @@ function PointDot({
   seriesIndex,
   layout,
   format,
+  floorY,
 }: {
   dot: DotItemDotProps;
   values: readonly (number | null)[];
   seriesIndex: number;
   layout: ChartLayout;
   format: ValueFormat;
+  // Where the floor line is drawn, if the chart has one.
+  floorY: number | undefined;
 }) {
   const { cx: x = 0, cy: y = 0, index } = dot;
   const value = values[index];
@@ -625,7 +692,7 @@ function PointDot({
         />
         <text
           x={x + 8}
-          y={y + (last ? 4 : startLabelDy(layout, y))}
+          y={y + (last ? 4 : startLabelDy(layout, y, floorY))}
           className={styles.valueText}
           data-part="value-label"
         >

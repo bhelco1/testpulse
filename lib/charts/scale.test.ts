@@ -90,6 +90,14 @@ describe('trendYScale', () => {
     });
   });
 
+  // Ostomate2's fromTagsFindsSourceAmongOtherUserTags takes 352 ms in each of its 8 seeded CI runs.
+  // A step of 5 ms put ticks at 0.345 and 0.355, which print as "0.34 s" and "0.35 s" beside the
+  // real 0.34 and 0.35: the axis read "0.35 s, 0.35 s, 0.34 s, 0.34 s".
+  it('never steps a duration finer than the hundredth of a second it prints at', () => {
+    const scale = trendYScale({ ...line, values: Array(8).fill(0.352), precision: 0.01 });
+    expect(scale).toEqual({ min: 0.34, max: 0.36, ticks: [0.34, 0.35, 0.36] });
+  });
+
   it('snaps seconds to tenths without floating-point noise', () => {
     expect(trendYScale({ ...line, values: [0.4, 0.6] })).toEqual({
       min: 0.3,
@@ -119,6 +127,19 @@ describe('niceScale', () => {
       min: 0,
       max: 75,
       ticks: [0, 25, 50, 75],
+    });
+  });
+
+  it('skips a step its labels cannot print, such as 2.5 hundredths', () => {
+    expect(niceScale(0.31, 0.38, 3, { percent: false, integer: false, precision: 0.01 })).toEqual({
+      min: 0.3,
+      max: 0.4,
+      ticks: [0.3, 0.35, 0.4],
+    });
+    expect(niceScale(0.31, 0.38, 3, { percent: false, integer: false })).toEqual({
+      min: 0.3,
+      max: 0.4,
+      ticks: [0.3, 0.325, 0.35, 0.375, 0.4],
     });
   });
 

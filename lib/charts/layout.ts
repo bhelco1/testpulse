@@ -30,11 +30,15 @@ export function chartHeight(width: number): number {
 
 // endLabelWidth is the widest last-point value label, measured at 13/600 (design v5 item 6): the
 // right margin grows to fit it so "100.0%" is never clipped. Bars have no end labels.
+// tickLabelWidth is the widest y label as drawn: the labels end 8 px left of the plot, so the left
+// margin grows by what they would lose past the edge, as on a phone, where "92.5%" is wider than
+// the 36 px the 44 px margin leaves it (decision 2026-10-02).
 export function chartLayout(
   width: number,
   count: number,
   kind: TrendKind,
   endLabelWidth = 0,
+  tickLabelWidth = 0,
 ): ChartLayout {
   const phone = isPhone(width);
   const fit = kind === 'bar' ? 0 : Math.ceil(8 + endLabelWidth + 6);
@@ -42,7 +46,7 @@ export function chartLayout(
     width,
     height: chartHeight(width),
     phone,
-    left: phone ? 44 : 56,
+    left: Math.max(phone ? 44 : 56, Math.ceil(8 + tickLabelWidth)),
     right: Math.max(phone ? 44 : 60, fit),
     top: 22,
     bottom: 30,
@@ -95,9 +99,18 @@ export function tooltipLeft(layout: ChartLayout, index: number): number {
   );
 }
 
-// The first value label sits below its point, or above it when the point is near the x axis.
-export function startLabelDy(layout: ChartLayout, y: number): number {
-  return y > layout.height - layout.bottom - 20 ? -10 : 18;
+// The first value label sits below its point, or above it when the point is near the x axis
+// (tp-charts.js) or when below it would overlap the floor label, which sits on a baseline 6 px
+// above the floor line (decision 2026-10-02). Each text is taken as its font size tall above its
+// baseline: 13 px for the value, 12 px for the floor.
+export function startLabelDy(layout: ChartLayout, y: number, floorY?: number): number {
+  if (y > layout.height - layout.bottom - 20) return -10;
+  if (floorY !== undefined) {
+    const below = y + 18;
+    const floorBaseline = floorY - 6;
+    if (below - 13 < floorBaseline && floorBaseline - 12 < below) return -10;
+  }
+  return 18;
 }
 
 // The chart's keyboard model: focus shows the latest point, arrows move, Escape closes.

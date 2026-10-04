@@ -135,7 +135,7 @@ export const STRATEGY: readonly StrategyRow[] = [
     name: 'Accessibility',
     tools: ['axe', 'Playwright'],
     scope:
-      'axe on every public page, and a contrast check of the design’s token pairs in both themes. Counted with E2E.',
+      'axe on every public page, counted with E2E. A script in the unit job checks the contrast of the design’s token pairs in both themes.',
     tone: null,
   },
   {
@@ -156,7 +156,7 @@ export const STRATEGY: readonly StrategyRow[] = [
 
 // The note under the self-report's pyramid (v9 item 4: contract tests count as Unit).
 export const PYRAMID_NOTE =
-  'Only spec §8 layers are counted. Accessibility, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.';
+  'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.';
 
 export interface SelfRun {
   readonly status: RunStatus;

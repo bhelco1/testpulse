@@ -50,6 +50,7 @@ describe('privacy copy', () => {
     expect(text('If this changes')).toBe(
       'A later version will log every visit anonymously and count visits to links sent with job applications. This page will be rewritten, and its date updated, before that ships.',
     );
+    expect(text('Live updates')).toContain('this site sends nothing about you over it.');
     expect(text('Live updates')).toContain('with JavaScript off, none is opened.');
   });
 

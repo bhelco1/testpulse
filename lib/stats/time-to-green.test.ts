@@ -317,6 +317,27 @@ describe('timeToGreen', () => {
     });
   });
 
+  describe('a single run', () => {
+    it('that passed: no recoveries, no median or worst, and not red', () => {
+      expect(timeToGreen([passed('p0', '2026-09-30T00:00:00Z')], options)).toEqual({
+        recoveries: [],
+        medianMs: null,
+        worstMs: null,
+        stillRed: null,
+      });
+    });
+
+    it('that failed: no recoveries, and red since that run', () => {
+      // f0 finished at 2026-10-01T03:00Z, 9 h before now (12:00).
+      expect(timeToGreen([failed('f0', '2026-10-01T03:00:00Z')], options)).toEqual({
+        recoveries: [],
+        medianMs: null,
+        worstMs: null,
+        stillRed: { failedRunId: 'f0', failedAt: at('2026-10-01T03:00:00Z'), elapsedMs: 9 * HOUR },
+      });
+    });
+  });
+
   it('is empty for no runs', () => {
     expect(timeToGreen([], options)).toEqual({
       recoveries: [],

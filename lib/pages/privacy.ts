@@ -31,7 +31,7 @@ export const PRIVACY = {
     {
       title: 'Live updates',
       paragraphs: [
-        'Pages that update live open one WebSocket connection from your browser straight to Supabase Realtime, the database service behind this site. It only receives new test results; nothing about you is sent over it.',
+        'Pages that update live open one WebSocket connection from your browser straight to Supabase Realtime, the database service behind this site. It only receives new test results; this site sends nothing about you over it.',
         'Like any server your browser connects to, Supabase sees your IP address. That is covered by Supabase’s own privacy policy, not by this site. Pages work without the connection: with JavaScript off, none is opened.',
       ],
     },
@@ -61,7 +61,7 @@ export const PRIVACY = {
  * to the words fails until this is updated, next to the date that must change with it.
  */
 export const PRIVACY_COPY_SHA256 =
-  'edcb1f09a4e41e971a05ad0dd1e42f6744613f4603546416c87a1ea767603b7a';
+  '1fd5a0b59f026bbf519f37ec76c198e81c042e453e31ba18a67730ce66cbe95b';
 
 export interface PrivacyView {
   readonly updated: TimeLabel;

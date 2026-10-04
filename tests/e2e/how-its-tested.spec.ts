@@ -104,7 +104,7 @@ test.describe('the page', () => {
       'Leak sweep',
     ]);
     await expect(table).toContainText(
-      'a contrast check of the design’s token pairs in both themes. Counted with E2E.',
+      'axe on every public page, counted with E2E. A script in the unit job checks the contrast',
     );
     await expect(table).toContainText('Walks every page that can show a private project');
     await expect(table).toContainText('Runs in the unit job; counted as Unit.');
@@ -156,7 +156,7 @@ test.describe('the page', () => {
       '/p/testpulse',
     );
     await expect(run.locator('[data-part="pyramid-note"]')).toHaveText(
-      'Only spec §8 layers are counted. Accessibility, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.',
+      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.',
     );
     // Only the designed reporting state: no sample tags, no coverage card without data, and
     // build progress only in the not-reporting state, as the mock draws it.

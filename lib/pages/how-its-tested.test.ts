@@ -125,7 +125,7 @@ describe('howItsTestedView', () => {
     ]);
     const scope = (name: string) => STRATEGY.find((row) => row.name === name)?.scope;
     expect(scope('Accessibility')).toBe(
-      'axe on every public page, and a contrast check of the design’s token pairs in both themes. Counted with E2E.',
+      'axe on every public page, counted with E2E. A script in the unit job checks the contrast of the design’s token pairs in both themes.',
     );
     expect(scope('Leak sweep')).toBe(
       'Walks every page that can show a private project as a visitor and fails if any private project’s failure text, stack trace or source link appears anywhere. Counted with E2E.',
@@ -139,12 +139,12 @@ describe('howItsTestedView', () => {
 
   it('notes under the pyramid how the checks are counted', () => {
     expect(PYRAMID_NOTE).toBe(
-      'Only spec §8 layers are counted. Accessibility, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.',
+      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.',
     );
   });
 
   it('carries the build progress, dated by its data file', () => {
-    expect(howItsTestedView(missing, NOW).progress.asOf.text).toBe('1 Oct');
+    expect(howItsTestedView(missing, NOW).progress.asOf.text).toBe('2 Oct');
     expect(howItsTestedView(missing, NOW).progress.phases).toHaveLength(8);
   });
 

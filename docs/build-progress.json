@@ -1,13 +1,13 @@
 {
-  "asOf": "2026-10-01",
+  "asOf": "2026-10-02",
   "phases": [
     { "phase": 0, "title": "Foundations", "status": "done" },
     { "phase": 1, "title": "Schema, parsers, ingestion", "status": "done" },
     { "phase": 2, "title": "Ostomate2 reporting live", "status": "done" },
     { "phase": 3, "title": "RouteServe reporting live", "status": "done" },
     { "phase": 4, "title": "Backfill", "status": "done" },
-    { "phase": 5, "title": "Public site", "status": "in_progress" },
-    { "phase": 6, "title": "Alerts, tracked links, admin", "status": "planned" },
+    { "phase": 5, "title": "Public site", "status": "done" },
+    { "phase": 6, "title": "Alerts, tracked links, admin", "status": "in_progress" },
     { "phase": 7, "title": "Self-reporting and launch", "status": "planned" }
   ]
 }

@@ -150,7 +150,7 @@ A rename is sometimes right. It is then a reporting change and follows the Chang
 
 Maestro writes the flow's title (the `name:` in its flow file) as both suite and name, so the title alone identifies the test within its module.
 
-- A flow meant to be the same test on two platforms MUST have one title on both, so it is one test on two platforms. In Ostomate2 today only "Journey 8: Biometric gate on Settings" does; its other flows are titled per platform and count as separate tests. Whether Ostomate2 aligns its iOS titles is Ostomate2's decision.
+- A flow meant to be the same test on two platforms MUST have one title on both, so it is one test on two platforms. In Ostomate2 today three do: "Journey 1: Cold-start QR log" and "Journey 2: Log + undo", whose iOS titles Ostomate2 PR #34 aligned with Android's on 2026-09-30, and "Journey 8: Biometric gate on Settings". Its other flows are titled per platform and count as separate tests. Whether Ostomate2 aligns more of its iOS titles is Ostomate2's decision.
 - A title MUST stay stable once the flow reports. Renaming it starts a new history.
 
 ## 5. Test types (layers)

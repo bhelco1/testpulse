@@ -13,9 +13,9 @@ stats, phases, and acceptance criteria.
 
 ## Status
 
-The build runs in phases 0 to 7 (spec section 17). Phases 0 to 4 and the design track are
-complete; Phase 5, the public site, is in progress. Tracked-link and admin features (Phase 6)
-and self-reporting (Phase 7) are still to come.
+The build runs in phases 0 to 7 (spec section 17). Phases 0 to 5 and the design track are
+complete, so the public site is built. Alerts, tracked links and admin (Phase 6) are next, and
+self-reporting (Phase 7) is still to come.
 
 ## Reporting projects
 

@@ -13,7 +13,7 @@ If a request conflicts with the spec, stop and say so. If a decision changes, up
 
 ## Current phase
 
-Phase 5: Public site. Design v6 is in `design/`, so every page can proceed, the landing page included. Update this line when a phase completes.
+Phase 6: Alerts, tracked links, admin. Design v9 is in `design/`; publishing the repository publicly is a follow-up, not a phase. Update this line when a phase completes.
 
 ## How to work
 

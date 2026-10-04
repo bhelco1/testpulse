@@ -49,6 +49,43 @@ test.describe('Ostomate2 (public)', () => {
     await expect(main.getByText('This repository is private')).toHaveCount(0);
   });
 
+  // projects/ostomate2.yaml as the seed registers it: a folded description is one paragraph.
+  test('introduces itself with its description and its dev stack', async ({ page }) => {
+    const intro = page.getByRole('heading', { level: 1 }).locator('xpath=..');
+    await expect(intro.locator(':scope > p')).toHaveText([
+      'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform rewrite of ' +
+        'Ostomate v1.',
+      'Track ostomy supply changes, predict reorders, and manage inventory, privately and ' +
+        'locally. Logs bag and flange changes by tap or QR deep link, predicts days of supply, ' +
+        'schedules reorder notifications, and adds calendar and stats views, QR label printing, ' +
+        'backup and restore, home-screen widgets, and an optional biometric lock. No ' +
+        'analytics; crash reporting is opt-in.',
+    ]);
+
+    const built = page.locator('[data-variant="built"]');
+    await expect(built.getByRole('heading')).toHaveText('Built with');
+    await expect(built.locator('dt')).toHaveText(['Mobile', 'Platforms', 'Services', 'Delivery']);
+    const tagsOf = (category: string) =>
+      built.locator('div', { has: page.locator('dt', { hasText: category }) }).locator('li');
+    await expect(tagsOf('Mobile')).toHaveText([
+      'Kotlin Multiplatform 2.3.21',
+      'Compose Multiplatform 1.11.0',
+      'Room KMP 2.8.4',
+      'Koin 4.2.1',
+    ]);
+    await expect(tagsOf('Platforms')).toHaveText([
+      'Android (minSdk 26, targetSdk 36)',
+      'iOS 15.3+ (SwiftUI shell, WidgetKit)',
+    ]);
+    await expect(tagsOf('Services')).toHaveText(['Sentry (opt-in crash reporting)']);
+    await expect(tagsOf('Delivery')).toHaveText([
+      'Gradle 9.3.1',
+      'JDK 21',
+      'GitHub Actions',
+      'Fastlane',
+    ]);
+  });
+
   test('leads the latest run with its 142 tests and the 30-day pass rate', async ({ page }) => {
     const card = page.getByRole('article');
     await expect(card.getByText('Passed', { exact: true })).toBeVisible();

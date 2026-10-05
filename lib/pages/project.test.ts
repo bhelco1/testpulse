@@ -136,6 +136,7 @@ function report(job: string, module: string, platform: string, total: number) {
     durationMs: 1_000,
     startedAt: NOW,
     finishedAt: NOW,
+    receivedAt: NOW,
   };
 }
 

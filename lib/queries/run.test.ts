@@ -100,6 +100,7 @@ const REPORT = {
   duration_ms: 20_000,
   started_at: '2026-10-05T09:26:00+00:00',
   finished_at: '2026-10-05T09:26:17.747+00:00',
+  received_at: '2026-10-05T09:26:19.120+00:00',
 };
 
 interface Tables {
@@ -198,7 +199,14 @@ describe('loadRunDetail', () => {
       tests: { total: 3, passed: 1, failed: 1, skipped: 1 },
     });
     expect(detail?.reports).toEqual([
-      expect.objectContaining({ job: 'android', module: 'composeApp', platform: 'jvm', total: 3 }),
+      expect.objectContaining({
+        job: 'android',
+        module: 'composeApp',
+        platform: 'jvm',
+        total: 3,
+        finishedAt: new Date('2026-10-05T09:26:17.747Z'),
+        receivedAt: new Date('2026-10-05T09:26:19.120Z'),
+      }),
     ]);
   });
 

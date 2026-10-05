@@ -105,6 +105,7 @@ const REPORT = {
   duration_ms: 19_500,
   started_at: '2026-10-05T08:59:40.5+00:00',
   finished_at: '2026-10-05T09:00:00+00:00',
+  received_at: '2026-10-05T09:00:02+00:00',
 };
 
 interface Tables {
@@ -283,6 +284,7 @@ describe('loadProjectPage', () => {
         durationMs: 19_500,
         startedAt: new Date('2026-10-05T08:59:40.5Z'),
         finishedAt: new Date('2026-10-05T09:00:00Z'),
+        receivedAt: new Date('2026-10-05T09:00:02Z'),
       },
     ]);
   });

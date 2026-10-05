@@ -322,6 +322,92 @@ describe('POST /api/v1/reports (spec section 6)', () => {
     });
   });
 
+  // Decision 2026-10-05: reports.received_at is when testpulse took the report in, whatever
+  // times its files carry. The captured fixtures date from September, so every post here is a
+  // report whose files are older than its receipt, as a replayed Gradle cache's were.
+  describe('receipt time (spec section 5.3)', () => {
+    const ciRunId = `${suffix}-received`;
+
+    const postShared = async () => {
+      const before = Date.now();
+      const response = await post(
+        publicKey,
+        multipart(['meta', meta({ ci_run_id: ciRunId })], ...files('junit', sharedJunit)),
+      );
+      const after = Date.now();
+      const [report] = await rows(admin, 'reports', 'received_at, finished_at', [
+        'id',
+        String(response.body.report_id),
+      ]);
+      return { response, before, after, report };
+    };
+
+    it('stores when the report was received, not when its files say it finished', async () => {
+      const { response, before, after, report } = await postShared();
+
+      expect(response.status).toBe(201);
+      const received = Date.parse(String(report?.received_at));
+      expect(received).toBeGreaterThanOrEqual(before);
+      expect(received).toBeLessThanOrEqual(after);
+      // The files' own finish, a September instant, is kept beside it.
+      const parsed = parseJunit(sharedJunit);
+      const fileFinish = Date.parse(String(parsed.startedAt)) + parsed.durationMs;
+      expect(Date.parse(String(report?.finished_at))).toBe(fileFinish);
+      expect(received).toBeGreaterThan(fileFinish);
+    });
+
+    it('takes the latest receipt on a re-post of the same key, as the replaced report is new', async () => {
+      const [first] = await rows(admin, 'reports', 'received_at', [
+        'run_id',
+        String((await runFor(publicId, ciRunId))[0]?.id),
+      ]);
+      const { response, before, report } = await postShared();
+
+      expect(response.status).toBe(200);
+      const received = Date.parse(String(report?.received_at));
+      expect(received).toBeGreaterThanOrEqual(before);
+      expect(received).toBeGreaterThan(Date.parse(String(first?.received_at)));
+    });
+
+    it('lets anon read received_at as it reads every reports column, public or private', async () => {
+      const response = await post(
+        privateKey,
+        multipart(
+          [
+            'meta',
+            meta({
+              ci_run_id: ciRunId,
+              job: 'test',
+              module: 'packages/shared',
+              platform: 'node',
+              path_prefix: ROUTESERVE_PREFIX,
+            }),
+          ],
+          ['jest', new Blob([sharedJest]), 'shared.json'],
+        ),
+      );
+      expect(response.status).toBe(201);
+      const publicRun = (await runFor(publicId, ciRunId))[0]?.id as string;
+      const privateRun = response.body.run_id as string;
+
+      const [publicReport] = await rows(admin, 'reports', 'received_at', ['run_id', publicRun]);
+      const asAnon = unwrap(
+        await anon
+          .from('reports')
+          .select('run_id, received_at')
+          .in('run_id', [publicRun, privateRun])
+          .order('run_id'),
+        'anon select reports.received_at',
+      );
+
+      expect(asAnon).toHaveLength(2);
+      for (const row of asAnon) expect(Date.parse(String(row.received_at))).not.toBeNaN();
+      expect(asAnon.find((row) => row.run_id === publicRun)?.received_at).toBe(
+        publicReport?.received_at,
+      );
+    });
+  });
+
   describe('run metadata (spec section 6.4)', () => {
     const ciRunId = `${suffix}-url`;
     const runUrl = 'https://github.com/bhelco1/Ostomate2/actions/runs/35644117162';

@@ -134,6 +134,7 @@ test('a private report arriving live leaks nothing, in any frame or response', a
     'module',
     'passed',
     'platform',
+    'received_at',
     'run_id',
     'skipped',
     'started_at',

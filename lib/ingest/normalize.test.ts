@@ -162,6 +162,14 @@ describe('normalizeReport with the Ostomate2 shared JVM fixture', () => {
     });
   });
 
+  // Decision 2026-10-05: the files' times and the receipt are kept apart, so a report whose files
+  // are older than its arrival (a replayed cache) still records when it arrived.
+  it('keeps the receipt time apart from the file times it carries', () => {
+    expect(Date.parse(payload.report.finished_at)).toBeLessThan(RECEIVED_AT.getTime());
+    expect(payload.received_at).toBe(RECEIVED_AT.toISOString());
+    expect(payload.report.started_at).toBe(report.startedAt);
+  });
+
   it('emits one entry per result with its documented test_key and no failure', () => {
     expect(payload.tests).toHaveLength(82);
     const [first] = report.tests;

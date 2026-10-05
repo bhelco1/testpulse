@@ -45,6 +45,7 @@ const report = (
   platform: string,
   counts: { total: number; passed: number; failed: number; skipped: number; durationMs: number },
   finishedAt: string,
+  receivedAt: string = finishedAt,
 ) => ({
   job,
   module,
@@ -53,6 +54,7 @@ const report = (
   ...counts,
   startedAt: new Date(finishedAt),
   finishedAt: new Date(finishedAt),
+  receivedAt: new Date(receivedAt),
 });
 
 const outcome = (
@@ -275,6 +277,32 @@ describe('runPageView: a public passing run', () => {
       // 111 ms reads as the run durations do, in whole seconds.
       expect.objectContaining({ key: 'ios/composeApp/ios-sim', tests: '50', duration: '0 s' }),
     ]);
+  });
+
+  // data-map.md, Report breakdown: the time is received_at. A job that replays cached result
+  // files carries the files' old times, so the receipt is the only true one (decision 2026-10-05).
+  it('dates each report by when testpulse received it, not by its files', () => {
+    const replayed = runPageView(
+      {
+        ...PASSING,
+        reports: [
+          report(
+            'android',
+            'shared',
+            'jvm',
+            { total: 82, passed: 82, failed: 0, skipped: 0, durationMs: 17_747 },
+            '2026-10-04T15:29:17.747Z',
+            '2026-10-05T10:40:12.000Z',
+          ),
+        ],
+      },
+      NOW,
+    );
+    expect(replayed.reports[0]?.received).toEqual({
+      text: '10:40:12',
+      datetime: '2026-10-05T10:40:12.000Z',
+      title: '5 Oct 2026, 10:40 UTC',
+    });
   });
 
   it('makes one results row per test, its time the slowest platform, linked to its history', () => {

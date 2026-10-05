@@ -112,6 +112,7 @@ async function seedProject(
         duration_ms: 1200,
         started_at: NOW,
         finished_at: LATER,
+        received_at: LATER,
       })
       .select('id')
       .single(),
@@ -399,6 +400,7 @@ describe('schema and row-level security (spec sections 5 and 9)', () => {
         duration_ms: 0,
         started_at: NOW,
         finished_at: NOW,
+        received_at: NOW,
       });
       expect(result.error?.code).toBe(PERMISSION_DENIED);
     });
@@ -491,6 +493,7 @@ describe('schema and row-level security (spec sections 5 and 9)', () => {
         duration_ms: 0,
         started_at: NOW,
         finished_at: LATER,
+        received_at: LATER,
       });
       expect(result.error?.code).toBe(UNIQUE_VIOLATION);
     });

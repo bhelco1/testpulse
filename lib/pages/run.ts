@@ -111,7 +111,7 @@ function reportRow(report: RunReport): RunReportRow {
             .map(([count, word]) => `${formatCount(count)} ${word}`)
             .join(' · '),
     tests: formatCount(total),
-    received: clockSecondsLabel(report.finishedAt),
+    received: clockSecondsLabel(report.receivedAt),
     duration: total === 0 ? '—' : formatRunDuration(report.durationMs),
   };
 }

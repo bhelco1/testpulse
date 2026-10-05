@@ -283,6 +283,7 @@ describe('Realtime as the browser sees it, with the publishable key', () => {
         'module',
         'passed',
         'platform',
+        'received_at',
         'run_id',
         'skipped',
         'started_at',

@@ -5,10 +5,10 @@ import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { POST } from '../../app/api/v1/reports/route.ts';
 import { readIntegrationEnv } from '../../tests/int/env.ts';
 import { toOstomate2BackfillRuns } from '../backfill/ostomate2-history.ts';
 import { findBackfillTarget, writeBackfill } from '../backfill/write.ts';
+import { ingestReport } from '../ingest/ingest.ts';
 import { hashApiKey } from '../projects/keys.ts';
 import { addProject } from '../projects/repo.ts';
 import { parseProjectFile } from '../projects/schema.ts';
@@ -31,9 +31,12 @@ const sharedJunit = readdirSync(`${repoRoot}fixtures/ostomate2/junit/jvm/shared`
   .map((name) => fixture(`ostomate2/junit/jvm/shared/${name}`));
 const sharedJacoco = fixture('ostomate2/jacoco/shared.xml');
 
-// After every captured history entry (2026-07-13 to 2026-09-22) and the JUnit fixtures'
-// timestamps (2026-09-21), and within 90 days of the first main entry.
+// After every captured history entry (2026-07-13 to 2026-09-22) and the CI run, and within 90
+// days of the first main entry.
 const NOW = new Date('2026-10-01T00:00:00Z');
+// A report is dated by its receipt (decision 2026-10-05), so the CI run is received on the day the
+// JUnit fixtures were captured rather than whenever this test runs.
+const CI_RECEIVED_AT = new Date('2026-09-21T20:00:00Z');
 const SHARED_CI_LINES_PCT = (457 / 490) * 100;
 
 describe('loadStatsInput over backfilled history and a CI run (spec section 17, Phase 4)', () => {
@@ -55,13 +58,13 @@ describe('loadStatsInput over backfilled history and a CI run (spec section 17, 
     form.append('meta', JSON.stringify(meta));
     sharedJunit.forEach((text, index) => form.append('junit', new Blob([text]), `junit-${index}`));
     form.append('jacoco', new Blob([sharedJacoco]), 'jacoco.xml');
-    const response = await POST(
-      new Request('http://testpulse.local/api/v1/reports', {
-        method: 'POST',
-        body: form,
-        headers: { authorization: `Bearer ${key}` },
-      }),
-    );
+    const response = await ingestReport(admin, {
+      authorization: `Bearer ${key}`,
+      contentLength: null,
+      contentEncoding: null,
+      formData: () => Promise.resolve(form),
+      receivedAt: CI_RECEIVED_AT,
+    });
     return response.status;
   };
 

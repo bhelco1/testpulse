@@ -114,6 +114,13 @@ axe accessibility checks and visual snapshot comparisons.
 project copies it verbatim into its own repo and calls it from CI after every test run. Its
 contract with `POST /api/v1/reports` is proven by `scripts/testpulse-report.test.ts`.
 
+## History
+
+This repository was published on 2026-10-05 with its history cleaned of a private project's
+details; the code is unchanged. Pull request numbers written before then, such as "PR #22" in the
+docs or "(bhelco1/testpulse-archive#22)" in commit messages, refer to the original repository,
+which is kept private as an archive.
+
 ## License
 
 The code is under the [MIT License](LICENSE). The bundled fonts in `app/fonts/` (Source Serif 4,

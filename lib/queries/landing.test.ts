@@ -139,6 +139,7 @@ const report = (job: string, module: string, platform: string, total: number) =>
   duration_ms: 1_000,
   started_at: '2026-10-05T09:25:00+00:00',
   finished_at: '2026-10-05T09:26:00+00:00',
+  received_at: '2026-10-05T09:26:02+00:00',
 });
 
 const failingRow = (id: string, suite: string, name: string, platform: string) => ({

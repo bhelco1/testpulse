@@ -68,7 +68,7 @@ export function loadResults(
 
 export const REPORT_COLUMNS =
   'job, module, platform, format, total, passed, failed, skipped, duration_ms, ' +
-  'started_at, finished_at';
+  'started_at, finished_at, received_at';
 
 const count = z.int().min(0);
 const instant = z.iso.datetime({ offset: true }).transform((value) => new Date(value));
@@ -86,6 +86,7 @@ export const ReportRowSchema = z
     duration_ms: count,
     started_at: instant,
     finished_at: instant,
+    received_at: instant,
   })
   .transform((row) => ({
     job: row.job,
@@ -99,6 +100,7 @@ export const ReportRowSchema = z
     durationMs: row.duration_ms,
     startedAt: row.started_at,
     finishedAt: row.finished_at,
+    receivedAt: row.received_at,
   }));
 
 export type RunReport = z.output<typeof ReportRowSchema>;

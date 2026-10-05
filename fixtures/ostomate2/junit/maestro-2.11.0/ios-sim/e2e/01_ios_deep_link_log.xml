@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="maestro-ios - iOS 26.5 - 94292E40-11DF-431C-9F15-56F843AE2C68" tests="1" failures="0" time="50.942" timestamp="2026-10-02T04:50:56">
+    <testcase id="Journey 1: Cold-start QR log" name="Journey 1: Cold-start QR log" classname="Journey 1: Cold-start QR log" file=".maestro/ios/01_ios_deep_link_log.yaml" time="50.913" timestamp="2026-10-02T04:50:56" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

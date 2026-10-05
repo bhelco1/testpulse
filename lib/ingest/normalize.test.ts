@@ -594,3 +594,69 @@ describe('normalizeReport with the Ostomate2 Maestro fixtures (test identity acr
     expect(failures[0]?.failure?.message).toMatch(/^App crashed or stopped while executing flow/);
   });
 });
+
+// Ostomate2 CI run 36965404280 on main, after its PR #37 moved Maestro to 2.11.0, which stamps
+// each testsuite with an offsetless UTC timestamp. The report starts at the earliest one rather
+// than when testpulse received it, and the shared titles now make three cross-platform tests.
+describe('normalizeReport with the Ostomate2 Maestro 2.11.0 fixtures', () => {
+  const project: IngestProject = {
+    id: PROJECT_ID,
+    layer_rules: ostomate2.layer_rules,
+    name_normalization: ostomate2.name_normalization,
+  };
+  const payloadFor = (job: string, platform: string) =>
+    normalizeReport(
+      meta({
+        ci_run_id: '36965404280',
+        job,
+        module: 'e2e',
+        platform,
+        commit_sha: 'f0a41bb172e9c85d6c74945dd3e9706dc1a5cd57',
+        branch: 'main',
+        event: 'push',
+        run_url: 'https://github.com/bhelco1/Ostomate2/actions/runs/36965404280',
+      }),
+      project,
+      {
+        format: 'junit',
+        report: parseJunit(readSuiteDir(`ostomate2/junit/maestro-2.11.0/${platform}/e2e`)),
+      },
+      [],
+      RECEIVED_AT,
+    );
+  const android = payloadFor('android-e2e', 'android-emulator');
+  const ios = payloadFor('ios-e2e', 'ios-sim');
+
+  it('starts each report at its first flow, read as UTC, and ends it after the summed times', () => {
+    expect(android.report).toMatchObject({
+      started_at: '2026-10-02T04:44:36.000Z',
+      finished_at: '2026-10-02T04:47:21.370Z',
+      duration_ms: 165370,
+    });
+    expect(ios.report).toMatchObject({
+      started_at: '2026-10-02T04:49:41.000Z',
+      finished_at: '2026-10-02T04:52:59.689Z',
+      duration_ms: 198689,
+    });
+  });
+
+  it('counts both reports green and resolves every flow to e2e', () => {
+    expect(android.report).toMatchObject({ total: 7, passed: 7, failed: 0, skipped: 0 });
+    expect(ios.report).toMatchObject({ total: 5, passed: 5, failed: 0, skipped: 0 });
+    expect(countBy([...android.tests, ...ios.tests].map((test) => test.layer))).toEqual({
+      e2e: 12,
+    });
+  });
+
+  it('keys the flows by title: 12 executions are 9 tests, three of them on both platforms', () => {
+    const androidKeys = new Set(android.tests.map((test) => test.test_key));
+    expect(new Set([...androidKeys, ...ios.tests.map((test) => test.test_key)]).size).toBe(9);
+    expect(
+      ios.tests.filter((test) => androidKeys.has(test.test_key)).map((test) => test.name),
+    ).toEqual([
+      'Journey 1: Cold-start QR log',
+      'Journey 2: Log + undo',
+      'Journey 8: Biometric gate on Settings',
+    ]);
+  });
+});

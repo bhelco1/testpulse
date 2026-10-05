@@ -199,6 +199,71 @@ describe('parseJunit against Ostomate2 Maestro output (one file per flow)', () =
   });
 });
 
+// Maestro 2.11.0 keeps the 2.6.1 layout and adds a timestamp to testsuite and testcase: whole
+// seconds with no offset, in the runner's local time, which is UTC on GitHub's runners.
+describe('parseJunit against Ostomate2 Maestro 2.11.0 output (timestamped flows)', () => {
+  const android = parseJunit(readSuiteDir('ostomate2/junit/maestro-2.11.0/android-emulator/e2e'));
+  const ios = parseJunit(readSuiteDir('ostomate2/junit/maestro-2.11.0/ios-sim/e2e'));
+
+  it('maps the 7 Android and 5 iOS flows by title, all passed, seconds to milliseconds', () => {
+    expect(android.tests).toEqual(
+      [
+        ['Journey 1: Cold-start QR log', 17431],
+        ['Journey 2: Log + undo', 20086],
+        ['Journey 3: Edit/delete event from calendar day sheet', 33034],
+        ['Journey 4: Set on-hand inventory count via Settings → Manage Supplies', 31450],
+        ['Journey 5: Backup round-trip', 25903],
+        ['Journey 8: Biometric gate on Settings', 15674],
+        ['Store screenshots — phone', 21656],
+      ].map(([title, durationMs]) => ({ suite: title, name: title, status: 'passed', durationMs })),
+    );
+    expect(ios.tests).toEqual(
+      [
+        ['iOS Journey: Onboarding walkthrough', 49597],
+        ['Journey 1: Cold-start QR log', 50913],
+        ['Journey 2: Log + undo', 30980],
+        ['iOS Journey 5: Backup export → share sheet', 33610],
+        ['Journey 8: Biometric gate on Settings', 33149],
+      ].map(([title, durationMs]) => ({ suite: title, name: title, status: 'passed', durationMs })),
+    );
+  });
+
+  it('sums the per-flow testsuite times', () => {
+    expect(android.durationMs).toBe(165370);
+    expect(ios.durationMs).toBe(198689);
+  });
+
+  // junit.ts appends Z to an offsetless timestamp, so the result does not depend on the machine's
+  // TZ; running this file with TZ=America/Denver gives the same instants.
+  it('starts each report at its earliest testsuite timestamp, read as UTC', () => {
+    const first = readFixture(
+      'ostomate2/junit/maestro-2.11.0/android-emulator/e2e/01_cold_start_qr_log.xml',
+    );
+    expect(first).toContain(
+      '<testsuite name="Test Suite" device="test" tests="1" failures="0" time="17.45" timestamp="2026-10-02T04:44:36">',
+    );
+    expect(android.startedAt).toBe('2026-10-02T04:44:36.000Z');
+    expect(ios.startedAt).toBe('2026-10-02T04:49:41.000Z');
+  });
+
+  it('starts a single flow at its own testsuite timestamp, not its testcase one', () => {
+    const onboarding = readFixture(
+      'ostomate2/junit/maestro-2.11.0/ios-sim/e2e/00_ios_onboarding.xml',
+    );
+    expect(onboarding).toContain('timestamp="2026-10-02T04:49:41"');
+    expect(onboarding).toContain('timestamp="2026-10-02T04:49:42"');
+    expect(parseJunit([onboarding]).startedAt).toBe('2026-10-02T04:49:41.000Z');
+  });
+
+  it('ignores the testsuite device attribute and the testcase id, file, status and timestamp', () => {
+    const serialized = JSON.stringify([android, ios]);
+    expect(serialized).not.toContain('94292E40-11DF-431C-9F15-56F843AE2C68');
+    expect(serialized).not.toContain('.maestro/');
+    expect(serialized).not.toContain('SUCCESS');
+    expect(serialized).not.toContain('Test Suite');
+  });
+});
+
 describe('parseJunit against Playwright output (testsuites wrapper)', () => {
   const report = parseJunit([readFixture('testpulse/junit/playwright-one-failure.xml')]);
 

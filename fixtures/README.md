@@ -57,6 +57,24 @@ Each job runs `maestro test --format junit --output e2e-results/<flow>.xml` once
 
 The failed iOS flow, `01_ios_deep_link_log.xml`, has `status="ERROR"` on the testcase and a `<failure>` child (no `message` attribute) whose text is Maestro's crash notice. No scrub was needed: the repo is public, and the only machine detail is the iOS testsuite's `device` attribute, the name, OS version and UDID of a simulator created on the CI runner (`maestro-ios - iOS 26.5 - 1D2D408B-…`), which identifies nothing outside that run. The Android files carry `device="test"`. The files were re-downloaded and compared byte for byte before commit.
 
+### Maestro 2.11.0 E2E
+
+The files above came from Maestro 2.6.1, which that commit's CI pinned. Ostomate2 PR #37 (merge commit `f0a41bb172e9c85d6c74945dd3e9706dc1a5cd57`) moved both E2E jobs to Maestro 2.11.0, which adds a `timestamp` to every `testsuite` and `testcase`: whole seconds, no offset, in the runner's local time, which is UTC on GitHub's runners. These files are its output from CI run 36965404280 (a `push` to `main` at that commit, every job green, started 2026-10-02 04:38 UTC; jobs "Android E2E (Maestro)" and "iOS E2E (Maestro)", artifacts `e2e-junit-android` and `e2e-junit-ios`), captured 2026-10-04 with:
+
+```
+gh run download -R bhelco1/Ostomate2 36965404280 -n e2e-junit-android -D <dir>
+gh run download -R bhelco1/Ostomate2 36965404280 -n e2e-junit-ios -D <dir>
+```
+
+The jobs, module, platforms and layout are as for 2.6.1, so the files sit under `junit/maestro-2.11.0/<platform>/e2e/`; the 2.6.1 files are kept because they hold the only crashed flow. Besides the timestamps, `time` now has millisecond decimals and the testcase's is a little shorter than its testsuite's. Since the 2.6.1 capture Ostomate2 retitled two iOS flows to match Android ("Journey 1: Cold-start QR log", "Journey 2: Log + undo"), so three titles are now shared across platforms.
+
+| Path | Source | Counts |
+|---|---|---|
+| `ostomate2/junit/maestro-2.11.0/android-emulator/e2e/*.xml` (7 files) | `e2e-junit-android` artifact, `e2e-results/` | 7 flows, 7 passed; earliest testsuite `timestamp` 2026-10-02T04:44:36 |
+| `ostomate2/junit/maestro-2.11.0/ios-sim/e2e/*.xml` (5 files) | `e2e-junit-ios` artifact, `e2e-results/` | 5 flows, 5 passed; earliest testsuite `timestamp` 2026-10-02T04:49:41 |
+
+No scrub was needed: the repo is public, and a grep of the raw files for `bobby`, `helco`, `/Users/`, `/home/`, `/private`, `runner`, `@gmail`, `token`, `secret`, `key`, `hostname` and `~/` finds nothing. The only machine detail is again the iOS testsuite's `device` attribute, a simulator created on the CI runner for that run (`maestro-ios - iOS 26.5 - 94292E40-…`); the Android files carry `device="test"`. The artifacts were downloaded twice and compared, and the committed files compared with the download, byte for byte.
+
 ## routeserve
 
 Private repo, captured from its `main` as of 2026-07-18. Its commit SHAs are left out here because the project is private. CI does not upload Jest JSON, so all three workspaces were run locally on 2026-09-21 with `--ci`. The backend ran with the `corridor.postgis` suite excluded (it needs a live PostGIS database) and `DATABASE_URL` pointed at a closed port; `SENTRY_DSN` was unset. Coverage was written outside the repo with `--coverageReporters=json-summary`, so no lcov or HTML was produced. No `.env*` file was read.

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="test" tests="1" failures="0" time="31.465" timestamp="2026-10-02T04:46:12">
+    <testcase id="Journey 4: Set on-hand inventory count via Settings → Manage Supplies" name="Journey 4: Set on-hand inventory count via Settings → Manage Supplies" classname="Journey 4: Set on-hand inventory count via Settings → Manage Supplies" file=".maestro/04_set_inventory.yaml" time="31.45" timestamp="2026-10-02T04:46:12" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

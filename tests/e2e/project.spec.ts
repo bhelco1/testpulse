@@ -130,8 +130,20 @@ test.describe('Ostomate2 (public)', () => {
     await expect(page.getByRole('region', { name: 'Declared suites' })).toHaveCount(0);
     await expect(page.locator('[data-part="tag"][data-declared]')).toHaveCount(0);
     await expect(page.locator('[data-part="tag"]').filter({ hasText: 'Maestro' })).toHaveText([
-      'Maestro 2.6.1',
+      'Maestro 2.11.0',
     ]);
+    const testStack = page.locator('[data-variant="tested"]');
+    await expect(testStack.locator('dt')).toHaveText([
+      'Runners',
+      'Property',
+      'Visual',
+      'Coverage',
+      'Static',
+      'E2E',
+    ]);
+    await expect(
+      testStack.locator('div', { has: page.locator('dt', { hasText: 'Static' }) }).locator('li'),
+    ).toHaveText(['detekt 1.23.8', 'ktlint 1.0.1', 'SwiftLint']);
 
     const coverage = page.getByRole('region', { name: 'Coverage and reports' });
     // 497 / 527 and 457 / 490.

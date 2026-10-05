@@ -86,7 +86,7 @@ Surveyed 2026-09-21 (read-only). Ostomate2 sources: repo contents, `git`, `gh` (
 | detekt / ktlint-gradle | 1.23.8 / 12.1.2 |
 | JaCoCo / Kover (in catalog, unused) | 0.8.13 / 0.8.3 |
 | kotest-property / robolectric / roborazzi / androidx-test-core | 5.9.1 / 4.14.1 / 1.68.0 / 1.6.1 |
-| Maestro (CI-pinned) | 2.6.1 |
+| Maestro (CI-pinned) | 2.6.1; 2.11.0 since Ostomate2 PR #37 (2026-10-02) |
 
 **Kotlin/Native targets.** `iosArm64`, `iosSimulatorArm64` (iosX64 removed 2026-07-13). `composeApp` exports static framework `Shared`.
 
@@ -148,7 +148,7 @@ Single pipeline: `.github/workflows/ci.yml` ("CI"). Triggers: `push` to `main`; 
 |---|---|---|---|---|---|
 | `detect-changes` | ubuntu | always | path filter → output `ios` (true on non-PR; on PR only if iOS-relevant paths changed) | none | none |
 | `android` | ubuntu | always | ktlint, detekt, `assembleDebug`, then `./gradlew :shared:testAndroidHostTest :shared:jacocoHostTestReport :shared:jacocoCoverageVerification :composeApp:testAndroidHostTest :composeApp:jacocoHostTestReport :composeApp:jacocoCoverageVerification --stacktrace`; coverage table to step summary; Codecov upload (conditional, `continue-on-error`) | `screenshot-diffs` (on failure), `coverage-report` (JaCoCo HTML+XML, always), `junit-results-jvm` (JVM JUnit XML, always), `androidApp-debug` APK | `CODECOV_TOKEN` |
-| `android-e2e` | ubuntu | not PR; needs `android` | Maestro 2.6.1 on emulator API 29 via `scripts/run_android_e2e.sh` (7 flows) | `e2e-diagnostics` (on failure) | none |
+| `android-e2e` | ubuntu | not PR; needs `android` | Maestro 2.6.1 (2.11.0 since 2026-10-02) on emulator API 29 via `scripts/run_android_e2e.sh` (7 flows) | `e2e-diagnostics` (on failure) | none |
 | `ios` | macos-latest | `ios == true` | SwiftLint `--strict`; `./gradlew :shared:iosSimulatorArm64Test :composeApp:iosSimulatorArm64Test`; unsigned `xcodebuild` simulator build | none | none |
 | `ios-e2e` | macos-latest | not PR | 5 Maestro flows on a fresh simulator (`MAESTRO_DRIVER_STARTUP_TIMEOUT=300000`) | `maestro-ios-debug` (on failure) | none |
 | `dashboard` | ubuntu | `always()` and not PR; needs all four | downloads `junit-results-jvm` + `coverage-report`, fetches jobs JSON via `gh api`, runs `scripts/generate_test_dashboard.py`, force-pushes `site/` to branch `test-dashboard` | published to branch | `github.token` |

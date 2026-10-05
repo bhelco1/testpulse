@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="test" tests="1" failures="0" time="25.917" timestamp="2026-10-02T04:46:51">
+    <testcase id="Journey 5: Backup round-trip" name="Journey 5: Backup round-trip" classname="Journey 5: Backup round-trip" file=".maestro/05_backup_round_trip.yaml" time="25.903" timestamp="2026-10-02T04:46:51" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

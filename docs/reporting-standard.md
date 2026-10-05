@@ -65,7 +65,7 @@ A report with coverage and no results is refused. Console output, logs and HTML 
 |---|---|---|
 | Gradle (JVM, Kotlin Multiplatform) | `build/test-results/<task>/TEST-*.xml`, written by every Gradle test task | In use (Ostomate2); fixtures in `fixtures/ostomate2/junit/` |
 | Playwright | `--reporter=junit` with `PLAYWRIGHT_JUNIT_OUTPUT_FILE=<file>` | Fixture in `fixtures/testpulse/junit/`; testpulse itself reports from Phase 7 |
-| Maestro | `maestro test --format junit --output <file> <flow>`. When flows run one at a time, give each its own `--output`, or each run overwrites the last | In use (Ostomate2 E2E, Maestro 2.6.1); fixtures in `fixtures/ostomate2/junit/{android-emulator,ios-sim}/e2e/` |
+| Maestro | `maestro test --format junit --output <file> <flow>`. When flows run one at a time, give each its own `--output`, or each run overwrites the last | In use (Ostomate2 E2E, Maestro 2.11.0); fixtures for 2.11.0 in `fixtures/ostomate2/junit/maestro-2.11.0/{android-emulator,ios-sim}/e2e/` and for 2.6.1 in `fixtures/ostomate2/junit/{android-emulator,ios-sim}/e2e/` |
 | Vitest | `--reporter=junit --outputFile=<file>` | Not used by any project yet; no fixture |
 | Jest | `jest --json --outputFile=<file>` | In use (routeserve `test:ci`); fixtures in `fixtures/routeserve/jest/` |
 | JaCoCo | the XML output of the Gradle JaCoCo report task | In use (Ostomate2); fixtures in `fixtures/ostomate2/jacoco/` |

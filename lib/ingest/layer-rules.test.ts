@@ -407,6 +407,24 @@ describe('Ostomate2 acceptance against projects/ostomate2.yaml', () => {
     }
   });
 
+  it('resolves every captured Maestro 2.11.0 flow to e2e: 7 Android, 5 iOS', () => {
+    for (const [job, platform, cases] of [
+      ['android-e2e', 'android-emulator', 7],
+      ['ios-e2e', 'ios-sim', 5],
+    ] as const) {
+      const dir = fixture(`ostomate2/junit/maestro-2.11.0/${platform}/e2e`);
+      const files = readdirSync(dir)
+        .filter((file) => file.endsWith('.xml'))
+        .sort()
+        .map((file) => readFileSync(`${dir}/${file}`, 'utf8'));
+      const flows = parseJunit(files).tests.map((test) => ({
+        ...target({ job, module: 'e2e', platform, suite: test.suite }),
+        cases: 1,
+      }));
+      expect(countByLayer(resolve, flows)).toEqual({ e2e: cases });
+    }
+  });
+
   // Inventory rows for Ostomate2: shared commonTest unit 53, androidHostTest integration 29.
   it('shared: unit 53, integration 29', () => {
     expect(countByLayer(resolve, suitesOf('shared'))).toEqual({ unit: 53, integration: 29 });

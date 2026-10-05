@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="maestro-ios - iOS 26.5 - 94292E40-11DF-431C-9F15-56F843AE2C68" tests="1" failures="0" time="33.645" timestamp="2026-10-02T04:53:12">
+    <testcase id="iOS Journey 5: Backup export → share sheet" name="iOS Journey 5: Backup export → share sheet" classname="iOS Journey 5: Backup export → share sheet" file=".maestro/ios/05_ios_backup_share.yaml" time="33.61" timestamp="2026-10-02T04:53:12" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

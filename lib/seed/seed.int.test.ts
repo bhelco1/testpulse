@@ -138,7 +138,7 @@ async function snapshot(admin: SupabaseClient) {
     reports: byKey(
       reports.map((row) => ({
         ...omit(row, 'id', 'run_id', 'created_at'),
-        ...times(row, 'started_at', 'finished_at'),
+        ...times(row, 'started_at', 'finished_at', 'received_at'),
         key: String(reportKey.get(row.id)),
       })),
     ),
@@ -313,6 +313,15 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       return tally;
     }, {});
     expect(formats).toEqual({ jacoco: 18, istanbul: 29 });
+  });
+
+  // The seed posts each report as it finishes (placeReport), so the run page's Received column
+  // reads the same times it read before received_at existed (decision 2026-10-05).
+  it('stores every report as received when it finished', () => {
+    expect(second.reports.length).toBeGreaterThan(0);
+    for (const report of second.reports) {
+      expect(report.received_at, report.key).toBe(report.finished_at);
+    }
   });
 
   it('places every run inside the 90 days before now, CI runs in the last 30', () => {

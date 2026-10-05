@@ -100,7 +100,7 @@ describe('backfill_run with the captured Ostomate2 history (spec section 17, Pha
         .from('reports')
         .select(
           'id, run_id, job, module, platform, format, total, passed, failed, skipped, ' +
-            'duration_ms, started_at, finished_at',
+            'duration_ms, started_at, finished_at, received_at',
         )
         .in('run_id', runIds)
         .order('id'),
@@ -213,6 +213,22 @@ describe('backfill_run with the captured Ostomate2 history (spec section 17, Pha
             row.format === 'jacoco',
         ),
       ).toBe(true);
+    });
+
+    // Decision 2026-10-05: an imported run was never posted, so its reports are dated as
+    // received when the history says the dashboard was built, which is also their span.
+    it('dates each imported report as received at its recorded time, not at the import', async () => {
+      const stored = await snapshot(backfillProjectId);
+      const first = runByCiId(stored.runs, FIRST_RUN_ID);
+      expect(stored.reports).toHaveLength(26);
+      for (const report of stored.reports) {
+        expect(iso(report.received_at)).toBe(iso(report.finished_at));
+      }
+      const firstReports = stored.reports.filter((report) => report.run_id === first.id);
+      expect(firstReports.map((report) => iso(report.received_at))).toEqual([
+        '2026-07-13T20:10:42.000Z',
+        '2026-07-13T20:10:42.000Z',
+      ]);
     });
 
     it('rolls the first and last runs up from their two reports', async () => {

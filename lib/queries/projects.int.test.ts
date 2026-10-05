@@ -101,6 +101,7 @@ describe('the public read client against local Supabase (spec sections 9 and 15)
           duration_ms: 10,
           started_at: NOW,
           finished_at: NOW,
+          received_at: NOW,
         })
         .select('id')
         .single(),

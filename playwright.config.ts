@@ -46,12 +46,16 @@ const withoutJs = /@js|@visual/;
 
 // The live-feed spec writes reports while its pages are open, which changes the landing page and
 // every page's header and footer, so it runs in a project of its own after every other project
-// has finished, and deletes what it wrote (tests/e2e/support/ingest.ts).
+// has finished, and deletes what it wrote (tests/e2e/support/ingest.ts). It is the teardown of
+// `seeded`, an empty project every other project depends on: Playwright runs a teardown after
+// its setup's dependents have finished, whether or not they passed, where a dependent project is
+// skipped when a dependency fails. So a failing page test cannot stop the live feed's own checks
+// running (tests/e2e/harness/order.spec.ts).
 const LIVE_SPEC = '**/live.spec.ts';
+const SEEDED = 'seeded';
 // The private-data leak sweep visits every page that can show a private project, so it runs once,
 // in a project of its own, rather than in every viewport and theme (tests/e2e/leak-sweep.spec.ts).
 const SWEEP_SPEC = '**/leak-sweep.spec.ts';
-const PAGE_PROJECTS = ['desktop-dark', 'desktop-light', 'phone-dark', 'phone-light', 'no-js'];
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -75,25 +79,36 @@ export default defineConfig({
   },
   projects: [
     {
+      // No tests. Every project that reads the seed as db:seed left it depends on it, and `live`,
+      // which writes to the database, is its teardown, so it runs after all of them.
+      name: SEEDED,
+      testMatch: [],
+      teardown: 'live',
+    },
+    {
       name: 'desktop-dark',
+      dependencies: [SEEDED],
       testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
     {
       name: 'desktop-light',
+      dependencies: [SEEDED],
       testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'light' },
     },
     {
       name: 'phone-dark',
+      dependencies: [SEEDED],
       testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'dark' },
     },
     {
       name: 'phone-light',
+      dependencies: [SEEDED],
       testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'light' },
@@ -102,6 +117,7 @@ export default defineConfig({
       // Static content must work without JavaScript (spec section 13). With scripts off the
       // page renders the same pixels as desktop-dark, so it takes no snapshot of its own.
       name: 'no-js',
+      dependencies: [SEEDED],
       testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
       grepInvert: withoutJs,
       use: { ...chrome, viewport: DESKTOP, javaScriptEnabled: false },
@@ -109,6 +125,7 @@ export default defineConfig({
     {
       // Tests of the harness itself: the server it starts, and negative controls for its checks.
       name: 'harness',
+      dependencies: [SEEDED],
       testDir: 'tests/e2e/harness',
       use: { ...chrome, viewport: DESKTOP },
     },
@@ -116,14 +133,13 @@ export default defineConfig({
       // A light system theme gives the sweep its signal that a page's client code has run: the
       // server renders the theme toggle for the dark default, and it relabels once hydrated.
       name: 'leak-sweep',
+      dependencies: [SEEDED],
       testMatch: SWEEP_SPEC,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'light' },
     },
     {
       name: 'live',
       testMatch: LIVE_SPEC,
-      // The live-feed spec writes reports and projects that would show on the swept pages.
-      dependencies: [...PAGE_PROJECTS, 'harness', 'leak-sweep'],
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
   ],

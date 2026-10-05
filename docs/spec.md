@@ -882,6 +882,7 @@ Phase 5 complete 2026-10-02.
 - Slowest 10 tests (was part of section 11's Suite duration row; per-run suite duration stays). Define first: the window, and how a test run on several platforms counts.
 - Flip rate (was section 11: tests that changed status between consecutive default-branch runs more than twice in 30 days). Define first: how passed-to-skipped and skipped-to-passed count, what a run missing the test does, and the denominator.
 - Project-level cross-platform parity (was section 11: tests executed on more than one platform). Define first: the window. Per-run platform mismatch stays in section 11.
+- Defect tracking integration (requested by Bobby 2026-10-05): connect to defect tracking products (for example GitHub Issues, Jira, Linear) and show defect stats on the project page. Define first: which products, how a project links its tracker, which stats (open and closed counts, age, severity, defects found by tests), what a private project may show, and how credentials are held at $0 recurring cost.
 
 ## 18. Open questions
 

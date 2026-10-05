@@ -144,9 +144,7 @@ describe('normalizeReport with the Ostomate2 shared JVM fixture', () => {
     });
   });
 
-  it('builds the report row with the totals from the inventory and the fixture timing', () => {
-    expect(report.startedAt).toBeDefined();
-    const startedAt = new Date(report.startedAt ?? '').getTime();
+  it('builds the report row with the totals from the inventory and the fixture duration', () => {
     expect(payload.report).toEqual({
       job: 'android',
       module: 'shared',
@@ -157,17 +155,17 @@ describe('normalizeReport with the Ostomate2 shared JVM fixture', () => {
       failed: 0,
       skipped: 0,
       duration_ms: report.durationMs,
-      started_at: report.startedAt,
-      finished_at: new Date(startedAt + report.durationMs).toISOString(),
     });
   });
 
-  // Decision 2026-10-05: the files' times and the receipt are kept apart, so a report whose files
-  // are older than its arrival (a replayed cache) still records when it arrived.
-  it('keeps the receipt time apart from the file times it carries', () => {
-    expect(Date.parse(payload.report.finished_at)).toBeLessThan(RECEIVED_AT.getTime());
+  // Decision 2026-10-05 (open question 6, option a): ingest_report dates a report by its receipt,
+  // so the payload carries the receipt and the duration and none of the files' own times, which a
+  // replayed cache can set hours or days early.
+  it("sends the receipt time and leaves the files' times out of the payload", () => {
+    expect(report.startedAt).toBeDefined();
     expect(payload.received_at).toBe(RECEIVED_AT.toISOString());
-    expect(payload.report.started_at).toBe(report.startedAt);
+    expect(payload.report).not.toHaveProperty('started_at');
+    expect(payload.report).not.toHaveProperty('finished_at');
   });
 
   it('emits one entry per result with its documented test_key and no failure', () => {
@@ -283,7 +281,7 @@ describe('normalizeReport timing', () => {
     durationMs: 1500,
   };
 
-  it('uses the receipt time as started_at when the report has no start time', () => {
+  it('normalizes a report whose files carry no start time', () => {
     const payload = normalizeReport(
       meta(),
       { id: PROJECT_ID, layer_rules: [{ default: 'unit' }], name_normalization: {} },
@@ -291,8 +289,8 @@ describe('normalizeReport timing', () => {
       [],
       RECEIVED_AT,
     );
-    expect(payload.report.started_at).toBe('2026-09-22T12:00:00.000Z');
-    expect(payload.report.finished_at).toBe('2026-09-22T12:00:01.500Z');
+    expect(payload.received_at).toBe('2026-09-22T12:00:00.000Z');
+    expect(payload.report.duration_ms).toBe(1500);
     expect(payload.report).toMatchObject({ total: 2, passed: 1, failed: 1, skipped: 0 });
     expect(payload.tests[1]?.failure).toEqual({ message: 'boom', detail: 'at s' });
   });
@@ -330,7 +328,7 @@ describe('normalizeReport timing', () => {
     expect(payload.run.run_url).toBeNull();
   });
 
-  it('computes finished_at at the caps without a RangeError', () => {
+  it('carries the duration caps through unchanged', () => {
     const atCaps: NormalizedReport = {
       tests: [{ suite: 's', name: 'a', status: 'passed', durationMs: MAX_TEST_DURATION_MS }],
       startedAt: '9998-12-31T23:59:59.999Z',
@@ -343,30 +341,26 @@ describe('normalizeReport timing', () => {
       [],
       RECEIVED_AT,
     );
-    expect(payload.report.finished_at).toBe('9999-12-31T23:59:59.999Z');
+    expect(payload.report.duration_ms).toBe(MAX_REPORT_DURATION_MS);
     expect(payload.tests[0]?.duration_ms).toBe(MAX_TEST_DURATION_MS);
   });
 
-  it.each<[string, string, number]>([
-    ['one millisecond past the last storable instant', '9999-12-31T23:59:59.999Z', 1],
-    [
-      'a Date-maximum start plus a one-year report',
-      '+275760-09-13T00:00:00.000Z',
-      MAX_REPORT_DURATION_MS,
-    ],
-    ['a start before year 1', '-000001-12-31T00:00:00.000Z', 0],
-  ])('refuses %s with a ParseError, not a RangeError', (_label, startedAt, durationMs) => {
-    const report: NormalizedReport = { tests: [], startedAt, durationMs };
-    const run = () =>
-      normalizeReport(
-        meta(),
-        { id: PROJECT_ID, layer_rules: [{ default: 'unit' }], name_normalization: {} },
-        { format: 'junit', report },
-        [],
-        RECEIVED_AT,
-      );
-    expect(run).toThrow(ParseError);
-    expect(run).toThrow(/timestamp/);
+  // The files' start no longer dates anything, so one no timestamp column could hold is not a
+  // reason to refuse the report.
+  it.each<[string, string]>([
+    ['a start past the last storable instant', '+275760-09-13T00:00:00.000Z'],
+    ['a start before year 1', '-000001-12-31T00:00:00.000Z'],
+  ])('accepts %s, since the payload does not carry it', (_label, startedAt) => {
+    const report: NormalizedReport = { tests: [], startedAt, durationMs: 0 };
+    const payload = normalizeReport(
+      meta(),
+      { id: PROJECT_ID, layer_rules: [{ default: 'unit' }], name_normalization: {} },
+      { format: 'junit', report },
+      [],
+      RECEIVED_AT,
+    );
+    expect(payload.received_at).toBe(RECEIVED_AT.toISOString());
+    expect(payload.report).not.toHaveProperty('started_at');
   });
 });
 
@@ -604,8 +598,8 @@ describe('normalizeReport with the Ostomate2 Maestro fixtures (test identity acr
 });
 
 // Ostomate2 CI run 36965404280 on main, after its PR #37 moved Maestro to 2.11.0, which stamps
-// each testsuite with an offsetless UTC timestamp. The report starts at the earliest one rather
-// than when testpulse received it, and the shared titles now make three cross-platform tests.
+// each testsuite with an offsetless UTC timestamp (the parser's tests read it); ingestion dates the
+// report by its receipt, and the shared titles now make three cross-platform tests.
 describe('normalizeReport with the Ostomate2 Maestro 2.11.0 fixtures', () => {
   const project: IngestProject = {
     id: PROJECT_ID,
@@ -635,17 +629,9 @@ describe('normalizeReport with the Ostomate2 Maestro 2.11.0 fixtures', () => {
   const android = payloadFor('android-e2e', 'android-emulator');
   const ios = payloadFor('ios-e2e', 'ios-sim');
 
-  it('starts each report at its first flow, read as UTC, and ends it after the summed times', () => {
-    expect(android.report).toMatchObject({
-      started_at: '2026-10-02T04:44:36.000Z',
-      finished_at: '2026-10-02T04:47:21.370Z',
-      duration_ms: 165370,
-    });
-    expect(ios.report).toMatchObject({
-      started_at: '2026-10-02T04:49:41.000Z',
-      finished_at: '2026-10-02T04:52:59.689Z',
-      duration_ms: 198689,
-    });
+  it("carries each report's summed flow times as its duration", () => {
+    expect(android.report.duration_ms).toBe(165370);
+    expect(ios.report.duration_ms).toBe(198689);
   });
 
   it('counts both reports green and resolves every flow to e2e', () => {

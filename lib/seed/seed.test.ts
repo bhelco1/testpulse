@@ -171,7 +171,11 @@ describe('seedDatabase', () => {
         job: payload.report.job,
         module: payload.report.module,
         platform: payload.report.platform,
-        started_at: payload.report.started_at,
+        // Ingestion dates the report by receipt (decision 2026-10-05): it starts its duration
+        // before it was received.
+        started_at: new Date(
+          Date.parse(payload.received_at) - payload.report.duration_ms,
+        ).toISOString(),
       })),
     ).toEqual(expected);
 

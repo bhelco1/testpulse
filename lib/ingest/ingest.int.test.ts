@@ -229,7 +229,7 @@ describe('POST /api/v1/reports (spec section 6)', () => {
       const reports = await rows(
         admin,
         'reports',
-        'id, job, module, platform, format, total, passed, failed, skipped, duration_ms, started_at, finished_at',
+        'id, job, module, platform, format, total, passed, failed, skipped, duration_ms, started_at, finished_at, received_at',
         ['run_id', runId],
       );
       const parsed = parseJunit(sharedJunit);
@@ -246,9 +246,14 @@ describe('POST /api/v1/reports (spec section 6)', () => {
         skipped: 0,
         duration_ms: parsed.durationMs,
       });
-      expect(iso(reports[0]?.started_at)).toBe(parsed.startedAt);
-      expect(iso(run?.started_at)).toBe(parsed.startedAt);
-      expect(iso(run?.finished_at)).toBe(iso(reports[0]?.finished_at));
+      // Dated by receipt (decision 2026-10-05): the report ends when it arrived and starts its
+      // duration before that.
+      const received = Date.parse(String(reports[0]?.received_at));
+      const startedAt = new Date(received - parsed.durationMs).toISOString();
+      expect(iso(reports[0]?.finished_at)).toBe(iso(reports[0]?.received_at));
+      expect(iso(reports[0]?.started_at)).toBe(startedAt);
+      expect(iso(run?.started_at)).toBe(startedAt);
+      expect(iso(run?.finished_at)).toBe(iso(reports[0]?.received_at));
 
       const tests = await rows(admin, 'tests', 'id, layer, first_seen_at, last_seen_at', [
         'project_id',
@@ -259,8 +264,8 @@ describe('POST /api/v1/reports (spec section 6)', () => {
         unit: 53,
         integration: 29,
       });
-      expect(iso(tests[0]?.first_seen_at)).toBe(parsed.startedAt);
-      expect(iso(tests[0]?.last_seen_at)).toBe(parsed.startedAt);
+      expect(iso(tests[0]?.first_seen_at)).toBe(startedAt);
+      expect(iso(tests[0]?.last_seen_at)).toBe(startedAt);
 
       const results = await rows(admin, 'results', 'id, status', ['report_id', firstReportId]);
       expect(results).toHaveLength(82);
@@ -349,11 +354,11 @@ describe('POST /api/v1/reports (spec section 6)', () => {
       const received = Date.parse(String(report?.received_at));
       expect(received).toBeGreaterThanOrEqual(before);
       expect(received).toBeLessThanOrEqual(after);
-      // The files' own finish, a September instant, is kept beside it.
+      // The files' own finish, a September instant, dates nothing: the report finished on arrival.
       const parsed = parseJunit(sharedJunit);
       const fileFinish = Date.parse(String(parsed.startedAt)) + parsed.durationMs;
-      expect(Date.parse(String(report?.finished_at))).toBe(fileFinish);
       expect(received).toBeGreaterThan(fileFinish);
+      expect(Date.parse(String(report?.finished_at))).toBe(received);
     });
 
     it('takes the latest receipt on a re-post of the same key, as the replaced report is new', async () => {
@@ -405,6 +410,147 @@ describe('POST /api/v1/reports (spec section 6)', () => {
       expect(asAnon.find((row) => row.run_id === publicRun)?.received_at).toBe(
         publicReport?.received_at,
       );
+    });
+  });
+
+  // Decision 2026-10-05 (open question 6, option a): ingest_report dates each report by its
+  // receipt, [received_at - duration_ms, received_at], whatever times the payload carries, and the
+  // run spans its reports' earliest start to their latest finish. The payloads below carry file
+  // times as the app deployed before this change sends them, 19 hours before the receipt, as
+  // Ostomate2's replayed Gradle cache did.
+  describe('report span by receipt (spec sections 5.2 and 5.3)', () => {
+    const ciRunId = `${suffix}-span`;
+    const HOUR_MS = 3_600_000;
+    const parsedShared = parseJunit(sharedJunit);
+
+    const replayed = (
+      module: string,
+      receivedAt: string,
+      durationMs: number,
+    ): Record<string, unknown> => {
+      const payload = normalizeReport(
+        {
+          ci_run_id: ciRunId,
+          run_attempt: 1,
+          job: 'android',
+          module,
+          platform: 'jvm',
+          commit_sha: '2ec580f',
+          branch: 'main',
+          event: 'push',
+        },
+        { id: publicId, layer_rules: [{ default: 'unit' }], name_normalization: {} },
+        { format: 'junit', report: { ...parsedShared, durationMs } },
+        [],
+        new Date(receivedAt),
+      );
+      const fileStart = Date.parse(receivedAt) - 19 * HOUR_MS - durationMs;
+      return {
+        ...payload,
+        report: {
+          ...payload.report,
+          started_at: new Date(fileStart).toISOString(),
+          finished_at: new Date(fileStart + durationMs).toISOString(),
+        },
+      };
+    };
+
+    const ingest = async (payload: Record<string, unknown>) => {
+      const result = await admin.rpc('ingest_report', { payload });
+      if (result.error) throw new Error(`ingest_report: ${result.error.message}`);
+      return result.data as { run_id: string; report_id: string };
+    };
+
+    const reportSpan = async (reportId: string) => {
+      const [report] = await rows(admin, 'reports', 'started_at, finished_at, received_at', [
+        'id',
+        reportId,
+      ]);
+      return {
+        started_at: iso(report?.started_at),
+        finished_at: iso(report?.finished_at),
+        received_at: iso(report?.received_at),
+      };
+    };
+
+    const runSpan = async () => {
+      const [run] = await runFor(publicId, ciRunId);
+      return { started_at: iso(run?.started_at), finished_at: iso(run?.finished_at) };
+    };
+
+    it('dates a report by its receipt when its files are 19 hours older', async () => {
+      const { report_id } = await ingest(replayed('span-a', '2026-10-05T12:00:00.000Z', 60_000));
+
+      expect(await reportSpan(report_id)).toEqual({
+        started_at: '2026-10-05T11:59:00.000Z',
+        finished_at: '2026-10-05T12:00:00.000Z',
+        received_at: '2026-10-05T12:00:00.000Z',
+      });
+      expect(await runSpan()).toEqual({
+        started_at: '2026-10-05T11:59:00.000Z',
+        finished_at: '2026-10-05T12:00:00.000Z',
+      });
+      // The tests were first seen in this report, so both of their dates are its start.
+      const tests = await rows(admin, 'tests', 'first_seen_at, last_seen_at', ['module', 'span-a']);
+      expect(tests).toHaveLength(parsedShared.tests.length);
+      for (const test of tests) {
+        expect(iso(test.first_seen_at)).toBe('2026-10-05T11:59:00.000Z');
+        expect(iso(test.last_seen_at)).toBe('2026-10-05T11:59:00.000Z');
+      }
+    });
+
+    it('starts the run at the earliest receipt minus duration across its reports', async () => {
+      // Received a minute after span-a but ran ten minutes, so it started first.
+      await ingest(replayed('span-b', '2026-10-05T12:01:00.000Z', 600_000));
+
+      expect(await runSpan()).toEqual({
+        started_at: '2026-10-05T11:51:00.000Z',
+        finished_at: '2026-10-05T12:01:00.000Z',
+      });
+    });
+
+    it("keeps the latest receipt's span when a report is re-posted", async () => {
+      const { report_id } = await ingest(replayed('span-b', '2026-10-05T13:00:00.000Z', 600_000));
+
+      expect(await reportSpan(report_id)).toEqual({
+        started_at: '2026-10-05T12:50:00.000Z',
+        finished_at: '2026-10-05T13:00:00.000Z',
+        received_at: '2026-10-05T13:00:00.000Z',
+      });
+      expect(await runSpan()).toEqual({
+        started_at: '2026-10-05T11:59:00.000Z',
+        finished_at: '2026-10-05T13:00:00.000Z',
+      });
+    });
+
+    it('refuses a duration that would start the report before the year 1, before writing', async () => {
+      const payload = normalizeReport(
+        {
+          ci_run_id: ciRunId,
+          run_attempt: 1,
+          job: 'android',
+          module: 'span-c',
+          platform: 'jvm',
+          commit_sha: '2ec580f',
+          branch: 'main',
+          event: 'push',
+        },
+        { id: publicId, layer_rules: [{ default: 'unit' }], name_normalization: {} },
+        { format: 'junit', report: { ...parsedShared, durationMs: 2_000 } },
+        [],
+        new Date('0001-01-01T00:00:01.000Z'),
+      );
+
+      const result = await admin.rpc('ingest_report', { payload });
+
+      expect(result.error?.message).toMatch(
+        /^ingest_report: payload\.report\.duration_ms reaches back before the year 1/,
+      );
+      const reports = await rows(admin, 'reports', 'module', [
+        'run_id',
+        String((await runFor(publicId, ciRunId))[0]?.id),
+      ]);
+      expect(reports.map((report) => report.module).sort()).toEqual(['span-a', 'span-b']);
     });
   });
 
@@ -889,7 +1035,7 @@ describe('POST /api/v1/reports (spec section 6)', () => {
       );
       const failedIndex = payload.tests.findIndex((test) => test.failure !== null);
       expect(failedIndex).toBeGreaterThan(0);
-      // The visibility case already stored these tests; a start far in the future means a
+      // The visibility case already stored these tests; a receipt far in the future means a
       // write that slipped through would have to move last_seen_at, so "unchanged" is a real check.
       const before = unwrap(
         await admin
@@ -905,11 +1051,7 @@ describe('POST /api/v1/reports (spec section 6)', () => {
       expect(before).toHaveLength(payload.tests.length);
       const broken = {
         ...payload,
-        report: {
-          ...payload.report,
-          started_at: '2030-01-01T00:00:00.000Z',
-          finished_at: '2030-01-01T00:01:00.000Z',
-        },
+        received_at: '2030-01-01T00:01:00.000Z',
         tests: payload.tests.map((test, index) =>
           index === failedIndex
             ? { ...test, failure: { message: 'x'.repeat(2001), detail: '' } }

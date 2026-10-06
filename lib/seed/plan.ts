@@ -262,21 +262,15 @@ export function planSeed(now: Date): SeedPlan {
 }
 
 /**
- * Moves one normalized report to the planned start. Ingestion takes a report's start from the
- * file (spec 5.2), and every fixture records the moment it was captured, so without this every
- * posting of a fixture would land on that same instant. Only the three times change: the
- * duration, results, coverage and run metadata stay exactly what normalizeReport produced.
+ * Moves one normalized report to the planned start. Ingestion dates a report by its receipt
+ * (decision 2026-10-05), so the report is received when the planned run would have finished: the
+ * planned start plus its duration. Only the receipt changes: the duration, results, coverage and
+ * run metadata stay exactly what normalizeReport produced.
  */
 export function placeReport(payload: IngestPayload, startedAt: Date): IngestPayload {
   const start = startedAt.getTime();
   if (Number.isNaN(start)) {
     throw new Error('the planned started_at is not a point in time');
   }
-  const duration = Date.parse(payload.report.finished_at) - Date.parse(payload.report.started_at);
-  const finishedAt = new Date(start + duration).toISOString();
-  return {
-    ...payload,
-    received_at: finishedAt,
-    report: { ...payload.report, started_at: startedAt.toISOString(), finished_at: finishedAt },
-  };
+  return { ...payload, received_at: new Date(start + payload.report.duration_ms).toISOString() };
 }

@@ -309,27 +309,18 @@ describe('placeReport', () => {
   const at = new Date('2026-10-01T11:48:00.000Z');
   const placed = placeReport(payload, at);
 
-  it('starts the report at the given instant and keeps its duration', () => {
-    // The file's own start, which ingestion would otherwise use.
-    expect(payload.report.started_at.slice(0, 10)).toBe('2026-09-21');
-    expect(placed.report.started_at).toBe(at.toISOString());
-    expect(Date.parse(placed.report.finished_at) - Date.parse(placed.report.started_at)).toBe(
-      Date.parse(payload.report.finished_at) - Date.parse(payload.report.started_at),
+  // Ingestion dates a report by its receipt (decision 2026-10-05), so the seed places a report by
+  // receiving it when the planned run would have finished: the planned start plus its duration.
+  it('receives the report at the planned start plus its duration', () => {
+    expect(payload.report.duration_ms).toBeGreaterThan(0);
+    expect(placed.received_at).toBe(
+      new Date(at.getTime() + payload.report.duration_ms).toISOString(),
     );
     expect(placed.report.duration_ms).toBe(payload.report.duration_ms);
   });
 
-  it('receives the report when it finishes', () => {
-    expect(placed.received_at).toBe(placed.report.finished_at);
-  });
-
   it('changes nothing else: results, coverage and run metadata are what ingestion produced', () => {
-    const withoutTimes = (value: typeof payload) => ({
-      ...value,
-      received_at: '',
-      report: { ...value.report, started_at: '', finished_at: '' },
-    });
-    expect(withoutTimes(placed)).toEqual(withoutTimes(payload));
+    expect({ ...placed, received_at: '' }).toEqual({ ...payload, received_at: '' });
     expect(placed.tests).toHaveLength(82);
   });
 

@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 
 import {
-  ParseError,
   type NormalizedCoverage,
   type NormalizedReport,
   type TestFailure,
@@ -77,8 +76,6 @@ export interface IngestPayload {
     readonly platform: string;
     readonly format: ReportFormat;
     readonly duration_ms: number;
-    readonly started_at: string;
-    readonly finished_at: string;
   };
   readonly tests: readonly PayloadTest[];
   readonly coverage: readonly PayloadCoverage[];
@@ -96,21 +93,6 @@ export function testKey(module: string, suite: string, name: string): string {
   return createHash('sha256')
     .update([module, suite, name].join(KEY_SEPARATOR), 'utf8')
     .digest('hex');
-}
-
-// Postgres reads timestamps with a four-digit year; a Date reaches year 275760 but renders
-// anything past 9999 (or before 1) in the extended form the database rejects.
-const MIN_STORABLE_MS = Date.parse('0001-01-01T00:00:00.000Z');
-const MAX_STORABLE_MS = Date.parse('9999-12-31T23:59:59.999Z');
-
-function storableInstant(field: 'started_at' | 'finished_at', ms: number): string {
-  if (!(ms >= MIN_STORABLE_MS && ms <= MAX_STORABLE_MS)) {
-    throw new ParseError(
-      `the report's ${field} falls outside the years 1 to 9999 a timestamp can store`,
-      { field },
-    );
-  }
-  return new Date(ms).toISOString();
 }
 
 // Spec 5.2 rolls errors into `failed`: the results table keeps the distinction, the totals
@@ -148,7 +130,8 @@ export function deriveStatus(totals: Totals): RunStatus {
 
 /**
  * Turns one parsed report into the payload `ingest_report` writes. Pure: the receipt time is an
- * argument, and it stands in for the report's own start only when the file carried none.
+ * argument. The files' own times are left out: `ingest_report` dates the report by its receipt,
+ * from `received_at` minus `duration_ms` to `received_at` (decision 2026-10-05).
  */
 export function normalizeReport(
   meta: ReportMeta,
@@ -160,8 +143,6 @@ export function normalizeReport(
   const resolveLayer = compileLayerRules(project.layer_rules);
   const normalizeIdentity = compileNameNormalization(project.name_normalization);
   const { report } = results;
-  const startedAtMs =
-    report.startedAt === undefined ? receivedAt.getTime() : Date.parse(report.startedAt);
 
   return {
     project_id: project.id,
@@ -181,8 +162,6 @@ export function normalizeReport(
       format: results.format,
       ...summarize(report.tests),
       duration_ms: report.durationMs,
-      started_at: storableInstant('started_at', startedAtMs),
-      finished_at: storableInstant('finished_at', startedAtMs + report.durationMs),
     },
     // The project's normalization runs before the key and the layer, so both are computed from
     // the identity the test has on every platform rather than the one this runner spelled.

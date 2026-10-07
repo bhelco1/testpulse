@@ -74,7 +74,7 @@ describe('buildProgressView', () => {
       'Phase 4 Backfill done',
       'Phase 5 Public site done',
       'Phase 6 Alerts, tracked links, admin in_progress',
-      'Phase 7 Self-reporting and launch planned',
+      'Phase 7 Launch planned',
     ]);
   });
 });

@@ -8,6 +8,6 @@
     { "phase": 4, "title": "Backfill", "status": "done" },
     { "phase": 5, "title": "Public site", "status": "done" },
     { "phase": 6, "title": "Alerts, tracked links, admin", "status": "in_progress" },
-    { "phase": 7, "title": "Self-reporting and launch", "status": "planned" }
+    { "phase": 7, "title": "Launch", "status": "planned" }
   ]
 }

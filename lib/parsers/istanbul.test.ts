@@ -20,6 +20,18 @@ const catchError = (run: () => unknown): unknown => {
   return undefined;
 };
 
+// Vitest's v8 coverage writes the same json-summary as Jest's istanbul (testpulse checks job).
+describe('parseIstanbulSummary against testpulse Vitest v8 coverage-summary.json', () => {
+  it('reads the total lines and branches of the unit run', () => {
+    expect(parseIstanbulSummary(readFixture('testpulse/istanbul/unit.json'))).toEqual({
+      linesCovered: 3125,
+      linesTotal: 3141,
+      branchesCovered: 2385,
+      branchesTotal: 2497,
+    });
+  });
+});
+
 describe('parseIstanbulSummary against routeserve coverage-summary.json', () => {
   it.each([
     ['shared', { linesCovered: 102, linesTotal: 102, branchesCovered: 5, branchesTotal: 5 }],

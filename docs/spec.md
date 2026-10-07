@@ -602,12 +602,12 @@ Held back, drawn nothing rather than guessed, until the design defines them:
 
 `app/how-its-tested/page.tsx` renders on the server as `anon` through `loadHowItsTested` and `loadSiteChrome`, per request (`connection()`), reading the time once from `lib/clock.ts`; `lib/pages/how-its-tested.ts` maps the loader's output to component props as pure, tested functions and holds the page's copy. It follows `design/pages/How Its Tested.dc.html` (v9 item 4, with Bobby's edits of 2026-09-30), its type and spacing taken from the mock as written (the h1 `clamp(40px, 5.5vw, 68px)`, the 34 px section headings and the 21 px lede are the mock's, not `--text-h1`, `--text-h2` and `--text-lede`): the eyebrow, heading and v9's lede, which no longer says testpulse reports here ("…From Phase 7 it will report its results here alongside everything else."), with "Source on GitHub" (`https://github.com/bhelco1/testpulse`, `SOURCE_URL`) and "Read the specification" (`docs/spec.md` on `main` in that repository); 01 Principles, principle 01 ending "…a passing automated test or a recorded manual check"; 02 "What runs, and what it covers": the strategy table (Layer, Tool, Scope; the mock's grid rows, 760 px at least, scrolling sideways in a focusable region) with Unit (90% line floor), Contract (in the unit job, counted as Unit), Component (added at Bobby's request: section 8 has the layer and `projects/testpulse.yaml` gives it the component tests), Integration (local Supabase, anon-client RLS), E2E (seeded pages, a no-JavaScript pass), Accessibility (axe, counted with E2E, and a script in the unit job that checks the contrast of "the design’s token pairs"), Visual (pinned image) and Leak sweep ("walks every page that can show a private project"), each layer row's swatch its section 8 tone and the rows counted under another layer a bordered square, then its three facts; 03 "Why it watches for silence" with its two incidents and their v9 "Now:" lines; 04 "testpulse’s own results" (`SelfReport`). The header marks "How it’s tested" as the current page; the page is titled "How it’s tested · testpulse". The repository is private today and is to be republished publicly under the same name, so its links answer 404 to visitors until then.
 
-The live section reads project `testpulse` through the publishable-key client like any other project (design/data-map.md): `loadProject` on `projects_public`, then the landing card's `loadSummaryInput` and `projectSummary`, and the latest run's `runs.duration_ms`. Production has no testpulse row until Phase 7 (2026-09-28 row), and the loader answers a missing row as `{ self: null }`, never an error or a 404; a database error still fails the page, so an outage never reads as "not reporting". The section is then the mock's designed not-reporting state: StatusBadge "Not reporting yet", "Self-reporting starts in Phase 7.", the paragraph, and "CI runs on GitHub" to the repository's Actions tab, beside "Build progress": a row per phase with its status in icon and word (Done, a check in `--pass`; In progress, a clock in `--ink-2`; Planned, a dashed ring in `--ink-3`), read from `docs/build-progress.json` through `lib/pages/build-progress.ts` (a Zod schema, checked at import) and headed "As of {date}" from the file's own `asOf`, never the clock (decision 2026-09-30). `lib/pages/build-progress.test.ts` holds the file to section 17: its phases are the section's "Phase n" headings in order, it marks done exactly the phases with a "Phase n complete {date}" line, and in progress the phase `CLAUDE.md` names as current, so a phase cannot close without the file changing in the same PR. A registered project with no default-branch CI run reads the same. Once testpulse has a latest run, the section shows the mock's reporting state from data, as the landing card reads a project: the run's StatusBadge, relative time, branch and 7-character SHA; distinct tests with "tests · {failed} failed · {skipped} skipped · {duration}" in the card's words and duration format ("0 s" for the seed's 242 ms, where the SAMPLE reads "1m 48s"), the failed count in `--fail` 600 when above 0; the pyramid's rows (`PyramidRows`, exported from `Pyramid`, in the mock's 6 px row gap); the note "Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit."; and "Full project page →". The seed's testpulse run reads Failed, 1 week ago, `main`, 3 tests, "1 failed · 1 skipped · 0 s", E2E 3 (100%).
+The live section reads project `testpulse` through the publishable-key client like any other project (design/data-map.md): `loadProject` on `projects_public`, then the landing card's `loadSummaryInput` and `projectSummary`, and the latest run's `runs.duration_ms`. Production has no testpulse row until self-reporting goes live (section 17; 2026-09-28 and 2026-10-07 rows), and the loader answers a missing row as `{ self: null }`, never an error or a 404; a database error still fails the page, so an outage never reads as "not reporting". The section is then the mock's designed not-reporting state: StatusBadge "Not reporting yet", "Self-reporting starts in Phase 7.", the paragraph, and "CI runs on GitHub" to the repository's Actions tab, beside "Build progress": a row per phase with its status in icon and word (Done, a check in `--pass`; In progress, a clock in `--ink-2`; Planned, a dashed ring in `--ink-3`), read from `docs/build-progress.json` through `lib/pages/build-progress.ts` (a Zod schema, checked at import) and headed "As of {date}" from the file's own `asOf`, never the clock (decision 2026-09-30). `lib/pages/build-progress.test.ts` holds the file to section 17: its phases are the section's "Phase n" headings in order, it marks done exactly the phases with a "Phase n complete {date}" line, and in progress the phase `CLAUDE.md` names as current, so a phase cannot close without the file changing in the same PR. A registered project with no default-branch CI run reads the same. Once testpulse has a latest run, the section shows the mock's reporting state from data, as the landing card reads a project: the run's StatusBadge, relative time, branch and 7-character SHA; distinct tests with "tests · {failed} failed · {skipped} skipped · {duration}" in the card's words and duration format ("0 s" for the seed's 242 ms, where the SAMPLE reads "1m 48s"), the failed count in `--fail` 600 when above 0; the pyramid's rows (`PyramidRows`, exported from `Pyramid`, in the mock's 6 px row gap); the note "Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit."; and "Full project page →". The seed's testpulse run reads Failed, 1 week ago, `main`, 3 tests, "1 failed · 1 skipped · 0 s", E2E 3 (100%).
 
 Held back, drawn nothing rather than guessed or stated falsely, until the design or the build catches up:
 
 - The footnote under "Build progress", "Read from the specification’s phase list when the site is built.": the list is read from `docs/build-progress.json`, not section 17 (decision 2026-09-30), so the sentence would be false. Question for design (v10 note).
-- The coverage card ("Coverage against the floor", "Lines, per workspace. Floor 90%, scale 0 to 100."): testpulse reports no coverage in the seed, `projects/testpulse.yaml` declares no `coverage_floors`, and the mock's modules (app, ingest, parsers) are not testpulse's; the card with no modules is not drawn. The "SAMPLE STATE" line is the mock's marker and is not built.
+- The coverage card ("Coverage against the floor", "Lines, per workspace. Floor 90%, scale 0 to 100."): testpulse reports no coverage in the seed, and the mock's modules (app, ingest, parsers) are not testpulse's; the card is not drawn. Since 2026-10-07 `projects/testpulse.yaml` declares `coverage_floors: { unit: 90 }` and CI reports the unit run's coverage as module `unit`, so live data exists once self-reporting goes live; drawing the card for one module is a question for design. The "SAMPLE STATE" line is the mock's marker and is not built.
 - An empty latest run's figures in the reporting state (the badge shows "Empty"; the total and sub-line are not drawn here), a stale testpulse (the mock draws no stale state for this section, so the time is not amber), and a latest run with no tests (no pyramid).
 - Live updates. The mock's header draws "Live", but the design gives the page no live behaviour, as on the run and test pages (13.5, 13.6): no subscription and no live indicator.
 - Semantics beyond the drawing: principle and incident titles are `h3` (the mock uses `div`s), styled as drawn; the section numbers are hidden from assistive technology, as `PageSection`'s are.
@@ -666,10 +666,10 @@ Held back:
 | Accessibility | axe via Playwright (`@axe-core/playwright`) | Every public page |
 | Contract | Vitest | Appendix A reporter script against a local server |
 
-Rules: coverage floor 90% lines, enforced in CI via Vitest thresholds. CI runs lint, typecheck, unit, integration, and E2E on every PR. No failure masking. From Phase 7, CI posts its own JUnit and coverage output to the production testpulse instance as project `testpulse`.
+Rules: coverage floor 90% lines, enforced in CI via Vitest thresholds. CI runs lint, typecheck, unit, integration, and E2E on every PR, on every push to `main` and weekly. No failure masking. CI posts its own JUnit and coverage output to the production testpulse instance as project `testpulse` through the shared report action (Appendix A), like any reporting project (section 17, "Self-reporting"); until its key is registered the report steps skip with a notice and CI stays green.
 
 - **Fixed time.** Pages and stats read the current time through `lib/clock.ts`. When `TESTPULSE_FIXED_NOW` is set, it returns that instant, so e2e runs and visual snapshots see the same windows and relative times on every run. The app refuses to start with it set when `VERCEL_ENV` is `production`.
-- **Seed data.** E2E runs against a database seeded by a TypeScript script that sends committed fixtures through the real parsers, `ingest_report` and `backfill_run`; there is no hand-written SQL seed. `projects/testpulse.yaml` (public) is added for the seed and stays unregistered in production until Phase 7.
+- **Seed data.** E2E runs against a database seeded by a TypeScript script that sends committed fixtures through the real parsers, `ingest_report` and `backfill_run`; there is no hand-written SQL seed. `projects/testpulse.yaml` (public) is added for the seed and stays unregistered in production until self-reporting goes live (section 17).
 - **Visual snapshots.** Snapshot PNGs are committed in the repo, without Git LFS, and generated only in the pinned Playwright Docker image, so local and CI render identically. The CI e2e job compares them with no retries.
 - **Lighthouse.** The Phase 5 score is checked manually against the Vercel preview of the phase's closing PR, mobile preset, on the landing page, a project page, a run page and a test page, and the scores are recorded in the Phase 5 evidence.
 
@@ -855,6 +855,17 @@ Evidence recorded 2026-10-02:
 
 Phase 5 complete 2026-10-02.
 
+### Self-reporting (pulled forward from Phase 7, before Phase 6)
+
+Bobby moved self-reporting ahead of Phase 6 on 2026-10-02 (decision 2026-10-07). It is not a numbered phase, so the phase list and `docs/build-progress.json` are unchanged apart from Phase 7's title.
+
+- testpulse CI posts its own results to production as project `testpulse` through the shared report action (`.github/actions/report`, Appendix A): Vitest unit and component JUnit with v8 coverage from job `checks` (module `unit`, platform `node`), Vitest integration JUnit from job `integration` (module `integration`, platform `node`), and Playwright JUnit from job `e2e` (module `e2e`), one report per Playwright project with the project's name as the platform.
+- Every reported test resolves to its layer through `projects/testpulse.yaml` (unit, component, integration, e2e), and `coverage_floors` mirrors the 90% line floor `vitest.config.ts` enforces.
+- With no token (a fork's pull request, or before the key is registered) every report step skips with a notice and CI stays green.
+- `/how-its-tested` shows live data for testpulse itself.
+
+Built 2026-10-07: `scripts/testpulse-report.test.ts` runs the reporter's contract through the script and through the action's step; `tests/ci/reporting.test.ts` holds `ci.yml` to the standard (a report after every test step, `if: always()`, a distinct `(job, module, platform)` each, every Playwright project reported, dependent jobs and the unit step running after a failure, the weekly schedule); `lib/ci/playwright-junit.test.ts` and `scripts/split-playwright-junit.test.ts` cover splitting Playwright's junit file by project; `lib/parsers/junit.test.ts`, `lib/parsers/istanbul.test.ts` and `lib/ingest/layer-rules.test.ts` parse testpulse's own captured Vitest, Playwright and coverage files and resolve their layers. Going live is manual: `project:add testpulse` in production, the `TESTPULSE_TOKEN` secret and `TESTPULSE_URL` variable in this repository, the `v1` tag, then a run whose reports appear on `/p/testpulse` with no testpulse warning in its logs.
+
 ### Phase 6: Alerts, tracked links, admin
 
 - Each alert in section 12 opens and resolves under its defined conditions; the daily stale check runs as a scheduled function.
@@ -865,10 +876,10 @@ Phase 5 complete 2026-10-02.
 - Daily scheduled function (heartbeat, stale check, prune) deployed and observed running on two consecutive days. (manual)
 - Run detail page shows the pruned-results notice for a run with results_pruned_at set.
 
-### Phase 7: Self-reporting and launch
+### Phase 7: Launch
 
-- testpulse CI posts its own Vitest (JUnit reporter), Playwright JUnit, and coverage output to production as project `testpulse`.
-- `/how-its-tested` shows live data for testpulse itself.
+Self-reporting, once part of this phase, moved ahead of Phase 6 (decision 2026-10-07).
+
 - The Raspberry Pi kiosks point at testpulse. (manual)
 - Custom domain configured. (manual)
 - Launch review: every public page read end to end as a hiring manager would, on desktop and phone. (manual)
@@ -1061,22 +1072,39 @@ Phase 5 complete 2026-10-02.
 | 2026-10-04 | `projects/ostomate2.yaml`'s test stack follows Ostomate2's CI: Maestro 2.11.0 (its PR #37) in place of 2.6.1, and a "Static" category, named as the design's Project Page mock names it, listing detekt 1.23.8, ktlint 1.0.1 and SwiftLint, the linters its `android` and `ios` jobs run. SwiftLint carries no version because CI installs Homebrew's latest. A Maestro 2.11.0 fixture is captured from Ostomate2 main run 36965404280 beside the 2.6.1 one, which stays. Production takes the stack change through `npm run projects:sync` after merge | 2.11.0 adds an offsetless `timestamp` to each testsuite and testcase, the first Maestro output testpulse dates by the file rather than by receipt; the fixture and its tests prove the parser reads it as UTC on any machine. ktlint's version is the engine ktlint-gradle 12.1.2 runs by default, since Ostomate2 pins only the plugin. The 2.6.1 fixture stays because it holds the only crashed Maestro flow |
 | 2026-10-05 | `reports.received_at` (migration `20261005003500_report_received_at`): when testpulse received the report, `ingest_report` writing the `received_at` the endpoint already stamped. Not null, with no default, since both writers pass it and a default would date a forgetful writer by the database's clock. A re-post takes the latest receipt, as 5.3's replace makes a new row. Existing rows: a CI report takes its `created_at`, which the same `ingest_report` call set by default and a re-post refreshed, so it is the receipt to within milliseconds and, unlike `finished_at`, does not repeat a replayed file's old time; an imported report takes its `finished_at`, as `backfill_run` now writes, since its `created_at` is the import. The run page's "Received" reads it, as `design/data-map.md` says. The run's span is unchanged (open question 6) | Ostomate2's cached Gradle results (until its PR #36) showed a run started at 00:29 that GitHub created at 19:27; the files alone cannot tell a report's arrival |
 | 2026-10-05 | Each CI report is dated by its receipt, closing open question 6 with option (a) (migration `20261005191648_report_span_by_receipt`): `ingest_report` sets `finished_at` to `received_at` and `started_at` to `received_at − duration_ms` and no longer reads the payload's `started_at` and `finished_at`, which it ignores rather than refuses so the app built before this keeps working; `normalizeReport` stops sending them. The run's rollup is unchanged, the earliest report start to the latest report finish, so a run spans its receipts. `tests.first_seen_at` and `last_seen_at` take the report's start as before, so they follow the receipt. Durations still come from the files. The database is the one place this happens, so every writer (the endpoint, the seed, a direct call) gets it and a payload cannot override it. The file's own start is not kept: nothing reads it. Existing rows: each CI report is re-dated from its stored `received_at` (the latest post's), then each CI run's span and each test's sightings are recomputed from the re-dated reports; imported runs and reports are left as they are. A duration that would start a report before the year 1 is refused by name | Ostomate2's replayed Gradle cache showed a run starting 19 h before GitHub created it, and the files' times also skewed section 11's ordering, windows, staleness and "Last report received" |
+| 2026-10-07 | Self-reporting is pulled forward from Phase 7 to before Phase 6 (Bobby, 2026-10-02). Section 17 gives it its own unnumbered section, as the design track had, and Phase 7 becomes "Launch" | testpulse showing its own results is the strongest evidence the site has, and nothing in Phase 6 is needed for it. A numbered phase would renumber Phases 6 and 7 and their build-progress rows |
+| 2026-10-07 | The reporter ships as a composite action, `.github/actions/report` (`bhelco1/testpulse/.github/actions/report@v1` from other repositories), running `.github/actions/report/testpulse-report.sh`; `scripts/testpulse-report.sh` stays as a byte-for-byte copy for repos that still copy it, and a contract test fails if the two differ. Inputs mirror the script's arguments plus `url` and `token`, and reach the script only as environment variables. The reporter also writes a job-summary line when a report is not sent or gets anything but 200 or 201. Reporting standard v1, wording only | The action needs the script inside its own directory, and the copies already in Ostomate2 and routeserve must keep working until they migrate; a test is a firmer guarantee than a symlink, which a raw download would turn into a path. A summary line is the planned signal for a refused report, and costs one function |
+| 2026-10-07 | testpulse reports as job `checks` module `unit`, job `integration` module `integration`, and job `e2e` module `e2e`, each on platform `node` except e2e, which sends one report per Playwright project with the project's name as the platform, after `scripts/split-playwright-junit.ts` splits Playwright's single junit file by project (`hostname`). Component tests are the `*.test.tsx` renders in the checks job; the coverage floor is `unit: 90`. Integration and e2e run after a failed checks job (`if: !cancelled()`), and so does the unit test step after a failed check; CI gains a weekly schedule | A Playwright test runs in up to five projects; as one report it would count up to five times under one platform and flakiness would compare different viewports. One report per project makes it one test on several platforms, as the standard's identity rules intend. Running dependent jobs after a failure follows rule 2.4 and costs nothing on a public repository's runners; the schedule is rule 2.8 |
 ---
 
 ## Appendix A: reporter script and CI steps
 
-`scripts/testpulse-report.sh`, copied into each reporting repo. It must never fail the build.
+The reporter is `.github/actions/report/testpulse-report.sh`, run by the shared composite action `bhelco1/testpulse/.github/actions/report@v1` (`.github/actions/report/action.yml`). `scripts/testpulse-report.sh` is a byte-for-byte copy for the repos that still copy the script into their own `scripts/`; `scripts/testpulse-report.test.ts` fails if the two differ, and runs its contract tests through both the script and the action's step. It must never fail the build.
 
 ```bash
 #!/usr/bin/env bash
-# Canonical testpulse reporter. Each reporting repo copies this file verbatim into its own
-# scripts/ directory; do not edit a copy, edit this one. It is specified in docs/spec.md,
+# Canonical testpulse reporter, run by the shared action bhelco1/testpulse/.github/actions/report.
+# testpulse keeps a byte-for-byte copy at scripts/testpulse-report.sh for repos that still copy
+# the script into their own scripts/ directory. Do not edit a copy: edit
+# .github/actions/report/testpulse-report.sh in testpulse. It is specified in docs/spec.md,
 # Appendix A, and its contract is proven by scripts/testpulse-report.test.ts.
 # Usage: testpulse-report.sh <job> <module> <platform> <format> <results-glob> [coverage-format coverage-file]
 set -uo pipefail
 
+# A warning annotation is easy to miss on a green job, so a report that was not sent, or that
+# got anything but 200 or 201, also leaves a line in the job summary. A summary that cannot be
+# written is ignored, stderr first so not even the failed redirect prints: reporting never fails
+# the build.
+report="${1:-}/${2:-}/${3:-}"
+summarize() {
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    printf -- '- testpulse: report `%s` %s\n' "$report" "$1" 2>/dev/null >> "$GITHUB_STEP_SUMMARY"
+  fi
+}
+
 if [ -z "${TESTPULSE_TOKEN:-}" ] || [ -z "${TESTPULSE_URL:-}" ]; then
   echo "::notice::testpulse not configured (fork PR or missing secret); skipping"
+  summarize "not sent: TESTPULSE_TOKEN or TESTPULSE_URL is not set (fork PR or missing secret)."
   exit 0
 fi
 
@@ -1087,6 +1115,7 @@ branch="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-}}"
 require_env() {
   if [ -z "$2" ]; then
     echo "::warning::testpulse: missing $1; skipping"
+    summarize "not sent: missing $1."
     exit 0
   fi
 }
@@ -1101,6 +1130,7 @@ job="${1:-}"; module="${2:-}"; platform="${3:-}"; format="${4:-}"; glob="${5:-}"
 cov_format="${6:-}"; cov_file="${7:-}"
 if [ -z "$job" ] || [ -z "$module" ] || [ -z "$platform" ] || [ -z "$format" ] || [ -z "$glob" ]; then
   echo "::warning::testpulse: usage: testpulse-report.sh <job> <module> <platform> <format> <results-glob> [coverage-format coverage-file]; skipping"
+  summarize "not sent: job, module, platform, format and results are all required."
   exit 0
 fi
 
@@ -1161,11 +1191,36 @@ code=${code:-000}
 
 if [ "$code" != "200" ] && [ "$code" != "201" ]; then
   echo "::warning::testpulse report failed (HTTP ${code}): $(head -c 500 "$out" 2>/dev/null)"
+  summarize "got HTTP ${code}, not 200 or 201. The step's warning has the response."
 fi
 exit 0
 ```
 
 Form field names are `junit` or `jest` for results and `jacoco` or `istanbul` for coverage, matching section 6.2.
+
+The action's inputs are the script's arguments in order (`job`, `module`, `platform`, `format`, `results`, and the optional `coverage-format` and `coverage-file`), plus `url` and `token`, which the caller passes from its `TESTPULSE_URL` variable and `TESTPULSE_TOKEN` secret. Inputs reach the script only through the step's environment, never spliced into its command. One step reports one `(job, module, platform)`.
+
+testpulse, `ci.yml`, job `checks`, after the unit test step (the e2e job's eight calls are the same, one per Playwright project):
+
+```yaml
+- name: Report unit and component results to testpulse
+  if: always()
+  uses: ./.github/actions/report
+  with:
+    job: checks
+    module: unit
+    platform: node
+    format: junit
+    results: test-results/junit/unit.xml
+    coverage-format: istanbul
+    coverage-file: coverage/coverage-summary.json
+    url: ${{ vars.TESTPULSE_URL }}
+    token: ${{ secrets.TESTPULSE_TOKEN }}
+```
+
+Another repository uses `bhelco1/testpulse/.github/actions/report@v1` in place of `./.github/actions/report`.
+
+Ostomate2 and routeserve still call their copies of the script, as they did at go-live:
 
 Ostomate2, `ci.yml`, job `android`, after "Upload JUnit results":
 

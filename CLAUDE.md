@@ -50,11 +50,13 @@ lib/alerts/          integrity alerts (spec section 12)
 lib/visibility/      public/private rules shared by queries and UI
 lib/queries/         the only data source for public pages; publishable-key client only
 lib/supabase/        server.ts (secret key, server-only), public.ts (publishable key)
+lib/ci/              CI helpers: splitting Playwright's junit file by project
 components/          built from the design bundle
 projects/            one YAML per reporting project
 fixtures/            real result files captured from reporting projects
 supabase/migrations/ schema and RLS policies
-scripts/             project:add, projects:sync, rotate-key, backfill, reporter
+scripts/             project:add, projects:sync, rotate-key, backfill, reporter copy, junit split
+.github/actions/report/  the shared report action and the canonical reporter script
 tests/e2e/           Playwright
 design/              Claude Design handoff bundle (do not edit by hand)
 docs/                spec, inventory, design brief
@@ -99,6 +101,15 @@ npm run backfill <slug> <file>     import a project's dashboard history as sourc
 - Database access goes through `lib/`; route handlers and components do not build queries inline.
 - Accessibility is part of done: semantic HTML, labelled controls, visible focus, status never by color alone.
 - Comments explain why, not what. No commented-out code.
+
+## testpulse reporting
+
+This project reports test results to testpulse and conforms to the
+[testpulse reporting standard, v1](https://github.com/bhelco1/testpulse/blob/main/docs/reporting-standard.md)
+(in a local checkout: `docs/reporting-standard.md`).
+Any change to CI test jobs, test frameworks or result output is a reporting change:
+follow the standard's Change checklist and update `projects/testpulse.yaml`.
+`tests/ci/reporting.test.ts` checks `.github/workflows/ci.yml` against it.
 
 ## Definition of done for a phase
 

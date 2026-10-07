@@ -64,14 +64,15 @@ A report with coverage and no results is refused. Console output, logs and HTML 
 | Tool | How | Status |
 |---|---|---|
 | Gradle (JVM, Kotlin Multiplatform) | `build/test-results/<task>/TEST-*.xml`, written by every Gradle test task | In use (Ostomate2); fixtures in `fixtures/ostomate2/junit/` |
-| Playwright | `--reporter=junit` with `PLAYWRIGHT_JUNIT_OUTPUT_FILE=<file>` | Fixture in `fixtures/testpulse/junit/`; testpulse itself reports from Phase 7 |
+| Playwright | `--reporter=junit` with `PLAYWRIGHT_JUNIT_OUTPUT_FILE=<file>`, or a `junit` reporter with an `outputFile` in the config. The file holds every project; testpulse's e2e job splits it by project (section 4) | In use (testpulse `e2e`); fixtures in `fixtures/testpulse/junit/` |
 | Maestro | `maestro test --format junit --output <file> <flow>`. When flows run one at a time, give each its own `--output`, or each run overwrites the last | In use (Ostomate2 E2E, Maestro 2.11.0); fixtures for 2.11.0 in `fixtures/ostomate2/junit/maestro-2.11.0/{android-emulator,ios-sim}/e2e/` and for 2.6.1 in `fixtures/ostomate2/junit/{android-emulator,ios-sim}/e2e/` |
-| Vitest | `--reporter=junit --outputFile=<file>` | Not used by any project yet; no fixture |
+| Vitest | `--reporter=junit --outputFile.junit=<file>`. Naming any reporter replaces Vitest's defaults, so name `default` (and on GitHub Actions `github-actions`) beside it | In use (testpulse `checks` and `integration`); fixtures in `fixtures/testpulse/junit/vitest-*.xml` |
 | Jest | `jest --json --outputFile=<file>` | In use (routeserve `test:ci`); fixtures in `fixtures/routeserve/jest/` |
 | JaCoCo | the XML output of the Gradle JaCoCo report task | In use (Ostomate2); fixtures in `fixtures/ostomate2/jacoco/` |
 | istanbul (Jest coverage) | `--coverageReporters=json-summary`, giving `coverage/coverage-summary.json` | In use (routeserve); fixtures in `fixtures/routeserve/istanbul/` |
+| istanbul (Vitest v8 coverage) | `json-summary` in `coverage.reporter`, giving `coverage/coverage-summary.json` | In use (testpulse `checks`); fixture `fixtures/testpulse/istanbul/unit.json` |
 
-A tool with no fixture in `fixtures/` is unproven, today Vitest. The first project to use it MUST get a real, scrubbed result file captured into testpulse's `fixtures/`, with parser tests, before its reports are relied on (section 9).
+A tool with no fixture in `fixtures/` is unproven; today every tool in the table has one. The first project to use an unproven tool MUST get a real, scrubbed result file captured into testpulse's `fixtures/`, with parser tests, before its reports are relied on (section 9).
 
 ### What the parsers require
 
@@ -128,12 +129,13 @@ The project chooses these three values; they are the reporter's first three argu
 
 | Value | Meaning | In use |
 |---|---|---|
-| `job` | the CI job that ran the tests; SHOULD be the workflow's job id | `android`, `ios`, `android-e2e`, `ios-e2e`, `test` |
-| `module` | the Gradle module, workspace or suite group | `shared`, `composeApp`, `e2e`, `apps/backend` |
-| `platform` | where the tests ran | `jvm`, `ios-sim`, `android-emulator`, `node` |
+| `job` | the CI job that ran the tests; SHOULD be the workflow's job id | `android`, `ios`, `android-e2e`, `ios-e2e`, `test`, `checks`, `integration`, `e2e` |
+| `module` | the Gradle module, workspace or suite group | `shared`, `composeApp`, `e2e`, `apps/backend`, `unit`, `integration` |
+| `platform` | where the tests ran | `jvm`, `ios-sim`, `android-emulator`, `node`, `desktop-dark`, `no-js` |
 
 - Each is 1 to 100 characters with no control characters, line breaks included.
 - Every report in one workflow run MUST have a distinct `(job, module, platform)`. Two steps, or two legs of a matrix job, that send the same three values overwrite each other.
+- A test that runs in several configurations in one job is one test on several platforms, and each configuration is its own report. testpulse's e2e job runs each Playwright test in up to four viewport and theme projects plus a no-JavaScript one: it reports each Playwright project with the project's name as the platform, so a test counts once in the totals and pyramid and flakiness compares like with like. One report holding every project would carry each test up to five times under one platform.
 - The values MUST stay stable, because they carry identity and history:
 
 | Renaming | Breaks |
@@ -174,33 +176,32 @@ Result files do not say whether a test is unit, integration or E2E. testpulse re
 - **Reporting MUST NOT turn a red job green.** The report step never changes the outcome of the test step. `if: always()` runs it after a failure without masking the failure. Do not add `continue-on-error` to a test step or `|| true` to a test command to make room for the report.
 - **Reporting does not fail the build.** The reporter always exits 0, whatever happens to the upload ([Appendix A](spec.md#appendix-a-reporter-script-and-ci-steps): "It must never fail the build"; [spec §17 Phase 2](spec.md#phase-2-ostomate2-reporting-live): with testpulse unreachable, CI still passes and logs a warning).
 
-What `scripts/testpulse-report.sh` does today, as proven by `scripts/testpulse-report.test.ts`:
+What the reporter does today, through the shared action or a copied script (section 9), as proven by `scripts/testpulse-report.test.ts`. "Summary" is a line in the GitHub job summary naming the report and the reason:
 
 | Case | Behaviour | Signal |
 |---|---|---|
-| `TESTPULSE_TOKEN` or `TESTPULSE_URL` unset (fork PR, missing secret) | skips | `::notice::` |
-| A GitHub variable that identifies the run is missing | skips | `::warning::` naming it |
-| Fewer than five arguments | skips | `::warning::` with usage |
-| No file matches the results glob | posts meta only; the endpoint answers 400, "one of junit or jest is required" | `::warning::` with status and body |
+| `TESTPULSE_TOKEN` or `TESTPULSE_URL` unset (fork PR, missing secret) | skips | `::notice::`, summary |
+| A GitHub variable that identifies the run is missing | skips | `::warning::` naming it, summary |
+| Fewer than five arguments (or action inputs) | skips | `::warning::` with usage, summary |
+| No file matches the results glob | posts meta only; the endpoint answers 400, "one of junit or jest is required" | `::warning::` with status and body, summary |
 | Coverage file missing | posts results without coverage | none |
-| Timeout, or HTTP 408, 429, 500, 502, 503, 504 | retried up to twice by curl, 30 s per attempt | `::warning::` if still failing |
-| Connection refused or DNS failure | not retried | `::warning::` with `HTTP 000` |
-| 400, 401, 413, 415 | not retried | `::warning::` with status and the first 500 bytes of the body |
-| 422, zero tests | stored | `::warning::` with the body |
+| Timeout, or HTTP 408, 429, 500, 502, 503, 504 | retried up to twice by curl, 30 s per attempt | `::warning::` and summary if still failing |
+| Connection refused or DNS failure | not retried | `::warning::` with `HTTP 000`, summary |
+| 400, 401, 413, 415 | not retried | `::warning::` with status and the first 500 bytes of the body, summary with the status |
+| 422, zero tests | stored | `::warning::` with the body, summary with the status |
 | 200 or 201 | done | none |
 
-Every case exits 0. Today a warning annotation is the only signal of a refused or failed upload, a missing secret is only a notice even on the default branch, a missing coverage file has no signal at all, and testpulse keeps no record of a request it refused.
+Every case exits 0, and a job summary that cannot be written is ignored. A missing secret is still only a notice (and a summary line) even on the default branch, a missing coverage file has no signal at all, and testpulse keeps no record of a request it refused.
 
 Planned (section 10), with the build still never failed by reporting:
 
-- The reporter writes a line to the GitHub job summary when a report is refused or not sent.
 - The reporter warns, with a job-summary line, when a job whose tests passed has no coverage file. It stays silent on a failing job, where a missing coverage file is expected.
 - testpulse alerts on missing reports, on refused reports it received, and on a module whose coverage has not been reported for N runs while its tests keep reporting (Phase 6).
 
 ## 8. Keys and secrets
 
 - Each project has its own API key, `tp_` followed by 43 base64url characters. testpulse stores only its SHA-256 hash ([spec §10](spec.md#10-adding-a-project), [§6.4](spec.md#64-behavior)).
-- The key MUST be stored only as the CI secret `TESTPULSE_TOKEN`. The endpoint is the CI variable `TESTPULSE_URL`, a variable rather than a secret.
+- The key MUST be stored only as the CI secret `TESTPULSE_TOKEN`. The endpoint is the CI variable `TESTPULSE_URL`, a variable rather than a secret. The shared action takes them as its `token` and `url` inputs.
 - The key MUST NOT be printed, echoed, committed, or written to a file that is uploaded as an artifact. The reporter sends it only in the `Authorization` header.
 - Workflows triggered from forks get no secrets; the reporter then skips with a notice, as intended.
 - `npm run project:add <slug>` and `npm run project:rotate-key <slug>`, run in testpulse, print a key once. Rotation invalidates the previous key immediately, so the project's secret is updated straight after. Rotate whenever a key may have been exposed.
@@ -218,12 +219,29 @@ In testpulse ([spec §10](spec.md#10-adding-a-project)):
 In the project's repo:
 
 4. Add `TESTPULSE_TOKEN` as a secret and `TESTPULSE_URL` as a variable.
-5. Copy `scripts/testpulse-report.sh` from testpulse byte for byte. Never edit the copy. The copy stays until the shared action replaces it (section 10).
-6. In the main CI workflow (rule 2.7), add a report step with `if: always()` to every job that runs tests, one reporter call per `(job, module, platform)`, and make sure every test task runs after a failure (rule 2.4).
-7. Add the weekly `schedule:` trigger (rule 2.8).
-8. Add the conformance statement (section 11) to the project's `CLAUDE.md`.
-9. Verify end to end: run the workflow manually (`workflow_dispatch`) on the branch. The run MUST appear on the project page under **All branches** with every expected report, correct totals, the right layers in the pyramid and coverage per module, and the job logs MUST show no testpulse warning.
-10. Verify a red run once: a deliberately failing test on the branch, reverted before merge, is recorded as `failed`, as routeserve's drill was ([spec §17 Phase 3](spec.md#phase-3-routeserve-reporting-live)).
+5. In the main CI workflow (rule 2.7), add a report step with `if: always()` to every job that runs tests, one step per `(job, module, platform)`, and make sure every test task runs after a failure (rule 2.4). Use the shared action:
+
+   ```yaml
+   - name: Report to testpulse
+     if: always()
+     uses: bhelco1/testpulse/.github/actions/report@v1
+     with:
+       job: test                  # the workflow's job id
+       module: packages/shared
+       platform: node
+       format: jest               # or junit
+       results: packages/shared/test-results.json
+       coverage-format: istanbul  # optional, with coverage-file
+       coverage-file: packages/shared/coverage/coverage-summary.json
+       url: ${{ vars.TESTPULSE_URL }}
+       token: ${{ secrets.TESTPULSE_TOKEN }}
+   ```
+
+   The inputs are the reporter's arguments (section 4) plus `url` and `token`; `results` is a file or, for `junit`, a glob. A project that copied `scripts/testpulse-report.sh` before the action existed may keep calling its copy, byte for byte and never edited, until it moves to the action.
+6. Add the weekly `schedule:` trigger (rule 2.8).
+7. Add the conformance statement (section 11) to the project's `CLAUDE.md`.
+8. Verify end to end: run the workflow manually (`workflow_dispatch`) on the branch. The run MUST appear on the project page under **All branches** with every expected report, correct totals, the right layers in the pyramid and coverage per module, and the job logs MUST show no testpulse warning.
+9. Verify a red run once: a deliberately failing test on the branch, reverted before merge, is recorded as `failed`, as routeserve's drill was ([spec §17 Phase 3](spec.md#phase-3-routeserve-reporting-live)).
 
 ### Changing how a project tests or reports
 
@@ -238,13 +256,13 @@ Any change to CI test jobs, test frameworks or result output is a reporting chan
 | Adding or changing a coverage floor | Change CI's enforced floor and `coverage_floors` together. |
 | A suite stops running in CI | Declare it `authored_not_executed`, or delete the suite and any declaration of it. |
 | Renaming a Maestro flow, or aligning its title across platforms | A new title starts a new history (section 4). |
-| testpulse changes `scripts/testpulse-report.sh` | Replace the project's copy with the new file byte for byte. No other edit. |
+| testpulse changes the reporter | With the action, nothing: testpulse moves the action's `v1` tag to the change. With a copied script, replace the copy with the new `scripts/testpulse-report.sh` byte for byte, no other edit, or move to the action. |
 
 For every change:
 
 1. Make the testpulse side (`projects/<slug>.yaml`, fixture, tests) in a testpulse PR, and land it no later than the project change. Until it lands, new results resolve to the default layer (section 5).
 2. Make the project side in the project's repo, under that repo's rules.
-3. Verify with a manual run on the branch, as in onboarding step 9.
+3. Verify with a manual run on the branch, as in onboarding step 8.
 
 ## 10. Planned, not in force
 
@@ -256,8 +274,8 @@ None of these is a v1 requirement. A planned item that adds or tightens a rule b
 | Alerts on refused reports testpulse received, and on a module whose coverage has not been reported for N runs while its tests keep reporting | Planned, Phase 6 | None; the alerts are on the testpulse side. |
 | Carrying missing reports forward from the previous attempt, so a partial re-run shows the whole suite (section 4) | Planned soon, designed with expected reports | The SHOULD on "Re-run all jobs" is lifted. |
 | Combining runs across workflows, so a suite in another workflow can report (motivating case: routeserve's manual `e2e.yml`) | Planned | Rule 2.7 is relaxed. |
-| The reporter writes a job-summary line when a report is refused or not sent, and warns when a passing job has no coverage file (section 7) | Planned; ships with the shared action, and until then in `scripts/testpulse-report.sh` | Update the copied script when it changes (section 9). |
-| A shared GitHub Action, `bhelco1/testpulse/.github/actions/report@v1`, replacing the copied reporter script | Planned, after testpulse is public: a public repository cannot use a private repository's action | A `uses:` step replaces `scripts/testpulse-report.sh`. |
+| The reporter warns, with a job-summary line, when a passing job has no coverage file (section 7). The job-summary line for a report refused or not sent shipped with the shared action on 2026-10-07 | Planned: the reporter cannot yet tell whether the job's tests passed | None with the action; update a copied script when it changes (section 9). |
+| A shared GitHub Action, `bhelco1/testpulse/.github/actions/report@v1`, replacing the copied reporter script | Available from 2026-10-07, once the `v1` tag is created on `main`; testpulse reports through it. Not a rule: a copied script still conforms. The tag is the action's major version, not this standard's | A `uses:` step (section 9) replaces `scripts/testpulse-report.sh`. |
 | The reporter also sends the CI workflow's overall result, so a failure before any results exist (a build break, an emulator that never booted) shows | Under consideration; to be decided with the Phase 6 expected-reports design | None until decided. |
 
 ## 11. Conformance statement
@@ -274,7 +292,7 @@ Any change to CI test jobs, test frameworks or result output is a reporting chan
 follow the standard's Change checklist and update `projects/<slug>.yaml` in testpulse.
 ```
 
-The GitHub link opens once testpulse is public, before Phase 7. Until then a session with both checkouts side by side reads the local path.
+testpulse is public, so the GitHub link opens. A session with both checkouts side by side can read the local path instead.
 
 ## 12. Open questions
 
@@ -285,3 +303,4 @@ None open. A question this standard raises is recorded here, decided in testpuls
 | Version | Date | Change |
 |---|---|---|
 | v1 | 2026-09-30 | First version. Incorporates the decisions of 2026-09-30 on the draft's open questions (failed uploads, missing coverage, several workflows, partial re-runs, reports varying by trigger, running every test after a failure, the conformance link, the shared action, tools with no fixture), on Maestro flow titles, on the versioning process and on CI workflow status. Not yet published to projects. |
+| v1 | 2026-10-07 | Wording only, so still v1: no MUST or SHOULD is added, removed or tightened. The shared action is available and the onboarding checklist shows its `uses:` form, with a copied script still conforming; the reporter writes a job-summary line when a report is refused or not sent; testpulse reports its own results (Vitest and Playwright in use, with fixtures, and each Playwright project its own platform); the conformance link opens now testpulse is public. |

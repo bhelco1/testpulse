@@ -14,6 +14,7 @@ import {
   LayerSchema,
   type LayerTarget,
 } from './layer-rules';
+import { splitJunitByProject } from '../ci/playwright-junit';
 import { parseJunit } from '../parsers';
 import { loadProjectFile, projectFilePath } from '../projects/files';
 
@@ -433,5 +434,57 @@ describe('Ostomate2 acceptance against projects/ostomate2.yaml', () => {
   // composeApp commonTest unit 50, androidHostTest screenshot (visual) 10.
   it('composeApp: unit 50, visual 10', () => {
     expect(countByLayer(resolve, suitesOf('composeApp'))).toEqual({ unit: 50, visual: 10 });
+  });
+});
+
+// testpulse's own reports (reporting standard section 9: test the layer rules against the
+// captured files), with the job, module and platform its ci.yml sends.
+describe('testpulse acceptance against projects/testpulse.yaml', () => {
+  const resolve = compileLayerRules(loadProjectFile(projectFilePath('testpulse')).layer_rules);
+  const casesOf = (file: string, job: string, module: string, platform: string) =>
+    parseJunit([readFileSync(fixture(`testpulse/junit/${file}`), 'utf8')]).tests.map((test) => ({
+      ...target({ job, module, platform, suite: test.suite }),
+      cases: 1,
+    }));
+
+  it('checks/unit/node: the *.test.tsx renders are component 655, everything else unit 1,513', () => {
+    expect(countByLayer(resolve, casesOf('vitest-unit.xml', 'checks', 'unit', 'node'))).toEqual({
+      unit: 1513,
+      component: 655,
+    });
+  });
+
+  it('counts a page render as component and a stylesheet check under components/ as unit', () => {
+    const at = (suite: string) => resolve(target({ job: 'checks', module: 'unit', suite }));
+    expect(at('app/page.test.tsx')).toBe('component');
+    expect(at('components/StatusBadge/StatusBadge.test.tsx')).toBe('component');
+    expect(at('components/testing/stylesheet.test.ts')).toBe('unit');
+    expect(at('scripts/testpulse-report.test.ts')).toBe('unit');
+  });
+
+  it('integration/integration/node: integration 180', () => {
+    expect(
+      countByLayer(
+        resolve,
+        casesOf('vitest-integration.xml', 'integration', 'integration', 'node'),
+      ),
+    ).toEqual({ integration: 180 });
+  });
+
+  it('e2e/e2e/<project>: every test of every Playwright project is e2e', () => {
+    const xml = readFileSync(fixture('testpulse/junit/playwright-e2e.xml'), 'utf8');
+    for (const [project, part] of splitJunitByProject(xml)) {
+      const tests = parseJunit([part]).tests.map((test) => ({
+        ...target({ job: 'e2e', module: 'e2e', platform: project, suite: test.suite }),
+        cases: 1,
+      }));
+      expect(countByLayer(resolve, tests), project).toEqual({ e2e: tests.length });
+    }
+  });
+
+  it('e2e: the seeded Playwright capture is e2e 3', () => {
+    expect(
+      countByLayer(resolve, casesOf('playwright-one-failure.xml', 'e2e', 'e2e', 'chromium')),
+    ).toEqual({ e2e: 3 });
   });
 });

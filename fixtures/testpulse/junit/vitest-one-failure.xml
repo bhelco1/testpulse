@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="3" failures="1" errors="0" time="0.004706583">
+    <testsuite name="lib/zz-deliberate-failure.test.ts" timestamp="2026-10-07T20:13:37.562Z" hostname="Bobbys-MBP.lan" tests="3" failures="1" errors="0" skipped="1" time="0.004706583">
+        <testcase classname="lib/zz-deliberate-failure.test.ts" name="a deliberate failure &gt; passes to capture a passing Vitest JUnit case" time="0.00085425">
+        </testcase>
+        <testcase classname="lib/zz-deliberate-failure.test.ts" name="a deliberate failure &gt; fails to capture a failing Vitest JUnit case" time="0.003058209">
+            <failure message="expected 1 to be 2 // Object.is equality" type="AssertionError">
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ lib/zz-deliberate-failure.test.ts:9:15
+            </failure>
+        </testcase>
+        <testcase classname="lib/zz-deliberate-failure.test.ts" name="a deliberate failure &gt; is skipped to capture a skipped Vitest JUnit case" time="0">
+            <skipped/>
+        </testcase>
+    </testsuite>
+</testsuites>

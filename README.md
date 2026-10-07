@@ -14,8 +14,9 @@ stats, phases, and acceptance criteria.
 ## Status
 
 The build runs in phases 0 to 7 (spec section 17). Phases 0 to 5 and the design track are
-complete, so the public site is built. Alerts, tracked links and admin (Phase 6) are next, and
-self-reporting (Phase 7) is still to come.
+complete, so the public site is built. Self-reporting, pulled forward from Phase 7, is built and
+goes live once testpulse's own key is registered; alerts, tracked links and admin (Phase 6) are
+in progress, and launch (Phase 7) follows.
 
 ## Reporting projects
 
@@ -25,7 +26,8 @@ self-reporting (Phase 7) is still to come.
   link, CI run links, failure text and full commit SHAs are hidden, enforced by row-level
   security in the database (spec section 9). Its internals are deliberately left out of this
   repo's docs.
-- **testpulse**: this repo reports its own results from Phase 7.
+- **testpulse**: public. This repo reports its own results like any other project (see
+  Reporting below).
 
 `docs/PROJECT_INVENTORY.md` describes what each project reports.
 
@@ -100,9 +102,9 @@ The full strategy is spec section 16.
 
 ## Continuous integration
 
-CI runs on every pull request and on every push to `main`. It checks formatting, lints,
+CI runs on every pull request, on every push to `main` and weekly. It checks formatting, lints,
 typechecks, checks for tracked secrets, runs the unit tests with coverage, builds the site, and
-then runs two jobs in parallel: the integration tests against a local Supabase started on the
+then runs two jobs in parallel, even when those checks fail: the integration tests against a local Supabase started on the
 runner, and the end-to-end tests: local Supabase on the runner, seeded from the committed fixtures,
 and Playwright in the pinned Playwright Docker image against the production build, with the clock
 fixed to the seed's instant, desktop and phone widths in light and dark, a no-JavaScript pass,
@@ -110,9 +112,19 @@ axe accessibility checks and visual snapshot comparisons.
 
 ## Reporting
 
-`scripts/testpulse-report.sh` is the canonical reporter (spec Appendix A): each reporting
-project copies it verbatim into its own repo and calls it from CI after every test run. Its
-contract with `POST /api/v1/reports` is proven by `scripts/testpulse-report.test.ts`.
+Projects report through a shared GitHub Action, `.github/actions/report`, which other
+repositories use as `bhelco1/testpulse/.github/actions/report@v1`, one step per job, module and
+platform, with `if: always()`. It runs the canonical reporter, `testpulse-report.sh` beside it
+(spec Appendix A), and never fails the build: a missing token, a missing file or a refused upload
+is a warning and a line in the job summary. `scripts/testpulse-report.sh` is a byte-for-byte copy
+for repos that still copy the script. The contract with `POST /api/v1/reports` is proven through
+both by `scripts/testpulse-report.test.ts`. What a project must send is in
+`docs/reporting-standard.md`.
+
+testpulse reports itself the same way. CI posts the Vitest unit and component results with V8
+coverage from the `checks` job, the Vitest integration results from `integration`, and the
+Playwright results from `e2e`, one report per Playwright project, so a test run at four viewports
+counts once. `tests/ci/reporting.test.ts` holds the workflow to the standard.
 
 ## History
 

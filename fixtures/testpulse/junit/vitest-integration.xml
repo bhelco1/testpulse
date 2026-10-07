@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="180" failures="0" errors="0" time="19.302481166">
+    <testsuite name="lib/backfill/backfill.int.test.ts" timestamp="2026-10-07T20:15:31.451Z" hostname="Bobbys-MBP.lan" tests="21" failures="0" errors="0" skipped="0" time="0.896380125">
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; a first import &gt; inserts the 13 main runs as source backfill, with 26 reports and 26 coverage rows" time="0.17056925">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; a first import &gt; dates each imported report as received at its recorded time, not at the import" time="0.012361333">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; a first import &gt; rolls the first and last runs up from their two reports" time="0.023968">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; a first import &gt; opens no alerts" time="0.00502975">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; running it again &gt; inserts nothing and leaves every row as it was" time="0.0867715">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; a run CI already reported &gt; is left exactly as ingest_report stored it, and the other 12 are imported" time="0.150874334">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; backfill_run validation &gt; refuses a report whose counts do not add up and writes nothing" time="0.00723975">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; backfill_run validation &gt; refuses a helper-checked field, reported under backfill_run and writes nothing" time="0.006653166">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; backfill_run validation &gt; refuses a coverage percentage above 100 and writes nothing" time="0.006479583">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; backfill_run validation &gt; refuses two reports under one key and writes nothing" time="0.004710042">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; backfill_run validation &gt; refuses no reports and writes nothing" time="0.006599459">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; backfill_run validation &gt; refuses a project that does not exist and writes nothing" time="0.006180667">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; backfill_run validation &gt; refuses a SHA that is not hexadecimal and writes nothing" time="0.005248542">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; backfill_run validation &gt; refuses a third decimal on a percentage" time="0.003737459">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; coverage forms &gt; refuses a row with both counts and a percentage" time="0.00403825">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; coverage forms &gt; refuses a row with neither" time="0.003710375">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; coverage forms &gt; refuses a row with a percentage and only one count" time="0.003284125">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; coverage forms &gt; refuses a row with a percentage above 100" time="0.003291625">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; access &gt; refuses backfill_run to anon and authenticated" time="0.009840208">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; access &gt; lets anon read the backfilled runs through runs_public, marked as backfill" time="0.003887291">
+        </testcase>
+        <testcase classname="lib/backfill/backfill.int.test.ts" name="backfill_run with the captured Ostomate2 history (spec section 17, Phase 4) &gt; access &gt; lets anon read backfilled coverage percentages, as it reads all coverage" time="0.013886084">
+        </testcase>
+    </testsuite>
+    <testsuite name="lib/ingest/ingest.int.test.ts" timestamp="2026-10-07T20:15:31.459Z" hostname="Bobbys-MBP.lan" tests="57" failures="0" errors="0" skipped="0" time="1.744022125">
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; authentication &gt; answers 401 with one body for a missing, malformed, and unknown key" time="0.012577958">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; Ostomate2 JVM reports &gt; creates the run, report, tests and results for the shared module (201)" time="0.0736755">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; Ostomate2 JVM reports &gt; replaces the report on a re-post of the same key (200) without duplicating rows" time="0.061072334">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; Ostomate2 JVM reports &gt; attaches a second module of the same CI run to the same run and sums the totals" time="0.064577">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; receipt time (spec section 5.3) &gt; stores when the report was received, not when its files say it finished" time="0.039605958">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; receipt time (spec section 5.3) &gt; takes the latest receipt on a re-post of the same key, as the replaced report is new" time="0.065605417">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; receipt time (spec section 5.3) &gt; lets anon read received_at as it reads every reports column, public or private" time="0.072066167">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; report span by receipt (spec sections 5.2 and 5.3) &gt; dates a report by its receipt when its files are 19 hours older" time="0.029866917">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; report span by receipt (spec sections 5.2 and 5.3) &gt; starts the run at the earliest receipt minus duration across its reports" time="0.023603666">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; report span by receipt (spec sections 5.2 and 5.3) &gt; keeps the latest receipt&apos;s span when a report is re-posted" time="0.029895125">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; report span by receipt (spec sections 5.2 and 5.3) &gt; refuses a duration that would start the report before the year 1, before writing" time="0.014014083">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; run metadata (spec section 6.4) &gt; keeps run_url when a later report for the run omits it" time="0.061217958">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; failures and visibility (spec section 9) &gt; marks the run failed and stores the failure message for a public project" time="0.031849291">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; failures and visibility (spec section 9) &gt; stores the same failure for a private project but hides it from anon" time="0.026637834">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; routeserve Jest reports &gt; strips path_prefix so suites are repo-relative" time="0.030286958">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; routeserve Jest reports &gt; turns the one-failure capture into a failed run with one failed result" time="0.029820042">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; coverage parts &gt; stores JaCoCo line and branch counters under the report module" time="0.040828292">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; coverage parts &gt; stores an istanbul summary" time="0.031016042">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; empty reports (spec sections 6.3 and 12) &gt; stores a zero-test report with run status empty and opens an empty_run alert (422)" time="0.025119167">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; empty reports (spec sections 6.3 and 12) &gt; does not open a second alert when the empty report is re-posted" time="0.018345958">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; empty reports (spec sections 6.3 and 12) &gt; resolves the alert when a non-empty report arrives for the same key" time="0.0536055">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation (400) &gt; names the part for malformed XML" time="0.009523542">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation (400) &gt; names the meta field that failed" time="0.011070042">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation (400) &gt; rejects junit and jest together" time="0.0103055">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation (400) &gt; rejects a body that is not multipart" time="0.012479292">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation (400) &gt; answers 400 naming junit and time for a test duration the results column cannot hold" time="0.039234292">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation (400) &gt; answers 400 naming branch for a meta value Postgres could not store" time="0.009586333">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation (400) &gt; writes nothing for any of them" time="0.003902875">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; size and encoding (spec section 6.5) &gt; answers 413 when content-length exceeds 4 MB" time="0.009319084">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; size and encoding (spec section 6.5) &gt; answers 413 when the parts read exceed 4 MB and no content-length said so" time="0.015595792">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; size and encoding (spec section 6.5) &gt; answers 415 for a gzip body until compression is supported" time="0.016162625">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; rate limit (spec section 6.3) &gt; answers 429 once the key has made 60 requests in the minute" time="0.403498584">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; ingest_report atomicity &gt; writes nothing when a later result is invalid" time="0.017845667">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; ingest_report atomicity &gt; refuses coverage whose covered count exceeds its total before writing" time="0.013262958">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; ingest_report atomicity &gt; raises a clear message for an empty payload" time="0.003957042">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; ingest_report atomicity &gt; raises a clear message for a missing run block" time="0.006427834">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; ingest_report atomicity &gt; raises a clear message for a bad event" time="0.005085167">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp refuses now, which reads the clock or is not finite" time="0.006222834">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp refuses today, which reads the clock or is not finite" time="0.003668459">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp refuses tomorrow, which reads the clock or is not finite" time="0.004140375">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp refuses yesterday, which reads the clock or is not finite" time="0.003442333">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp refuses epoch, which reads the clock or is not finite" time="0.003135709">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp refuses infinity, which reads the clock or is not finite" time="0.001789791">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp refuses -infinity, which reads the clock or is not finite" time="0.003281708">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp refuses allballs, which reads the clock or is not finite" time="0.00376075">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_timestamp reads the form Date.toISOString writes" time="0.002237">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_int refuses one above the maximum with a message naming both bounds" time="0.004705083">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_int refuses one below the minimum with a message naming both bounds" time="0.003961333">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_int refuses a fraction with a message naming both bounds" time="0.004198667">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_text refuses a value over its cap and names the field" time="0.003785416">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; validation helpers by direct RPC &gt; ingest_report names project_id when it is not a UUID" time="0.003695">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="POST /api/v1/reports (spec section 6) &gt; cleanup &gt; removes the throwaway projects, everything they own, and their rate-limit buckets" time="0.030894792">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="Kotlin Multiplatform name normalization &gt; records 110 executions across the two reports of one run" time="0.005960125">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="Kotlin Multiplatform name normalization &gt; keeps 60 distinct tests rows, none carrying the platform in its identity" time="0.003893167">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="Kotlin Multiplatform name normalization &gt; resolves the layers from the normalized suites: unit 50, visual 10" time="0.003615334">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="Kotlin Multiplatform name normalization &gt; links every iOS result to the tests row its JVM counterpart created" time="0.010138208">
+        </testcase>
+        <testcase classname="lib/ingest/ingest.int.test.ts" name="Kotlin Multiplatform name normalization &gt; leaves a project without normalization exactly as it was: 110 rows, unit 100" time="0.0179745">
+        </testcase>
+    </testsuite>
+    <testsuite name="lib/projects/repo.int.test.ts" timestamp="2026-10-07T20:15:31.472Z" hostname="Bobbys-MBP.lan" tests="16" failures="0" errors="0" skipped="0" time="1.834314375">
+        <testcase classname="lib/projects/repo.int.test.ts" name="project repository (spec section 10) &gt; addProject &gt; inserts the YAML columns and stores only the hash of the key it returns" time="0.04714875">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="project repository (spec section 10) &gt; addProject &gt; refuses a slug that already has a row" time="0.007366708">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="project repository (spec section 10) &gt; syncProjects &gt; updates rows from files, leaves the key hash alone, and reports skipped and orphaned slugs" time="0.048912292">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="project repository (spec section 10) &gt; rotateProjectKey &gt; replaces the stored hash so the old key stops matching and the new one matches" time="0.013140958">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="project repository (spec section 10) &gt; rotateProjectKey &gt; fails for a slug with no row" time="0.0036515">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="project repository (spec section 10) &gt; as anon (spec section 9) &gt; reads the project through projects_public without api_key_hash" time="0.004719666">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; project:add inserts the row and prints a key whose hash is what was stored" time="0.217251959">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; project:add exits non-zero with one line when the slug already exists" time="0.214291042">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; project:add exits non-zero without a slug argument" time="0.136306292">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; projects:sync updates known slugs, skips unknown ones, and keeps the key" time="0.207751333">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; projects:sync exits non-zero and changes nothing when any file is invalid" time="0.16097">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; project:rotate-key prints a new key whose hash replaces the stored one" time="0.198656708">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; project:rotate-key exits non-zero for an unknown slug" time="0.181424125">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; project-add.ts exits non-zero when the database settings are missing" time="0.14271575">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; projects-sync.ts exits non-zero when the database settings are missing" time="0.144208">
+        </testcase>
+        <testcase classname="lib/projects/repo.int.test.ts" name="scripts against the local database (spec section 10) &gt; project-rotate-key.ts exits non-zero when the database settings are missing" time="0.083356292">
+        </testcase>
+    </testsuite>
+    <testsuite name="lib/queries/projects.int.test.ts" timestamp="2026-10-07T20:15:31.474Z" hostname="Bobbys-MBP.lan" tests="5" failures="0" errors="0" skipped="0" time="0.178193833">
+        <testcase classname="lib/queries/projects.int.test.ts" name="the public read client against local Supabase (spec sections 9 and 15) &gt; is refused direct access to projects" time="0.006275375">
+        </testcase>
+        <testcase classname="lib/queries/projects.int.test.ts" name="the public read client against local Supabase (spec sections 9 and 15) &gt; is refused direct access to runs" time="0.011130084">
+        </testcase>
+        <testcase classname="lib/queries/projects.int.test.ts" name="the public read client against local Supabase (spec sections 9 and 15) &gt; reads projects_public and runs_public" time="0.012562875">
+        </testcase>
+        <testcase classname="lib/queries/projects.int.test.ts" name="the public read client against local Supabase (spec sections 9 and 15) &gt; gets no failure text for a private project and gets it for a public one" time="0.003885708">
+        </testcase>
+        <testcase classname="lib/queries/projects.int.test.ts" name="the public read client against local Supabase (spec sections 9 and 15) &gt; listPublicProjects returns both projects with repo_url hidden for the private one" time="0.006332167">
+        </testcase>
+    </testsuite>
+    <testsuite name="lib/seed/seed.int.test.ts" timestamp="2026-10-07T20:15:31.475Z" hostname="Bobbys-MBP.lan" tests="40" failures="0" errors="0" skipped="0" time="7.41375625">
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; runs as npm run db:seed, prints a summary and never an API key" time="0.001090334">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; writes identical data every time: only row IDs, created_at and key hashes differ" time="0.025672084">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; registers the three projects, as anon sees them" time="0.004821292">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; stores the planned runs per project and source, with their statuses" time="0.000264958">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; counts each Ostomate2 test once across the JVM and the iOS simulator" time="0.000738875">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; shows anon the failure text of the public project" time="0.009291042">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; hides the private project failure text from anon while it exists" time="0.008544375">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; imports the Ostomate2 history as backfill runs with percentage coverage" time="0.000474">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; stores count-form coverage from JaCoCo and istanbul on CI runs" time="0.000165541">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; stores every report as received when it finished" time="0.000723792">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; places every run inside the 90 days before now, CI runs in the last 30" time="0.000725166">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; leaves testpulse stale and the reporting projects fresh at now" time="0.000178334">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; gives the section 11 stats something to find, read as anon at now" time="0.295707917">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; loads the three seed projects in dashboard order" time="0.000355916">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; takes each latest run from the default branch and CI, with its pass rate in distinct tests" time="0.000498875">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; shows a private project its counts, with the commit cut to 7 characters by runs_public" time="0.000972833">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; counts distinct tests per layer in the latest run, declared suites excluded" time="0.000383833">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; takes each module’s latest coverage, walking back past a report that had none" time="0.001261209">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; gives each card its own green streaks, runs in 30 days and time to green" time="0.003739">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; derives health from public data: testpulse stale 13 days, the others healthy" time="0.0002535">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; combines the three into the headline tiles, with no time to green or green streak" time="0.001151208">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; gives each card its latest run’s reports, failing tests and duration" time="0.000484583">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; feeds the 3 newest default-branch CI runs across projects, in distinct tests" time="0.0006845">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; landing headline and project cards at SEED_NOW, read as anon (spec sections 11, 13) &gt; maps to the landing page’s tiles as the seed’s hand-computed values read" time="0.00205375">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; finds no page for a slug that is not registered" time="0.003419583">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; carries each project’s own fields, a private one without its repository link" time="0.0001865">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; summarises the latest run as the landing card does" time="0.00010325">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; lists the latest run’s reports and its failing test" time="0.000153667">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; trends Ostomate2 over its last 30 runs on main: 21, CI and imported, 8 of them CI" time="0.000177583">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; trends routeserve over its ten CI runs on main, red four times" time="0.000163084">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; lists routeserve’s one flaky test, which failed and passed on one commit" time="0.000079917">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; lists CI runs newest first, the default branch unless asked for all" time="0.508452084">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; loads a public run with its per-test rows on both platforms" time="0.096202291">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; shows a public project’s failure text, which RLS allows" time="0.055919834">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; loads a test’s history on both platforms" time="0.038967459">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; loads the flaky test’s history with the flip marked on both of its cells" time="0.026630708">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; reads testpulse’s own results for /how-its-tested" time="0.026081417">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; a private project’s pages hold no failure text, repository links or full SHAs &gt; in the run page of its failed latest run, which still shows the failing row" time="0.3408895">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; a private project’s pages hold no failure text, repository links or full SHAs &gt; in the project page" time="0.001400542">
+        </testcase>
+        <testcase classname="lib/seed/seed.int.test.ts" name="the e2e seed against local Supabase (spec section 16) &gt; project, run and test pages at SEED_NOW, read as anon (spec sections 9, 11, 13) &gt; a private project’s pages hold no failure text, repository links or full SHAs &gt; in the failing test’s history" time="0.017526833">
+        </testcase>
+    </testsuite>
+    <testsuite name="lib/stats/load.int.test.ts" timestamp="2026-10-07T20:15:31.478Z" hostname="Bobbys-MBP.lan" tests="5" failures="0" errors="0" skipped="0" time="0.421374083">
+        <testcase classname="lib/stats/load.int.test.ts" name="loadStatsInput over backfilled history and a CI run (spec section 17, Phase 4) &gt; loads, with the anon client, the 13 backfilled main runs and the main CI run only" time="0.001407458">
+        </testcase>
+        <testcase classname="lib/stats/load.int.test.ts" name="loadStatsInput over backfilled history and a CI run (spec section 17, Phase 4) &gt; puts the backfilled runs and the CI run in every trend" time="0.001400125">
+        </testcase>
+        <testcase classname="lib/stats/load.int.test.ts" name="loadStatsInput over backfilled history and a CI run (spec section 17, Phase 4) &gt; gives time-to-green and flakiness the CI run alone" time="0.000777875">
+        </testcase>
+        <testcase classname="lib/stats/load.int.test.ts" name="loadStatsInput over backfilled history and a CI run (spec section 17, Phase 4) &gt; adds the latest CI run before the window for time to green, passing over newer backfilled runs" time="0.012187083">
+        </testcase>
+        <testcase classname="lib/stats/load.int.test.ts" name="loadStatsInput over backfilled history and a CI run (spec section 17, Phase 4) &gt; refuses a slug with no project" time="0.004218791">
+        </testcase>
+    </testsuite>
+    <testsuite name="lib/visibility/private-heads.int.test.ts" timestamp="2026-10-07T20:15:31.478Z" hostname="Bobbys-MBP.lan" tests="2" failures="0" errors="0" skipped="0" time="0.25741325">
+        <testcase classname="lib/visibility/private-heads.int.test.ts" name="a private run that failed on two platforms, read as anon &gt; holds the hidden values in the database (positive control, secret key)" time="0.01413575">
+        </testcase>
+        <testcase classname="lib/visibility/private-heads.int.test.ts" name="a private run that failed on two platforms, read as anon &gt; shows a head per failing platform, and no failure text, full SHA or run URL" time="0.103870416">
+        </testcase>
+    </testsuite>
+    <testsuite name="lib/visibility/realtime.int.test.ts" timestamp="2026-10-07T20:15:31.478Z" hostname="Bobbys-MBP.lan" tests="2" failures="0" errors="0" skipped="0" time="5.82450475">
+        <testcase classname="lib/visibility/realtime.int.test.ts" name="Realtime publication (spec section 4 and section 9) &gt; publishes exactly public.reports" time="0.845647792">
+        </testcase>
+        <testcase classname="lib/visibility/realtime.int.test.ts" name="Realtime as the browser sees it, with the publishable key &gt; delivers the reports insert for public and private projects, and nothing else" time="1.765283125">
+        </testcase>
+    </testsuite>
+    <testsuite name="lib/visibility/rls.int.test.ts" timestamp="2026-10-07T20:15:31.479Z" hostname="Bobbys-MBP.lan" tests="32" failures="0" errors="0" skipped="0" time="0.732522375">
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; reads result_failures only for public projects" time="0.010341083">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; is refused direct access to projects and runs" time="0.009435083">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; reads projects_public without api_key_hash and with repo_url hidden for private projects" time="0.007662167">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; reads runs_public with run_url hidden and commit_sha truncated for private projects" time="0.004950291">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; is refused all access to tracked_links" time="0.003484833">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; is refused all access to visits" time="0.004050042">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; is refused all access to alerts" time="0.004873667">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; is refused all access to heartbeats" time="0.005187">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; is refused all access to rate_limit_buckets" time="0.004973375">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; cannot insert into reports" time="0.006824875">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as anon &gt; cannot write through the public views" time="0.014287625">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on projects" time="0.014502959">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on runs" time="0.0115125">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on reports" time="0.006264458">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on tests" time="0.004753583">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on results" time="0.005269625">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on result_failures" time="0.008342125">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on coverage" time="0.011556">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on alerts" time="0.008338875">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on tracked_links" time="0.009003083">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on visits" time="0.003730625">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on heartbeats" time="0.005061292">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on rate_limit_buckets" time="0.003776417">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on projects_public" time="0.003306416">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; is refused select on runs_public" time="0.003333583">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; as authenticated &gt; cannot insert into heartbeats" time="0.004402667">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; constraints &gt; rejects a duplicate (project_id, ci_run_id, run_attempt) run" time="0.005010458">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; constraints &gt; rejects a duplicate (run_id, job, module, platform) report" time="0.003699">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; constraints &gt; rejects a run status outside passed, failed, empty" time="0.003652416">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; constraints &gt; rejects a project visibility outside public, private" time="0.008728709">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; cleanup &gt; deleting a project cascades to everything it owns" time="0.037097875">
+        </testcase>
+        <testcase classname="lib/visibility/rls.int.test.ts" name="schema and row-level security (spec sections 5 and 9) &gt; cleanup &gt; deleting a tracked link keeps its visits and detaches them" time="0.006643">
+        </testcase>
+    </testsuite>
+</testsuites>

@@ -1065,18 +1065,32 @@ Phase 5 complete 2026-10-02.
 
 ## Appendix A: reporter script and CI steps
 
-`scripts/testpulse-report.sh`, copied into each reporting repo. It must never fail the build.
+The reporter is `.github/actions/report/testpulse-report.sh`, run by the shared composite action `bhelco1/testpulse/.github/actions/report@v1` (`.github/actions/report/action.yml`). `scripts/testpulse-report.sh` is a byte-for-byte copy for the repos that still copy the script into their own `scripts/`; `scripts/testpulse-report.test.ts` fails if the two differ, and runs its contract tests through both the script and the action's step. It must never fail the build.
 
 ```bash
 #!/usr/bin/env bash
-# Canonical testpulse reporter. Each reporting repo copies this file verbatim into its own
-# scripts/ directory; do not edit a copy, edit this one. It is specified in docs/spec.md,
+# Canonical testpulse reporter, run by the shared action bhelco1/testpulse/.github/actions/report.
+# testpulse keeps a byte-for-byte copy at scripts/testpulse-report.sh for repos that still copy
+# the script into their own scripts/ directory. Do not edit a copy: edit
+# .github/actions/report/testpulse-report.sh in testpulse. It is specified in docs/spec.md,
 # Appendix A, and its contract is proven by scripts/testpulse-report.test.ts.
 # Usage: testpulse-report.sh <job> <module> <platform> <format> <results-glob> [coverage-format coverage-file]
 set -uo pipefail
 
+# A warning annotation is easy to miss on a green job, so a report that was not sent, or that
+# got anything but 200 or 201, also leaves a line in the job summary. A summary that cannot be
+# written is ignored, stderr first so not even the failed redirect prints: reporting never fails
+# the build.
+report="${1:-}/${2:-}/${3:-}"
+summarize() {
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    printf -- '- testpulse: report `%s` %s\n' "$report" "$1" 2>/dev/null >> "$GITHUB_STEP_SUMMARY"
+  fi
+}
+
 if [ -z "${TESTPULSE_TOKEN:-}" ] || [ -z "${TESTPULSE_URL:-}" ]; then
   echo "::notice::testpulse not configured (fork PR or missing secret); skipping"
+  summarize "not sent: TESTPULSE_TOKEN or TESTPULSE_URL is not set (fork PR or missing secret)."
   exit 0
 fi
 
@@ -1087,6 +1101,7 @@ branch="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-}}"
 require_env() {
   if [ -z "$2" ]; then
     echo "::warning::testpulse: missing $1; skipping"
+    summarize "not sent: missing $1."
     exit 0
   fi
 }
@@ -1101,6 +1116,7 @@ job="${1:-}"; module="${2:-}"; platform="${3:-}"; format="${4:-}"; glob="${5:-}"
 cov_format="${6:-}"; cov_file="${7:-}"
 if [ -z "$job" ] || [ -z "$module" ] || [ -z "$platform" ] || [ -z "$format" ] || [ -z "$glob" ]; then
   echo "::warning::testpulse: usage: testpulse-report.sh <job> <module> <platform> <format> <results-glob> [coverage-format coverage-file]; skipping"
+  summarize "not sent: job, module, platform, format and results are all required."
   exit 0
 fi
 
@@ -1161,11 +1177,36 @@ code=${code:-000}
 
 if [ "$code" != "200" ] && [ "$code" != "201" ]; then
   echo "::warning::testpulse report failed (HTTP ${code}): $(head -c 500 "$out" 2>/dev/null)"
+  summarize "got HTTP ${code}, not 200 or 201. The step's warning has the response."
 fi
 exit 0
 ```
 
 Form field names are `junit` or `jest` for results and `jacoco` or `istanbul` for coverage, matching section 6.2.
+
+The action's inputs are the script's arguments in order (`job`, `module`, `platform`, `format`, `results`, and the optional `coverage-format` and `coverage-file`), plus `url` and `token`, which the caller passes from its `TESTPULSE_URL` variable and `TESTPULSE_TOKEN` secret. Inputs reach the script only through the step's environment, never spliced into its command. One step reports one `(job, module, platform)`.
+
+testpulse, `ci.yml`, job `checks`, after the unit test step (the e2e job's eight calls are the same, one per Playwright project):
+
+```yaml
+- name: Report unit and component results to testpulse
+  if: always()
+  uses: ./.github/actions/report
+  with:
+    job: checks
+    module: unit
+    platform: node
+    format: junit
+    results: test-results/junit/unit.xml
+    coverage-format: istanbul
+    coverage-file: coverage/coverage-summary.json
+    url: ${{ vars.TESTPULSE_URL }}
+    token: ${{ secrets.TESTPULSE_TOKEN }}
+```
+
+Another repository uses `bhelco1/testpulse/.github/actions/report@v1` in place of `./.github/actions/report`.
+
+Ostomate2 and routeserve still call their copies of the script, as they did at go-live:
 
 Ostomate2, `ci.yml`, job `android`, after "Upload JUnit results":
 

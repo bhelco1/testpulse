@@ -1,0 +1,66 @@
+name: testpulse report
+description: >
+  Posts one report of test results, and optionally coverage, to testpulse: one call per
+  (job, module, platform). Runs the canonical reporter, testpulse-report.sh beside this file, and
+  never fails the build: an unset token, a missing file or a refused upload is a notice or a
+  warning and a job-summary line. Call it with `if: always()` (reporting standard, rule 2.2).
+  Usage is in docs/reporting-standard.md, section 9.
+
+inputs:
+  job:
+    description: The CI job that ran the tests; the workflow's job id (standard section 4).
+    required: true
+  module:
+    description: The module, workspace or suite group the tests belong to (standard section 4).
+    required: true
+  platform:
+    description: Where the tests ran, for example node, jvm or ios-sim (standard section 4).
+    required: true
+  format:
+    description: The results format, junit or jest.
+    required: true
+  results:
+    description: >
+      The results file, or a glob of files for junit, relative to the workspace. Paths with spaces
+      are not supported.
+    required: true
+  coverage-format:
+    description: The coverage format, istanbul or jacoco. Optional.
+    required: false
+    default: ''
+  coverage-file:
+    description: The coverage file. Optional; a missing file sends the results without coverage.
+    required: false
+    default: ''
+  url:
+    description: The testpulse base URL, from the TESTPULSE_URL variable.
+    required: false
+    default: ''
+  token:
+    description: >
+      The project's API key, from the TESTPULSE_TOKEN secret. It is sent only in the
+      Authorization header and never printed. Empty (a fork's pull request) skips with a notice.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    # Inputs reach the script as environment variables, never spliced into the command, so no
+    # value a caller passes can be read as shell.
+    - name: Report to testpulse
+      shell: bash
+      env:
+        TESTPULSE_URL: ${{ inputs.url }}
+        TESTPULSE_TOKEN: ${{ inputs.token }}
+        TESTPULSE_JOB: ${{ inputs.job }}
+        TESTPULSE_MODULE: ${{ inputs.module }}
+        TESTPULSE_PLATFORM: ${{ inputs.platform }}
+        TESTPULSE_FORMAT: ${{ inputs.format }}
+        TESTPULSE_RESULTS: ${{ inputs.results }}
+        TESTPULSE_COVERAGE_FORMAT: ${{ inputs.coverage-format }}
+        TESTPULSE_COVERAGE_FILE: ${{ inputs.coverage-file }}
+      run: >
+        bash "$GITHUB_ACTION_PATH/testpulse-report.sh"
+        "$TESTPULSE_JOB" "$TESTPULSE_MODULE" "$TESTPULSE_PLATFORM" "$TESTPULSE_FORMAT"
+        "$TESTPULSE_RESULTS" "$TESTPULSE_COVERAGE_FORMAT" "$TESTPULSE_COVERAGE_FILE"

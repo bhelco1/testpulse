@@ -31,13 +31,22 @@ test_stack:
   - category: Coverage
     items: [V8 via Vitest]
 
-# Phase 7 posts Vitest unit and component results from the checks job, Vitest integration
-# results from the integration job, and Playwright results from the e2e job (spec section 16).
+# CI (.github/workflows/ci.yml) posts, through .github/actions/report: Vitest unit and component
+# results with coverage from the checks job (module unit), Vitest integration results from the
+# integration job (module integration), and Playwright results from the e2e job (module e2e), one
+# report per Playwright project with the project's name as the platform. Component tests are the
+# React renders in jsdom, every *.test.tsx; the contract, stylesheet and other .test.ts files in
+# the checks job are unit tests.
 layer_rules:
   - match: { job: e2e }
     layer: e2e
   - match: { job: integration }
     layer: integration
-  - match: { suite: 'components/**' }
+  - match: { job: checks, suite: '**/*.test.tsx' }
     layer: component
   - default: unit
+
+# The floor vitest.config.ts enforces on the unit run (coverage.thresholds.lines), keyed by the
+# module whose report carries the coverage.
+coverage_floors:
+  unit: 90

@@ -27,6 +27,53 @@ describe('splitJunitByProject against fixtures/testpulse/junit/playwright-one-fa
   });
 });
 
+// The full suite as the e2e job runs it: every project in one file (fixtures/README.md).
+describe('splitJunitByProject against fixtures/testpulse/junit/playwright-e2e.xml', () => {
+  const whole = fixture('testpulse/junit/playwright-e2e.xml');
+  const split = splitJunitByProject(whole);
+
+  it('finds the eight Playwright projects with tests, in the order they ran', () => {
+    expect([...split.keys()]).toEqual([
+      'desktop-dark',
+      'desktop-light',
+      'phone-dark',
+      'phone-light',
+      'no-js',
+      'harness',
+      'leak-sweep',
+      'live',
+    ]);
+  });
+
+  it('keeps every suite exactly once, byte for byte', () => {
+    const parts = [...split.values()].flatMap(suitesOf);
+    expect(parts).toHaveLength(suitesOf(whole).length);
+    expect(new Set(parts)).toEqual(new Set(suitesOf(whole)));
+  });
+
+  it('gives each project its own tests, each test once, as the parser reads them', () => {
+    const counts = Object.fromEntries(
+      [...split].map(([project, xml]) => {
+        const tests = parseJunit([xml]).tests;
+        expect(new Set(tests.map(({ suite, name }) => `${suite}\u0000${name}`)).size).toBe(
+          tests.length,
+        );
+        return [project, tests.length];
+      }),
+    );
+    expect(counts).toEqual({
+      'desktop-dark': 186,
+      'desktop-light': 186,
+      'phone-dark': 186,
+      'phone-light': 186,
+      'no-js': 106,
+      harness: 18,
+      'leak-sweep': 7,
+      live: 7,
+    });
+  });
+});
+
 // Rewrites of the captured file, as the junit parser's edge-case tests do: no hand-written sample.
 describe('splitJunitByProject edge cases derived from the capture', () => {
   const [passing, failing] = suitesOf(oneFailure) as [string, string];

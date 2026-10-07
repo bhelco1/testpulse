@@ -144,8 +144,50 @@ The failing testcase carries `failure@message`, the full Playwright error in CDA
 
 The failure stack and the attachment paths contain the absolute path of the local checkout. One plain string substitution was applied: that path prefix was replaced with `/home/runner/work/testpulse/testpulse/` (3 replacements: 1 in the failure stack, 2 in `system-out` attachment paths, where the relative `../../../../../../` that Playwright emits in front of the absolute path was left as is). Nothing else changed; a grep for `bobbyhelco`, `/Users/`, `/private/tmp` and `@gmail` finds nothing.
 
+### Vitest and V8 coverage
+
+testpulse's own Vitest output, captured 2026-10-07 on a developer machine from branch `feat/report-action-self-reporting` (based on `main` at `1a2f637`, with that branch's work in progress), with the reporters and output paths `.github/workflows/ci.yml` uses. Vitest writes the machine's name in every `testsuite`'s `hostname` (`Bobbys-MBP.lan`); it names a developer machine and nothing else, and stays because fixtures are never edited after capture.
+
+```
+npm run test -- --reporter=default --reporter=github-actions --reporter=junit --outputFile.junit=test-results/junit/unit.xml
+npm run test:int -- --reporter=default --reporter=github-actions --reporter=junit --outputFile.junit=test-results/junit/integration.xml
+```
+
+The integration run was against local Supabase after `npm run db:reset` and `npm run db:seed`. The failing file came from a temporary `lib/zz-deliberate-failure.test.ts` holding one passing test, one that fails on `expect(1).toBe(2)` and one `it.skip`, run alone and deleted straight after; it is not committed:
+
+```
+npx vitest run lib/zz-deliberate-failure.test.ts --reporter=default --reporter=junit --outputFile.junit=<scratch>/vitest-one-failure.xml
+```
+
+| Path | Source | Counts |
+|---|---|---|
+| `testpulse/junit/vitest-unit.xml` | `test-results/junit/unit.xml`, the `checks` job's unit and component run (`testsuites` wrapper, one `testsuite` per test file, `classname` the repo-relative file, `name` the describe path joined by ` > `) | 138 suites, 2,168 tests, all passed; 655 in `*.test.tsx` files |
+| `testpulse/junit/vitest-integration.xml` | `test-results/junit/integration.xml`, the `integration` job's run | 9 suites, 180 tests, all passed |
+| `testpulse/junit/vitest-one-failure.xml` | the deliberate failure above | 1 suite, 3 tests: 1 passed, 1 failed, 1 skipped (`<skipped/>`, `time="0"`) |
+| `testpulse/istanbul/unit.json` | `coverage/coverage-summary.json` from the unit run, Vitest's V8 coverage with the `json-summary` reporter | 189 files + `total`: lines 3125/3141, branches 2385/2497 |
+
+The failing case carries `failure@message` and `failure@type="AssertionError"`, and its text is Vitest's diff and the repo-relative location, with no absolute path. A grep of the three XML files for `/Users/`, `/private/`, `/home/` and `@gmail` finds nothing.
+
+Scrub: `unit.json` is keyed by each source file's absolute path. One plain string substitution was applied: the local checkout's path (under the developer's home directory) was replaced with `/home/runner/work/testpulse/testpulse/` (189 replacements). Nothing else changed; the file was re-parsed as JSON and the totals above are the raw ones. The JUnit files needed no scrub.
+
+### Playwright, the full suite
+
+Playwright's junit output for the whole e2e suite, as `playwright.config.ts` writes it (`test-results/e2e-junit.xml`, every project in one file), captured 2026-10-07 from the same branch as the Vitest files, run in the pinned Playwright image against local Supabase after `npm run db:reset`, `npm run db:seed` and `npm run test:int`:
+
+```
+npm run test:e2e:docker
+```
+
+Each `testsuite` is one spec file in one Playwright project, the project's name in `hostname`; each `testcase` has the spec file as `classname` and the describe path joined by ` › ` as `name`, with no project in it. So one test appears once per project that runs it, which is why the e2e job splits the file by project before reporting (`lib/ci/playwright-junit.ts`).
+
+| Path | Source | Counts |
+|---|---|---|
+| `testpulse/junit/playwright-e2e.xml` | `test-results/e2e-junit.xml` | 36 suites in 8 projects, 882 testcases of 235 distinct tests: 879 passed, 1 failed, 2 errors. Per project: desktop-dark, desktop-light, phone-dark and phone-light 186 each, no-js 106, harness 18, leak-sweep 7, live 7 |
+
+Three tests failed in this local run, on a machine running the amd64 image under emulation: two `phone-dark` run-page tests hit the 30 s test timeout, which Playwright writes as `<error message="Test timeout of 30000ms exceeded." type="Error">`, and one `desktop-light` test-history chart check found no marks within its 5 s wait (`<failure>`). They are kept as captured: they are the only `<error>` elements in the fixtures. Their `system-out` lists attachment paths relative to `test-results/`, and their stacks name `/work/`, the container's workspace. No scrub was needed: a grep for `bobby`, `/Users/`, `@gmail`, `sb_secret`, `sb_publishable` and `eyJhb` finds nothing.
+
 ## Known gaps
 
-- No fixture contains a JUnit `<error>` element or a Jest `pending`/`todo`/`skipped` result. The parser tests for those branches rewrite one of the captured files in the test itself and say so in a comment; no hand-written result sample exists.
+- No fixture contains a Jest `pending`/`todo`/`skipped` result. The only JUnit `<error>` elements are Playwright's timeouts in `testpulse/junit/playwright-e2e.xml`. The parser tests for the Jest branches, and the older `<error>` tests, rewrite one of the captured files in the test itself and say so in a comment; no hand-written result sample exists.
 - Ostomate2's Gradle JUnit has never failed in CI: the nearest failed run (35643254905) failed in `xcodebuild` and Maestro, not in JUnit. The failing JUnit fixtures are Playwright's and the one crashed iOS Maestro flow, which uses `<failure>` despite its `status="ERROR"` attribute, so it adds no `<error>` element.
 - Ostomate2 `shared` iOS-simulator results were not captured: the local copy was stale (July, 79 tests) and did not match HEAD.

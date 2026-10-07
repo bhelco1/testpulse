@@ -1,0 +1,1956 @@
+<testsuites id="" name="" tests="882" failures="1" skipped="0" errors="2" time="1234.200412">
+<testsuite name="home.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-dark" tests="18" failures="0" skipped="0" time="190.787" errors="0">
+<testcase name="the landing page › leads with the lede as its h1 and the portfolio’s 1,186 tests" classname="home.spec.ts" time="10.433">
+</testcase>
+<testcase name="the landing page › reads the total and its note as one sentence" classname="home.spec.ts" time="10.491">
+</testcase>
+<testcase name="the landing page › shows the four portfolio tiles" classname="home.spec.ts" time="9.845">
+</testcase>
+<testcase name="the landing page › shows no time to green or green streak" classname="home.spec.ts" time="10.333">
+</testcase>
+<testcase name="the landing page › lists the three projects’ cards under “Latest default-branch run”" classname="home.spec.ts" time="9.964">
+</testcase>
+<testcase name="the landing page › gives Ostomate2 its passed run, layers, coverage and reports" classname="home.spec.ts" time="12.916">
+</testcase>
+<testcase name="the landing page › gives RouteServe a private failed card naming its failing test" classname="home.spec.ts" time="12.97">
+</testcase>
+<testcase name="the landing page › gives testpulse a stale failed card with no coverage" classname="home.spec.ts" time="11.579">
+</testcase>
+<testcase name="the landing page › lists the three newest default-branch runs, a private one untitled" classname="home.spec.ts" time="13.209">
+</testcase>
+<testcase name="the landing page › says what the site is and links to how it is tested" classname="home.spec.ts" time="10.524">
+</testcase>
+<testcase name="the landing page › dates the last report in the footer" classname="home.spec.ts" time="7.709">
+</testcase>
+<testcase name="the landing page › does not scroll sideways" classname="home.spec.ts" time="7.033">
+</testcase>
+<testcase name="Tab reaches every control, each with a visible focus ring" classname="home.spec.ts" time="10.774">
+</testcase>
+<testcase name="goes live: “Live” in the header and the feed’s live note" classname="home.spec.ts" time="8.665">
+</testcase>
+<testcase name="has no serious or critical axe violations" classname="home.spec.ts" time="18.307">
+</testcase>
+<testcase name="follows the system theme" classname="home.spec.ts" time="6.768">
+</testcase>
+<testcase name="matches its visual snapshot" classname="home.spec.ts" time="11.488">
+</testcase>
+<testcase name="the landing page leaks nothing of a private project › in the HTML and every response of /" classname="home.spec.ts" time="7.779">
+</testcase>
+</testsuite>
+<testsuite name="how-its-tested.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-dark" tests="16" failures="0" skipped="0" time="85.019" errors="0">
+<testcase name="the page › is titled and marked current in the header" classname="how-its-tested.spec.ts" time="6.798">
+</testcase>
+<testcase name="the page › opens with the heading, the lede and the repository links" classname="how-its-tested.spec.ts" time="5.741">
+</testcase>
+<testcase name="the page › lists the five principles, 01 ending with a recorded manual check" classname="how-its-tested.spec.ts" time="4.547">
+</testcase>
+<testcase name="the page › says what runs, layer by layer, with nothing from Phase 6" classname="how-its-tested.spec.ts" time="4.671">
+</testcase>
+<testcase name="the page › tells the two incidents as the pages show them today" classname="how-its-tested.spec.ts" time="4.374">
+</testcase>
+<testcase name="the page › shows testpulse’s latest run from the seed" classname="how-its-tested.spec.ts" time="4.49">
+</testcase>
+<testcase name="the page › dates the last report in the footer" classname="how-its-tested.spec.ts" time="3.514">
+</testcase>
+<testcase name="the page › does not scroll sideways" classname="how-its-tested.spec.ts" time="3.195">
+</testcase>
+<testcase name="the page › shows neither “Live” nor “Offline”" classname="how-its-tested.spec.ts" time="3.212">
+</testcase>
+<testcase name="answers 200" classname="how-its-tested.spec.ts" time="3.06">
+</testcase>
+<testcase name="no serious or critical axe violations" classname="how-its-tested.spec.ts" time="10.271">
+</testcase>
+<testcase name="the page follows the system theme" classname="how-its-tested.spec.ts" time="3.156">
+</testcase>
+<testcase name="Tab reaches every control, each with a visible focus ring" classname="how-its-tested.spec.ts" time="5.691">
+</testcase>
+<testcase name="links to the page resolve › from the header" classname="how-its-tested.spec.ts" time="8.858">
+</testcase>
+<testcase name="links to the page resolve › from the landing page’s About button" classname="how-its-tested.spec.ts" time="6.359">
+</testcase>
+<testcase name="matches its visual snapshot" classname="how-its-tested.spec.ts" time="7.082">
+</testcase>
+</testsuite>
+<testsuite name="privacy.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-dark" tests="14" failures="0" skipped="0" time="86.031" errors="0">
+<testcase name="the privacy page › answers 200 with its title, eyebrow and heading" classname="privacy.spec.ts" time="4.942">
+</testcase>
+<testcase name="the privacy page › says what is recorded today: nothing, dated by its copy" classname="privacy.spec.ts" time="5.343">
+</testcase>
+<testcase name="the privacy page › states nothing of the Phase 6 visit logging, which is not built" classname="privacy.spec.ts" time="5.504">
+</testcase>
+<testcase name="the privacy page › sets no cookie and stores nothing until the toggle" classname="privacy.spec.ts" time="4.528">
+</testcase>
+<testcase name="the privacy page › shows neither “Live” nor “Offline”" classname="privacy.spec.ts" time="4.943">
+</testcase>
+<testcase name="the privacy page › marks its own footer link as the current page, in ink" classname="privacy.spec.ts" time="5.25">
+</testcase>
+<testcase name="the privacy page › dates the last report in the footer" classname="privacy.spec.ts" time="4.525">
+</testcase>
+<testcase name="the privacy page › does not scroll sideways" classname="privacy.spec.ts" time="4.74">
+</testcase>
+<testcase name="the privacy page › has no serious or critical axe violations" classname="privacy.spec.ts" time="11.983">
+</testcase>
+<testcase name="the privacy page › follows the system theme" classname="privacy.spec.ts" time="4.976">
+</testcase>
+<testcase name="the privacy page › Tab reaches every control, each with a visible focus ring" classname="privacy.spec.ts" time="6.306">
+</testcase>
+<testcase name="the privacy page › matches its visual snapshot" classname="privacy.spec.ts" time="5.979">
+</testcase>
+<testcase name="the footer’s Privacy link › resolves from every kind of page" classname="privacy.spec.ts" time="9.014">
+</testcase>
+<testcase name="the footer’s Privacy link › opens the privacy page from the landing page" classname="privacy.spec.ts" time="7.998">
+</testcase>
+</testsuite>
+<testsuite name="project.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-dark" tests="39" failures="0" skipped="0" time="339.059" errors="0">
+<testcase name="Ostomate2 (public) › names the project, its breadcrumbs, health and repository" classname="project.spec.ts" time="11.438">
+</testcase>
+<testcase name="Ostomate2 (public) › introduces itself with its description and its dev stack" classname="project.spec.ts" time="10.728">
+</testcase>
+<testcase name="Ostomate2 (public) › leads the latest run with its 142 tests and the 30-day pass rate" classname="project.spec.ts" time="10.785">
+</testcase>
+<testcase name="Ostomate2 (public) › wraps Time to green below the other stats only on a phone" classname="project.spec.ts" time="5.917">
+</testcase>
+<testcase name="Ostomate2 (public) › shows the pyramid, coverage and reports, with no declared suites" classname="project.spec.ts" time="10.201">
+</testcase>
+<testcase name="Ostomate2 (public) › charts its last 30 runs on main: 21 for pass rate, its 8 CI runs for the rest" classname="project.spec.ts" time="10.666">
+</testcase>
+<testcase name="Ostomate2 (public) › lists the 8 CI runs on main, newest first, and no flaky tests" classname="project.spec.ts" time="10.935">
+</testcase>
+<testcase name="Ostomate2 (public) › adds the pull request run under All branches" classname="project.spec.ts" time="12.424">
+</testcase>
+<testcase name="RouteServe (private) › marks the project private, with no repository link" classname="project.spec.ts" time="7.814">
+</testcase>
+<testcase name="RouteServe (private) › leads with the failed latest run and its failing test, no failure text" classname="project.spec.ts" time="11.476">
+</testcase>
+<testcase name="RouteServe (private) › charts its ten CI runs on main, four of them red, and the strip of all ten" classname="project.spec.ts" time="8.127">
+</testcase>
+<testcase name="RouteServe (private) › marks the four red runs on each chart that has a value there" classname="project.spec.ts" time="13.857">
+</testcase>
+<testcase name="RouteServe (private) › shows its pyramid, declared suite, three floors and the flaky test" classname="project.spec.ts" time="9.205">
+</testcase>
+<testcase name="RouteServe (private) › lists 10 untitled runs on main" classname="project.spec.ts" time="8.746">
+</testcase>
+<testcase name="RouteServe (private) › loads 20 more across all branches" classname="project.spec.ts" time="15.914">
+</testcase>
+<testcase name="ostomate2: Tab reaches every control, each with a visible focus ring" classname="project.spec.ts" time="13.619">
+</testcase>
+<testcase name="ostomate2: no serious or critical axe violations" classname="project.spec.ts" time="15.699">
+</testcase>
+<testcase name="ostomate2: goes live, with the run list&apos;s note" classname="project.spec.ts" time="9.56">
+</testcase>
+<testcase name="ostomate2: a chart&apos;s table links each run to its page" classname="project.spec.ts" time="8.846">
+</testcase>
+<testcase name="ostomate2: the page follows the system theme" classname="project.spec.ts" time="2.639">
+</testcase>
+<testcase name="ostomate2: every chart&apos;s y labels are whole and distinct" classname="project.spec.ts" time="4.424">
+</testcase>
+<testcase name="ostomate2: no value label overlaps a floor label" classname="project.spec.ts" time="4.244">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="project.spec.ts" time="2.512">
+</testcase>
+<testcase name="ostomate2: matches its visual snapshot" classname="project.spec.ts" time="5.583">
+</testcase>
+<testcase name="routeserve: Tab reaches every control, each with a visible focus ring" classname="project.spec.ts" time="6.563">
+</testcase>
+<testcase name="routeserve: no serious or critical axe violations" classname="project.spec.ts" time="12.509">
+</testcase>
+<testcase name="routeserve: goes live, with the run list&apos;s note" classname="project.spec.ts" time="4.668">
+</testcase>
+<testcase name="routeserve: a chart&apos;s table links each run to its page" classname="project.spec.ts" time="6.326">
+</testcase>
+<testcase name="routeserve: the page follows the system theme" classname="project.spec.ts" time="3.168">
+</testcase>
+<testcase name="routeserve: every chart&apos;s y labels are whole and distinct" classname="project.spec.ts" time="7.195">
+</testcase>
+<testcase name="routeserve: no value label overlaps a floor label" classname="project.spec.ts" time="8.897">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="project.spec.ts" time="4.386">
+</testcase>
+<testcase name="routeserve: matches its visual snapshot" classname="project.spec.ts" time="12.097">
+</testcase>
+<testcase name="an unknown project › is served with HTTP 404 and the Not found title" classname="project.spec.ts" time="5.336">
+</testcase>
+<testcase name="an unknown project › shows the designed Not found page" classname="project.spec.ts" time="5.47">
+</testcase>
+<testcase name="an unknown project › has no serious or critical axe violations" classname="project.spec.ts" time="11.698">
+</testcase>
+<testcase name="a private project’s page leaks nothing › the values it must not show exist in what the seed sends" classname="project.spec.ts" time="0.009">
+</testcase>
+<testcase name="a private project’s page leaks nothing › in the HTML and every response of /p/routeserve, through both list filters" classname="project.spec.ts" time="18.074">
+</testcase>
+<testcase name="a private project’s page leaks nothing › while the same capture finds a public project’s repository link" classname="project.spec.ts" time="7.304">
+</testcase>
+</testsuite>
+<testsuite name="run.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-dark" tests="41" failures="0" skipped="0" time="420.101" errors="0">
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › titles the run and its breadcrumbs" classname="run.spec.ts" time="10.55">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › gives its status, time, branch, linked commit, event, start and CI run" classname="run.spec.ts" time="10.197">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › counts 142 distinct tests, not the 192 executions" classname="run.spec.ts" time="7.362">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › lists its three reports with their results, time received and duration" classname="run.spec.ts" time="8.506">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › filters by status in tests, and by layer; the first 50 rows show" classname="run.spec.ts" time="7.374">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › shows all 142 rows, 50 on two platforms, each timed by its slowest" classname="run.spec.ts" time="10.387">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › narrows to a layer, and to nothing with “Clear filters”" classname="run.spec.ts" time="9.912">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › reads failed, a week ago, with 3 tests: 1 passed, 1 failed, 1 skipped" classname="run.spec.ts" time="6.37">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › names the failing test in the failed-run banner" classname="run.spec.ts" time="6.205">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › “Show failure” filters to Failed and focuses the failing row" classname="run.spec.ts" time="7.085">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › opens the failure with its message and stack trace, and no head" classname="run.spec.ts" time="6.956">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › closes and reopens the failure" classname="run.spec.ts" time="7.552">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › heads the page “Run {id}” with a lock, the commit short and unlinked, no CI" classname="run.spec.ts" time="11.822">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › says in the banner which test failed, where, and that its text is hidden" classname="run.spec.ts" time="10.779">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › counts 1,041 distinct tests, not the 1,045 executions" classname="run.spec.ts" time="11.031">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › leads with the failing, flaky test and the private notice, no failure text" classname="run.spec.ts" time="10.46">
+</testcase>
+<testcase name="ostomate2: no serious or critical axe violations" classname="run.spec.ts" time="20.987">
+</testcase>
+<testcase name="ostomate2: the page follows the system theme" classname="run.spec.ts" time="7.887">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="run.spec.ts" time="7.969">
+</testcase>
+<testcase name="ostomate2: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="6.02">
+</testcase>
+<testcase name="ostomate2: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="14.708">
+</testcase>
+<testcase name="ostomate2: matches its visual snapshot" classname="run.spec.ts" time="11.285">
+</testcase>
+<testcase name="testpulse: no serious or critical axe violations" classname="run.spec.ts" time="14.851">
+</testcase>
+<testcase name="testpulse: the page follows the system theme" classname="run.spec.ts" time="6.133">
+</testcase>
+<testcase name="testpulse: the page does not scroll sideways" classname="run.spec.ts" time="7.271">
+</testcase>
+<testcase name="testpulse: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="6.767">
+</testcase>
+<testcase name="testpulse: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="8.843">
+</testcase>
+<testcase name="testpulse: matches its visual snapshot" classname="run.spec.ts" time="8.675">
+</testcase>
+<testcase name="routeserve: no serious or critical axe violations" classname="run.spec.ts" time="21.07">
+</testcase>
+<testcase name="routeserve: the page follows the system theme" classname="run.spec.ts" time="9.367">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="run.spec.ts" time="9.369">
+</testcase>
+<testcase name="routeserve: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="9.265">
+</testcase>
+<testcase name="routeserve: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="18.381">
+</testcase>
+<testcase name="routeserve: matches its visual snapshot" classname="run.spec.ts" time="13.222">
+</testcase>
+<testcase name="links to a run page resolve › from each run row on the project page" classname="run.spec.ts" time="9.443">
+</testcase>
+<testcase name="links to a run page resolve › from the landing feed, to a pull request run by its title" classname="run.spec.ts" time="13.865">
+</testcase>
+<testcase name="a run that is not there › answers 404 for a malformed ID, an unknown ID, another project’s run and an unknown project" classname="run.spec.ts" time="10.862">
+</testcase>
+<testcase name="a run that is not there › shows the designed run kind for a run the project does not have" classname="run.spec.ts" time="11.085">
+</testcase>
+<testcase name="a run that is not there › shows the project kind for a run URL naming no project" classname="run.spec.ts" time="10.102">
+</testcase>
+<testcase name="a private run page leaks nothing › in the HTML and every response of RouteServe’s failed run, through its filters" classname="run.spec.ts" time="13.546">
+</testcase>
+<testcase name="a private run page leaks nothing › while the same capture finds a public run’s failure text and repository" classname="run.spec.ts" time="6.58">
+</testcase>
+</testsuite>
+<testsuite name="test-history.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-dark" tests="58" failures="0" skipped="0" time="402.222" errors="0">
+<testcase name="an Ostomate2 test on one platform (public) › names the test, its suite, layer and breadcrumbs" classname="test-history.spec.ts" time="5.569">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › tiles its 9 runs since 24 Sep, none failed or flaky, 68 ms each" classname="test-history.spec.ts" time="6.077">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › draws one strip of its 9 runs, all passed, and opens on the latest" classname="test-history.spec.ts" time="6.401">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › charts its duration over the 8 default-branch CI runs" classname="test-history.spec.ts" time="4.964">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › the oldest cell is 8 runs ago" classname="test-history.spec.ts" time="6.451">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › names the test and draws a strip per platform" classname="test-history.spec.ts" time="7.565">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › tiles the JVM’s median with the simulator’s beside it" classname="test-history.spec.ts" time="7.317">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › charts a line per platform, giving the range across both" classname="test-history.spec.ts" time="5.071">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › moves the selected run with the keyboard, in both strips" classname="test-history.spec.ts" time="8.428">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › opens the selected run" classname="test-history.spec.ts" time="8.322">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › names the test and marks it flaky" classname="test-history.spec.ts" time="8.037">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › tiles 11 runs, 4 failed, 1 commit flipped" classname="test-history.spec.ts" time="8.01">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip with diamonds and the failures with squares" classname="test-history.spec.ts" time="7.368">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip of one commit on both of its cells and opens on the latest failure" classname="test-history.spec.ts" time="7.36">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › charts its 10 runs on main, leaving the pull request out" classname="test-history.spec.ts" time="4.333">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › selects a flaky run by pointer and a passing one by keyboard" classname="test-history.spec.ts" time="8.11">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › names the test and shows its one failed run" classname="test-history.spec.ts" time="6.322">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › tiles its one failed run and notes it is the only one" classname="test-history.spec.ts" time="5.816">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › draws the duration chart’s one-run state, with no caption" classname="test-history.spec.ts" time="4.697">
+</testcase>
+<testcase name="ostomate2-one-platform: no serious or critical axe violations" classname="test-history.spec.ts" time="14.732">
+</testcase>
+<testcase name="ostomate2-one-platform: the page follows the system theme" classname="test-history.spec.ts" time="5.524">
+</testcase>
+<testcase name="ostomate2-one-platform: the page does not scroll sideways" classname="test-history.spec.ts" time="4.819">
+</testcase>
+<testcase name="ostomate2-one-platform: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="5.047">
+</testcase>
+<testcase name="ostomate2-one-platform: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="10.315">
+</testcase>
+<testcase name="ostomate2-one-platform: matches its visual snapshot" classname="test-history.spec.ts" time="9.936">
+</testcase>
+<testcase name="ostomate2-two-platforms: no serious or critical axe violations" classname="test-history.spec.ts" time="14.504">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page follows the system theme" classname="test-history.spec.ts" time="6.779">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page does not scroll sideways" classname="test-history.spec.ts" time="5.643">
+</testcase>
+<testcase name="ostomate2-two-platforms: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="5.292">
+</testcase>
+<testcase name="ostomate2-two-platforms: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="7.441">
+</testcase>
+<testcase name="ostomate2-two-platforms: matches its visual snapshot" classname="test-history.spec.ts" time="5.661">
+</testcase>
+<testcase name="routeserve-flaky: no serious or critical axe violations" classname="test-history.spec.ts" time="8.466">
+</testcase>
+<testcase name="routeserve-flaky: the page follows the system theme" classname="test-history.spec.ts" time="3.272">
+</testcase>
+<testcase name="routeserve-flaky: the page does not scroll sideways" classname="test-history.spec.ts" time="2.386">
+</testcase>
+<testcase name="routeserve-flaky: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.581">
+</testcase>
+<testcase name="routeserve-flaky: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="4.965">
+</testcase>
+<testcase name="routeserve-flaky: matches its visual snapshot" classname="test-history.spec.ts" time="4.907">
+</testcase>
+<testcase name="testpulse-failing: no serious or critical axe violations" classname="test-history.spec.ts" time="7.45">
+</testcase>
+<testcase name="testpulse-failing: the page follows the system theme" classname="test-history.spec.ts" time="3.043">
+</testcase>
+<testcase name="testpulse-failing: the page does not scroll sideways" classname="test-history.spec.ts" time="2.474">
+</testcase>
+<testcase name="testpulse-failing: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.424">
+</testcase>
+<testcase name="testpulse-failing: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="4.41">
+</testcase>
+<testcase name="testpulse-failing: matches its visual snapshot" classname="test-history.spec.ts" time="3.976">
+</testcase>
+<testcase name="ostomate2-one-platform: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="7.261">
+</testcase>
+<testcase name="ostomate2-two-platforms: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="7.839">
+</testcase>
+<testcase name="routeserve-flaky: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="8.153">
+</testcase>
+<testcase name="an Ostomate2 test that holds at 352 ms › labels its duration axis 0.34 s, 0.35 s and 0.36 s, once each" classname="test-history.spec.ts" time="7.251">
+</testcase>
+<testcase name="links to a test history resolve › from a passing row of the run page" classname="test-history.spec.ts" time="15.664">
+</testcase>
+<testcase name="links to a test history resolve › from every row of a run page, without scripts too" classname="test-history.spec.ts" time="10.684">
+</testcase>
+<testcase name="links to a test history resolve › from the failure’s “Test history” link" classname="test-history.spec.ts" time="10.191">
+</testcase>
+<testcase name="a test that is not there › answers 404 for a malformed, unknown or other project’s key and an unknown project" classname="test-history.spec.ts" time="10.03">
+</testcase>
+<testcase name="a test that is not there › shows the designed test kind for a key the project does not have" classname="test-history.spec.ts" time="8.688">
+</testcase>
+<testcase name="a test that is not there › the test kind links to the overview" classname="test-history.spec.ts" time="8.814">
+</testcase>
+<testcase name="a test that is not there › shows the project kind for a test URL naming no project" classname="test-history.spec.ts" time="9.598">
+</testcase>
+<testcase name="a private test history leaks nothing › the values it must not show exist in what the seed sends" classname="test-history.spec.ts" time="0.012">
+</testcase>
+<testcase name="a private test history leaks nothing › in the HTML and every response of the flaky test’s page, through its timeline" classname="test-history.spec.ts" time="8.481">
+</testcase>
+<testcase name="a private test history leaks nothing › in every response of the run it opens" classname="test-history.spec.ts" time="10.004">
+</testcase>
+<testcase name="a private test history leaks nothing › while the same capture finds a public run’s failure text and repository" classname="test-history.spec.ts" time="7.287">
+</testcase>
+</testsuite>
+<testsuite name="home.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-light" tests="18" failures="0" skipped="0" time="138.286" errors="0">
+<testcase name="the landing page › leads with the lede as its h1 and the portfolio’s 1,186 tests" classname="home.spec.ts" time="7.57">
+</testcase>
+<testcase name="the landing page › reads the total and its note as one sentence" classname="home.spec.ts" time="7.553">
+</testcase>
+<testcase name="the landing page › shows the four portfolio tiles" classname="home.spec.ts" time="7.16">
+</testcase>
+<testcase name="the landing page › shows no time to green or green streak" classname="home.spec.ts" time="7.426">
+</testcase>
+<testcase name="the landing page › lists the three projects’ cards under “Latest default-branch run”" classname="home.spec.ts" time="7.479">
+</testcase>
+<testcase name="the landing page › gives Ostomate2 its passed run, layers, coverage and reports" classname="home.spec.ts" time="9.352">
+</testcase>
+<testcase name="the landing page › gives RouteServe a private failed card naming its failing test" classname="home.spec.ts" time="8.971">
+</testcase>
+<testcase name="the landing page › gives testpulse a stale failed card with no coverage" classname="home.spec.ts" time="8.346">
+</testcase>
+<testcase name="the landing page › lists the three newest default-branch runs, a private one untitled" classname="home.spec.ts" time="9.083">
+</testcase>
+<testcase name="the landing page › says what the site is and links to how it is tested" classname="home.spec.ts" time="7.304">
+</testcase>
+<testcase name="the landing page › dates the last report in the footer" classname="home.spec.ts" time="5.493">
+</testcase>
+<testcase name="the landing page › does not scroll sideways" classname="home.spec.ts" time="4.784">
+</testcase>
+<testcase name="Tab reaches every control, each with a visible focus ring" classname="home.spec.ts" time="7.719">
+</testcase>
+<testcase name="goes live: “Live” in the header and the feed’s live note" classname="home.spec.ts" time="6.723">
+</testcase>
+<testcase name="has no serious or critical axe violations" classname="home.spec.ts" time="14.482">
+</testcase>
+<testcase name="follows the system theme" classname="home.spec.ts" time="4.328">
+</testcase>
+<testcase name="matches its visual snapshot" classname="home.spec.ts" time="8.752">
+</testcase>
+<testcase name="the landing page leaks nothing of a private project › in the HTML and every response of /" classname="home.spec.ts" time="5.761">
+</testcase>
+</testsuite>
+<testsuite name="how-its-tested.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-light" tests="16" failures="0" skipped="0" time="97.081" errors="0">
+<testcase name="the page › is titled and marked current in the header" classname="how-its-tested.spec.ts" time="5.497">
+</testcase>
+<testcase name="the page › opens with the heading, the lede and the repository links" classname="how-its-tested.spec.ts" time="5.8">
+</testcase>
+<testcase name="the page › lists the five principles, 01 ending with a recorded manual check" classname="how-its-tested.spec.ts" time="5.291">
+</testcase>
+<testcase name="the page › says what runs, layer by layer, with nothing from Phase 6" classname="how-its-tested.spec.ts" time="5.588">
+</testcase>
+<testcase name="the page › tells the two incidents as the pages show them today" classname="how-its-tested.spec.ts" time="4.623">
+</testcase>
+<testcase name="the page › shows testpulse’s latest run from the seed" classname="how-its-tested.spec.ts" time="6.249">
+</testcase>
+<testcase name="the page › dates the last report in the footer" classname="how-its-tested.spec.ts" time="4.401">
+</testcase>
+<testcase name="the page › does not scroll sideways" classname="how-its-tested.spec.ts" time="4.95">
+</testcase>
+<testcase name="the page › shows neither “Live” nor “Offline”" classname="how-its-tested.spec.ts" time="4.607">
+</testcase>
+<testcase name="answers 200" classname="how-its-tested.spec.ts" time="4.536">
+</testcase>
+<testcase name="no serious or critical axe violations" classname="how-its-tested.spec.ts" time="12.096">
+</testcase>
+<testcase name="the page follows the system theme" classname="how-its-tested.spec.ts" time="3.607">
+</testcase>
+<testcase name="Tab reaches every control, each with a visible focus ring" classname="how-its-tested.spec.ts" time="5.798">
+</testcase>
+<testcase name="links to the page resolve › from the header" classname="how-its-tested.spec.ts" time="8.844">
+</testcase>
+<testcase name="links to the page resolve › from the landing page’s About button" classname="how-its-tested.spec.ts" time="7.48">
+</testcase>
+<testcase name="matches its visual snapshot" classname="how-its-tested.spec.ts" time="7.714">
+</testcase>
+</testsuite>
+<testsuite name="privacy.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-light" tests="14" failures="0" skipped="0" time="73.102" errors="0">
+<testcase name="the privacy page › answers 200 with its title, eyebrow and heading" classname="privacy.spec.ts" time="4.767">
+</testcase>
+<testcase name="the privacy page › says what is recorded today: nothing, dated by its copy" classname="privacy.spec.ts" time="5.206">
+</testcase>
+<testcase name="the privacy page › states nothing of the Phase 6 visit logging, which is not built" classname="privacy.spec.ts" time="5.06">
+</testcase>
+<testcase name="the privacy page › sets no cookie and stores nothing until the toggle" classname="privacy.spec.ts" time="4.384">
+</testcase>
+<testcase name="the privacy page › shows neither “Live” nor “Offline”" classname="privacy.spec.ts" time="4.917">
+</testcase>
+<testcase name="the privacy page › marks its own footer link as the current page, in ink" classname="privacy.spec.ts" time="5.019">
+</testcase>
+<testcase name="the privacy page › dates the last report in the footer" classname="privacy.spec.ts" time="3.407">
+</testcase>
+<testcase name="the privacy page › does not scroll sideways" classname="privacy.spec.ts" time="3.438">
+</testcase>
+<testcase name="the privacy page › has no serious or critical axe violations" classname="privacy.spec.ts" time="9.514">
+</testcase>
+<testcase name="the privacy page › follows the system theme" classname="privacy.spec.ts" time="3.836">
+</testcase>
+<testcase name="the privacy page › Tab reaches every control, each with a visible focus ring" classname="privacy.spec.ts" time="5.434">
+</testcase>
+<testcase name="the privacy page › matches its visual snapshot" classname="privacy.spec.ts" time="5.956">
+</testcase>
+<testcase name="the footer’s Privacy link › resolves from every kind of page" classname="privacy.spec.ts" time="6.788">
+</testcase>
+<testcase name="the footer’s Privacy link › opens the privacy page from the landing page" classname="privacy.spec.ts" time="5.376">
+</testcase>
+</testsuite>
+<testsuite name="project.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-light" tests="39" failures="0" skipped="0" time="282.142" errors="0">
+<testcase name="Ostomate2 (public) › names the project, its breadcrumbs, health and repository" classname="project.spec.ts" time="5.05">
+</testcase>
+<testcase name="Ostomate2 (public) › introduces itself with its description and its dev stack" classname="project.spec.ts" time="4.153">
+</testcase>
+<testcase name="Ostomate2 (public) › leads the latest run with its 142 tests and the 30-day pass rate" classname="project.spec.ts" time="4.074">
+</testcase>
+<testcase name="Ostomate2 (public) › wraps Time to green below the other stats only on a phone" classname="project.spec.ts" time="2.739">
+</testcase>
+<testcase name="Ostomate2 (public) › shows the pyramid, coverage and reports, with no declared suites" classname="project.spec.ts" time="4.171">
+</testcase>
+<testcase name="Ostomate2 (public) › charts its last 30 runs on main: 21 for pass rate, its 8 CI runs for the rest" classname="project.spec.ts" time="3.913">
+</testcase>
+<testcase name="Ostomate2 (public) › lists the 8 CI runs on main, newest first, and no flaky tests" classname="project.spec.ts" time="4.066">
+</testcase>
+<testcase name="Ostomate2 (public) › adds the pull request run under All branches" classname="project.spec.ts" time="4.535">
+</testcase>
+<testcase name="RouteServe (private) › marks the project private, with no repository link" classname="project.spec.ts" time="3.228">
+</testcase>
+<testcase name="RouteServe (private) › leads with the failed latest run and its failing test, no failure text" classname="project.spec.ts" time="4.281">
+</testcase>
+<testcase name="RouteServe (private) › charts its ten CI runs on main, four of them red, and the strip of all ten" classname="project.spec.ts" time="4.224">
+</testcase>
+<testcase name="RouteServe (private) › marks the four red runs on each chart that has a value there" classname="project.spec.ts" time="5.113">
+</testcase>
+<testcase name="RouteServe (private) › shows its pyramid, declared suite, three floors and the flaky test" classname="project.spec.ts" time="4.591">
+</testcase>
+<testcase name="RouteServe (private) › lists 10 untitled runs on main" classname="project.spec.ts" time="3.176">
+</testcase>
+<testcase name="RouteServe (private) › loads 20 more across all branches" classname="project.spec.ts" time="6.405">
+</testcase>
+<testcase name="ostomate2: Tab reaches every control, each with a visible focus ring" classname="project.spec.ts" time="7.065">
+</testcase>
+<testcase name="ostomate2: no serious or critical axe violations" classname="project.spec.ts" time="13.517">
+</testcase>
+<testcase name="ostomate2: goes live, with the run list&apos;s note" classname="project.spec.ts" time="5.111">
+</testcase>
+<testcase name="ostomate2: a chart&apos;s table links each run to its page" classname="project.spec.ts" time="6.737">
+</testcase>
+<testcase name="ostomate2: the page follows the system theme" classname="project.spec.ts" time="4.238">
+</testcase>
+<testcase name="ostomate2: every chart&apos;s y labels are whole and distinct" classname="project.spec.ts" time="9.18">
+</testcase>
+<testcase name="ostomate2: no value label overlaps a floor label" classname="project.spec.ts" time="9.216">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="project.spec.ts" time="5.436">
+</testcase>
+<testcase name="ostomate2: matches its visual snapshot" classname="project.spec.ts" time="12.781">
+</testcase>
+<testcase name="routeserve: Tab reaches every control, each with a visible focus ring" classname="project.spec.ts" time="16.131">
+</testcase>
+<testcase name="routeserve: no serious or critical axe violations" classname="project.spec.ts" time="20.711">
+</testcase>
+<testcase name="routeserve: goes live, with the run list&apos;s note" classname="project.spec.ts" time="11.017">
+</testcase>
+<testcase name="routeserve: a chart&apos;s table links each run to its page" classname="project.spec.ts" time="13.748">
+</testcase>
+<testcase name="routeserve: the page follows the system theme" classname="project.spec.ts" time="6.583">
+</testcase>
+<testcase name="routeserve: every chart&apos;s y labels are whole and distinct" classname="project.spec.ts" time="10.057">
+</testcase>
+<testcase name="routeserve: no value label overlaps a floor label" classname="project.spec.ts" time="9.09">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="project.spec.ts" time="5.281">
+</testcase>
+<testcase name="routeserve: matches its visual snapshot" classname="project.spec.ts" time="11.698">
+</testcase>
+<testcase name="an unknown project › is served with HTTP 404 and the Not found title" classname="project.spec.ts" time="4.016">
+</testcase>
+<testcase name="an unknown project › shows the designed Not found page" classname="project.spec.ts" time="4.157">
+</testcase>
+<testcase name="an unknown project › has no serious or critical axe violations" classname="project.spec.ts" time="9.711">
+</testcase>
+<testcase name="a private project’s page leaks nothing › the values it must not show exist in what the seed sends" classname="project.spec.ts" time="0.01">
+</testcase>
+<testcase name="a private project’s page leaks nothing › in the HTML and every response of /p/routeserve, through both list filters" classname="project.spec.ts" time="15.293">
+</testcase>
+<testcase name="a private project’s page leaks nothing › while the same capture finds a public project’s repository link" classname="project.spec.ts" time="7.639">
+</testcase>
+</testsuite>
+<testsuite name="run.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-light" tests="41" failures="0" skipped="0" time="303.524" errors="0">
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › titles the run and its breadcrumbs" classname="run.spec.ts" time="8.694">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › gives its status, time, branch, linked commit, event, start and CI run" classname="run.spec.ts" time="8.521">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › counts 142 distinct tests, not the 192 executions" classname="run.spec.ts" time="8.767">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › lists its three reports with their results, time received and duration" classname="run.spec.ts" time="8.083">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › filters by status in tests, and by layer; the first 50 rows show" classname="run.spec.ts" time="8.66">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › shows all 142 rows, 50 on two platforms, each timed by its slowest" classname="run.spec.ts" time="8.889">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › narrows to a layer, and to nothing with “Clear filters”" classname="run.spec.ts" time="8.779">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › reads failed, a week ago, with 3 tests: 1 passed, 1 failed, 1 skipped" classname="run.spec.ts" time="5.892">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › names the failing test in the failed-run banner" classname="run.spec.ts" time="5.939">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › “Show failure” filters to Failed and focuses the failing row" classname="run.spec.ts" time="5.986">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › opens the failure with its message and stack trace, and no head" classname="run.spec.ts" time="6.086">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › closes and reopens the failure" classname="run.spec.ts" time="7.007">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › heads the page “Run {id}” with a lock, the commit short and unlinked, no CI" classname="run.spec.ts" time="9.632">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › says in the banner which test failed, where, and that its text is hidden" classname="run.spec.ts" time="8.844">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › counts 1,041 distinct tests, not the 1,045 executions" classname="run.spec.ts" time="9.462">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › leads with the failing, flaky test and the private notice, no failure text" classname="run.spec.ts" time="8.943">
+</testcase>
+<testcase name="ostomate2: no serious or critical axe violations" classname="run.spec.ts" time="16.232">
+</testcase>
+<testcase name="ostomate2: the page follows the system theme" classname="run.spec.ts" time="8.411">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="run.spec.ts" time="8.057">
+</testcase>
+<testcase name="ostomate2: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="7.574">
+</testcase>
+<testcase name="ostomate2: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="10.959">
+</testcase>
+<testcase name="ostomate2: matches its visual snapshot" classname="run.spec.ts" time="6.916">
+</testcase>
+<testcase name="testpulse: no serious or critical axe violations" classname="run.spec.ts" time="8.725">
+</testcase>
+<testcase name="testpulse: the page follows the system theme" classname="run.spec.ts" time="4.025">
+</testcase>
+<testcase name="testpulse: the page does not scroll sideways" classname="run.spec.ts" time="3.348">
+</testcase>
+<testcase name="testpulse: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="3.37">
+</testcase>
+<testcase name="testpulse: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="4.007">
+</testcase>
+<testcase name="testpulse: matches its visual snapshot" classname="run.spec.ts" time="3.994">
+</testcase>
+<testcase name="routeserve: no serious or critical axe violations" classname="run.spec.ts" time="12.404">
+</testcase>
+<testcase name="routeserve: the page follows the system theme" classname="run.spec.ts" time="4.844">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="run.spec.ts" time="4.67">
+</testcase>
+<testcase name="routeserve: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="5.239">
+</testcase>
+<testcase name="routeserve: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="9.306">
+</testcase>
+<testcase name="routeserve: matches its visual snapshot" classname="run.spec.ts" time="7.412">
+</testcase>
+<testcase name="links to a run page resolve › from each run row on the project page" classname="run.spec.ts" time="5.212">
+</testcase>
+<testcase name="links to a run page resolve › from the landing feed, to a pull request run by its title" classname="run.spec.ts" time="7.24">
+</testcase>
+<testcase name="a run that is not there › answers 404 for a malformed ID, an unknown ID, another project’s run and an unknown project" classname="run.spec.ts" time="6.665">
+</testcase>
+<testcase name="a run that is not there › shows the designed run kind for a run the project does not have" classname="run.spec.ts" time="6.19">
+</testcase>
+<testcase name="a run that is not there › shows the project kind for a run URL naming no project" classname="run.spec.ts" time="6.076">
+</testcase>
+<testcase name="a private run page leaks nothing › in the HTML and every response of RouteServe’s failed run, through its filters" classname="run.spec.ts" time="8.821">
+</testcase>
+<testcase name="a private run page leaks nothing › while the same capture finds a public run’s failure text and repository" classname="run.spec.ts" time="5.643">
+</testcase>
+</testsuite>
+<testsuite name="test-history.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="desktop-light" tests="58" failures="1" skipped="0" time="355.54" errors="0">
+<testcase name="an Ostomate2 test on one platform (public) › names the test, its suite, layer and breadcrumbs" classname="test-history.spec.ts" time="2.982">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › tiles its 9 runs since 24 Sep, none failed or flaky, 68 ms each" classname="test-history.spec.ts" time="3.112">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › draws one strip of its 9 runs, all passed, and opens on the latest" classname="test-history.spec.ts" time="3.055">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › charts its duration over the 8 default-branch CI runs" classname="test-history.spec.ts" time="2.426">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › the oldest cell is 8 runs ago" classname="test-history.spec.ts" time="4.055">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › names the test and draws a strip per platform" classname="test-history.spec.ts" time="5.3">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › tiles the JVM’s median with the simulator’s beside it" classname="test-history.spec.ts" time="5.27">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › charts a line per platform, giving the range across both" classname="test-history.spec.ts" time="3.323">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › moves the selected run with the keyboard, in both strips" classname="test-history.spec.ts" time="9.506">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › opens the selected run" classname="test-history.spec.ts" time="13.274">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › names the test and marks it flaky" classname="test-history.spec.ts" time="12.954">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › tiles 11 runs, 4 failed, 1 commit flipped" classname="test-history.spec.ts" time="15.63">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip with diamonds and the failures with squares" classname="test-history.spec.ts" time="15.798">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|e2e/test-history-RouteServe’s--ee0ac-d-the-failures-with-squares-desktop-light/error-context.md]]
+
+[[ATTACHMENT|e2e/test-history-RouteServe’s--ee0ac-d-the-failures-with-squares-desktop-light/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveCount(expected) failed" type="expect.toHaveCount">
+<![CDATA[  [desktop-light] › test-history.spec.ts:294:3 › RouteServe’s flaky test (private) › marks the flip with diamonds and the failures with squares @js 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('figure').filter({ has: getByRole('heading', { name: 'Duration' }) }).locator('[data-part="mark"]')
+    Expected: 5
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" getByRole('figure').filter({ has: getByRole('heading', { name: 'Duration' }) }).locator('[data-part="mark"]') with timeout 5000ms
+      - waiting for getByRole('figure').filter({ has: getByRole('heading', { name: 'Duration' }) }).locator('[data-part="mark"]')
+        3 × locator resolved to 0 elements
+          - unexpected value "0"
+
+
+      297 |     async ({ page }) => {
+      298 |       const marks = duration(page).locator('[data-part="mark"]');
+    > 299 |       await expect(marks).toHaveCount(5);
+          |                           ^
+      300 |       const looks = await marks.evaluateAll((all) =>
+      301 |         all.map((mark) => [
+      302 |           mark.getAttribute('fill'),
+        at /work/tests/e2e/test-history.spec.ts:299:27
+
+    Error Context: ../../test-results/e2e/test-history-RouteServe’s--ee0ac-d-the-failures-with-squares-desktop-light/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../test-results/e2e/test-history-RouteServe’s--ee0ac-d-the-failures-with-squares-desktop-light/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../test-results/e2e/test-history-RouteServe’s--ee0ac-d-the-failures-with-squares-desktop-light/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip of one commit on both of its cells and opens on the latest failure" classname="test-history.spec.ts" time="16.351">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › charts its 10 runs on main, leaving the pull request out" classname="test-history.spec.ts" time="8.88">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › selects a flaky run by pointer and a passing one by keyboard" classname="test-history.spec.ts" time="13.33">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › names the test and shows its one failed run" classname="test-history.spec.ts" time="9.24">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › tiles its one failed run and notes it is the only one" classname="test-history.spec.ts" time="7.544">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › draws the duration chart’s one-run state, with no caption" classname="test-history.spec.ts" time="7.677">
+</testcase>
+<testcase name="ostomate2-one-platform: no serious or critical axe violations" classname="test-history.spec.ts" time="14.475">
+</testcase>
+<testcase name="ostomate2-one-platform: the page follows the system theme" classname="test-history.spec.ts" time="5.492">
+</testcase>
+<testcase name="ostomate2-one-platform: the page does not scroll sideways" classname="test-history.spec.ts" time="5.468">
+</testcase>
+<testcase name="ostomate2-one-platform: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="4.726">
+</testcase>
+<testcase name="ostomate2-one-platform: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="8.069">
+</testcase>
+<testcase name="ostomate2-one-platform: matches its visual snapshot" classname="test-history.spec.ts" time="7.579">
+</testcase>
+<testcase name="ostomate2-two-platforms: no serious or critical axe violations" classname="test-history.spec.ts" time="12.594">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page follows the system theme" classname="test-history.spec.ts" time="4.786">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page does not scroll sideways" classname="test-history.spec.ts" time="3.747">
+</testcase>
+<testcase name="ostomate2-two-platforms: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="4.086">
+</testcase>
+<testcase name="ostomate2-two-platforms: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="6.551">
+</testcase>
+<testcase name="ostomate2-two-platforms: matches its visual snapshot" classname="test-history.spec.ts" time="8.94">
+</testcase>
+<testcase name="routeserve-flaky: no serious or critical axe violations" classname="test-history.spec.ts" time="8.811">
+</testcase>
+<testcase name="routeserve-flaky: the page follows the system theme" classname="test-history.spec.ts" time="3.527">
+</testcase>
+<testcase name="routeserve-flaky: the page does not scroll sideways" classname="test-history.spec.ts" time="2.375">
+</testcase>
+<testcase name="routeserve-flaky: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.435">
+</testcase>
+<testcase name="routeserve-flaky: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="3.877">
+</testcase>
+<testcase name="routeserve-flaky: matches its visual snapshot" classname="test-history.spec.ts" time="6.229">
+</testcase>
+<testcase name="testpulse-failing: no serious or critical axe violations" classname="test-history.spec.ts" time="5.793">
+</testcase>
+<testcase name="testpulse-failing: the page follows the system theme" classname="test-history.spec.ts" time="2.426">
+</testcase>
+<testcase name="testpulse-failing: the page does not scroll sideways" classname="test-history.spec.ts" time="2.367">
+</testcase>
+<testcase name="testpulse-failing: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.282">
+</testcase>
+<testcase name="testpulse-failing: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="3.106">
+</testcase>
+<testcase name="testpulse-failing: matches its visual snapshot" classname="test-history.spec.ts" time="3.134">
+</testcase>
+<testcase name="ostomate2-one-platform: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.181">
+</testcase>
+<testcase name="ostomate2-two-platforms: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.136">
+</testcase>
+<testcase name="routeserve-flaky: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.575">
+</testcase>
+<testcase name="an Ostomate2 test that holds at 352 ms › labels its duration axis 0.34 s, 0.35 s and 0.36 s, once each" classname="test-history.spec.ts" time="3.126">
+</testcase>
+<testcase name="links to a test history resolve › from a passing row of the run page" classname="test-history.spec.ts" time="5.958">
+</testcase>
+<testcase name="links to a test history resolve › from every row of a run page, without scripts too" classname="test-history.spec.ts" time="3.99">
+</testcase>
+<testcase name="links to a test history resolve › from the failure’s “Test history” link" classname="test-history.spec.ts" time="4.597">
+</testcase>
+<testcase name="a test that is not there › answers 404 for a malformed, unknown or other project’s key and an unknown project" classname="test-history.spec.ts" time="5.108">
+</testcase>
+<testcase name="a test that is not there › shows the designed test kind for a key the project does not have" classname="test-history.spec.ts" time="3.572">
+</testcase>
+<testcase name="a test that is not there › the test kind links to the overview" classname="test-history.spec.ts" time="5.713">
+</testcase>
+<testcase name="a test that is not there › shows the project kind for a test URL naming no project" classname="test-history.spec.ts" time="5.497">
+</testcase>
+<testcase name="a private test history leaks nothing › the values it must not show exist in what the seed sends" classname="test-history.spec.ts" time="0.005">
+</testcase>
+<testcase name="a private test history leaks nothing › in the HTML and every response of the flaky test’s page, through its timeline" classname="test-history.spec.ts" time="5.017">
+</testcase>
+<testcase name="a private test history leaks nothing › in every response of the run it opens" classname="test-history.spec.ts" time="6.043">
+</testcase>
+<testcase name="a private test history leaks nothing › while the same capture finds a public run’s failure text and repository" classname="test-history.spec.ts" time="4.44">
+</testcase>
+</testsuite>
+<testsuite name="home.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-dark" tests="18" failures="0" skipped="0" time="63.316" errors="0">
+<testcase name="the landing page › leads with the lede as its h1 and the portfolio’s 1,186 tests" classname="home.spec.ts" time="3.399">
+</testcase>
+<testcase name="the landing page › reads the total and its note as one sentence" classname="home.spec.ts" time="3.653">
+</testcase>
+<testcase name="the landing page › shows the four portfolio tiles" classname="home.spec.ts" time="3.257">
+</testcase>
+<testcase name="the landing page › shows no time to green or green streak" classname="home.spec.ts" time="3.286">
+</testcase>
+<testcase name="the landing page › lists the three projects’ cards under “Latest default-branch run”" classname="home.spec.ts" time="3.163">
+</testcase>
+<testcase name="the landing page › gives Ostomate2 its passed run, layers, coverage and reports" classname="home.spec.ts" time="3.292">
+</testcase>
+<testcase name="the landing page › gives RouteServe a private failed card naming its failing test" classname="home.spec.ts" time="3.339">
+</testcase>
+<testcase name="the landing page › gives testpulse a stale failed card with no coverage" classname="home.spec.ts" time="3.214">
+</testcase>
+<testcase name="the landing page › lists the three newest default-branch runs, a private one untitled" classname="home.spec.ts" time="3.365">
+</testcase>
+<testcase name="the landing page › says what the site is and links to how it is tested" classname="home.spec.ts" time="2.752">
+</testcase>
+<testcase name="the landing page › dates the last report in the footer" classname="home.spec.ts" time="2.773">
+</testcase>
+<testcase name="the landing page › does not scroll sideways" classname="home.spec.ts" time="2.38">
+</testcase>
+<testcase name="Tab reaches every control, each with a visible focus ring" classname="home.spec.ts" time="3.85">
+</testcase>
+<testcase name="goes live: “Live” in the header and the feed’s live note" classname="home.spec.ts" time="3.312">
+</testcase>
+<testcase name="has no serious or critical axe violations" classname="home.spec.ts" time="7.053">
+</testcase>
+<testcase name="follows the system theme" classname="home.spec.ts" time="2.737">
+</testcase>
+<testcase name="matches its visual snapshot" classname="home.spec.ts" time="3.815">
+</testcase>
+<testcase name="the landing page leaks nothing of a private project › in the HTML and every response of /" classname="home.spec.ts" time="4.676">
+</testcase>
+</testsuite>
+<testsuite name="how-its-tested.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-dark" tests="16" failures="0" skipped="0" time="47.121" errors="0">
+<testcase name="the page › is titled and marked current in the header" classname="how-its-tested.spec.ts" time="2.744">
+</testcase>
+<testcase name="the page › opens with the heading, the lede and the repository links" classname="how-its-tested.spec.ts" time="2.689">
+</testcase>
+<testcase name="the page › lists the five principles, 01 ending with a recorded manual check" classname="how-its-tested.spec.ts" time="2.575">
+</testcase>
+<testcase name="the page › says what runs, layer by layer, with nothing from Phase 6" classname="how-its-tested.spec.ts" time="2.749">
+</testcase>
+<testcase name="the page › tells the two incidents as the pages show them today" classname="how-its-tested.spec.ts" time="2.593">
+</testcase>
+<testcase name="the page › shows testpulse’s latest run from the seed" classname="how-its-tested.spec.ts" time="2.695">
+</testcase>
+<testcase name="the page › dates the last report in the footer" classname="how-its-tested.spec.ts" time="2.269">
+</testcase>
+<testcase name="the page › does not scroll sideways" classname="how-its-tested.spec.ts" time="2.26">
+</testcase>
+<testcase name="the page › shows neither “Live” nor “Offline”" classname="how-its-tested.spec.ts" time="2.323">
+</testcase>
+<testcase name="answers 200" classname="how-its-tested.spec.ts" time="2.101">
+</testcase>
+<testcase name="no serious or critical axe violations" classname="how-its-tested.spec.ts" time="6.144">
+</testcase>
+<testcase name="the page follows the system theme" classname="how-its-tested.spec.ts" time="2.248">
+</testcase>
+<testcase name="Tab reaches every control, each with a visible focus ring" classname="how-its-tested.spec.ts" time="2.864">
+</testcase>
+<testcase name="links to the page resolve › from the header" classname="how-its-tested.spec.ts" time="4.4">
+</testcase>
+<testcase name="links to the page resolve › from the landing page’s About button" classname="how-its-tested.spec.ts" time="3.362">
+</testcase>
+<testcase name="matches its visual snapshot" classname="how-its-tested.spec.ts" time="3.105">
+</testcase>
+</testsuite>
+<testsuite name="privacy.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-dark" tests="14" failures="0" skipped="0" time="37.66" errors="0">
+<testcase name="the privacy page › answers 200 with its title, eyebrow and heading" classname="privacy.spec.ts" time="2.484">
+</testcase>
+<testcase name="the privacy page › says what is recorded today: nothing, dated by its copy" classname="privacy.spec.ts" time="2.629">
+</testcase>
+<testcase name="the privacy page › states nothing of the Phase 6 visit logging, which is not built" classname="privacy.spec.ts" time="2.487">
+</testcase>
+<testcase name="the privacy page › sets no cookie and stores nothing until the toggle" classname="privacy.spec.ts" time="2.092">
+</testcase>
+<testcase name="the privacy page › shows neither “Live” nor “Offline”" classname="privacy.spec.ts" time="2.145">
+</testcase>
+<testcase name="the privacy page › marks its own footer link as the current page, in ink" classname="privacy.spec.ts" time="2.353">
+</testcase>
+<testcase name="the privacy page › dates the last report in the footer" classname="privacy.spec.ts" time="2.141">
+</testcase>
+<testcase name="the privacy page › does not scroll sideways" classname="privacy.spec.ts" time="2.056">
+</testcase>
+<testcase name="the privacy page › has no serious or critical axe violations" classname="privacy.spec.ts" time="5.271">
+</testcase>
+<testcase name="the privacy page › follows the system theme" classname="privacy.spec.ts" time="2.101">
+</testcase>
+<testcase name="the privacy page › Tab reaches every control, each with a visible focus ring" classname="privacy.spec.ts" time="2.581">
+</testcase>
+<testcase name="the privacy page › matches its visual snapshot" classname="privacy.spec.ts" time="2.508">
+</testcase>
+<testcase name="the footer’s Privacy link › resolves from every kind of page" classname="privacy.spec.ts" time="3.471">
+</testcase>
+<testcase name="the footer’s Privacy link › opens the privacy page from the landing page" classname="privacy.spec.ts" time="3.341">
+</testcase>
+</testsuite>
+<testsuite name="project.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-dark" tests="39" failures="0" skipped="0" time="175.8" errors="0">
+<testcase name="Ostomate2 (public) › names the project, its breadcrumbs, health and repository" classname="project.spec.ts" time="4.015">
+</testcase>
+<testcase name="Ostomate2 (public) › introduces itself with its description and its dev stack" classname="project.spec.ts" time="4.039">
+</testcase>
+<testcase name="Ostomate2 (public) › leads the latest run with its 142 tests and the 30-day pass rate" classname="project.spec.ts" time="4.049">
+</testcase>
+<testcase name="Ostomate2 (public) › wraps Time to green below the other stats only on a phone" classname="project.spec.ts" time="2.553">
+</testcase>
+<testcase name="Ostomate2 (public) › shows the pyramid, coverage and reports, with no declared suites" classname="project.spec.ts" time="4.033">
+</testcase>
+<testcase name="Ostomate2 (public) › charts its last 30 runs on main: 21 for pass rate, its 8 CI runs for the rest" classname="project.spec.ts" time="3.843">
+</testcase>
+<testcase name="Ostomate2 (public) › lists the 8 CI runs on main, newest first, and no flaky tests" classname="project.spec.ts" time="3.843">
+</testcase>
+<testcase name="Ostomate2 (public) › adds the pull request run under All branches" classname="project.spec.ts" time="4.706">
+</testcase>
+<testcase name="RouteServe (private) › marks the project private, with no repository link" classname="project.spec.ts" time="4.121">
+</testcase>
+<testcase name="RouteServe (private) › leads with the failed latest run and its failing test, no failure text" classname="project.spec.ts" time="4.312">
+</testcase>
+<testcase name="RouteServe (private) › charts its ten CI runs on main, four of them red, and the strip of all ten" classname="project.spec.ts" time="4.467">
+</testcase>
+<testcase name="RouteServe (private) › marks the four red runs on each chart that has a value there" classname="project.spec.ts" time="4.686">
+</testcase>
+<testcase name="RouteServe (private) › shows its pyramid, declared suite, three floors and the flaky test" classname="project.spec.ts" time="4.209">
+</testcase>
+<testcase name="RouteServe (private) › lists 10 untitled runs on main" classname="project.spec.ts" time="2.966">
+</testcase>
+<testcase name="RouteServe (private) › loads 20 more across all branches" classname="project.spec.ts" time="6.081">
+</testcase>
+<testcase name="ostomate2: Tab reaches every control, each with a visible focus ring" classname="project.spec.ts" time="5.832">
+</testcase>
+<testcase name="ostomate2: no serious or critical axe violations" classname="project.spec.ts" time="9.313">
+</testcase>
+<testcase name="ostomate2: goes live, with the run list&apos;s note" classname="project.spec.ts" time="4.384">
+</testcase>
+<testcase name="ostomate2: a chart&apos;s table links each run to its page" classname="project.spec.ts" time="5.495">
+</testcase>
+<testcase name="ostomate2: the page follows the system theme" classname="project.spec.ts" time="2.517">
+</testcase>
+<testcase name="ostomate2: every chart&apos;s y labels are whole and distinct" classname="project.spec.ts" time="4.124">
+</testcase>
+<testcase name="ostomate2: no value label overlaps a floor label" classname="project.spec.ts" time="4.253">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="project.spec.ts" time="2.493">
+</testcase>
+<testcase name="ostomate2: matches its visual snapshot" classname="project.spec.ts" time="4.883">
+</testcase>
+<testcase name="routeserve: Tab reaches every control, each with a visible focus ring" classname="project.spec.ts" time="6.5">
+</testcase>
+<testcase name="routeserve: no serious or critical axe violations" classname="project.spec.ts" time="10.012">
+</testcase>
+<testcase name="routeserve: goes live, with the run list&apos;s note" classname="project.spec.ts" time="4.684">
+</testcase>
+<testcase name="routeserve: a chart&apos;s table links each run to its page" classname="project.spec.ts" time="6.149">
+</testcase>
+<testcase name="routeserve: the page follows the system theme" classname="project.spec.ts" time="2.932">
+</testcase>
+<testcase name="routeserve: every chart&apos;s y labels are whole and distinct" classname="project.spec.ts" time="4.58">
+</testcase>
+<testcase name="routeserve: no value label overlaps a floor label" classname="project.spec.ts" time="4.512">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="project.spec.ts" time="3.057">
+</testcase>
+<testcase name="routeserve: matches its visual snapshot" classname="project.spec.ts" time="5.326">
+</testcase>
+<testcase name="an unknown project › is served with HTTP 404 and the Not found title" classname="project.spec.ts" time="2.332">
+</testcase>
+<testcase name="an unknown project › shows the designed Not found page" classname="project.spec.ts" time="2.687">
+</testcase>
+<testcase name="an unknown project › has no serious or critical axe violations" classname="project.spec.ts" time="5.364">
+</testcase>
+<testcase name="a private project’s page leaks nothing › the values it must not show exist in what the seed sends" classname="project.spec.ts" time="0.007">
+</testcase>
+<testcase name="a private project’s page leaks nothing › in the HTML and every response of /p/routeserve, through both list filters" classname="project.spec.ts" time="8.414">
+</testcase>
+<testcase name="a private project’s page leaks nothing › while the same capture finds a public project’s repository link" classname="project.spec.ts" time="4.027">
+</testcase>
+</testsuite>
+<testsuite name="run.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-dark" tests="41" failures="0" skipped="0" time="435.876" errors="2">
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › titles the run and its breadcrumbs" classname="run.spec.ts" time="4.233">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › gives its status, time, branch, linked commit, event, start and CI run" classname="run.spec.ts" time="4.313">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › counts 142 distinct tests, not the 192 executions" classname="run.spec.ts" time="4.301">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › lists its three reports with their results, time received and duration" classname="run.spec.ts" time="4.423">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › filters by status in tests, and by layer; the first 50 rows show" classname="run.spec.ts" time="3.457">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › shows all 142 rows, 50 on two platforms, each timed by its slowest" classname="run.spec.ts" time="5.228">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › narrows to a layer, and to nothing with “Clear filters”" classname="run.spec.ts" time="4.887">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › reads failed, a week ago, with 3 tests: 1 passed, 1 failed, 1 skipped" classname="run.spec.ts" time="3.464">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › names the failing test in the failed-run banner" classname="run.spec.ts" time="3.199">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › “Show failure” filters to Failed and focuses the failing row" classname="run.spec.ts" time="3.558">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › opens the failure with its message and stack trace, and no head" classname="run.spec.ts" time="3.279">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › closes and reopens the failure" classname="run.spec.ts" time="3.676">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › heads the page “Run {id}” with a lock, the commit short and unlinked, no CI" classname="run.spec.ts" time="4.949">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › says in the banner which test failed, where, and that its text is hidden" classname="run.spec.ts" time="4.605">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › counts 1,041 distinct tests, not the 1,045 executions" classname="run.spec.ts" time="4.882">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › leads with the failing, flaky test and the private notice, no failure text" classname="run.spec.ts" time="7.579">
+</testcase>
+<testcase name="ostomate2: no serious or critical axe violations" classname="run.spec.ts" time="25.22">
+</testcase>
+<testcase name="ostomate2: the page follows the system theme" classname="run.spec.ts" time="10.869">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="run.spec.ts" time="10.508">
+</testcase>
+<testcase name="ostomate2: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="12.525">
+</testcase>
+<testcase name="ostomate2: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="35.488">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|e2e/run-ostomate2-Tab-reaches--19577-h-with-a-visible-focus-ring-phone-dark/error-context.md]]
+
+[[ATTACHMENT|e2e/run-ostomate2-Tab-reaches--19577-h-with-a-visible-focus-ring-phone-dark/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 30000ms exceeded." type="Error">
+<![CDATA[  [phone-dark] › run.spec.ts:408:3 › ostomate2: Tab reaches every control, each with a visible focus ring @js 
+
+    Test timeout of 30000ms exceeded.
+
+    Error Context: ../../test-results/e2e/run-ostomate2-Tab-reaches--19577-h-with-a-visible-focus-ring-phone-dark/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../test-results/e2e/run-ostomate2-Tab-reaches--19577-h-with-a-visible-focus-ring-phone-dark/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../test-results/e2e/run-ostomate2-Tab-reaches--19577-h-with-a-visible-focus-ring-phone-dark/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="ostomate2: matches its visual snapshot" classname="run.spec.ts" time="20.821">
+</testcase>
+<testcase name="testpulse: no serious or critical axe violations" classname="run.spec.ts" time="28.13">
+</testcase>
+<testcase name="testpulse: the page follows the system theme" classname="run.spec.ts" time="11.437">
+</testcase>
+<testcase name="testpulse: the page does not scroll sideways" classname="run.spec.ts" time="13.984">
+</testcase>
+<testcase name="testpulse: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="13.64">
+</testcase>
+<testcase name="testpulse: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="20.978">
+</testcase>
+<testcase name="testpulse: matches its visual snapshot" classname="run.spec.ts" time="18.795">
+</testcase>
+<testcase name="routeserve: no serious or critical axe violations" classname="run.spec.ts" time="31.504">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|e2e/run-routeserve-no-serious-or-critical-axe-violations-phone-dark/error-context.md]]
+
+[[ATTACHMENT|e2e/run-routeserve-no-serious-or-critical-axe-violations-phone-dark/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 30000ms exceeded." type="Error">
+<![CDATA[  [phone-dark] › run.spec.ts:373:3 › routeserve: no serious or critical axe violations @js ─────────
+
+    Test timeout of 30000ms exceeded.
+
+    Error Context: ../../test-results/e2e/run-routeserve-no-serious-or-critical-axe-violations-phone-dark/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../test-results/e2e/run-routeserve-no-serious-or-critical-axe-violations-phone-dark/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../test-results/e2e/run-routeserve-no-serious-or-critical-axe-violations-phone-dark/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="routeserve: the page follows the system theme" classname="run.spec.ts" time="26.743">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="run.spec.ts" time="6.7">
+</testcase>
+<testcase name="routeserve: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="15.36">
+</testcase>
+<testcase name="routeserve: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="15.955">
+</testcase>
+<testcase name="routeserve: matches its visual snapshot" classname="run.spec.ts" time="6.988">
+</testcase>
+<testcase name="links to a run page resolve › from each run row on the project page" classname="run.spec.ts" time="4.692">
+</testcase>
+<testcase name="links to a run page resolve › from the landing feed, to a pull request run by its title" classname="run.spec.ts" time="6.068">
+</testcase>
+<testcase name="a run that is not there › answers 404 for a malformed ID, an unknown ID, another project’s run and an unknown project" classname="run.spec.ts" time="4.875">
+</testcase>
+<testcase name="a run that is not there › shows the designed run kind for a run the project does not have" classname="run.spec.ts" time="5.639">
+</testcase>
+<testcase name="a run that is not there › shows the project kind for a run URL naming no project" classname="run.spec.ts" time="5.635">
+</testcase>
+<testcase name="a private run page leaks nothing › in the HTML and every response of RouteServe’s failed run, through its filters" classname="run.spec.ts" time="7.983">
+</testcase>
+<testcase name="a private run page leaks nothing › while the same capture finds a public run’s failure text and repository" classname="run.spec.ts" time="5.306">
+</testcase>
+</testsuite>
+<testsuite name="test-history.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-dark" tests="58" failures="0" skipped="0" time="207.011" errors="0">
+<testcase name="an Ostomate2 test on one platform (public) › names the test, its suite, layer and breadcrumbs" classname="test-history.spec.ts" time="3.019">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › tiles its 9 runs since 24 Sep, none failed or flaky, 68 ms each" classname="test-history.spec.ts" time="3.001">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › draws one strip of its 9 runs, all passed, and opens on the latest" classname="test-history.spec.ts" time="3.047">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › charts its duration over the 8 default-branch CI runs" classname="test-history.spec.ts" time="2.45">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › the oldest cell is 8 runs ago" classname="test-history.spec.ts" time="3.043">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › names the test and draws a strip per platform" classname="test-history.spec.ts" time="3.278">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › tiles the JVM’s median with the simulator’s beside it" classname="test-history.spec.ts" time="3.168">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › charts a line per platform, giving the range across both" classname="test-history.spec.ts" time="2.393">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › moves the selected run with the keyboard, in both strips" classname="test-history.spec.ts" time="3.429">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › opens the selected run" classname="test-history.spec.ts" time="3.78">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › names the test and marks it flaky" classname="test-history.spec.ts" time="3.432">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › tiles 11 runs, 4 failed, 1 commit flipped" classname="test-history.spec.ts" time="3.325">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip with diamonds and the failures with squares" classname="test-history.spec.ts" time="3.28">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip of one commit on both of its cells and opens on the latest failure" classname="test-history.spec.ts" time="3.445">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › charts its 10 runs on main, leaving the pull request out" classname="test-history.spec.ts" time="2.406">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › selects a flaky run by pointer and a passing one by keyboard" classname="test-history.spec.ts" time="3.643">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › names the test and shows its one failed run" classname="test-history.spec.ts" time="2.999">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › tiles its one failed run and notes it is the only one" classname="test-history.spec.ts" time="2.802">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › draws the duration chart’s one-run state, with no caption" classname="test-history.spec.ts" time="2.558">
+</testcase>
+<testcase name="ostomate2-one-platform: no serious or critical axe violations" classname="test-history.spec.ts" time="6.153">
+</testcase>
+<testcase name="ostomate2-one-platform: the page follows the system theme" classname="test-history.spec.ts" time="2.384">
+</testcase>
+<testcase name="ostomate2-one-platform: the page does not scroll sideways" classname="test-history.spec.ts" time="2.364">
+</testcase>
+<testcase name="ostomate2-one-platform: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.26">
+</testcase>
+<testcase name="ostomate2-one-platform: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="3.522">
+</testcase>
+<testcase name="ostomate2-one-platform: matches its visual snapshot" classname="test-history.spec.ts" time="4.621">
+</testcase>
+<testcase name="ostomate2-two-platforms: no serious or critical axe violations" classname="test-history.spec.ts" time="6.202">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page follows the system theme" classname="test-history.spec.ts" time="2.24">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page does not scroll sideways" classname="test-history.spec.ts" time="2.22">
+</testcase>
+<testcase name="ostomate2-two-platforms: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.181">
+</testcase>
+<testcase name="ostomate2-two-platforms: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="3.729">
+</testcase>
+<testcase name="ostomate2-two-platforms: matches its visual snapshot" classname="test-history.spec.ts" time="4.758">
+</testcase>
+<testcase name="routeserve-flaky: no serious or critical axe violations" classname="test-history.spec.ts" time="6.339">
+</testcase>
+<testcase name="routeserve-flaky: the page follows the system theme" classname="test-history.spec.ts" time="2.47">
+</testcase>
+<testcase name="routeserve-flaky: the page does not scroll sideways" classname="test-history.spec.ts" time="2.315">
+</testcase>
+<testcase name="routeserve-flaky: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.319">
+</testcase>
+<testcase name="routeserve-flaky: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="3.711">
+</testcase>
+<testcase name="routeserve-flaky: matches its visual snapshot" classname="test-history.spec.ts" time="4.785">
+</testcase>
+<testcase name="testpulse-failing: no serious or critical axe violations" classname="test-history.spec.ts" time="5.839">
+</testcase>
+<testcase name="testpulse-failing: the page follows the system theme" classname="test-history.spec.ts" time="2.291">
+</testcase>
+<testcase name="testpulse-failing: the page does not scroll sideways" classname="test-history.spec.ts" time="2.223">
+</testcase>
+<testcase name="testpulse-failing: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.289">
+</testcase>
+<testcase name="testpulse-failing: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="3.092">
+</testcase>
+<testcase name="testpulse-failing: matches its visual snapshot" classname="test-history.spec.ts" time="4.12">
+</testcase>
+<testcase name="ostomate2-one-platform: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.048">
+</testcase>
+<testcase name="ostomate2-two-platforms: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.051">
+</testcase>
+<testcase name="routeserve-flaky: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.175">
+</testcase>
+<testcase name="an Ostomate2 test that holds at 352 ms › labels its duration axis 0.34 s, 0.35 s and 0.36 s, once each" classname="test-history.spec.ts" time="2.958">
+</testcase>
+<testcase name="links to a test history resolve › from a passing row of the run page" classname="test-history.spec.ts" time="6.556">
+</testcase>
+<testcase name="links to a test history resolve › from every row of a run page, without scripts too" classname="test-history.spec.ts" time="4.611">
+</testcase>
+<testcase name="links to a test history resolve › from the failure’s “Test history” link" classname="test-history.spec.ts" time="4.183">
+</testcase>
+<testcase name="a test that is not there › answers 404 for a malformed, unknown or other project’s key and an unknown project" classname="test-history.spec.ts" time="4.883">
+</testcase>
+<testcase name="a test that is not there › shows the designed test kind for a key the project does not have" classname="test-history.spec.ts" time="3.932">
+</testcase>
+<testcase name="a test that is not there › the test kind links to the overview" classname="test-history.spec.ts" time="5.815">
+</testcase>
+<testcase name="a test that is not there › shows the project kind for a test URL naming no project" classname="test-history.spec.ts" time="5.783">
+</testcase>
+<testcase name="a private test history leaks nothing › the values it must not show exist in what the seed sends" classname="test-history.spec.ts" time="0.008">
+</testcase>
+<testcase name="a private test history leaks nothing › in the HTML and every response of the flaky test’s page, through its timeline" classname="test-history.spec.ts" time="4.958">
+</testcase>
+<testcase name="a private test history leaks nothing › in every response of the run it opens" classname="test-history.spec.ts" time="5.613">
+</testcase>
+<testcase name="a private test history leaks nothing › while the same capture finds a public run’s failure text and repository" classname="test-history.spec.ts" time="5.512">
+</testcase>
+</testsuite>
+<testsuite name="home.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-light" tests="18" failures="0" skipped="0" time="72.787" errors="0">
+<testcase name="the landing page › leads with the lede as its h1 and the portfolio’s 1,186 tests" classname="home.spec.ts" time="3.685">
+</testcase>
+<testcase name="the landing page › reads the total and its note as one sentence" classname="home.spec.ts" time="3.534">
+</testcase>
+<testcase name="the landing page › shows the four portfolio tiles" classname="home.spec.ts" time="3.388">
+</testcase>
+<testcase name="the landing page › shows no time to green or green streak" classname="home.spec.ts" time="3.526">
+</testcase>
+<testcase name="the landing page › lists the three projects’ cards under “Latest default-branch run”" classname="home.spec.ts" time="3.621">
+</testcase>
+<testcase name="the landing page › gives Ostomate2 its passed run, layers, coverage and reports" classname="home.spec.ts" time="5.014">
+</testcase>
+<testcase name="the landing page › gives RouteServe a private failed card naming its failing test" classname="home.spec.ts" time="4.972">
+</testcase>
+<testcase name="the landing page › gives testpulse a stale failed card with no coverage" classname="home.spec.ts" time="4.571">
+</testcase>
+<testcase name="the landing page › lists the three newest default-branch runs, a private one untitled" classname="home.spec.ts" time="4.835">
+</testcase>
+<testcase name="the landing page › says what the site is and links to how it is tested" classname="home.spec.ts" time="4.226">
+</testcase>
+<testcase name="the landing page › dates the last report in the footer" classname="home.spec.ts" time="3.111">
+</testcase>
+<testcase name="the landing page › does not scroll sideways" classname="home.spec.ts" time="2.829">
+</testcase>
+<testcase name="Tab reaches every control, each with a visible focus ring" classname="home.spec.ts" time="4.003">
+</testcase>
+<testcase name="goes live: “Live” in the header and the feed’s live note" classname="home.spec.ts" time="3.331">
+</testcase>
+<testcase name="has no serious or critical axe violations" classname="home.spec.ts" time="7.049">
+</testcase>
+<testcase name="follows the system theme" classname="home.spec.ts" time="2.711">
+</testcase>
+<testcase name="matches its visual snapshot" classname="home.spec.ts" time="3.751">
+</testcase>
+<testcase name="the landing page leaks nothing of a private project › in the HTML and every response of /" classname="home.spec.ts" time="4.63">
+</testcase>
+</testsuite>
+<testsuite name="how-its-tested.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-light" tests="16" failures="0" skipped="0" time="48.725" errors="0">
+<testcase name="the page › is titled and marked current in the header" classname="how-its-tested.spec.ts" time="2.763">
+</testcase>
+<testcase name="the page › opens with the heading, the lede and the repository links" classname="how-its-tested.spec.ts" time="2.702">
+</testcase>
+<testcase name="the page › lists the five principles, 01 ending with a recorded manual check" classname="how-its-tested.spec.ts" time="2.592">
+</testcase>
+<testcase name="the page › says what runs, layer by layer, with nothing from Phase 6" classname="how-its-tested.spec.ts" time="2.781">
+</testcase>
+<testcase name="the page › tells the two incidents as the pages show them today" classname="how-its-tested.spec.ts" time="2.554">
+</testcase>
+<testcase name="the page › shows testpulse’s latest run from the seed" classname="how-its-tested.spec.ts" time="2.74">
+</testcase>
+<testcase name="the page › dates the last report in the footer" classname="how-its-tested.spec.ts" time="2.291">
+</testcase>
+<testcase name="the page › does not scroll sideways" classname="how-its-tested.spec.ts" time="2.218">
+</testcase>
+<testcase name="the page › shows neither “Live” nor “Offline”" classname="how-its-tested.spec.ts" time="2.272">
+</testcase>
+<testcase name="answers 200" classname="how-its-tested.spec.ts" time="2.244">
+</testcase>
+<testcase name="no serious or critical axe violations" classname="how-its-tested.spec.ts" time="6.344">
+</testcase>
+<testcase name="the page follows the system theme" classname="how-its-tested.spec.ts" time="2.337">
+</testcase>
+<testcase name="Tab reaches every control, each with a visible focus ring" classname="how-its-tested.spec.ts" time="3.17">
+</testcase>
+<testcase name="links to the page resolve › from the header" classname="how-its-tested.spec.ts" time="4.503">
+</testcase>
+<testcase name="links to the page resolve › from the landing page’s About button" classname="how-its-tested.spec.ts" time="3.686">
+</testcase>
+<testcase name="matches its visual snapshot" classname="how-its-tested.spec.ts" time="3.528">
+</testcase>
+</testsuite>
+<testsuite name="privacy.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-light" tests="14" failures="0" skipped="0" time="39.901" errors="0">
+<testcase name="the privacy page › answers 200 with its title, eyebrow and heading" classname="privacy.spec.ts" time="2.605">
+</testcase>
+<testcase name="the privacy page › says what is recorded today: nothing, dated by its copy" classname="privacy.spec.ts" time="2.573">
+</testcase>
+<testcase name="the privacy page › states nothing of the Phase 6 visit logging, which is not built" classname="privacy.spec.ts" time="2.507">
+</testcase>
+<testcase name="the privacy page › sets no cookie and stores nothing until the toggle" classname="privacy.spec.ts" time="2.119">
+</testcase>
+<testcase name="the privacy page › shows neither “Live” nor “Offline”" classname="privacy.spec.ts" time="2.236">
+</testcase>
+<testcase name="the privacy page › marks its own footer link as the current page, in ink" classname="privacy.spec.ts" time="2.432">
+</testcase>
+<testcase name="the privacy page › dates the last report in the footer" classname="privacy.spec.ts" time="2.181">
+</testcase>
+<testcase name="the privacy page › does not scroll sideways" classname="privacy.spec.ts" time="2.086">
+</testcase>
+<testcase name="the privacy page › has no serious or critical axe violations" classname="privacy.spec.ts" time="5.403">
+</testcase>
+<testcase name="the privacy page › follows the system theme" classname="privacy.spec.ts" time="2.23">
+</testcase>
+<testcase name="the privacy page › Tab reaches every control, each with a visible focus ring" classname="privacy.spec.ts" time="2.587">
+</testcase>
+<testcase name="the privacy page › matches its visual snapshot" classname="privacy.spec.ts" time="2.564">
+</testcase>
+<testcase name="the footer’s Privacy link › resolves from every kind of page" classname="privacy.spec.ts" time="4.914">
+</testcase>
+<testcase name="the footer’s Privacy link › opens the privacy page from the landing page" classname="privacy.spec.ts" time="3.464">
+</testcase>
+</testsuite>
+<testsuite name="project.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-light" tests="39" failures="0" skipped="0" time="179.565" errors="0">
+<testcase name="Ostomate2 (public) › names the project, its breadcrumbs, health and repository" classname="project.spec.ts" time="4.223">
+</testcase>
+<testcase name="Ostomate2 (public) › introduces itself with its description and its dev stack" classname="project.spec.ts" time="4.556">
+</testcase>
+<testcase name="Ostomate2 (public) › leads the latest run with its 142 tests and the 30-day pass rate" classname="project.spec.ts" time="4.269">
+</testcase>
+<testcase name="Ostomate2 (public) › wraps Time to green below the other stats only on a phone" classname="project.spec.ts" time="2.82">
+</testcase>
+<testcase name="Ostomate2 (public) › shows the pyramid, coverage and reports, with no declared suites" classname="project.spec.ts" time="4.364">
+</testcase>
+<testcase name="Ostomate2 (public) › charts its last 30 runs on main: 21 for pass rate, its 8 CI runs for the rest" classname="project.spec.ts" time="4.351">
+</testcase>
+<testcase name="Ostomate2 (public) › lists the 8 CI runs on main, newest first, and no flaky tests" classname="project.spec.ts" time="4.05">
+</testcase>
+<testcase name="Ostomate2 (public) › adds the pull request run under All branches" classname="project.spec.ts" time="4.686">
+</testcase>
+<testcase name="RouteServe (private) › marks the project private, with no repository link" classname="project.spec.ts" time="3.281">
+</testcase>
+<testcase name="RouteServe (private) › leads with the failed latest run and its failing test, no failure text" classname="project.spec.ts" time="4.165">
+</testcase>
+<testcase name="RouteServe (private) › charts its ten CI runs on main, four of them red, and the strip of all ten" classname="project.spec.ts" time="4.316">
+</testcase>
+<testcase name="RouteServe (private) › marks the four red runs on each chart that has a value there" classname="project.spec.ts" time="4.88">
+</testcase>
+<testcase name="RouteServe (private) › shows its pyramid, declared suite, three floors and the flaky test" classname="project.spec.ts" time="4.401">
+</testcase>
+<testcase name="RouteServe (private) › lists 10 untitled runs on main" classname="project.spec.ts" time="3.082">
+</testcase>
+<testcase name="RouteServe (private) › loads 20 more across all branches" classname="project.spec.ts" time="6.24">
+</testcase>
+<testcase name="ostomate2: Tab reaches every control, each with a visible focus ring" classname="project.spec.ts" time="6.028">
+</testcase>
+<testcase name="ostomate2: no serious or critical axe violations" classname="project.spec.ts" time="9.482">
+</testcase>
+<testcase name="ostomate2: goes live, with the run list&apos;s note" classname="project.spec.ts" time="4.336">
+</testcase>
+<testcase name="ostomate2: a chart&apos;s table links each run to its page" classname="project.spec.ts" time="5.344">
+</testcase>
+<testcase name="ostomate2: the page follows the system theme" classname="project.spec.ts" time="2.667">
+</testcase>
+<testcase name="ostomate2: every chart&apos;s y labels are whole and distinct" classname="project.spec.ts" time="4.251">
+</testcase>
+<testcase name="ostomate2: no value label overlaps a floor label" classname="project.spec.ts" time="4.401">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="project.spec.ts" time="2.57">
+</testcase>
+<testcase name="ostomate2: matches its visual snapshot" classname="project.spec.ts" time="5.076">
+</testcase>
+<testcase name="routeserve: Tab reaches every control, each with a visible focus ring" classname="project.spec.ts" time="6.825">
+</testcase>
+<testcase name="routeserve: no serious or critical axe violations" classname="project.spec.ts" time="10.36">
+</testcase>
+<testcase name="routeserve: goes live, with the run list&apos;s note" classname="project.spec.ts" time="4.877">
+</testcase>
+<testcase name="routeserve: a chart&apos;s table links each run to its page" classname="project.spec.ts" time="6.063">
+</testcase>
+<testcase name="routeserve: the page follows the system theme" classname="project.spec.ts" time="3.269">
+</testcase>
+<testcase name="routeserve: every chart&apos;s y labels are whole and distinct" classname="project.spec.ts" time="4.663">
+</testcase>
+<testcase name="routeserve: no value label overlaps a floor label" classname="project.spec.ts" time="4.56">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="project.spec.ts" time="2.708">
+</testcase>
+<testcase name="routeserve: matches its visual snapshot" classname="project.spec.ts" time="5.405">
+</testcase>
+<testcase name="an unknown project › is served with HTTP 404 and the Not found title" classname="project.spec.ts" time="2.466">
+</testcase>
+<testcase name="an unknown project › shows the designed Not found page" classname="project.spec.ts" time="2.596">
+</testcase>
+<testcase name="an unknown project › has no serious or critical axe violations" classname="project.spec.ts" time="5.408">
+</testcase>
+<testcase name="a private project’s page leaks nothing › the values it must not show exist in what the seed sends" classname="project.spec.ts" time="0.009">
+</testcase>
+<testcase name="a private project’s page leaks nothing › in the HTML and every response of /p/routeserve, through both list filters" classname="project.spec.ts" time="8.479">
+</testcase>
+<testcase name="a private project’s page leaks nothing › while the same capture finds a public project’s repository link" classname="project.spec.ts" time="4.038">
+</testcase>
+</testsuite>
+<testsuite name="run.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-light" tests="41" failures="0" skipped="0" time="217.088" errors="0">
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › titles the run and its breadcrumbs" classname="run.spec.ts" time="3.608">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › gives its status, time, branch, linked commit, event, start and CI run" classname="run.spec.ts" time="4.535">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › counts 142 distinct tests, not the 192 executions" classname="run.spec.ts" time="4.279">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › lists its three reports with their results, time received and duration" classname="run.spec.ts" time="4.628">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › filters by status in tests, and by layer; the first 50 rows show" classname="run.spec.ts" time="4.438">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › shows all 142 rows, 50 on two platforms, each timed by its slowest" classname="run.spec.ts" time="5.183">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › narrows to a layer, and to nothing with “Clear filters”" classname="run.spec.ts" time="4.692">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › reads failed, a week ago, with 3 tests: 1 passed, 1 failed, 1 skipped" classname="run.spec.ts" time="3.427">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › names the failing test in the failed-run banner" classname="run.spec.ts" time="3.361">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › “Show failure” filters to Failed and focuses the failing row" classname="run.spec.ts" time="3.557">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › opens the failure with its message and stack trace, and no head" classname="run.spec.ts" time="3.433">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › closes and reopens the failure" classname="run.spec.ts" time="3.902">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › heads the page “Run {id}” with a lock, the commit short and unlinked, no CI" classname="run.spec.ts" time="4.969">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › says in the banner which test failed, where, and that its text is hidden" classname="run.spec.ts" time="4.957">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › counts 1,041 distinct tests, not the 1,045 executions" classname="run.spec.ts" time="5.142">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › leads with the failing, flaky test and the private notice, no failure text" classname="run.spec.ts" time="5.189">
+</testcase>
+<testcase name="ostomate2: no serious or critical axe violations" classname="run.spec.ts" time="11.466">
+</testcase>
+<testcase name="ostomate2: the page follows the system theme" classname="run.spec.ts" time="4.474">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="run.spec.ts" time="3.472">
+</testcase>
+<testcase name="ostomate2: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="4.718">
+</testcase>
+<testcase name="ostomate2: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="6.996">
+</testcase>
+<testcase name="ostomate2: matches its visual snapshot" classname="run.spec.ts" time="4.658">
+</testcase>
+<testcase name="testpulse: no serious or critical axe violations" classname="run.spec.ts" time="7.807">
+</testcase>
+<testcase name="testpulse: the page follows the system theme" classname="run.spec.ts" time="3.818">
+</testcase>
+<testcase name="testpulse: the page does not scroll sideways" classname="run.spec.ts" time="3.302">
+</testcase>
+<testcase name="testpulse: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="3.455">
+</testcase>
+<testcase name="testpulse: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="4.28">
+</testcase>
+<testcase name="testpulse: matches its visual snapshot" classname="run.spec.ts" time="3.883">
+</testcase>
+<testcase name="routeserve: no serious or critical axe violations" classname="run.spec.ts" time="13.17">
+</testcase>
+<testcase name="routeserve: the page follows the system theme" classname="run.spec.ts" time="5.216">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="run.spec.ts" time="5.348">
+</testcase>
+<testcase name="routeserve: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="5.557">
+</testcase>
+<testcase name="routeserve: Tab reaches every control, each with a visible focus ring" classname="run.spec.ts" time="9.714">
+</testcase>
+<testcase name="routeserve: matches its visual snapshot" classname="run.spec.ts" time="6.744">
+</testcase>
+<testcase name="links to a run page resolve › from each run row on the project page" classname="run.spec.ts" time="5.104">
+</testcase>
+<testcase name="links to a run page resolve › from the landing feed, to a pull request run by its title" classname="run.spec.ts" time="6.336">
+</testcase>
+<testcase name="a run that is not there › answers 404 for a malformed ID, an unknown ID, another project’s run and an unknown project" classname="run.spec.ts" time="4.702">
+</testcase>
+<testcase name="a run that is not there › shows the designed run kind for a run the project does not have" classname="run.spec.ts" time="5.662">
+</testcase>
+<testcase name="a run that is not there › shows the project kind for a run URL naming no project" classname="run.spec.ts" time="5.498">
+</testcase>
+<testcase name="a private run page leaks nothing › in the HTML and every response of RouteServe’s failed run, through its filters" classname="run.spec.ts" time="6.891">
+</testcase>
+<testcase name="a private run page leaks nothing › while the same capture finds a public run’s failure text and repository" classname="run.spec.ts" time="5.517">
+</testcase>
+</testsuite>
+<testsuite name="test-history.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="phone-light" tests="58" failures="0" skipped="0" time="225.312" errors="0">
+<testcase name="an Ostomate2 test on one platform (public) › names the test, its suite, layer and breadcrumbs" classname="test-history.spec.ts" time="3.131">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › tiles its 9 runs since 24 Sep, none failed or flaky, 68 ms each" classname="test-history.spec.ts" time="3.406">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › draws one strip of its 9 runs, all passed, and opens on the latest" classname="test-history.spec.ts" time="3.563">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › charts its duration over the 8 default-branch CI runs" classname="test-history.spec.ts" time="2.883">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › the oldest cell is 8 runs ago" classname="test-history.spec.ts" time="3.863">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › names the test and draws a strip per platform" classname="test-history.spec.ts" time="4.215">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › tiles the JVM’s median with the simulator’s beside it" classname="test-history.spec.ts" time="4.521">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › charts a line per platform, giving the range across both" classname="test-history.spec.ts" time="3.489">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › moves the selected run with the keyboard, in both strips" classname="test-history.spec.ts" time="4.8">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › opens the selected run" classname="test-history.spec.ts" time="5.074">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › names the test and marks it flaky" classname="test-history.spec.ts" time="4.577">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › tiles 11 runs, 4 failed, 1 commit flipped" classname="test-history.spec.ts" time="4.242">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip with diamonds and the failures with squares" classname="test-history.spec.ts" time="4.003">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip of one commit on both of its cells and opens on the latest failure" classname="test-history.spec.ts" time="3.985">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › charts its 10 runs on main, leaving the pull request out" classname="test-history.spec.ts" time="2.735">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › selects a flaky run by pointer and a passing one by keyboard" classname="test-history.spec.ts" time="3.92">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › names the test and shows its one failed run" classname="test-history.spec.ts" time="3.275">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › tiles its one failed run and notes it is the only one" classname="test-history.spec.ts" time="3.117">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › draws the duration chart’s one-run state, with no caption" classname="test-history.spec.ts" time="2.654">
+</testcase>
+<testcase name="ostomate2-one-platform: no serious or critical axe violations" classname="test-history.spec.ts" time="6.09">
+</testcase>
+<testcase name="ostomate2-one-platform: the page follows the system theme" classname="test-history.spec.ts" time="2.243">
+</testcase>
+<testcase name="ostomate2-one-platform: the page does not scroll sideways" classname="test-history.spec.ts" time="2.164">
+</testcase>
+<testcase name="ostomate2-one-platform: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.251">
+</testcase>
+<testcase name="ostomate2-one-platform: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="3.61">
+</testcase>
+<testcase name="ostomate2-one-platform: matches its visual snapshot" classname="test-history.spec.ts" time="4.766">
+</testcase>
+<testcase name="ostomate2-two-platforms: no serious or critical axe violations" classname="test-history.spec.ts" time="6.646">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page follows the system theme" classname="test-history.spec.ts" time="2.28">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page does not scroll sideways" classname="test-history.spec.ts" time="2.359">
+</testcase>
+<testcase name="ostomate2-two-platforms: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.44">
+</testcase>
+<testcase name="ostomate2-two-platforms: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="4.108">
+</testcase>
+<testcase name="ostomate2-two-platforms: matches its visual snapshot" classname="test-history.spec.ts" time="4.945">
+</testcase>
+<testcase name="routeserve-flaky: no serious or critical axe violations" classname="test-history.spec.ts" time="7.084">
+</testcase>
+<testcase name="routeserve-flaky: the page follows the system theme" classname="test-history.spec.ts" time="2.796">
+</testcase>
+<testcase name="routeserve-flaky: the page does not scroll sideways" classname="test-history.spec.ts" time="2.485">
+</testcase>
+<testcase name="routeserve-flaky: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.496">
+</testcase>
+<testcase name="routeserve-flaky: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="4.365">
+</testcase>
+<testcase name="routeserve-flaky: matches its visual snapshot" classname="test-history.spec.ts" time="4.819">
+</testcase>
+<testcase name="testpulse-failing: no serious or critical axe violations" classname="test-history.spec.ts" time="5.999">
+</testcase>
+<testcase name="testpulse-failing: the page follows the system theme" classname="test-history.spec.ts" time="2.673">
+</testcase>
+<testcase name="testpulse-failing: the page does not scroll sideways" classname="test-history.spec.ts" time="2.205">
+</testcase>
+<testcase name="testpulse-failing: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.265">
+</testcase>
+<testcase name="testpulse-failing: Tab reaches every control, each with a visible focus ring" classname="test-history.spec.ts" time="3.22">
+</testcase>
+<testcase name="testpulse-failing: matches its visual snapshot" classname="test-history.spec.ts" time="4.383">
+</testcase>
+<testcase name="ostomate2-one-platform: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.227">
+</testcase>
+<testcase name="ostomate2-two-platforms: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.324">
+</testcase>
+<testcase name="routeserve-flaky: the duration chart&apos;s y labels are whole and distinct" classname="test-history.spec.ts" time="3.433">
+</testcase>
+<testcase name="an Ostomate2 test that holds at 352 ms › labels its duration axis 0.34 s, 0.35 s and 0.36 s, once each" classname="test-history.spec.ts" time="3.077">
+</testcase>
+<testcase name="links to a test history resolve › from a passing row of the run page" classname="test-history.spec.ts" time="6.362">
+</testcase>
+<testcase name="links to a test history resolve › from every row of a run page, without scripts too" classname="test-history.spec.ts" time="4.476">
+</testcase>
+<testcase name="links to a test history resolve › from the failure’s “Test history” link" classname="test-history.spec.ts" time="4.647">
+</testcase>
+<testcase name="a test that is not there › answers 404 for a malformed, unknown or other project’s key and an unknown project" classname="test-history.spec.ts" time="5.05">
+</testcase>
+<testcase name="a test that is not there › shows the designed test kind for a key the project does not have" classname="test-history.spec.ts" time="4.129">
+</testcase>
+<testcase name="a test that is not there › the test kind links to the overview" classname="test-history.spec.ts" time="5.702">
+</testcase>
+<testcase name="a test that is not there › shows the project kind for a test URL naming no project" classname="test-history.spec.ts" time="5.582">
+</testcase>
+<testcase name="a private test history leaks nothing › the values it must not show exist in what the seed sends" classname="test-history.spec.ts" time="0.005">
+</testcase>
+<testcase name="a private test history leaks nothing › in the HTML and every response of the flaky test’s page, through its timeline" classname="test-history.spec.ts" time="4.876">
+</testcase>
+<testcase name="a private test history leaks nothing › in every response of the run it opens" classname="test-history.spec.ts" time="5.597">
+</testcase>
+<testcase name="a private test history leaks nothing › while the same capture finds a public run’s failure text and repository" classname="test-history.spec.ts" time="5.68">
+</testcase>
+</testsuite>
+<testsuite name="home.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="no-js" tests="14" failures="0" skipped="0" time="38.565" errors="0">
+<testcase name="the landing page › leads with the lede as its h1 and the portfolio’s 1,186 tests" classname="home.spec.ts" time="3.13">
+</testcase>
+<testcase name="the landing page › reads the total and its note as one sentence" classname="home.spec.ts" time="3.146">
+</testcase>
+<testcase name="the landing page › shows the four portfolio tiles" classname="home.spec.ts" time="2.803">
+</testcase>
+<testcase name="the landing page › shows no time to green or green streak" classname="home.spec.ts" time="2.906">
+</testcase>
+<testcase name="the landing page › lists the three projects’ cards under “Latest default-branch run”" classname="home.spec.ts" time="2.937">
+</testcase>
+<testcase name="the landing page › gives Ostomate2 its passed run, layers, coverage and reports" classname="home.spec.ts" time="2.734">
+</testcase>
+<testcase name="the landing page › gives RouteServe a private failed card naming its failing test" classname="home.spec.ts" time="2.678">
+</testcase>
+<testcase name="the landing page › gives testpulse a stale failed card with no coverage" classname="home.spec.ts" time="2.591">
+</testcase>
+<testcase name="the landing page › lists the three newest default-branch runs, a private one untitled" classname="home.spec.ts" time="2.66">
+</testcase>
+<testcase name="the landing page › says what the site is and links to how it is tested" classname="home.spec.ts" time="2.461">
+</testcase>
+<testcase name="the landing page › dates the last report in the footer" classname="home.spec.ts" time="2.754">
+</testcase>
+<testcase name="the landing page › does not scroll sideways" classname="home.spec.ts" time="2.436">
+</testcase>
+<testcase name="shows neither “Live” nor “Offline” without scripts" classname="home.spec.ts" time="2.591">
+</testcase>
+<testcase name="renders its static content without running scripts" classname="home.spec.ts" time="2.738">
+</testcase>
+</testsuite>
+<testsuite name="how-its-tested.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="no-js" tests="12" failures="0" skipped="0" time="26.015" errors="0">
+<testcase name="the page › is titled and marked current in the header" classname="how-its-tested.spec.ts" time="2.483">
+</testcase>
+<testcase name="the page › opens with the heading, the lede and the repository links" classname="how-its-tested.spec.ts" time="2.246">
+</testcase>
+<testcase name="the page › lists the five principles, 01 ending with a recorded manual check" classname="how-its-tested.spec.ts" time="2.213">
+</testcase>
+<testcase name="the page › says what runs, layer by layer, with nothing from Phase 6" classname="how-its-tested.spec.ts" time="2.309">
+</testcase>
+<testcase name="the page › tells the two incidents as the pages show them today" classname="how-its-tested.spec.ts" time="2.168">
+</testcase>
+<testcase name="the page › shows testpulse’s latest run from the seed" classname="how-its-tested.spec.ts" time="2.285">
+</testcase>
+<testcase name="the page › dates the last report in the footer" classname="how-its-tested.spec.ts" time="1.959">
+</testcase>
+<testcase name="the page › does not scroll sideways" classname="how-its-tested.spec.ts" time="1.883">
+</testcase>
+<testcase name="the page › shows neither “Live” nor “Offline”" classname="how-its-tested.spec.ts" time="1.968">
+</testcase>
+<testcase name="answers 200" classname="how-its-tested.spec.ts" time="1.746">
+</testcase>
+<testcase name="the page renders without running scripts" classname="how-its-tested.spec.ts" time="2.153">
+</testcase>
+<testcase name="links to the page resolve › without scripts too" classname="how-its-tested.spec.ts" time="2.602">
+</testcase>
+</testsuite>
+<testsuite name="privacy.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="no-js" tests="9" failures="0" skipped="0" time="18.47" errors="0">
+<testcase name="the privacy page › answers 200 with its title, eyebrow and heading" classname="privacy.spec.ts" time="1.955">
+</testcase>
+<testcase name="the privacy page › says what is recorded today: nothing, dated by its copy" classname="privacy.spec.ts" time="2.042">
+</testcase>
+<testcase name="the privacy page › states nothing of the Phase 6 visit logging, which is not built" classname="privacy.spec.ts" time="2.027">
+</testcase>
+<testcase name="the privacy page › shows neither “Live” nor “Offline”" classname="privacy.spec.ts" time="1.81">
+</testcase>
+<testcase name="the privacy page › marks its own footer link as the current page, in ink" classname="privacy.spec.ts" time="2.074">
+</testcase>
+<testcase name="the privacy page › dates the last report in the footer" classname="privacy.spec.ts" time="1.796">
+</testcase>
+<testcase name="the privacy page › does not scroll sideways" classname="privacy.spec.ts" time="1.745">
+</testcase>
+<testcase name="the privacy page › renders without running scripts" classname="privacy.spec.ts" time="1.969">
+</testcase>
+<testcase name="the footer’s Privacy link › resolves from every kind of page" classname="privacy.spec.ts" time="3.052">
+</testcase>
+</testsuite>
+<testsuite name="project.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="no-js" tests="19" failures="0" skipped="0" time="47.297" errors="0">
+<testcase name="Ostomate2 (public) › names the project, its breadcrumbs, health and repository" classname="project.spec.ts" time="2.605">
+</testcase>
+<testcase name="Ostomate2 (public) › introduces itself with its description and its dev stack" classname="project.spec.ts" time="2.485">
+</testcase>
+<testcase name="Ostomate2 (public) › leads the latest run with its 142 tests and the 30-day pass rate" classname="project.spec.ts" time="2.402">
+</testcase>
+<testcase name="Ostomate2 (public) › wraps Time to green below the other stats only on a phone" classname="project.spec.ts" time="2.209">
+</testcase>
+<testcase name="Ostomate2 (public) › shows the pyramid, coverage and reports, with no declared suites" classname="project.spec.ts" time="2.504">
+</testcase>
+<testcase name="Ostomate2 (public) › charts its last 30 runs on main: 21 for pass rate, its 8 CI runs for the rest" classname="project.spec.ts" time="2.606">
+</testcase>
+<testcase name="Ostomate2 (public) › lists the 8 CI runs on main, newest first, and no flaky tests" classname="project.spec.ts" time="2.538">
+</testcase>
+<testcase name="RouteServe (private) › marks the project private, with no repository link" classname="project.spec.ts" time="2.667">
+</testcase>
+<testcase name="RouteServe (private) › leads with the failed latest run and its failing test, no failure text" classname="project.spec.ts" time="2.68">
+</testcase>
+<testcase name="RouteServe (private) › charts its ten CI runs on main, four of them red, and the strip of all ten" classname="project.spec.ts" time="2.647">
+</testcase>
+<testcase name="RouteServe (private) › shows its pyramid, declared suite, three floors and the flaky test" classname="project.spec.ts" time="2.732">
+</testcase>
+<testcase name="RouteServe (private) › lists 10 untitled runs on main" classname="project.spec.ts" time="2.664">
+</testcase>
+<testcase name="ostomate2: shows neither “Live” nor “Offline” without scripts" classname="project.spec.ts" time="2.308">
+</testcase>
+<testcase name="ostomate2: the page renders without running scripts" classname="project.spec.ts" time="2.741">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="project.spec.ts" time="2.153">
+</testcase>
+<testcase name="routeserve: shows neither “Live” nor “Offline” without scripts" classname="project.spec.ts" time="2.474">
+</testcase>
+<testcase name="routeserve: the page renders without running scripts" classname="project.spec.ts" time="3.137">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="project.spec.ts" time="2.349">
+</testcase>
+<testcase name="an unknown project › is served with HTTP 404 and the Not found title" classname="project.spec.ts" time="1.396">
+</testcase>
+</testsuite>
+<testsuite name="run.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="no-js" tests="23" failures="0" skipped="0" time="66.565" errors="0">
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › titles the run and its breadcrumbs" classname="run.spec.ts" time="2.798">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › gives its status, time, branch, linked commit, event, start and CI run" classname="run.spec.ts" time="2.843">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › counts 142 distinct tests, not the 192 executions" classname="run.spec.ts" time="2.742">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › lists its three reports with their results, time received and duration" classname="run.spec.ts" time="2.832">
+</testcase>
+<testcase name="Ostomate2’s latest run (public, passed, two platforms) › filters by status in tests, and by layer; the first 50 rows show" classname="run.spec.ts" time="2.75">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › reads failed, a week ago, with 3 tests: 1 passed, 1 failed, 1 skipped" classname="run.spec.ts" time="2.68">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › names the failing test in the failed-run banner" classname="run.spec.ts" time="2.583">
+</testcase>
+<testcase name="testpulse’s run (public, failed, one platform) › opens the failure with its message and stack trace, and no head" classname="run.spec.ts" time="2.503">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › heads the page “Run {id}” with a lock, the commit short and unlinked, no CI" classname="run.spec.ts" time="3.324">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › says in the banner which test failed, where, and that its text is hidden" classname="run.spec.ts" time="3.345">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › counts 1,041 distinct tests, not the 1,045 executions" classname="run.spec.ts" time="3.29">
+</testcase>
+<testcase name="RouteServe’s latest run (private, failed) › leads with the failing, flaky test and the private notice, no failure text" classname="run.spec.ts" time="3.369">
+</testcase>
+<testcase name="ostomate2: the page does not scroll sideways" classname="run.spec.ts" time="2.635">
+</testcase>
+<testcase name="ostomate2: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="2.631">
+</testcase>
+<testcase name="ostomate2: the page renders without running scripts" classname="run.spec.ts" time="2.72">
+</testcase>
+<testcase name="testpulse: the page does not scroll sideways" classname="run.spec.ts" time="2.315">
+</testcase>
+<testcase name="testpulse: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="2.43">
+</testcase>
+<testcase name="testpulse: the page renders without running scripts" classname="run.spec.ts" time="2.473">
+</testcase>
+<testcase name="routeserve: the page does not scroll sideways" classname="run.spec.ts" time="3.139">
+</testcase>
+<testcase name="routeserve: shows neither “Live” nor “Offline”" classname="run.spec.ts" time="3.231">
+</testcase>
+<testcase name="routeserve: the page renders without running scripts" classname="run.spec.ts" time="3.326">
+</testcase>
+<testcase name="links to a run page resolve › from each run row on the project page" classname="run.spec.ts" time="3.352">
+</testcase>
+<testcase name="a run that is not there › answers 404 for a malformed ID, an unknown ID, another project’s run and an unknown project" classname="run.spec.ts" time="3.254">
+</testcase>
+</testsuite>
+<testsuite name="test-history.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="no-js" tests="29" failures="0" skipped="0" time="62.992" errors="0">
+<testcase name="an Ostomate2 test on one platform (public) › names the test, its suite, layer and breadcrumbs" classname="test-history.spec.ts" time="2.276">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › tiles its 9 runs since 24 Sep, none failed or flaky, 68 ms each" classname="test-history.spec.ts" time="2.215">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › draws one strip of its 9 runs, all passed, and opens on the latest" classname="test-history.spec.ts" time="2.265">
+</testcase>
+<testcase name="an Ostomate2 test on one platform (public) › charts its duration over the 8 default-branch CI runs" classname="test-history.spec.ts" time="2.128">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › names the test and draws a strip per platform" classname="test-history.spec.ts" time="2.34">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › tiles the JVM’s median with the simulator’s beside it" classname="test-history.spec.ts" time="2.306">
+</testcase>
+<testcase name="an Ostomate2 test on two platforms (public) › charts a line per platform, giving the range across both" classname="test-history.spec.ts" time="2.218">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › names the test and marks it flaky" classname="test-history.spec.ts" time="2.287">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › tiles 11 runs, 4 failed, 1 commit flipped" classname="test-history.spec.ts" time="2.324">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › marks the flip of one commit on both of its cells and opens on the latest failure" classname="test-history.spec.ts" time="2.263">
+</testcase>
+<testcase name="RouteServe’s flaky test (private) › charts its 10 runs on main, leaving the pull request out" classname="test-history.spec.ts" time="2.054">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › names the test and shows its one failed run" classname="test-history.spec.ts" time="2.271">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › tiles its one failed run and notes it is the only one" classname="test-history.spec.ts" time="2.189">
+</testcase>
+<testcase name="testpulse’s failing test (public, one run) › draws the duration chart’s one-run state, with no caption" classname="test-history.spec.ts" time="1.91">
+</testcase>
+<testcase name="ostomate2-one-platform: the page does not scroll sideways" classname="test-history.spec.ts" time="1.888">
+</testcase>
+<testcase name="ostomate2-one-platform: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="1.977">
+</testcase>
+<testcase name="ostomate2-one-platform: the page renders without running scripts" classname="test-history.spec.ts" time="2.198">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page does not scroll sideways" classname="test-history.spec.ts" time="1.906">
+</testcase>
+<testcase name="ostomate2-two-platforms: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="2.052">
+</testcase>
+<testcase name="ostomate2-two-platforms: the page renders without running scripts" classname="test-history.spec.ts" time="2.131">
+</testcase>
+<testcase name="routeserve-flaky: the page does not scroll sideways" classname="test-history.spec.ts" time="1.92">
+</testcase>
+<testcase name="routeserve-flaky: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="1.989">
+</testcase>
+<testcase name="routeserve-flaky: the page renders without running scripts" classname="test-history.spec.ts" time="2.196">
+</testcase>
+<testcase name="testpulse-failing: the page does not scroll sideways" classname="test-history.spec.ts" time="1.83">
+</testcase>
+<testcase name="testpulse-failing: shows neither “Live” nor “Offline”" classname="test-history.spec.ts" time="1.951">
+</testcase>
+<testcase name="testpulse-failing: the page renders without running scripts" classname="test-history.spec.ts" time="2.037">
+</testcase>
+<testcase name="without scripts, the duration chart is its table › lists the two-platform test’s 8 runs, newest first" classname="test-history.spec.ts" time="2.414">
+</testcase>
+<testcase name="links to a test history resolve › from every row of a run page, without scripts too" classname="test-history.spec.ts" time="3.068">
+</testcase>
+<testcase name="a test that is not there › answers 404 for a malformed, unknown or other project’s key and an unknown project" classname="test-history.spec.ts" time="2.389">
+</testcase>
+</testsuite>
+<testsuite name="harness/axe.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="harness" tests="3" failures="0" skipped="0" time="11.564" errors="0">
+<testcase name="fails on a critical violation and names it" classname="harness/axe.spec.ts" time="3.977">
+</testcase>
+<testcase name="fails on a serious violation and names it" classname="harness/axe.spec.ts" time="3.826">
+</testcase>
+<testcase name="lets moderate violations through, as the spec sets the bar at serious" classname="harness/axe.spec.ts" time="3.761">
+</testcase>
+</testsuite>
+<testsuite name="harness/ingest.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="harness" tests="3" failures="0" skipped="0" time="0.052" errors="0">
+<testcase name="refuses a hosted URL before it builds a client, without echoing the key" classname="harness/ingest.spec.ts" time="0.019">
+</testcase>
+<testcase name="refuses the hosted URL before looking for the key" classname="harness/ingest.spec.ts" time="0.023">
+</testcase>
+<testcase name="builds a secret-key client for the local stack" classname="harness/ingest.spec.ts" time="0.01">
+</testcase>
+</testsuite>
+<testsuite name="harness/order.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="harness" tests="8" failures="0" skipped="0" time="83.349" errors="0">
+<testcase name="the e2e project graph › runs every project, the live feed last, when all pass" classname="harness/order.spec.ts" time="10.533">
+</testcase>
+<testcase name="the e2e project graph › still runs the leak sweep and the live feed, last, when desktop-dark fails" classname="harness/order.spec.ts" time="10.435">
+</testcase>
+<testcase name="the e2e project graph › still runs the leak sweep and the live feed, last, when desktop-light fails" classname="harness/order.spec.ts" time="10.3">
+</testcase>
+<testcase name="the e2e project graph › still runs the leak sweep and the live feed, last, when phone-dark fails" classname="harness/order.spec.ts" time="10.425">
+</testcase>
+<testcase name="the e2e project graph › still runs the leak sweep and the live feed, last, when phone-light fails" classname="harness/order.spec.ts" time="10.569">
+</testcase>
+<testcase name="the e2e project graph › still runs the leak sweep and the live feed, last, when no-js fails" classname="harness/order.spec.ts" time="10.372">
+</testcase>
+<testcase name="the e2e project graph › still runs the leak sweep and the live feed, last, when harness fails" classname="harness/order.spec.ts" time="10.297">
+</testcase>
+<testcase name="the e2e project graph › still runs the leak sweep and the live feed, last, when leak-sweep fails" classname="harness/order.spec.ts" time="10.418">
+</testcase>
+</testsuite>
+<testsuite name="harness/server.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="harness" tests="4" failures="0" skipped="0" time="6.682" errors="0">
+<testcase name="the server under test runs on the seed clock" classname="harness/server.spec.ts" time="0.006">
+</testcase>
+<testcase name="next start with a fixed clock › refuses to start when VERCEL_ENV is production" classname="harness/server.spec.ts" time="1.911">
+</testcase>
+<testcase name="next start with a fixed clock › refuses to start on a malformed instant" classname="harness/server.spec.ts" time="1.424">
+</testcase>
+<testcase name="next start with a fixed clock › starts and serves on a preview deployment" classname="harness/server.spec.ts" time="3.341">
+</testcase>
+</testsuite>
+<testsuite name="leak-sweep.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="leak-sweep" tests="7" failures="0" skipped="0" time="243.742" errors="0">
+<testcase name="the private-data leak sweep › knows what it looks for, and finds each value in every form" classname="leak-sweep.spec.ts" time="0.095">
+</testcase>
+<testcase name="the private-data leak sweep › the landing page and the project page, through the branch filter and Load 20 more" classname="leak-sweep.spec.ts" time="21.413">
+</testcase>
+<testcase name="the private-data leak sweep › every RouteServe run page, through its status filter and Load 50 more" classname="leak-sweep.spec.ts" time="92.19">
+</testcase>
+<testcase name="the private-data leak sweep › the failing test’s history, through every run by keyboard, and the run it opens" classname="leak-sweep.spec.ts" time="17.024">
+</testcase>
+<testcase name="the private-data leak sweep › the site’s own pages and the not-found pages" classname="leak-sweep.spec.ts" time="44.549">
+</testcase>
+<testcase name="the private-data leak sweep › every page as served without scripts, every seeded test’s history included" classname="leak-sweep.spec.ts" time="56.883">
+</testcase>
+<testcase name="the private-data leak sweep › while the same sweep finds a public project’s failure text, commit and run links" classname="leak-sweep.spec.ts" time="11.588">
+</testcase>
+</testsuite>
+<testsuite name="live.spec.ts" timestamp="2026-10-07T20:16:32.170Z" hostname="live" tests="7" failures="0" skipped="0" time="100.571" errors="0">
+<testcase name="a new report appears in the landing feed without reload, marked New" classname="live.spec.ts" time="8.983">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="a private report arriving live leaks nothing, in any frame or response" classname="live.spec.ts" time="7.175">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="a private run failing on two platforms shows each head, and no failure text" classname="live.spec.ts" time="10.331">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="a new run appears in the project page’s run list without reload" classname="live.spec.ts" time="9.301">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="offline › when the socket cannot stay open, on the landing page" classname="live.spec.ts" time="12.903">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="offline › when Realtime refuses the subscription, on the project page" classname="live.spec.ts" time="23.679">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="offline › and live again when the socket reconnects" classname="live.spec.ts" time="28.199">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>

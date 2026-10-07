@@ -309,6 +309,93 @@ describe('parseJunit against Playwright output (testsuites wrapper)', () => {
   });
 });
 
+// testpulse's own Vitest output, as its checks and integration jobs write it (reporting
+// standard section 3: the Vitest fixture that makes the tool proven).
+describe('parseJunit against Vitest output (testpulse checks and integration jobs)', () => {
+  const unit = parseJunit([readFixture('testpulse/junit/vitest-unit.xml')]);
+  const integration = parseJunit([readFixture('testpulse/junit/vitest-integration.xml')]);
+  const oneFailure = parseJunit([readFixture('testpulse/junit/vitest-one-failure.xml')]);
+
+  it('reads the unit run: 2,168 passed tests in 138 files, each test once', () => {
+    expect(countBy(unit.tests.map((test) => test.status))).toEqual({ passed: 2168 });
+    expect(new Set(unit.tests.map((test) => test.suite)).size).toBe(138);
+    expect(new Set(unit.tests.map((test) => `${test.suite}\u0000${test.name}`)).size).toBe(2168);
+    expect(unit.startedAt).toBe('2026-10-07T20:14:31.239Z');
+  });
+
+  it('reads the integration run: 180 passed tests in 9 files', () => {
+    expect(countBy(integration.tests.map((test) => test.status))).toEqual({ passed: 180 });
+    expect(new Set(integration.tests.map((test) => test.suite)).size).toBe(9);
+  });
+
+  it('takes the repo-relative file as the suite and the describe path as the name', () => {
+    expect(unit.tests[0]).toEqual({
+      suite: 'app/fonts/fonts.test.ts',
+      name: 'self-hosted fonts > never loads a font from Google Fonts',
+      status: 'passed',
+      durationMs: 63,
+    });
+    expect(integration.tests.every((test) => test.suite.endsWith('.int.test.ts'))).toBe(true);
+  });
+
+  it('maps a passed, a failed and a skipped Vitest case', () => {
+    expect(oneFailure.tests).toEqual([
+      {
+        suite: 'lib/zz-deliberate-failure.test.ts',
+        name: 'a deliberate failure > passes to capture a passing Vitest JUnit case',
+        status: 'passed',
+        durationMs: 1,
+      },
+      {
+        suite: 'lib/zz-deliberate-failure.test.ts',
+        name: 'a deliberate failure > fails to capture a failing Vitest JUnit case',
+        status: 'failed',
+        durationMs: 3,
+        failure: {
+          message: 'expected 1 to be 2 // Object.is equality',
+          detail:
+            'AssertionError: expected 1 to be 2 // Object.is equality\n\n- Expected\n+ Received\n\n' +
+            '- 2\n+ 1\n\n ❯ lib/zz-deliberate-failure.test.ts:9:15',
+        },
+      },
+      {
+        suite: 'lib/zz-deliberate-failure.test.ts',
+        name: 'a deliberate failure > is skipped to capture a skipped Vitest JUnit case',
+        status: 'skipped',
+        durationMs: 0,
+      },
+    ]);
+  });
+});
+
+// The whole Playwright suite in one file, every project in it, from a local run in the pinned
+// image in which three tests failed (fixtures/README.md): the only captured <error> elements.
+describe('parseJunit against the full Playwright suite (every project in one file)', () => {
+  const report = parseJunit([readFixture('testpulse/junit/playwright-e2e.xml')]);
+
+  it('reads 882 executions of 235 distinct tests', () => {
+    expect(report.tests).toHaveLength(882);
+    expect(new Set(report.tests.map((test) => `${test.suite}\u0000${test.name}`)).size).toBe(235);
+    expect(countBy(report.tests.map((test) => test.status))).toEqual({
+      passed: 879,
+      failed: 1,
+      error: 2,
+    });
+  });
+
+  it('maps a timeout, which Playwright writes as an error element, to error', () => {
+    const errors = report.tests.filter((test) => test.status === 'error');
+    expect(errors.map((test) => test.name)).toEqual([
+      'ostomate2: Tab reaches every control, each with a visible focus ring',
+      'routeserve: no serious or critical axe violations',
+    ]);
+    for (const test of errors) {
+      expect(test.suite).toBe('run.spec.ts');
+      expect(test.failure?.message).toBe('Test timeout of 30000ms exceeded.');
+    }
+  });
+});
+
 describe('parseJunit edge cases derived from the real fixtures', () => {
   const playwright = readFixture('testpulse/junit/playwright-one-failure.xml');
   const gradle = readFixture(

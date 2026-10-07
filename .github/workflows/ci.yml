@@ -4,6 +4,10 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Weekly, so a quiet week still reports and testpulse can tell it from one that stopped
+  # (reporting standard, rule 2.8; expected_cadence_days in projects/testpulse.yaml).
+  schedule:
+    - cron: '17 6 * * 1'
 
 permissions:
   contents: read
@@ -44,14 +48,38 @@ jobs:
       - name: Check design token contrast
         run: npm run check:contrast
 
+      # Runs after a failed check above, so its results are still reported (reporting standard,
+      # rule 2.4). Naming the reporters replaces Vitest's defaults, so default and github-actions
+      # are named again beside junit.
       - name: Unit tests with coverage
-        run: npm run test
+        if: ${{ !cancelled() }}
+        run: >-
+          npm run test --
+          --reporter=default --reporter=github-actions
+          --reporter=junit --outputFile.junit=test-results/junit/unit.xml
+
+      - name: Report unit and component results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: checks
+          module: unit
+          platform: node
+          format: junit
+          results: test-results/junit/unit.xml
+          coverage-format: istanbul
+          coverage-file: coverage/coverage-summary.json
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
 
       - name: Build
         run: npm run build
 
+  # Integration and e2e wait for checks but run whatever its result, so a failed lint or unit
+  # test does not leave the run without their reports (reporting standard, rule 2.4).
   integration:
     needs: checks
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -71,10 +99,26 @@ jobs:
         uses: ./.github/actions/local-supabase
 
       - name: Integration tests against local Supabase
-        run: npm run test:int
+        run: >-
+          npm run test:int --
+          --reporter=default --reporter=github-actions
+          --reporter=junit --outputFile.junit=test-results/junit/integration.xml
+
+      - name: Report integration results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: integration
+          module: integration
+          platform: node
+          format: junit
+          results: test-results/junit/integration.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
 
   e2e:
     needs: checks
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -101,6 +145,110 @@ jobs:
       # Playwright image on the host network, the one place snapshots are compared (spec 16).
       - name: End-to-end tests in the Playwright image against the production build
         run: npm run test:e2e:docker
+
+      # playwright.config.ts writes one junit file for every project. Each Playwright project is
+      # reported as its own platform, so a test run in four viewports is one test on four
+      # platforms rather than four copies in one report. The container wrote test-results/ as
+      # root, so the split files go to the runner's temp directory.
+      - name: Split Playwright results by project
+        if: always()
+        run: node scripts/split-playwright-junit.ts test-results/e2e-junit.xml "$RUNNER_TEMP/e2e-junit"
+
+      - name: Report desktop-dark end-to-end results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: e2e
+          module: e2e
+          platform: desktop-dark
+          format: junit
+          results: ${{ runner.temp }}/e2e-junit/desktop-dark.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
+
+      - name: Report desktop-light end-to-end results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: e2e
+          module: e2e
+          platform: desktop-light
+          format: junit
+          results: ${{ runner.temp }}/e2e-junit/desktop-light.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
+
+      - name: Report phone-dark end-to-end results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: e2e
+          module: e2e
+          platform: phone-dark
+          format: junit
+          results: ${{ runner.temp }}/e2e-junit/phone-dark.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
+
+      - name: Report phone-light end-to-end results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: e2e
+          module: e2e
+          platform: phone-light
+          format: junit
+          results: ${{ runner.temp }}/e2e-junit/phone-light.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
+
+      - name: Report no-js end-to-end results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: e2e
+          module: e2e
+          platform: no-js
+          format: junit
+          results: ${{ runner.temp }}/e2e-junit/no-js.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
+
+      - name: Report harness end-to-end results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: e2e
+          module: e2e
+          platform: harness
+          format: junit
+          results: ${{ runner.temp }}/e2e-junit/harness.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
+
+      - name: Report leak-sweep end-to-end results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: e2e
+          module: e2e
+          platform: leak-sweep
+          format: junit
+          results: ${{ runner.temp }}/e2e-junit/leak-sweep.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
+
+      - name: Report live end-to-end results to testpulse
+        if: always()
+        uses: ./.github/actions/report
+        with:
+          job: e2e
+          module: e2e
+          platform: live
+          format: junit
+          results: ${{ runner.temp }}/e2e-junit/live.xml
+          url: ${{ vars.TESTPULSE_URL }}
+          token: ${{ secrets.TESTPULSE_TOKEN }}
 
       - name: Upload Playwright results on failure
         if: failure()

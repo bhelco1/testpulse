@@ -141,6 +141,8 @@ test.describe('an Ostomate2 test on one platform (public)', () => {
       ['Median time', '0.07 s', 'last 30 CI runs'],
     ]);
     await expect(stripNote(page)).toHaveText('Oldest on the left');
+    // components.md Test history page: "Strip note: 13 --ink-3" (design v10).
+    await expect(stripNote(page)).toHaveCSS('font-size', '13px');
   });
 
   test('draws one strip of its 9 runs, all passed, and opens on the latest', async ({ page }) => {
@@ -198,7 +200,7 @@ test.describe('an Ostomate2 test on two platforms (public)', () => {
     );
     await expect(cells(page)).toHaveCount(18);
     // 25 ms on the JVM and 3 ms on the simulator, as the two JUnit files record them.
-    await expect(fields(page)).toHaveText(['jvmPassed·0.03 s', 'ios-simPassed·0.00 s']);
+    await expect(fields(page)).toHaveText(['jvmPassed·0.03 s', 'ios-simPassed·3 ms']);
   });
 
   test('tiles the JVM’s median with the simulator’s beside it', async ({ page }) => {
@@ -206,7 +208,7 @@ test.describe('an Ostomate2 test on two platforms (public)', () => {
       ['Runs', '9', 'since 24 Sep'],
       ['Failed', '0', 'on any platform'],
       ['Flaky', '0', 'none in 30 days'],
-      ['Median time', '0.03 s', 'jvm · ios-sim 0.00 s'],
+      ['Median time', '0.03 s', 'jvm · ios-sim 3 ms'],
     ]);
   });
 
@@ -278,14 +280,15 @@ test.describe('RouteServe’s flaky test (private)', () => {
     await expect(page.locator('[data-part="flaky"]')).toHaveText('Flaky');
   });
 
-  // The four red runs on main, the flip's failing side among them, as the project page's flaky
-  // row counts them ("Failed 4 of last 10 runs").
-  test('tiles 11 runs, 4 failed, 1 commit flipped', async ({ page }) => {
+  // The three runs drawn Failed: of the four red runs on main, the flip's failing side counts as
+  // Flaky, never Failed, as the project page's flaky row counts them ("Failed 3 of last 10 runs";
+  // design v10 item 18, decision 2026-10-07).
+  test('tiles 11 runs, 3 failed, 1 commit flipped', async ({ page }) => {
     await expectTiles(page, [
       ['Runs', '11', 'since 24 Sep'],
-      ['Failed', '4', '4 runs · node'],
+      ['Failed', '3', '3 runs · node'],
       ['Flaky', '1', 'commit in 30 days · node'],
-      ['Median time', '0.00 s', 'last 30 CI runs'],
+      ['Median time', '1 ms', 'last 30 CI runs'],
     ]);
   });
 
@@ -345,7 +348,7 @@ test.describe('RouteServe’s flaky test (private)', () => {
       String(ROUTESERVE_SHAS.at(-1)),
     );
     // 2 ms when it fails, as the captured failing Jest file records it.
-    await expect(fields(page)).toHaveText(['ResultFailed·0.00 s']);
+    await expect(fields(page)).toHaveText(['ResultFailed·2 ms']);
     await expect(panel(page).getByRole('link', { name: 'Open run →' })).toHaveAttribute(
       'href',
       RUN_HREF('routeserve'),
@@ -366,7 +369,7 @@ test.describe('RouteServe’s flaky test (private)', () => {
     async ({ page }) => {
       await cells(page).nth(4).click();
       await expect(cells(page).nth(4)).toHaveAttribute('aria-selected', 'true');
-      await expect(fields(page)).toHaveText(['ResultFlaky·0.00 s']);
+      await expect(fields(page)).toHaveText(['ResultFlaky·2 ms']);
       await page.keyboard.press('ArrowRight');
       await expect(cells(page).nth(5)).toHaveAttribute('aria-selected', 'true');
       await expect(panel(page).locator('[data-part="run-sha"]')).toHaveText(
@@ -395,7 +398,7 @@ test.describe('testpulse’s failing test (public, one run)', () => {
     );
     await expect(panel(page).locator('[data-part="when"]')).toHaveText('1 week ago');
     // 4 ms, as the Playwright JUnit file records it.
-    await expect(fields(page)).toHaveText(['ResultFailed·0.00 s']);
+    await expect(fields(page)).toHaveText(['ResultFailed·4 ms']);
   });
 
   test('tiles its one failed run and notes it is the only one', async ({ page }) => {
@@ -403,7 +406,7 @@ test.describe('testpulse’s failing test (public, one run)', () => {
       ['Runs', '1', 'since 22 Sep'],
       ['Failed', '1', '1 run · chromium'],
       ['Flaky', '0', 'none in 30 days'],
-      ['Median time', '0.00 s', 'last 30 CI runs'],
+      ['Median time', '4 ms', 'last 30 CI runs'],
     ]);
     await expect(stripNote(page)).toHaveText('One run so far');
   });

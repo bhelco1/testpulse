@@ -534,9 +534,9 @@ describe('runPageView: a private failing run', () => {
       name: 'assetCreateSchema accepts a minimal valid asset',
       status: 'failed',
       flaky: true,
-      time: '0.00 s',
+      time: '4 ms',
       failures: [
-        { platform: 'node', status: 'failed', duration: '0.00 s', message: null, detail: null },
+        { platform: 'node', status: 'failed', duration: '4 ms', message: null, detail: null },
       ],
       historyHref: '/p/routeserve/tests/assetCreateSchema accepts a minimal valid asset-key',
     });
@@ -603,7 +603,7 @@ describe('runPageView: a private failing run', () => {
     const leakedView = runPageView(leaked, NOW);
     const [leakedRow] = leakedView.results?.kind === 'rows' ? leakedView.results.rows : [];
     expect(leakedRow?.failures).toEqual([
-      { platform: 'node', status: 'failed', duration: '0.00 s', message: null, detail: null },
+      { platform: 'node', status: 'failed', duration: '4 ms', message: null, detail: null },
     ]);
     expect(JSON.stringify(leakedView)).not.toContain('secret');
     expect(JSON.stringify(leakedView)).not.toContain('github.com');

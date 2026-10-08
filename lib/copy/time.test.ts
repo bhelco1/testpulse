@@ -150,14 +150,21 @@ describe('clockLabel', () => {
   });
 });
 
-// The run page's rows and the test history panel print a test's time as the Run Detail and Test
-// History mocks do (M.fmt, "0.41 s"); only the chart reads milliseconds (v8 item 48).
+// A test's time reads one way everywhere it is printed, the charts included (design v10 item 14,
+// components.md "Small durations, everywhere"; decision 2026-10-07): seconds to two places from
+// 10 ms, whole ms under it, and a stored 0 "<1 ms".
 describe('formatTestTime', () => {
-  it('reads seconds to two places, 0.00 s included', () => {
+  it('reads seconds to two places from 10 ms', () => {
     expect(formatTestTime(410)).toBe('0.41 s');
-    expect(formatTestTime(3)).toBe('0.00 s');
-    expect(formatTestTime(0)).toBe('0.00 s');
+    expect(formatTestTime(10)).toBe('0.01 s');
     expect(formatTestTime(1_125)).toBe('1.13 s');
+  });
+
+  it('reads whole milliseconds under 10 ms, and a stored 0 as under 1 ms', () => {
+    expect(formatTestTime(9)).toBe('9 ms');
+    expect(formatTestTime(3)).toBe('3 ms');
+    expect(formatTestTime(1)).toBe('1 ms');
+    expect(formatTestTime(0)).toBe('<1 ms');
   });
 });
 

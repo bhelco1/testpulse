@@ -13,7 +13,7 @@ If a request conflicts with the spec, stop and say so. If a decision changes, up
 
 ## Current phase
 
-Phase 6: Alerts, tracked links, admin. Design v12 is in `design/` (its kiosk held back for v13); publishing the repository publicly is a follow-up, not a phase. Update this line when a phase completes.
+Phase 6: Alerts, tracked links, admin. Design v14 is in `design/` (its three-card kiosk not built yet); publishing the repository publicly is a follow-up, not a phase. Update this line when a phase completes.
 
 ## How to work
 

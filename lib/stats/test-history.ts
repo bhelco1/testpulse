@@ -82,11 +82,11 @@ export interface TestHistory {
   /** Commits it both passed and failed on, on one platform, in 30 days: the Flaky tile. */
   readonly flakyCommits: number;
   /**
-   * Runs among runs in which it failed or errored on any platform, a flip's failing side
-   * included, as the flaky list counts them: the Failed tile.
+   * Runs among runs drawn Failed: a failed or errored cell on any platform that is not flaky, as
+   * the flaky list counts them: the Failed tile.
    */
   readonly failedRuns: number;
-  /** The platforms it failed or errored on among runs, in report order. */
+  /** The platforms of those cells, in report order. */
   readonly failedPlatforms: readonly string[];
   /**
    * Runs among runs whose platforms reported different statuses, and the latest of them as an
@@ -108,7 +108,8 @@ function platformsOf(results: readonly HistoryResult[]): string[] {
 }
 
 // Failing is failed or error on any platform; a flaky cell draws as Flaky, so the failing side of
-// a flip does not count (design v6 item 7, components.md StatusTimeline).
+// a flip does not count (design v6 item 7, components.md StatusTimeline). The Failed tile counts
+// the same way: a flaky run is Flaky, never Failed (design v10 item 18, decision 2026-10-07).
 const isFailing = (cell: HistoryCell): boolean =>
   !cell.flaky && (cell.status === 'failed' || cell.status === 'error');
 
@@ -121,9 +122,6 @@ const median = (values: readonly number[]): number | null => {
   // Both middle entries exist: sorted has at least one value.
   return sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
 };
-
-const failedOrErrored = (cell: HistoryCell): boolean =>
-  cell.status === 'failed' || cell.status === 'error';
 
 // A platform mismatch, as the run page's results table has it: statuses that differ across the
 // platforms the test reported on in one run.
@@ -222,9 +220,9 @@ export function testHistory(
           ),
         };
 
-  const failing = timeline.filter((run) => run.results.some(failedOrErrored));
+  const failing = timeline.filter((run) => run.results.some(isFailing));
   const failingPlatforms = new Set(
-    failing.flatMap((run) => run.results.filter(failedOrErrored).map((cell) => cell.platform)),
+    failing.flatMap((run) => run.results.filter(isFailing).map((cell) => cell.platform)),
   );
   const mismatched = timeline.flatMap((run, index) => (isMismatch(run) ? [index] : []));
 

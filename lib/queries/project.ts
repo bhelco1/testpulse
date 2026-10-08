@@ -270,10 +270,15 @@ export async function loadProjectPage(
   const flaky = flakyTests(runs, results, stats);
   const flakyByTest = flakyPlatforms(runs, results, stats);
   const flakyIds = flakyByTest.map((test) => test.testId);
+  // The history read can stop before the other side of a flip among its runs; the results of the
+  // 30 days hold every flip, so together they find each side the strip draws as Flaky.
+  const history = await loadFlakyHistory(client, flakyIds, runs.filter(ci));
+  const historyIds = new Set(history.map((result) => result.id));
+  const flakyIdSet = new Set(flakyIds);
   const failures = new Map(
     flakyFailures(
       runs,
-      await loadFlakyHistory(client, flakyIds, runs.filter(ci)),
+      [...history, ...results.filter((r) => flakyIdSet.has(r.testId) && !historyIds.has(r.id))],
       flakyIds,
       stats,
     ).map((counted) => [counted.testId, counted]),

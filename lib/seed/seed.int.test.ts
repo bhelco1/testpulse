@@ -873,8 +873,9 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
             ...ROUTESERVE_TEST,
             layer: 'unit',
             platforms: ['node'],
-            // It has a result in all 10 CI runs on main and failed in the 4 red ones.
-            failures: { failed: 4, runs: 10 },
+            // It has a result in all 10 CI runs on main and failed in the 4 red ones; the red first
+            // attempt is one side of the flip, Flaky and never Failed (decision 2026-10-07).
+            failures: { failed: 3, runs: 10 },
             // The red first attempt and its green re-run share one commit.
             commits: 1,
           },

@@ -99,18 +99,17 @@ export function tooltipLeft(layout: ChartLayout, index: number): number {
   );
 }
 
-// The first value label sits below its point, or above it when the point is near the x axis
-// (tp-charts.js) or when below it would overlap the floor label, which sits on a baseline 6 px
-// above the floor line (decision 2026-10-02). Each text is taken as its font size tall above its
-// baseline: 13 px for the value, 12 px for the floor.
-export function startLabelDy(layout: ChartLayout, y: number, floorY?: number): number {
-  if (y > layout.height - layout.bottom - 20) return -10;
-  if (floorY !== undefined) {
-    const below = y + 18;
-    const floorBaseline = floorY - 6;
-    if (below - 13 < floorBaseline && floorBaseline - 12 < below) return -10;
-  }
-  return 18;
+// The first value label sits 18 px below its point; if that would meet the x axis or the floor
+// label, 10 px above; if both would collide it is dropped, null, the caption already stating the
+// first value (design v10 item 13, decision 2026-10-07). The boxes are tp-charts.js's: a value
+// label spans 12 px above its baseline to 2 px below, the floor label 18 px to 2 px above the
+// floor line, and the axis allows a baseline down to 2 px above it.
+export function startLabelDy(layout: ChartLayout, y: number, floorY?: number): number | null {
+  const axis = layout.height - layout.bottom - 2;
+  const hits = (baseline: number): boolean =>
+    baseline > axis ||
+    (floorY !== undefined && baseline - 12 < floorY - 2 && baseline + 2 > floorY - 18);
+  return [18, -10].find((dy) => !hits(y + dy)) ?? null;
 }
 
 // The chart's keyboard model: focus shows the latest point, arrows move, Escape closes.

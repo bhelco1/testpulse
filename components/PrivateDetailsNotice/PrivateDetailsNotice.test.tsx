@@ -29,6 +29,15 @@ describe('PrivateDetailsNotice', () => {
     expect(lock?.querySelector('path')?.getAttribute('d')).toBe('M8 11V7a4 4 0 0 1 8 0v4');
   });
 
+  // Design v12 item 9: the title is --ink-2, per the Notice spec, as Run Detail draws it.
+  it('titles the notice in 14.5 px semibold --ink-2', () => {
+    expect(ruleFor(CSS, '.title')).toEqual({
+      'font-weight': '600',
+      'font-size': '14.5px',
+      color: 'var(--ink-2)',
+    });
+  });
+
   it('is a dashed inset panel with the row radius', () => {
     expect(ruleFor(CSS, '.notice')).toMatchObject({
       padding: '14px var(--space-4)',

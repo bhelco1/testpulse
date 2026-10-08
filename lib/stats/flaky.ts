@@ -133,15 +133,18 @@ export function flakyPlatforms(
 
 // Design v7 item 6 (components.md StatusTimeline, data-map.md "Flaky list"): the flaky list's
 // "Failed {n} of last {m} runs". m is the last 40 default-branch CI runs in which the test has a
-// result, of any status and on any platform, fewer when it has fewer; n is those in which it
-// failed or errored on any platform. Unlike the flaky flag, this has no day window, so a test
-// flaky in the 30 days can count no failures when its failing runs are behind 40 later ones.
+// result, of any status and on any platform, fewer when it has fewer; n is those the Test History
+// strip draws Failed: a failed or errored result on a platform where none of the run's results
+// is one side of a flip. A flaky run is Flaky, never Failed (design v10 item 18, decision
+// 2026-10-07). Unlike the flip itself, m has no day window, so a test flaky in the 30 days can
+// count no failures when its failing runs are behind 40 later ones, and a flip older than 30 days
+// is not one, so its failing side counts.
 
 export const FLAKY_RATE_RUNS = 40;
 
 export interface FlakyFailures {
   readonly testId: string;
-  /** n: runs among them in which the test failed or errored on any platform. */
+  /** n: runs among them with a failed or errored platform that is not one side of a flip. */
   readonly failed: number;
   /** m: the test's last runs with a result, at most 40. */
   readonly runs: number;
@@ -162,14 +165,32 @@ export function flakyFailures(
       )
       .map((run) => [run.id, run]),
   );
-  // Per test, each run it has a result in and whether any of them failed.
-  const failedIn = new Map<string, Map<string, boolean>>(testIds.map((id) => [id, new Map()]));
+  const flipSides = flakyResultIds(runs, results, options);
+  // Per test and run, each platform's cell as the strip draws it: failing, and whether flaky.
+  const cellsIn = new Map<string, Map<string, Map<string, { failing: boolean; flaky: boolean }>>>(
+    testIds.map((id) => [id, new Map()]),
+  );
   for (const result of results) {
-    const byRun = failedIn.get(result.testId);
+    const byRun = cellsIn.get(result.testId);
     if (byRun === undefined || !counted.has(result.runId)) continue;
-    const failing = result.status === 'failed' || result.status === 'error';
-    byRun.set(result.runId, (byRun.get(result.runId) ?? false) || failing);
+    const byPlatform = byRun.get(result.runId) ?? new Map();
+    const cell = byPlatform.get(result.platform) ?? { failing: false, flaky: false };
+    cell.failing ||= result.status === 'failed' || result.status === 'error';
+    cell.flaky ||= flipSides.has(result.id);
+    byPlatform.set(result.platform, cell);
+    byRun.set(result.runId, byPlatform);
   }
+  const failedIn = new Map(
+    [...cellsIn].map(([testId, byRun]) => [
+      testId,
+      new Map(
+        [...byRun].map(([runId, byPlatform]) => [
+          runId,
+          [...byPlatform.values()].some((cell) => cell.failing && !cell.flaky),
+        ]),
+      ),
+    ]),
+  );
   return testIds.map((testId) => {
     const byRun = failedIn.get(testId) ?? new Map<string, boolean>();
     const last = [...byRun.keys()]

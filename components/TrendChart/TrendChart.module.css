@@ -129,16 +129,26 @@
   fill: var(--ink-3);
 }
 
+/* The start, end and floor labels sit on a 3 px --surface halo painted under the text, so a line
+   passing under a label never cuts its digits (design v10 item 13). */
 .valueText {
   font-size: var(--chart-value);
   font-weight: 600;
   fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: 3px;
+  paint-order: stroke;
+  stroke-linejoin: round;
 }
 
 .floorText {
   font-size: var(--chart-axis);
   font-weight: 600;
   fill: var(--attn);
+  stroke: var(--surface);
+  stroke-width: 3px;
+  paint-order: stroke;
+  stroke-linejoin: round;
 }
 
 .tooltip {

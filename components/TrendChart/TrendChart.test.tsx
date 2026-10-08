@@ -557,6 +557,19 @@ describe('TrendChart at phone width', () => {
     });
   });
 
+  // Design v10 item 13 (components.md TrendChart; decision 2026-10-07): the start, end and floor
+  // labels sit on a 3 px --surface halo, painted under the text, so a line never cuts a digit.
+  it('draws the value and floor labels on a 3 px surface halo', () => {
+    const halo = {
+      stroke: 'var(--surface)',
+      'stroke-width': '3px',
+      'paint-order': 'stroke',
+      'stroke-linejoin': 'round',
+    };
+    expect(ruleFor(CSS, '.valueText')).toMatchObject(halo);
+    expect(ruleFor(CSS, '.floorText')).toMatchObject(halo);
+  });
+
   it('redraws on the next frame when the width changes', async () => {
     const { container } = render(<TrendChart {...COVERAGE} />);
     chartWidth = 720;
@@ -1784,6 +1797,17 @@ describe('TrendChart y labels', () => {
     format: 'pct',
     unit: 'run',
   };
+
+  // Design v10 item 13: a start 9.9 px above the floor line meets "floor 93%" both 18 px below
+  // its point and 10 px above it, so its label is dropped; the caption states the first value.
+  it('drops the first value label when both places meet the floor label', () => {
+    const values = [93.2, ...(COMPOSE_APP.series[0]?.values.slice(1) ?? [])];
+    const { container } = render(
+      <TrendChart {...COMPOSE_APP} series={[{ name: 'composeApp', values }]} />,
+    );
+    expect(parts(container, 'end-dot')).toHaveLength(2);
+    expect(parts(container, 'value-label').map((label) => label.textContent)).toEqual(['94.3%']);
+  });
 
   for (const width of [720, 342]) {
     it(`lifts "93.6%" above its point, off "floor 93%", at ${width} px`, () => {

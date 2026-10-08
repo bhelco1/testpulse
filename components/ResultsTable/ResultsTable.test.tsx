@@ -683,7 +683,7 @@ describe('ResultsTable rows', () => {
       status: 'failed',
       platforms: [{ platform: 'node', status: 'failed' }],
       failures: [
-        { platform: 'node', status: 'failed', duration: '0.00 s', message: null, detail: null },
+        { platform: 'node', status: 'failed', duration: '2 ms', message: null, detail: null },
       ],
     });
     const { container } = renderTable({ results: [one], visibility: 'private' });

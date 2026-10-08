@@ -418,10 +418,10 @@ describe('testHistory', () => {
       expect(history.failedPlatforms).toEqual(['jvm', 'ios-sim']);
     });
 
-    // "Runs where it failed or errored on any platform", as the flaky list's "Failed {n} of last
-    // {m} runs" counts them on the project page, so one test reads alike on both pages: the
-    // failing side of a flip is a run it failed in, though the strip draws its cell as Flaky.
-    it('counts the failing side of a flip as a failed run', () => {
+    // Decision 2026-10-07 (design v10 item 18): a flaky run counts as Flaky, never Failed, so the
+    // Failed tile counts the runs the strip draws Failed, as the flaky list's "Failed {n} of last
+    // {m} runs" does. This supersedes the 2026-10-01 rule that counted a flip's failing side.
+    it('does not count the failing side of a flip across attempts as a failed run', () => {
       const runs = [
         publicRun('a1', '2026-09-20T10:00:00Z', { commitSha: 'c1' }),
         publicRun('a2', '2026-09-20T11:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
@@ -431,9 +431,63 @@ describe('testHistory', () => {
         [result('x1', 'a1', 'jvm', 'failed'), result('x2', 'a2', 'jvm', 'passed')],
         options,
       );
-      expect(history.failedRuns).toBe(1);
-      expect(history.failedPlatforms).toEqual(['jvm']);
+      expect(history.failedRuns).toBe(0);
+      expect(history.failedPlatforms).toEqual([]);
       expect(history.flakyCommits).toBe(1);
+    });
+
+    it('does not count a run that failed then passed on retry as a failed run', () => {
+      const runs = [publicRun('r1', '2026-09-20T10:00:00Z')];
+      const history = testHistory(
+        runs,
+        [result('x1', 'r1', 'node', 'failed'), result('x2', 'r1', 'node', 'passed')],
+        options,
+      );
+      expect(history.runs[0]?.results).toMatchObject([{ status: 'failed', flaky: true }]);
+      expect(history.failedRuns).toBe(0);
+      expect(history.failedPlatforms).toEqual([]);
+    });
+
+    it('counts a flaky run as failed for its other platform that failed without a flip', () => {
+      const runs = [
+        publicRun('a1', '2026-09-20T10:00:00Z', { commitSha: 'c1' }),
+        publicRun('a2', '2026-09-20T11:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
+      ];
+      const history = testHistory(
+        runs,
+        [
+          result('x1', 'a1', 'jvm', 'failed'),
+          result('x2', 'a1', 'ios-sim', 'failed'),
+          result('x3', 'a2', 'jvm', 'passed'),
+          result('x4', 'a2', 'ios-sim', 'failed'),
+        ],
+        options,
+      );
+      expect(history.failedRuns).toBe(2);
+      expect(history.failedPlatforms).toEqual(['ios-sim']);
+    });
+
+    // Section 11's flip is in default-branch CI runs of the last 30 days; the 2026-10-07 row's
+    // (b) records that a flip anywhere else is not flaky, so its failing side is Failed.
+    it('counts a retry flip on another branch, and one older than 30 days, as failed runs', () => {
+      const runs = [
+        publicRun('old', '2026-08-15T10:00:00Z', { commitSha: 'c1' }),
+        publicRun('old2', '2026-08-15T11:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
+        publicRun('pr', '2026-09-20T10:00:00Z', { commitSha: 'c2', branch: 'feature/x' }),
+      ];
+      const history = testHistory(
+        runs,
+        [
+          result('x1', 'old', 'jvm', 'failed'),
+          result('x2', 'old2', 'jvm', 'passed'),
+          result('x3', 'pr', 'jvm', 'failed'),
+          result('x4', 'pr', 'jvm', 'passed'),
+        ],
+        options,
+      );
+      expect(history.flaky).toBe(false);
+      expect(history.failedRuns).toBe(2);
+      expect(history.failedPlatforms).toEqual(['jvm']);
     });
 
     it('counts the commits it flipped on in 30 days', () => {

@@ -216,7 +216,7 @@ describe('testHistoryView', () => {
       { label: 'Failed', value: '2', sub: ['2 runs · jvm, ios-sim'], tone: 'fail' },
       { label: 'Flaky', value: '0', sub: ['none in 30 days'], tone: 'ink' },
       // The JVM's median, 30 ms, as a test's time reads; the simulator's 3 ms beside it.
-      { label: 'Median time', value: '0.03 s', sub: ['jvm · ios-sim 0.00 s'], tone: 'ink' },
+      { label: 'Median time', value: '0.03 s', sub: ['jvm · ios-sim 3 ms'], tone: 'ink' },
     ]);
   });
 
@@ -245,7 +245,7 @@ describe('testHistoryView', () => {
           // 25 ms and 3 ms, as the design prints a test's time.
           results: [
             { platform: 'jvm', status: 'passed', duration: '0.03 s' },
-            { platform: 'ios-sim', status: 'passed', duration: '0.00 s' },
+            { platform: 'ios-sim', status: 'passed', duration: '3 ms' },
           ],
         },
         {
@@ -289,7 +289,7 @@ describe('testHistoryView', () => {
           href: '/p/ostomate2/runs/r4',
           results: [
             { platform: 'jvm', status: 'passed', duration: '0.03 s' },
-            { platform: 'ios-sim', status: 'skipped', duration: '0.00 s' },
+            { platform: 'ios-sim', status: 'skipped', duration: '<1 ms' },
           ],
         },
       ],

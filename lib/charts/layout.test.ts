@@ -182,13 +182,34 @@ describe('startLabelDy', () => {
     expect(startLabelDy(phone, yAt(phone, phoneScale, 93.6), yAt(phone, phoneScale, 93))).toBe(-10);
   });
 
-  it('keeps it below when the floor label is clear of it', () => {
+  // Design v10 item 13 (components.md TrendChart, "Label collisions"; decision 2026-10-07), as
+  // tp-charts.js boxes them: a value label spans 12 px above its baseline to 2 px below, and the
+  // floor label's box runs from 18 px to 2 px above the floor line. This supersedes the 2026-10-02
+  // boxes, under which a floor line at 136 left a label 18 below a point at 100 clear.
+  it('keeps it below when the floor label is clear of it, by the design’s boxes', () => {
     const line = chartLayout(600, 4, 'line');
-    // Below, its 13 px text sits on a baseline at 118; the floor label's 12 px text sits on a
-    // baseline 6 above the floor line, so a floor line at 136 or lower leaves them touching at most.
-    expect(startLabelDy(line, 100, 136)).toBe(18);
+    // Below, the label's box is 106 to 120: clear of a floor box ending at 106 or starting at 120.
+    expect(startLabelDy(line, 100, 108)).toBe(18);
+    expect(startLabelDy(line, 100, 138)).toBe(18);
     expect(startLabelDy(line, 100, 60)).toBe(18);
-    expect(startLabelDy(line, 100, 135)).toBe(-10);
+    expect(startLabelDy(line, 100, 136)).toBe(-10);
+    expect(startLabelDy(line, 100, 110)).toBe(-10);
+  });
+
+  it('drops it when both below and above its point would meet the floor label', () => {
+    const line = chartLayout(600, 4, 'line');
+    // Above, the label's box is 78 to 92; a floor line at 109 has its label's box at 91 to 107,
+    // which meets both.
+    expect(startLabelDy(line, 100, 109)).toBeNull();
+    expect(startLabelDy(line, 100, 108.5)).toBeNull();
+  });
+
+  it('drops it when below meets the x axis and above meets the floor label', () => {
+    const line = chartLayout(600, 4, 'line');
+    // 210 + 18 is past the axis allowance at 218; above, its box 188 to 202 meets a floor box of
+    // 190 to 206.
+    expect(startLabelDy(line, 210, 208)).toBeNull();
+    expect(startLabelDy(line, 210)).toBe(-10);
   });
 });
 

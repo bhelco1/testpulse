@@ -331,9 +331,10 @@ test.describe('RouteServe (private)', () => {
     const flaky = page.getByRole('region', { name: 'Flaky tests', exact: true }).getByRole('link');
     await expect(flaky).toHaveCount(1);
     await expect(flaky).toContainText('assetCreateSchema accepts a minimal valid asset');
-    // It has a result in all 10 CI runs on main and failed in the 4 red ones.
+    // It has a result in all 10 CI runs on main and failed in the 4 red ones, one of them the
+    // flip's failing side, which counts as Flaky, never Failed (decision 2026-10-07).
     await expect(flaky.locator('[data-part="meta"]')).toHaveText(
-      'Failed 4 of last 10 runsUnitnode',
+      'Failed 3 of last 10 runsUnitnode',
     );
   });
 
@@ -637,7 +638,7 @@ test.describe('a private project’s page leaks nothing', { tag: '@js' }, () => 
     expect(html).toContain('Held at 100.0% over 6 runs; above its 80% floor.');
     expect(html).toMatch(/href="\/p\/routeserve\/runs\/[0-9a-f-]{36}" class="[^"]*runLink/);
     expect(html).toContain('99.9% on the latest run. 4 of the last 10 runs failed.');
-    expect(html).toContain('Failed 4 of last 10 runs');
+    expect(html).toContain('Failed 3 of last 10 runs');
 
     expect(leaksIn(texts, HIDDEN)).toEqual([]);
   });

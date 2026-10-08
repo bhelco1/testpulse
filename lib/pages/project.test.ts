@@ -263,7 +263,7 @@ describe('projectPageView', () => {
         href: '/p/ostomate2/runs/run-9',
         figure: '142',
         figureTone: 'ink',
-        line: 'tests · 142 passed · 0 failed · 0 skipped · 36 s',
+        line: 'tests · 142 passed · 0 failed · 0 skipped · 35 s',
         failing: null,
         passRate30: '100%',
         recovery: { greenStreak: summary.greenStreak, timeToGreen: summary.timeToGreen },
@@ -298,7 +298,7 @@ describe('projectPageView', () => {
         status: 'failed',
         figure: '1',
         figureTone: 'fail',
-        line: 'failed · 1,040 of 1,041 passed · 204 s',
+        line: 'failed · 1,040 of 1,041 passed · 3m 24s',
         failing: {
           short: 'asset.test.ts › assetCreateSchema accepts a minimal valid asset',
           full: 'packages/shared/src/schemas/asset.test.ts › assetCreateSchema accepts a minimal valid asset',
@@ -316,7 +316,7 @@ describe('projectPageView', () => {
       });
 
       expect(projectPageView(one, NOW).latestRun?.line).toBe(
-        'test · 1 passed · 0 failed · 0 skipped · 36 s',
+        'test · 1 passed · 0 failed · 0 skipped · 35 s',
       );
     });
 
@@ -475,7 +475,7 @@ describe('projectPageView', () => {
             status: 'passed',
             // Distinct tests, not the 192 executions (decision 2026-09-29).
             total: 142,
-            duration: '36 s',
+            duration: '35 s',
           },
         ],
         branchHrefs: { default: '/p/ostomate2', all: '/p/ostomate2?branches=all' },
@@ -541,7 +541,7 @@ describe('projectPageView', () => {
       expect(view.runs.items[0]).toMatchObject({
         status: 'failed',
         pruned: true,
-        duration: '36 s',
+        duration: '35 s',
       });
       expect(view.runs.items[0]).not.toHaveProperty('total');
       expect(view.runs.items[0]).not.toHaveProperty('failed');
@@ -869,8 +869,9 @@ describe('projectPageView', () => {
         marks,
         format: 'dur',
         unit: 'run',
-        // 6 green runs of 206.7 s and 4 red of 204.1 s: the median is the mean of two green.
-        caption: 'Between 204 s and 207 s over the last 10 runs. Median 207 s.',
+        // 6 green runs of 206.7 s and 4 red of 204.1 s: the median is the mean of two green. The
+        // y axis stays in seconds; the caption reads as run durations do (design v14 item 3).
+        caption: 'Between 3m 24s and 3m 26s over the last 10 runs. Median 3m 26s.',
         ...tableOf(TEN),
       });
     });

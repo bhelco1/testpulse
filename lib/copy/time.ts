@@ -1,4 +1,4 @@
-import { formatTrendValue } from '../charts/format';
+import { runDurationText } from '../charts/format';
 
 // Times as pages print them. Pure: the current time is passed in (spec section 16, "Fixed
 // time"), so the server renders the same words on every run of the e2e suite. Everything is in
@@ -121,8 +121,8 @@ export const clockSecondsLabel = (instant: Date): TimeLabel =>
     instant,
   );
 
-/** A run's duration as the charts and run rows read it: whole seconds, "36 s". */
-export const formatRunDuration = (ms: number): string => formatTrendValue(ms / SECOND, 'dur');
+/** A run's or report's duration, as cards, feed rows and the run page read it: "11m 34s". */
+export const formatRunDuration = (ms: number): string => runDurationText(ms / SECOND);
 
 /** A test's time as the run page and test history panel read it: seconds to two places, "0.41 s". */
 export const formatTestTime = (ms: number): string => `${(ms / SECOND).toFixed(2)} s`;

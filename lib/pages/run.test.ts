@@ -251,7 +251,7 @@ describe('runPageView: a public passing run', () => {
       passed: '142',
       failed: '0',
       skipped: '0',
-      duration: '36 s',
+      duration: '35 s',
       failTone: false,
     });
   });
@@ -271,10 +271,10 @@ describe('runPageView: a public passing run', () => {
           datetime: '2026-10-05T09:26:05.000Z',
           title: '5 Oct 2026, 09:26 UTC',
         },
-        duration: '18 s',
+        duration: '17 s',
       },
-      expect.objectContaining({ key: 'android/shared/jvm', result: '82 passed', duration: '18 s' }),
-      // 111 ms reads as the run durations do, in whole seconds.
+      expect.objectContaining({ key: 'android/shared/jvm', result: '82 passed', duration: '17 s' }),
+      // 111 ms reads as the run durations do, in whole seconds rounded down.
       expect.objectContaining({ key: 'ios/composeApp/ios-sim', tests: '50', duration: '0 s' }),
     ]);
   });
@@ -505,7 +505,7 @@ describe('runPageView: a private failing run', () => {
       passed: '1,040',
       failed: '1',
       skipped: '0',
-      duration: '204 s',
+      duration: '3m 24s',
       failTone: true,
     });
   });
@@ -520,7 +520,7 @@ describe('runPageView: a private failing run', () => {
         skippedShare: 0,
         result: '1 failed · 78 passed',
         tests: '79',
-        duration: '20 s',
+        duration: '19 s',
       }),
     ]);
   });

@@ -39,10 +39,11 @@ export const RUNS_PER_DAY = Array.from(
   (_, i) => ([0, 1, 2, 1, 0, 3, 1][i % 7] ?? 0) + (i % 11 === 0 ? 2 : 0),
 );
 
-// Ostomate2 and routeserve run durations, in whole seconds.
+// Ostomate2 and routeserve run durations, in whole seconds. Ostomate2's is design v14's, around
+// its live 694 s.
 export const OSTOMATE2_RUN_SECONDS = [
-  24, 25, 24, 26, 25, 27, 26, 25, 28, 26, 27, 25, 29, 27, 26, 28, 31, 27, 26, 28, 27, 26, 28, 27,
-  29, 26, 28, 27, 26, 27,
+  658, 670, 658, 682, 670, 694, 682, 670, 706, 682, 694, 670, 718, 694, 682, 706, 742, 694, 682,
+  706, 694, 682, 706, 694, 718, 682, 706, 694, 682, 694,
 ];
 export const ROUTESERVE_RUN_SECONDS = [
   27, 28, 27, 29, 28, 27, 30, 28, 29, 27, 28, 31, 29, 28, 27, 29, 28, 30, 29, 28, 27, 29, 30, 28,

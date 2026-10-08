@@ -58,9 +58,21 @@ describe('formatTrendValue', () => {
     expect(formatTrendValue(3, 'ms', true)).toBe('3 ms');
   });
 
-  it('rounds run durations to whole seconds', () => {
+  // Design v14 item 3 (tp-charts.js dur): the axis ticks stay in whole seconds; a value read as a
+  // figure takes the run-duration format, rounded down.
+  it('ticks run durations in whole seconds', () => {
     expect(formatTrendValue(26.6, 'dur')).toBe('27 s');
-    expect(formatTrendValue(26.6, 'dur', true)).toBe('27 s');
+    expect(formatTrendValue(660, 'dur')).toBe('660 s');
+  });
+
+  it('reads a run duration as a figure in the run-duration format', () => {
+    expect(formatTrendValue(26.6, 'dur', true)).toBe('26 s');
+    expect(formatTrendValue(59.999, 'dur', true)).toBe('59 s');
+    expect(formatTrendValue(60, 'dur', true)).toBe('1m 00s');
+    expect(formatTrendValue(694.9, 'dur', true)).toBe('11m 34s');
+    expect(formatTrendValue(3599.9, 'dur', true)).toBe('59m 59s');
+    expect(formatTrendValue(3600, 'dur', true)).toBe('1h 00m');
+    expect(formatTrendValue(3912, 'dur', true)).toBe('1h 05m');
   });
 
   it('rounds counts and groups thousands', () => {

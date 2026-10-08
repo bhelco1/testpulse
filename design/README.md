@@ -1,4 +1,4 @@
-# testpulse handoff v12
+# testpulse handoff v14
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -49,7 +49,7 @@ The HTML is the source of truth for exact measurements; below is the structure.
 
 **Project, Run detail, Test history, How it's tested, Admin, Privacy** — see the pages; each is annotated with its tweaks. Private projects: no repo link, no `run_url`, and failure text replaced by the private-details notice.
 
-**Kiosk** Fixed 1920×1080 artboard scaled with `transform: scale(min(vw/1920, vh/1080))`, letterboxed on `#0b0a09`. Minimum text 22px. Header: wordmark, overall status pill (All projects passing / N failing / N silent), Live, last report, clock (HH:MM). Main grid 480px / 1fr / 1fr: hero column (total 200px, note, 3 tiles: Pass rate, Projects reporting, Projects passing) and one card per project (name 64, total 104, layer bar, coverage, health). Card border becomes 3px `--fail` or `--attn` when that project needs attention. Bottom strip: 3 most recent runs. No interactive controls; dark only.
+**Kiosk** Fixed 1920×1080 artboard scaled with `transform: scale(min(vw/1920, vh/1080))`, letterboxed on `#0b0a09`. Minimum text 22px. Header: wordmark, overall status pill (All projects passing / N failing / N silent), Live, last report, clock (HH:MM). Below the header, a hero band: total 116px, then "Tests on the latest runs" + the note, then 3 stacked tiles in a row (Pass rate, Projects reporting, Projects passing). Below it, three equal card columns (578 px), one card per project: Ostomate2, RouteServe, testpulse (name 52, total 88, layer bar, coverage, health). Card border becomes 3px `--fail` or `--attn` when that project needs attention. Bottom strip: 3 most recent runs. No interactive controls; dark only.
 
 ## Interactions and behaviour
 - Theme toggle: dark default; stores choice in localStorage; `prefers-color-scheme` used when none stored. Only `background-color, border-color, color, fill, stroke` transition, over `--motion-base`, while `html[data-theme-switching]` is set.
@@ -686,3 +686,78 @@ Same rules: the Design System page is canonical, components.md matches it, every
 - Kiosk still draws two project cards (its 1080 layout fits two). Its figures include testpulse. Say if it should show a third card.
 
 Files changed in v12: How Its Tested.dc.html, Landing.dc.html, Kiosk.dc.html, Project Page.dc.html, Design System.dc.html, Run Detail.dc.html, Admin.dc.html, Review.dc.html, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v13
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing else was changed.
+
+**A. Owner decision**
+1. The kiosk is rearranged for three cards.
+   - Stage gap 22. A hero band runs across the top: total 116 px; "Tests on the latest runs" and the note; three stacked tiles (label 24 above, value 48 below, min width 240).
+   - Below it, three equal card columns: 1,792 / 3 with gap 28 = 578 px, 512 inside.
+   - Card sizes now fit that width: padding 26×30, name 52 (the Private tag wraps under it if needed), total 88, layer labels 24 (wrapping to two lines with four layers), coverage grid 200 / 1fr / 110 with gap 16 ("packages/shared" fits at mono 22), coverage block 20 below with row gap 10, footer padding 14 0 16. Layer counts use thousands separators.
+   - The vertical spacing was tightened (18–22 between blocks) so the tallest card, RouteServe with three coverage rows, fits the 1080 height.
+   - testpulse card: Unit 1,528, Component 655, Integration 180, E2E 235, unit 99.4% floor 90%. Its time, commit and duration are SAMPLE, as on Landing.
+   - The feed now reads Ostomate2, testpulse, RouteServe by recency.
+   - All four scenarios use this layout.
+   - The kiosk's coverage formatter rounds down now; it rounded testpulse to 99.5%.
+   - Design System: kiosk cards are drawn at 578 px, a testpulse kiosk card is added, kiosk tiles use the stacked form, and the tile figures cover three projects.
+   - Updated in components.md (ProjectCard kiosk, StatTile kiosk, CoverageBar kiosk) and the README Kiosk paragraph.
+
+**B. Leftovers**
+2. Run Detail, Ostomate2: 160 tests in six reports with the live keys and counts (received times and durations SAMPLE); 159 of 160 in the failed sample.
+   - RouteServe: run total 1,044 distinct tests; reports 501 / 428 / 119 = 1,048 executions.
+   - The foot strings the brief quotes are data only. The reports-table foot was removed from the page in v8 (item 25), so nothing renders them. They are corrected anyway ("Reports add up to 1,048 executions; the run counts 1,044 distinct tests…").
+   - Rule (data-map v13): the reports table shows executions per report, and the header and totals show distinct tests.
+   - Landing and the Design System had RouteServe's backend at 497; it is now 501.
+3. Fixed:
+   - Landing and Design System "reports: 4" → 6.
+   - Design System "118 to 142" → "118 to 160", and its series now ends at 160.
+   - The Project Page comment.
+4. The spec's wording is written into components.md (flaky rate and Failed tile) and data-map. A flip is a pass and a fail on one commit and platform, in default-branch CI runs of the last 30 days, including inside one run. Pull-request or older pairs aren't flips, so their failing side counts as Failed.
+5. Rule reworded: tones only group, and the labels carry the meaning. Shared tones may sit side by side (testpulse's Integration and E2E); the 3 px gap separates every segment.
+
+**C. Run duration**
+6. One format, whole seconds rounded down:
+   - Under 60 s: "27 s".
+   - Under 60 min: "{m}m {ss}s" ("1m 48s"; 694 s → "11m 34s"; 1073 s → "17m 53s").
+   - 60 min and over: "{h}h {mm}m".
+   - Helper `TPKit.runDur(ms)`, in components.md "Run duration" and data-map v13.
+   - "6 min" is replaced by "11m 34s" on Landing, the Design System and How It's Tested. Test durations keep the `sec` format.
+
+**Assumptions to check**
+- RouteServe's mobile and shared reports (428, 119) are the split the Landing mock already used. Only the backend's 501 and the 1,048 sum are from the brief.
+- testpulse's "11m 34s" uses the 694 s you quoted from the build; it's still tagged SAMPLE.
+- The kiosk fit is worked out from the sizes; it still needs a look at 1920×1080 in each scenario.
+
+Files changed in v13: Kiosk.dc.html, Design System.dc.html, Landing.dc.html, Run Detail.dc.html, How Its Tested.dc.html, Project Page.dc.html, tp-kit.js, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v14
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing else was changed.
+
+1. By rule, kiosk tiles have no sub-line. Anything a web sub-line says goes into the label.
+   - Latest run empty, none red: label "Ostomate2 last run empty".
+   - No runs yet: label "No runs yet", value "0".
+   - components.md StatTile kiosk and the Kiosk Projects passing line are updated.
+   - Design System kiosk tiles: the sub-lines and the "Runs in last 30 days" tile (not a kiosk tile) are removed, and the note is rewritten.
+   - The 18 px headroom is unchanged.
+2. Failed scenario feed is now by recency: Ostomate2 4 min (failed), testpulse 12 min, RouteServe 2 h.
+3. Confirmed your proposal:
+   - The y axis keeps whole-second ticks ("660 s").
+   - Tooltip, table and end label use the run-duration format, via tp-charts.js `dur`.
+   - The caption follows the same format ("Between 10m 58s and 12m 22s over the last 30 runs. Median 11m 34s.").
+   - Specimen added: Design System section 02, "RUN DURATION" (27 s, 11m 34s, 17m 53s, 1h 05m).
+4. Run duration is the sum of the reports. I set Ostomate2's six sample report durations to add up to its live 694 s: 52 + 41 + 298 (4m 58s) + 47 + 38 + 218 (3m 38s).
+   - The Run Detail header reads 11m 34s, so it agrees with the reports and with item 5's card.
+   - Your 6m 35s would have contradicted the card for the same run (0e2d0b4).
+   - The failed sample run uses the same reports, so it is also 11m 34s.
+5. Ostomate2 reads 11m 34s on its card, feed rows, Project Page run, run list and failed run, on Landing, Kiosk and the Design System.
+   - Its duration chart is rescaled around 694 s (SAMPLE spread) with the new caption.
+   - testpulse reads 17m 53s on Landing, Kiosk, How It's Tested and the Design System.
+   - Other sample Ostomate2 runs: 11m 21s, 11m 46s.
+6. Leftovers:
+   - Spec §11 flip wording is now in components.md (flaky-list n = 0 row and Flaky tile) and data-map (StatusTimeline flaky cells).
+   - Design System empty-run card: "6 reports arrived".
+   - Loading value bar: 120×48 in components.md.
+   - RouteServe's reports foot now reads only "Reports add up to 1,048 executions of 1,044 distinct tests." (data-map v13 says the same).
+
+Files changed in v14: Kiosk.dc.html, Run Detail.dc.html, Landing.dc.html, How Its Tested.dc.html, Project Page.dc.html, Design System.dc.html, tp-charts.js, design/README.md, design/components.md, design/data-map.md.

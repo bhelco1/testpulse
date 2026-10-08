@@ -251,8 +251,8 @@ class Component extends DCLogic {
         name: 'Ostomate2', private: false, lastReport: '4 min ago', streak: 41, ttg: '2h 14m', longest: 58, worst: '9h 02m', recN: 4,
         tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
         description: 'Logs bag and flange changes with a tap or a QR deep link, predicts days of supply, and sends reorder reminders. Data stays on the device. Crash reporting is opt-in and off by default, and there is no analytics.',
-        run: { when: '4 min ago', branch: 'main', sha: '0e2d0b4', figure: '160', line: 'tests · 160 passed · 0 failed · 0 skipped · 27 s' },
-        failRun: { when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', figure: '1', line: 'failed · 159 of 160 passed · 31 s', failName: 'HomeViewModelTest › rendersToday', failPlat: 'ios-sim' },
+        run: { when: '4 min ago', branch: 'main', sha: '0e2d0b4', figure: '160', line: 'tests · 160 passed · 0 failed · 0 skipped · 11m 34s' },
+        failRun: { when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', figure: '1', line: 'failed · 159 of 160 passed · 11m 34s', failName: 'HomeViewModelTest › rendersToday', failPlat: 'ios-sim' },
         pass: Array.from({ length: 30 }, () => 100),
         platforms: 'Same suites on JVM (149) and iOS simulator (137); Maestro flows on the Android emulator (8) and iOS simulator (5)',
         built: [
@@ -268,7 +268,7 @@ class Component extends DCLogic {
           { g: 'Static analysis', t: [tag('detekt'), tag('ktlint'), tag('SwiftLint')] }, /* v11 item 13: accepted */
           { g: 'E2E', t: [tag('Maestro 2.11.0')] },
         ],
-        total: '160', pyrNote: 'Distinct tests across six reports', /* v10 item 3: Maestro reports (7 Android + 5 iOS) */
+        total: '160', pyrNote: 'Distinct tests across six reports', /* Maestro flows report as E2E (10 distinct flows) */
         layers: { unit: 110, integration: 30, visual: 10, e2e: 10 }, /* v12: live production, 7 Oct 23:32 UTC */
         e2e: { flows: 0 },
         pyrCaption: '69% of tests are unit tests. The same suites run on JVM and on the iOS simulator, so a platform-specific failure shows up as a mismatch rather than hiding. The 10 Maestro flows count once each, even where a flow runs on both platforms.',
@@ -282,13 +282,13 @@ class Component extends DCLogic {
         covVals: [52.6, 57.9, 64.3, 69.8, 76.1, 81.4, 86.2, 89.7, 91.3, 92.0], covMin: 40, covFloor: 91, covTicks: [40, 60, 80, 100],
         tests: [].concat(rep(118, 6), rep(124, 6), rep(131, 6), rep(137, 6), rep(142, 5), [160]), testsMin: 100, testsMax: 175, testsTicks: [100, 125, 150, 175],
         testsCap: 'Grew from 118 to 160 over the last 30 runs.',
-        dur: [24, 25, 24, 26, 25, 27, 26, 25, 28, 26, 27, 25, 29, 27, 26, 28, 31, 27, 26, 28, 27, 26, 28, 27, 29, 26, 28, 27, 26, 27],
-        durCap: 'Between 24 s and 31 s over the last 30 runs. Median 27 s.',
+        dur: [658, 670, 658, 682, 670, 694, 682, 670, 706, 682, 694, 670, 718, 694, 682, 706, 742, 694, 682, 706, 694, 682, 706, 694, 718, 682, 706, 694, 682, 694], /* v14: around Ostomate2's live 694 s; SAMPLE */
+        durCap: 'Between 10m 58s and 12m 22s over the last 30 runs. Median 11m 34s.',
         runs: [
-          { pass: true, title: 'Push to main', branch: 'main', sha: '0e2d0b4', counts: '160 tests · 27 s', when: '4 min ago' },
-          { fail: true, pr: true, title: 'Pull request from fix-today-count', branch: 'fix-today-count', sha: 'a41f9c2', counts: '159 of 160 · 31 s', when: 'yesterday' },
-          { pass: true, title: 'Scheduled run', branch: 'main', sha: '7c1e5a0', counts: '160 tests · 26 s', when: '2 days ago', sample: true },
-          { pass: true, title: 'Push to main', branch: 'main', sha: 'b93d17e', counts: '160 tests · 28 s', when: '3 days ago', sample: true },
+          { pass: true, title: 'Push to main', branch: 'main', sha: '0e2d0b4', counts: '160 tests · 11m 34s', when: '4 min ago' },
+          { fail: true, pr: true, title: 'Pull request from fix-today-count', branch: 'fix-today-count', sha: 'a41f9c2', counts: '159 of 160 · 11m 34s', when: 'yesterday' },
+          { pass: true, title: 'Scheduled run', branch: 'main', sha: '7c1e5a0', counts: '160 tests · 11m 21s', when: '2 days ago', sample: true },
+          { pass: true, title: 'Push to main', branch: 'main', sha: 'b93d17e', counts: '160 tests · 11m 46s', when: '3 days ago', sample: true },
         ],
         flaky: [{ name: 'insertsAndQueriesByDay', suite: 'ChangeEventDaoTest', rate: 'Failed 2 of last 40 runs', layer: 'Integration', plat: 'jvm' }],
       },

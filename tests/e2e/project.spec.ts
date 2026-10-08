@@ -138,11 +138,13 @@ test.describe('Ostomate2 (public)', () => {
       'Property',
       'Visual',
       'Coverage',
-      'Static',
+      'Static analysis',
       'E2E',
     ]);
     await expect(
-      testStack.locator('div', { has: page.locator('dt', { hasText: 'Static' }) }).locator('li'),
+      testStack
+        .locator('div', { has: page.locator('dt', { hasText: 'Static analysis' }) })
+        .locator('li'),
     ).toHaveText(['detekt 1.23.8', 'ktlint 1.0.1', 'SwiftLint']);
 
     const coverage = page.getByRole('region', { name: 'Coverage and reports' });

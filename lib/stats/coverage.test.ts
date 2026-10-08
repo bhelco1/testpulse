@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { latestCoverage } from './coverage.ts';
+import { latestCoverage, latestCoverageWithLines } from './coverage.ts';
 import { countsCoverage, pctCoverage, run } from './records.test-support.ts';
 
 // Spec section 11: "Coverage: Latest lines % per module, plotted against that module's
@@ -137,5 +137,75 @@ describe('latestCoverage', () => {
       countsCoverage('c2', 'a2', 'shared', 95, 100),
     ];
     expect(latestCoverage(runs, coverage, options)[0]).toMatchObject({ runId: 'a2', pct: 95 });
+  });
+});
+
+// How it's tested's coverage card (design v12, components.md "How it’s tested page"; data-map v11)
+// adds "{module}: {covered} of {total} lines covered." under each row, from the same coverage row
+// the percentage was read from.
+describe('latestCoverageWithLines', () => {
+  it('carries the line counts of the row each module’s percentage came from', () => {
+    // r2 is latest for shared; composeApp comes from r1, as latestCoverage reads them.
+    const runs = [run('r1', '2026-10-01T00:00:00Z'), run('r2', '2026-10-02T00:00:00Z')];
+    const coverage = [
+      countsCoverage('c1', 'r1', 'shared', 400, 490),
+      countsCoverage('c2', 'r1', 'composeApp', 497, 527),
+      countsCoverage('c3', 'r2', 'shared', 457, 490),
+    ];
+    expect(latestCoverageWithLines(runs, coverage, options)).toEqual([
+      {
+        module: 'composeApp',
+        runId: 'r1',
+        pct: (497 / 527) * 100,
+        floor: 93,
+        belowFloor: false,
+        lines: { covered: 497, total: 527 },
+      },
+      {
+        module: 'shared',
+        runId: 'r2',
+        pct: (457 / 490) * 100,
+        floor: 91,
+        belowFloor: false,
+        lines: { covered: 457, total: 490 },
+      },
+    ]);
+  });
+
+  it('has no line counts for a recorded percentage', () => {
+    const runs = [run('bf', '2026-09-22T20:14:18Z', { source: 'backfill' })];
+    expect(
+      latestCoverageWithLines(runs, [pctCoverage('c1', 'bf', 'shared', 93.3)], options),
+    ).toEqual([
+      { module: 'shared', runId: 'bf', pct: 93.3, floor: 91, belowFloor: false, lines: null },
+    ]);
+  });
+
+  it('reads the same modules and values as latestCoverage', () => {
+    const runs = [
+      run('bf', '2026-09-22T20:14:18Z', { source: 'backfill' }),
+      run('r1', '2026-10-01T00:00:00Z'),
+      run('pr', '2026-10-03T00:00:00Z', { branch: 'feature' }),
+    ];
+    const coverage = [
+      pctCoverage('c0', 'bf', 'composeApp', 92.5),
+      countsCoverage('c1', 'r1', 'shared', 3125, 3141),
+      countsCoverage('c2', 'r1', 'empty', 0, 0),
+      countsCoverage('c3', 'pr', 'shared', 1, 2),
+    ];
+    const withLines = latestCoverageWithLines(runs, coverage, options);
+    expect(
+      withLines.map(({ module, runId, pct, floor, belowFloor }) => ({
+        module,
+        runId,
+        pct,
+        floor,
+        belowFloor,
+      })),
+    ).toEqual(latestCoverage(runs, coverage, options));
+    expect(withLines.map(({ module, lines }) => [module, lines])).toEqual([
+      ['composeApp', null],
+      ['shared', { covered: 3125, total: 3141 }],
+    ]);
   });
 });

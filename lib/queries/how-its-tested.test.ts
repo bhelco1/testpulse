@@ -49,11 +49,26 @@ const runRow = (id: string, finishedAt: string, overrides: Record<string, unknow
   ...overrides,
 });
 
-const result = (id: string, testId: string, status: string, runId: string) => ({
+const result = (id: string, testId: string, status: string, runId: string, layer = 'e2e') => ({
   id,
   test_id: testId,
   status,
-  tests: { layer: 'e2e' },
+  tests: { layer },
+  reports: { run_id: runId },
+});
+
+const coverageRow = (
+  id: string,
+  runId: string,
+  module: string,
+  covered: number,
+  total: number,
+) => ({
+  id,
+  module,
+  lines_covered: covered,
+  lines_total: total,
+  lines_pct: null,
   reports: { run_id: runId },
 });
 
@@ -61,6 +76,7 @@ interface Tables {
   readonly projects?: readonly unknown[];
   readonly runs?: readonly unknown[];
   readonly results?: readonly unknown[];
+  readonly coverage?: readonly unknown[];
 }
 
 const isLastReportQuery = (query: Query) =>
@@ -81,7 +97,7 @@ const answering =
       case 'results':
         return { data: tables.results ?? [] };
       case 'coverage':
-        return { data: [] };
+        return { data: tables.coverage ?? [] };
       default:
         return { error: { code: 'X', message: `unexpected table ${query.table}` } };
     }
@@ -131,6 +147,52 @@ describe('loadHowItsTested', () => {
     expect(self?.summary.layers).toEqual({ e2e: 3 });
   });
 
+  // Design v12 item 1 (decided by Bobby, 2026-10-07): the results card counts distinct tests per
+  // layer, Unit and Component apart. A test reported twice (two platforms) counts once.
+  it('counts distinct tests per layer, unit and component apart', async () => {
+    const { client } = fakeClient(
+      answering({
+        projects: [projectRow],
+        runs: [runRow('r1', '2026-10-05T10:00:00+00:00', { status: 'passed', failed: 0 })],
+        results: [
+          result('x1', 't-unit', 'passed', 'r1', 'unit'),
+          result('x2', 't-component', 'passed', 'r1', 'component'),
+          result('x3', 't-e2e', 'passed', 'r1', 'e2e'),
+          result('x4', 't-e2e', 'passed', 'r1', 'e2e'),
+        ],
+      }),
+    );
+
+    const { self } = await loadHowItsTested(client, NOW);
+
+    expect(self?.summary.totalTests).toBe(3);
+    expect(self?.summary.layers).toEqual({ unit: 1, component: 1, e2e: 1 });
+  });
+
+  // Design v12 item 10 (data-map v11): the coverage card's rows and their line counts.
+  it('reads the latest coverage per module with its line counts and floor', async () => {
+    const { client } = fakeClient(
+      answering({
+        projects: [{ ...projectRow, coverage_floors: { unit: 90 } }],
+        runs: [runRow('r1', '2026-10-05T10:00:00+00:00')],
+        coverage: [coverageRow('c1', 'r1', 'unit', 3125, 3141)],
+      }),
+    );
+
+    const { self } = await loadHowItsTested(client, NOW);
+
+    expect(self?.coverage).toEqual([
+      {
+        module: 'unit',
+        runId: 'r1',
+        pct: (3125 / 3141) * 100,
+        floor: 90,
+        belowFloor: false,
+        lines: { covered: 3125, total: 3141 },
+      },
+    ]);
+  });
+
   it('answers a registered project with no run as having no latest run', async () => {
     const { client } = fakeClient(answering({ projects: [projectRow], runs: [] }));
 
@@ -138,6 +200,7 @@ describe('loadHowItsTested', () => {
 
     expect(self?.summary.latestRun).toBeNull();
     expect(self?.latestDurationMs).toBeNull();
+    expect(self?.coverage).toEqual([]);
   });
 
   it('fails loudly when the database refuses, rather than showing “not reporting”', async () => {

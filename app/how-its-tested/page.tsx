@@ -4,6 +4,7 @@ import { useId, type ReactNode } from 'react';
 
 import { ClockIcon, ExternalLinkIcon, SlashCircleIcon } from '../../components/icons/icons';
 import { PageFrame } from '../../components/PageFrame/PageFrame';
+import { RelativeTime } from '../../components/RelativeTime/RelativeTime';
 import { SelfReport } from '../../components/SelfReport/SelfReport';
 import { SiteFooter } from '../../components/SiteFooter/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader/SiteHeader';
@@ -246,9 +247,9 @@ export default async function HowItsTestedPage() {
               <div className={styles.selfHead}>
                 {heading}
                 <p className={styles.intro}>
-                  testpulse’s CI posts its JUnit and coverage output to this site as the project{' '}
-                  <code className={styles.selfCode}>testpulse</code>, the same way the other
-                  projects do.
+                  Since <RelativeTime when={view.since} />, testpulse’s CI posts its results to this
+                  site as the project <code className={styles.selfCode}>testpulse</code>, through
+                  the same shared GitHub Action Ostomate2 and RouteServe use.
                 </p>
               </div>
               <SelfReport view={view.self} actionsHref={ACTIONS_URL} progress={view.progress} />

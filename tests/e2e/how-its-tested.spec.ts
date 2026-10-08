@@ -1,12 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { readFileSync } from 'node:fs';
+
 import { planSeed, SEED_NOW } from '../../lib/seed/plan.ts';
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
 import { open } from './support/open.ts';
 
 // /how-its-tested (spec section 13; docs/spec.md 13.7) against the seed (lib/seed/plan.ts) at
 // SEED_NOW, where testpulse has reported once: its Playwright fixture, 1 passed, 1 failed and 1
-// skipped, 13 days before SEED_NOW. testpulse has reported to production since 2026-10-07; the
+// skipped, 13 days before SEED_NOW, with no coverage. testpulse has reported to production since 2026-10-07; the
 // state without a run ("Not reporting yet") is proven in lib/pages/how-its-tested.test.ts and
 // components/SelfReport/SelfReport.test.tsx, since this harness cannot remove a seeded project
 // without changing the pages other specs check. Tags route tests to projects
@@ -17,6 +19,10 @@ const PATH = '/how-its-tested';
 const REPO = 'https://github.com/bhelco1/testpulse';
 
 const PLAN = planSeed(new Date(SEED_NOW));
+const progress = JSON.parse(readFileSync('docs/build-progress.json', 'utf8')) as {
+  asOf: string;
+  phases: { phase: number; title: string; status: 'done' | 'in_progress' | 'planned' }[];
+};
 const [TESTPULSE_SHA] = PLAN.runs
   .filter((run) => run.slug === 'testpulse')
   .map((run) => run.commitSha.slice(0, 7));
@@ -52,9 +58,9 @@ test.describe('the page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'This dashboard is tested the same way as the projects it reports on.',
     );
-    // Interim wording until v11 (decision 2026-10-07): testpulse reports here now.
+    // Design v12's reporting-state lede (v11 item 1).
     await expect(page.locator('[data-part="lede"]')).toHaveText(
-      'A test dashboard that isn’t tested is just a claim. testpulse is built test-first, and its own CI runs every suite on every pull request. It reports its own results here, alongside everything else.',
+      'A test dashboard that isn’t tested is just a claim. testpulse is built test-first. Its own CI runs every suite on every pull request and reports the results here, alongside everything else.',
     );
     const main = page.getByRole('main');
     await expect(main.getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
@@ -85,6 +91,9 @@ test.describe('the page', () => {
     await expect(principles.getByRole('listitem').first()).toContainText(
       'Every phase starts with failing tests written from its acceptance criteria. A phase is done when each criterion has a passing automated test or a recorded manual check.',
     );
+    await expect(principles.getByRole('listitem').nth(1)).toContainText(
+      'Parsers are tested against actual result files captured from Ostomate2, RouteServe and testpulse itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
+    );
   });
 
   test('says what runs, layer by layer, with nothing from Phase 6', async ({ page }) => {
@@ -108,7 +117,16 @@ test.describe('the page', () => {
       'axe on every public page, counted with E2E. A script in the unit job checks the contrast',
     );
     await expect(table).toContainText('Walks every page that can show a private project');
-    await expect(table).toContainText('Runs in the unit job; counted as Unit.');
+    await expect(table).toContainText('stat calculations, API key hashing. 90% line floor.');
+    await expect(table).toContainText(
+      'The shared GitHub Action every project reports through, run against a local server. Runs in the unit job; counted as Unit.',
+    );
+    await expect(table.locator('[data-part="layer"]').nth(2)).toContainText(
+      'VitestTesting Library',
+    );
+    await expect(table.locator('[data-part="layer"]').nth(5)).toContainText(
+      'axePlaywrightcontrast script',
+    );
     await expect(strategy.locator('[data-part="fact"]')).toHaveText([
       'Coverage floor90% linesEnforced by Vitest thresholds in the unit job. Below it, CI fails.',
       'On every pull requestLint, typecheck, unit, integration, E2E',
@@ -138,9 +156,11 @@ test.describe('the page', () => {
 
   test('shows testpulse’s latest run from the seed', async ({ page }) => {
     const self = selfResults(page);
-    await expect(self.locator('p').filter({ hasText: 'CI posts its JUnit' })).toHaveText(
-      'testpulse’s CI posts its JUnit and coverage output to this site as the project testpulse, the same way the other projects do.',
+    const intro = self.locator('p').filter({ hasText: 'CI posts its results' });
+    await expect(intro).toHaveText(
+      'Since 7 Oct, testpulse’s CI posts its results to this site as the project testpulse, through the same shared GitHub Action Ostomate2 and RouteServe use.',
     );
+    await expect(intro.locator('time')).toHaveAttribute('datetime', '2026-10-07T00:00:00.000Z');
     await expect(self).not.toContainText('Phase 7');
     const run = self.getByRole('article');
     await expect(run.getByText('Failed', { exact: true })).toBeVisible();
@@ -158,14 +178,33 @@ test.describe('the page', () => {
       '/p/testpulse',
     );
     await expect(run.locator('[data-part="pyramid-note"]')).toHaveText(
-      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.',
+      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer testpulse’s layer rules give it, whichever report it arrived in.',
     );
-    // Only the designed reporting state: no sample tags, no coverage card without data, and
-    // build progress only in the not-reporting state, as the mock draws it.
+    // Only the designed reporting state: no sample tags, and no coverage card, since the seeded
+    // run sent no coverage (spec 13.7).
     await expect(self).not.toContainText('Not reporting yet');
-    await expect(self).not.toContainText('Build progress');
     await expect(page.getByRole('main')).not.toContainText('SAMPLE');
     await expect(self).not.toContainText('Coverage against the floor');
+  });
+
+  // Design v12 item 2 (decided by Bobby, 2026-10-07): the last card of section 04, in both
+  // states, phases 0 to 7 of docs/build-progress.json and no Self-reporting row.
+  test('ends with build progress from its data file', async ({ page }) => {
+    const card = selfResults(page).getByRole('region', { name: 'Build progress' });
+    await expect(card.getByRole('heading', { level: 3 })).toHaveText('Build progress');
+    await expect(page.getByRole('heading', { name: 'Build progress' })).toHaveCount(1);
+    await expect(card.locator('[data-part="as-of"] time')).toHaveAttribute(
+      'datetime',
+      `${progress.asOf}T00:00:00.000Z`,
+    );
+    const word = { done: 'Done', in_progress: 'In progress', planned: 'Planned' } as const;
+    await expect(card.locator('[data-part="phase"]')).toHaveText(
+      progress.phases.map(({ phase, title, status }) => `Phase ${phase}${title}${word[status]}`),
+    );
+    await expect(card).not.toContainText('Self-reporting');
+    const last = selfResults(page).locator(':scope > :last-child');
+    await expect(last).toHaveAttribute('aria-labelledby', /.+/);
+    await expect(last.getByRole('heading', { level: 3 })).toHaveText('Build progress');
   });
 
   test('dates the last report in the footer', async ({ page }) => {

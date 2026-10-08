@@ -1,8 +1,13 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import Link from 'next/link';
 
 import type { BuildProgressView, PhaseStatus } from '../../lib/pages/build-progress';
-import { PYRAMID_NOTE, type SelfReportView } from '../../lib/pages/how-its-tested';
+import {
+  PYRAMID_NOTE,
+  type SelfCoverage,
+  type SelfReportView,
+} from '../../lib/pages/how-its-tested';
+import { CoverageBar } from '../CoverageBar/CoverageBar';
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -19,7 +24,7 @@ export interface SelfReportProps {
   view: SelfReportView;
   // testpulse's CI runs on GitHub: the repository's Actions tab.
   actionsHref: string;
-  // "Build progress", beside the not-reporting card's text.
+  // "Build progress", section 04's last card in either state.
   progress: BuildProgressView;
 }
 
@@ -32,12 +37,17 @@ const PHASE: Readonly<
 };
 
 function BuildProgress({ progress }: { progress: BuildProgressView }) {
+  const headingId = useId();
   return (
-    <div data-part="progress">
+    <section
+      aria-labelledby={headingId}
+      className={cx(styles.panel, styles.progress)}
+      data-part="progress"
+    >
       <div className={styles.progressHead}>
-        <span className={styles.progressTitle} data-part="progress-title">
+        <h3 id={headingId} className={styles.progressTitle} data-part="progress-title">
           Build progress
-        </span>
+        </h3>
         <span className={styles.asOf} data-part="as-of">
           <span>As of</span> <RelativeTime when={progress.asOf} />
         </span>
@@ -57,42 +67,83 @@ function BuildProgress({ progress }: { progress: BuildProgressView }) {
           );
         })}
       </ol>
-    </div>
+    </section>
+  );
+}
+
+// "Coverage against the floor" (design v12 item 10): canonical CoverageBar rows, then a line per
+// module with its counts. A module stored as a recorded percentage has no counts and no line.
+function Coverage({ coverage }: { coverage: readonly SelfCoverage[] }) {
+  const headingId = useId();
+  const notes = coverage.flatMap(({ module, note }) => (note === null ? [] : [{ module, note }]));
+  return (
+    <section aria-labelledby={headingId} className={styles.panel} data-part="coverage">
+      <h3 id={headingId} className={styles.coverageTitle}>
+        Coverage against the floor
+      </h3>
+      <div className={styles.coverageScope} data-part="coverage-scope">
+        Lines, latest default-branch run
+      </div>
+      <div className={styles.coverageRows}>
+        {coverage.map(({ module, pct, floor }) => (
+          <CoverageBar key={module} module={module} pct={pct} floor={floor} />
+        ))}
+      </div>
+      {notes.length > 0 && (
+        <p className={styles.coverageNotes}>
+          {notes.map(({ module, note }) => (
+            <span key={module} className={styles.coverageNote} data-part="coverage-note">
+              {note}
+            </span>
+          ))}
+        </p>
+      )}
+    </section>
   );
 }
 
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
 // "testpulse’s own results" on /how-its-tested (design/pages/How Its Tested.dc.html, tweak
-// selfReporting). Not reporting yet until testpulse's CI posts its first report, with
-// "Build progress" from docs/build-progress.json; then its latest run as the other projects'
-// cards show one, with the note on how the pyramid counts. Drawn nothing rather than guessed
-// (spec 13.7): the progress list's footnote, which says it is read from the specification; the
-// coverage card, whose data and floors testpulse lacks; and an empty run's figures, which the
-// page does not draw.
+// selfReporting; design v12). Reporting: testpulse's latest run as the other projects' cards
+// show one, with the note on how the pyramid counts, then its coverage against the floor. Not
+// reporting yet, for a reset or an outage: no figures. Either way "Build progress" from
+// docs/build-progress.json ends the section. Drawn nothing rather than guessed (spec 13.7): the
+// coverage card when testpulse reported no coverage, and an empty run's figures.
 export function SelfReport({ view, actionsHref, progress }: SelfReportProps) {
-  if (view.state === 'not_reporting') {
-    return (
-      <div className={cx(styles.card, styles.notReporting)} data-state="not_reporting">
-        <div className={styles.intro}>
-          <StatusBadge status="not_reporting" />
-          <h3 className={styles.title}>testpulse hasn’t reported here yet.</h3>
-          <p className={styles.body}>
-            Until then this section stays empty rather than showing numbers nobody measured. The
-            suites already run in CI on every pull request; you can see them in the repository’s
-            Actions tab.
-          </p>
-          <a href={actionsHref} className={styles.link}>
-            CI runs on GitHub
-            <ExternalLinkIcon size={13} strokeWidth={2.4} />
-          </a>
-        </div>
-        <BuildProgress progress={progress} />
-      </div>
-    );
-  }
+  return (
+    <>
+      {view.state === 'not_reporting' ? (
+        <NotReporting actionsHref={actionsHref} />
+      ) : (
+        <Reporting view={view} />
+      )}
+      <BuildProgress progress={progress} />
+    </>
+  );
+}
 
-  const { run, layers, total, projectHref } = view;
+function NotReporting({ actionsHref }: { actionsHref: string }) {
+  return (
+    <div className={cx(styles.card, styles.notReporting)} data-state="not_reporting">
+      <div className={styles.intro}>
+        <StatusBadge status="not_reporting" />
+        <h3 className={styles.title}>No results received yet.</h3>
+        <p className={styles.body}>
+          This section stays empty rather than showing numbers nobody measured. The suites run in CI
+          on every pull request; you can see them in the repository’s Actions tab.
+        </p>
+        <a href={actionsHref} className={styles.link}>
+          CI runs on GitHub
+          <ExternalLinkIcon size={13} strokeWidth={2.4} />
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function Reporting({ view }: { view: Extract<SelfReportView, { state: 'reporting' }> }) {
+  const { run, layers, total, coverage, projectHref } = view;
   return (
     <div className={styles.reporting} data-state="reporting">
       <article className={cx(styles.card, styles.run)}>
@@ -138,6 +189,7 @@ export function SelfReport({ view, actionsHref, progress }: SelfReportProps) {
           Full project page →
         </Link>
       </article>
+      {coverage.length > 0 && <Coverage coverage={coverage} />}
     </div>
   );
 }

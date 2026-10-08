@@ -63,7 +63,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ isPublic }}" hint-placeholder-val="{{ true }}"><a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;color:var(--ink-2)">Source on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a></sc-if>
 </div>
 <sc-if value="{{ p.private }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;gap:12px;align-items:flex-start;max-width:620px;padding:14px 16px;border-radius:12px;background:var(--neutral-tint);border:1px solid var(--line-strong)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div style="font-size:14px;color:var(--ink-2);line-height:1.5">This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.</div></div>
+<div style="display:flex;gap:12px;align-items:flex-start;max-width:620px;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Details hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real.</p></div></div>
 </sc-if>
 </div>
 
@@ -209,7 +209,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
 <div style="font:500 22px 'Source Serif 4',serif">Flaky tests</div>
-<p style="margin:4px 0 16px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Flaky: passed and failed on the same commit and platform within the last 30 days.</p>
+<p style="margin:4px 0 16px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Flaky: passed and failed on the same commit and platform, in default-branch CI runs of the last 30 days.</p>
 <sc-if value="{{ hasFlaky }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ p.flaky }}" as="f" hint-placeholder-count="1">
 <a href="#" style="display:block;padding:12px 14px;border-radius:12px;background:var(--inset);border:1px solid var(--line);text-decoration:none" style-hover="background:var(--raised)">
@@ -221,7 +221,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Illustrates the row. The inventory found no known flaky tests.</div>
 </sc-if>
 <sc-if value="{{ noFlaky }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;border:1px dashed var(--line-strong)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg><div><div style="font-weight:600;font-size:14.5px">No flaky tests in the last 30 days</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">No test passed and failed on the same commit and platform.</div></div></div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;border:1px dashed var(--line-strong)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg><div><div style="font-weight:600;font-size:14.5px">No flaky tests in the last 30 days</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">No test passed and failed on the same commit and platform in default-branch CI runs.</div></div></div>
 </sc-if>
 </section>
 </div>

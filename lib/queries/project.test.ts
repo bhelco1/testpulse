@@ -483,8 +483,8 @@ describe('loadProjectPage', () => {
           name: 'insertsAndQueriesByDay',
           layer: 'integration',
           platforms: ['jvm'],
-          // Failed in a1 of a1 and a2.
-          failures: { failed: 1, runs: 2 },
+          // a1's failure is one side of the flip: Flaky, never Failed (decision 2026-10-07).
+          failures: { failed: 0, runs: 2 },
           // a1 and a2 are one commit.
           commits: 1,
         },
@@ -547,8 +547,9 @@ describe('loadProjectPage', () => {
 
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
-    // Its last 40 runs with a result are h4 to h44 less h40; it failed in h5 and h43.
-    expect(page?.flaky.tests.map((test) => test.failures)).toEqual([{ failed: 2, runs: 40 }]);
+    // Its last 40 runs with a result are h4 to h44 less h40; it failed in h5 and h43, and h43's
+    // failure is one side of the flip, so only h5 counts (decision 2026-10-07).
+    expect(page?.flaky.tests.map((test) => test.failures)).toEqual([{ failed: 1, runs: 40 }]);
     // Newest first, 40 runs a read, until the test has 40 runs with a result: h44 to h5, then
     // h4 to h0.
     const reads = queries.filter(history);
@@ -577,6 +578,46 @@ describe('loadProjectPage', () => {
     expect(firstArgs(reads[0] as Query, 'select')).toEqual([
       'id, test_id, status, reports!inner(run_id, platform)',
     ]);
+  });
+
+  // The strip draws a flip's failing side Flaky however many runs the history read reached, so
+  // the list counts it the same way when the other side is older than the 40 runs it read.
+  it('does not count a flip side whose other side is behind the last 40 runs', async () => {
+    // 42 CI runs on main an hour apart within the 30 days, each on its own commit but f1 and f2:
+    // f1 passed and f2 failed there. The test's last 40 runs are f2 to f41, so f2 is in them and
+    // f1, the other side of its flip, is not.
+    const runs = Array.from({ length: 42 }, (_, i) =>
+      runRow(`f${i}`, new Date(Date.UTC(2026, 9, 2) + i * 3_600_000).toISOString(), {
+        commit_sha: i === 1 || i === 2 ? 'flip' : `c${i}`,
+      }),
+    );
+    const results = runs.map((run, i) =>
+      statsResult(`y-${run.id}`, run.id, 't1', i === 2 ? 'failed' : 'passed'),
+    );
+    const answer = answering({
+      runs,
+      tests: [
+        {
+          id: 't1',
+          test_key: 'key-t1',
+          module: 'shared',
+          suite: 'ChangeEventDaoTest',
+          name: 'insertsAndQueriesByDay',
+          layer: 'integration',
+        },
+      ],
+    });
+    const { client } = fakeClient((query) => {
+      if (!isStatsResults(query)) return answer(query);
+      const ids = new Set(
+        argsOf(query, 'in').find(([column]) => column === 'reports.run_id')?.[1] as string[],
+      );
+      return { data: results.filter((row) => ids.has(row.reports.run_id)) };
+    });
+
+    const page = await loadProjectPage('ostomate2', {}, client, NOW);
+
+    expect(page?.flaky.tests.map((test) => test.failures)).toEqual([{ failed: 0, runs: 40 }]);
   });
 
   it('reads no tests when nothing is flaky', async () => {

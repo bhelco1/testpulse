@@ -390,6 +390,60 @@ describe('flakyFailures', () => {
     ]);
   });
 
+  // Decision 2026-10-07 (design v10 item 18): n counts the runs the Test History strip draws
+  // Failed. A run whose failing result is one side of a section 11 flip is Flaky, never Failed.
+  it('does not count a run whose failure is one side of a flip across attempts', () => {
+    const runs = [
+      run('a1', '2026-09-20T00:00:00Z', { commitSha: 'c1' }),
+      run('a2', '2026-09-20T01:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
+      run('b', '2026-09-21T00:00:00Z'),
+    ];
+    const results = [
+      result('x1', 'a1', 't', 'failed'),
+      result('x2', 'a2', 't', 'passed'),
+      result('x3', 'b', 't', 'failed'),
+    ];
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 1, runs: 3 },
+    ]);
+  });
+
+  it('does not count a run that failed then passed on retry', () => {
+    const runs = [run('r', '2026-09-20T00:00:00Z')];
+    const results = [result('x1', 'r', 't', 'failed'), result('x2', 'r', 't', 'passed')];
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 0, runs: 1 },
+    ]);
+  });
+
+  it('counts a flaky run whose other platform failed without a flip', () => {
+    const runs = [
+      run('a1', '2026-09-20T00:00:00Z', { commitSha: 'c1' }),
+      run('a2', '2026-09-20T01:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
+    ];
+    const results = [
+      result('x1', 'a1', 't', 'failed', 'jvm'),
+      result('x2', 'a2', 't', 'passed', 'jvm'),
+      result('x3', 'a2', 't', 'failed', 'ios-sim'),
+    ];
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 1, runs: 2 },
+    ]);
+  });
+
+  // Section 11's flip is within 30 days; the 2026-10-07 row's (b): an older one is not flaky, so
+  // its failing side counts.
+  it('counts the failing side of a flip older than 30 days', () => {
+    const runs = [
+      run('a1', '2026-08-01T00:00:00Z', { commitSha: 'c1' }),
+      run('a2', '2026-08-01T01:00:00Z', { commitSha: 'c1', runAttempt: 2 }),
+    ];
+    const results = [result('x1', 'a1', 't', 'failed'), result('x2', 'a2', 't', 'passed')];
+    expect(flakyFailures(runs, results, ['t'], options)).toEqual([
+      { testId: 't', failed: 1, runs: 2 },
+    ]);
+  });
+
   it('answers each test asked for, in the order asked', () => {
     const runs = hourly(2);
     const results = [

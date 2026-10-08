@@ -1,4 +1,4 @@
-# testpulse handoff v10
+# testpulse handoff v12
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -597,3 +597,92 @@ Same rules: the Design System page is canonical, components.md matches it, every
    - Module names and values are SAMPLE.
 
 Files changed in v10: Landing.dc.html, Project Page.dc.html, Privacy.dc.html, How Its Tested.dc.html, Test History.dc.html, NotFound.dc.html, Run Detail.dc.html, Design System.dc.html, tp-charts.js, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v11
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing else was changed.
+
+**A. Self-reporting**
+1. How It's Tested now opens in the reporting state (the tweak defaults to "reporting"; "not reporting yet" is kept for an outage). New copy:
+   - Lede: "testpulse is built test-first. Its own CI runs every suite on every pull request and reports the results here, alongside everything else."
+   - Section 04: "Since 7 Oct, testpulse's CI posts its results … through the same shared GitHub Action Ostomate2 and RouteServe use."
+   - Not-reporting copy: "No results received yet." (no phase reference).
+   - Phase list (docs/build-progress.json, "As of 7 Oct"): 0–5 Done; "Self-reporting (moved ahead of Phase 6)" Done with no phase number; 6 Alerts, tracked links, admin; 7 Launch. Build progress is now its own card at the end of section 04, shown in both states.
+   - Updated in components.md "How it's tested page" and data-map.
+2. Coverage card redrawn with exact CoverageBar rows (128 grid, 6 track, 2×14 marker, nowrap with ellipsis, below floor = arrow + amber value, bar stays ink). One real row: unit 99.4%, floor 90% (3,125 of 3,141, rounded down), with "3,125 of 3,141 lines covered in the unit job." data-map v11 has rows for the coverage and results cards.
+3. Strategy table:
+   - Contract: "The shared GitHub Action every project reports through…".
+   - Unit: "API key hashing" replaces "token and key utilities". Design-token checks are the contrast script; tracked-link tokens are added with Phase 6.
+   - Component tools: Vitest, Testing Library, as built.
+   - The pyramid gains a Component layer.
+   - Results card shows real figures only, in executions: total 3,245 "test executions in 10 reports"; pyramid E2E 882 (3,245 − 2,183 − 180, eight Playwright reports), Integration 180, "Unit + Component" 2,183 (one row: they share the unit job's report). It moves to distinct tests once those are published.
+   - Note: each Playwright project reports separately.
+4. Principle 02 now names testpulse's own Vitest and Playwright output.
+
+**B. Contradictions**
+5. components.md flaky-list rate: n counts runs drawn Failed; a flaky run is never Failed, anywhere. Also in data-map v11.
+6. Design System section 13 ErrorState uses the new body.
+7. Tag row: components.md wins (14 px, 8 × 14); the Design System drawing is updated. Strip note: 13 px; Test History is updated.
+8. Picked as built:
+   - Heads: line 249's public head, "{platform} · {Failed|Error} · {time}" with a bare key.
+   - Notice: line 251's title "Details hidden: private repository" + two sentences.
+   - Updated: the Design System sample, the line 331 Notice "uses" and line 356.
+9. Run Detail and Admin now draw the two-row header (toggle only, no Live).
+10. Ostomate2 is 157 distinct tests in six reports, with keys android-e2e/e2e/android-emulator and ios-e2e/e2e/ios-sim.
+   - Project Page: platforms line, "The six together make one run", footer "Counted once per distinct test across reports", pyramid 106/29/10/12, figures 157 / 156 of 157.
+   - Landing (hero 1,205), Kiosk and Design System samples follow.
+   - components.md (platform split, declared examples now RouteServe, hero example) and data-map (hero, card, per-report rows) updated.
+11. data-map now names docs/build-progress.json (dated by its asOf) in both places.
+
+**C. Owner decisions**
+12. tp-charts.js now keeps the 1, 2, 2.5, 5 candidates and skips any that isn't a whole number of hundredths (or is under 0.01 s), so 0.025 is skipped for 0.05, not rounded to 0.03.
+13. "Static analysis" kept.
+14. The Landing "loading" scenario is removed from the tweak and the logic. data-map's footer now reads max(reports.received_at), and runs are dated by received_at.
+
+**Assumptions to check**
+- Ostomate2's +3 tests (154 → 157) are placed on Unit, and the shared reports read 85; the brief gives only the total.
+- The results card's status and "12 min ago · main · 8d3e1a2" meta stay SAMPLE; every count on it is real.
+- Self-reporting appears in the phase list as its own Done row with no phase number.
+
+Files changed in v11: How Its Tested.dc.html, Project Page.dc.html, Landing.dc.html, Kiosk.dc.html, Test History.dc.html, Run Detail.dc.html, Admin.dc.html, Design System.dc.html, tp-charts.js, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v12
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing else was changed.
+
+**A. Owner decisions**
+1. The How It's Tested results card now counts distinct tests: Unit 1,528, Component 655, Integration 180 and E2E 235, total 2,598.
+   - Unit and Component are separate rows.
+   - The sub-line is back: "tests · 0 failed · 0 skipped · 6 min". The duration is SAMPLE, under the card's existing SAMPLE meta.
+   - The pyramid note has no literal figures: "Each test counts once, in the layer testpulse's layer rules give it, whichever report it arrived in."
+   - Updated in components.md "How it's tested page" and data-map v11.
+2. The Self-reporting row is removed. The list mirrors docs/build-progress.json's phases 0–7: Phase 6 "Alerts, tracked links, admin" In progress, Phase 7 "Launch" Planned.
+
+**B. Partly done**
+3. components.md now says "Vitest, Testing Library" everywhere, and the pyramid note says "the Action's contract tests".
+4. data-map (Flaky list row and v10/v11 notes), components.md flaky rate and Failed tile now agree: Failed = final failed or error on any platform, not part of a flip. Either side of a flip (same commit, a pass and a fail on one platform, within or across runs) is Flaky, never Failed.
+5. Live numbers applied, and every layer sum equals its total.
+   - Ostomate2: 160 = 110 + 30 + 10 + 10, six reports (61, 88, 8, 51, 86, 5), no declared suites. Platform split "jvm 149 · android-emulator 8 · ios-sim 142". Caption: the 10 Maestro flows count once each.
+   - RouteServe: 1,044. Unit is 607 so the layers sum, and the backend report reads 497.
+   - testpulse: 2,598.
+   - Hero 3,802 "across three projects". Tiles: Projects reporting 3 of 3, Projects passing 3 of 3, runs per project with testpulse. Failed, empty and stale scenarios: 2 of 3, "3,801 of 3,802", and "RouteServe and testpulse only".
+   - Landing has a third card, testpulse.
+   - Updated: Design System (Ostomate2 card, hero specimen 3,802, count specimen 1,044, a new "TESTPULSE · PASSED" card, a testpulse pyramid; the mixed-declared sample moved to RouteServe), Landing, Kiosk, Project Page, components.md and data-map.
+6. Leftovers:
+   - Landing: the loading markup and `isLoading` are removed.
+   - Review: lists the "no projects" scenario and "reporting (default) / not reporting yet".
+   - data-map: the strip row and the time rule name `received_at`. Runs have no `created_at`.
+   - How It's Tested: the comments now name docs/build-progress.json and the SAMPLE comment is gone.
+   - Kiosk: "0 skipped."
+
+**C. New**
+7. Admin: the testpulse row reads "12 min ago", "✓ In sync", key `tp_••••••••••••4hQx`, with "Rotate key" like the others.
+8. Build progress has one heading. The visible label is now the card's h3; the hidden one is gone.
+9. One private notice everywhere, following Run Detail (13.5 px, margin 4). The title is now `--ink-2` per the Notice spec: Design System sections 10 (both), Run Detail and components.md.
+10. Per module: "unit: 3,125 of 3,141 lines covered." No job name, because coverage is stored per module (data-map v11).
+11. The data-map "## v11" block has a table header.
+
+**Assumptions to check**
+- The eight Playwright report counts on testpulse's card split its 882 executions evenly (one 112, seven 110). That split, the card's "6 min", "12 min ago" and commit are SAMPLE. Landing names them in its SAMPLE line in every scenario, and the Design System card label says so.
+- RouteServe's −4 (1,048 → 1,044) is taken from Unit and the backend report; only the total is live.
+- Kiosk still draws two project cards (its 1080 layout fits two). Its figures include testpulse. Say if it should show a third card.
+
+Files changed in v12: How Its Tested.dc.html, Landing.dc.html, Kiosk.dc.html, Project Page.dc.html, Design System.dc.html, Run Detail.dc.html, Admin.dc.html, Review.dc.html, design/README.md, design/components.md, design/data-map.md.

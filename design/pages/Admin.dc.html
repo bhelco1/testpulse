@@ -20,14 +20,17 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <div style="{{ themeVars }}">
 <div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
 
-<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
-<div style="display:flex;align-items:center;gap:14px"><a href="#" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a><span style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;padding:3px 7px;border-radius:5px;background:var(--ink);color:var(--on-ink)">ADMIN</span></div>
-<nav style="display:flex;align-items:center;gap:8px;font-size:14.5px;flex-wrap:wrap">
+<header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:4px 16px;padding:18px 0;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:14px"><a href="#" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a><span style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;padding:3px 7px;border-radius:5px;background:var(--ink);color:var(--on-ink)">ADMIN</span></div>
+<nav style="display:flex;align-items:center;gap:0 8px;font-size:14.5px;flex-wrap:wrap">
 <span style="color:var(--ink-3);padding:0 8px">Signed in with magic link</span>
 <a href="#" style="height:44px;padding:0 12px;display:flex;align-items:center">View public site</a>
 <button style="height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign out</button>
-<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+<span aria-hidden="true" style="flex:none;width:52px;height:0"></span>
 </nav>
+<div style="position:absolute;top:18px;right:0;display:flex;align-items:center;gap:4px">
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</div>
 </header>
 
 <main style="padding:24px 0 64px;display:flex;flex-direction:column;gap:48px">
@@ -173,7 +176,7 @@ class Component extends DCLogic {
     const P = [
       { id: 'o2', name: 'Ostomate2', vis: 'Public', report: '4 min ago', sync: '✓ In sync', key: 'tp_••••••••••••7Qx2' },
       { id: 'rs', name: 'RouteServe', vis: 'Private', report: showAlerts ? '◷ 1 week ago' : '2 h ago', stale: showAlerts, sync: '✓ In sync', key: 'tp_••••••••••••c9Lm' },
-      { id: 'tp', name: 'testpulse', vis: 'Public', report: 'Never', sync: 'No row yet · skipped', syncWarn: true, key: 'No key issued', noKey: true },
+      { id: 'tp', name: 'testpulse', vis: 'Public', report: '12 min ago', sync: '✓ In sync', key: 'tp_••••••••••••4hQx' }, /* v12 item 7: reporting since 7 Oct */
     ];
     const projects = P.map(p => {
       const confirming = this.state.rotating === p.id, revealed = this.state.revealed === p.id;

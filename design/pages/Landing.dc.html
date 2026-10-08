@@ -53,38 +53,6 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </section>
 </sc-if>
 
-<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
-<div aria-busy="true" aria-label="Loading results" style="display:flex;flex-direction:column;gap:12px;animation:tpShimmer 1.6s ease-in-out infinite">
-<div style="width:min(100%,380px);height:24px;border-radius:8px;background:var(--raised)"></div>
-<div style="width:min(100%,300px);height:120px;border-radius:14px;background:var(--raised);margin:4px 0 20px"></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px"><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div><div style="height:112px;border-radius:16px;background:var(--surface);border:1px solid var(--line)"></div></div>
-<div style="width:140px;height:28px;border-radius:8px;background:var(--raised);margin-top:36px"></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px"><article aria-busy="true" aria-label="Loading project" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(20px,2.4vw,30px) 18px;display:flex;flex-direction:column;animation:tpShimmer 1.6s ease-in-out infinite">
-<div style="display:flex;justify-content:space-between"><div style="width:92px;height:26px;border-radius:99px;background:var(--raised)"></div><div style="width:180px;height:14px;border-radius:4px;background:var(--raised);align-self:center"></div></div>
-<div style="width:55%;height:38px;border-radius:6px;background:var(--raised);margin-top:18px"></div>
-<div style="width:85%;height:14px;border-radius:4px;background:var(--raised);margin-top:12px"></div>
-<div style="width:40%;height:48px;border-radius:6px;background:var(--raised);margin-top:22px"></div>
-<div style="height:8px;border-radius:99px;background:var(--raised);margin-top:20px"></div>
-<div style="height:6px;border-radius:99px;background:var(--raised);margin-top:30px"></div>
-<div style="height:6px;border-radius:99px;background:var(--raised);margin-top:18px"></div>
-<div style="height:78px;border-radius:12px;background:var(--inset);margin-top:22px"></div>
-<div style="height:14px;width:60%;border-radius:4px;background:var(--raised);margin-top:30px"></div>
-</article><article aria-busy="true" aria-label="Loading project" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px clamp(20px,2.4vw,30px) 18px;display:flex;flex-direction:column;animation:tpShimmer 1.6s ease-in-out infinite">
-<div style="display:flex;justify-content:space-between"><div style="width:92px;height:26px;border-radius:99px;background:var(--raised)"></div><div style="width:180px;height:14px;border-radius:4px;background:var(--raised);align-self:center"></div></div>
-<div style="width:55%;height:38px;border-radius:6px;background:var(--raised);margin-top:18px"></div>
-<div style="width:85%;height:14px;border-radius:4px;background:var(--raised);margin-top:12px"></div>
-<div style="width:40%;height:48px;border-radius:6px;background:var(--raised);margin-top:22px"></div>
-<div style="height:8px;border-radius:99px;background:var(--raised);margin-top:20px"></div>
-<div style="height:6px;border-radius:99px;background:var(--raised);margin-top:30px"></div>
-<div style="height:6px;border-radius:99px;background:var(--raised);margin-top:18px"></div>
-<div style="height:78px;border-radius:12px;background:var(--inset);margin-top:22px"></div>
-<div style="height:14px;width:60%;border-radius:4px;background:var(--raised);margin-top:30px"></div>
-</article></div>
-<div style="max-width:720px;margin-top:4px"><div aria-busy="true" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;animation:tpShimmer 1.6s ease-in-out infinite"><sc-for list="{{ three }}" as="k" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:16px;padding:14px 16px"><div style="width:104px;height:14px;border-radius:4px;background:var(--raised)"></div><div style="flex:1"><div style="width:70%;height:14px;border-radius:4px;background:var(--raised)"></div><div style="width:45%;height:10px;border-radius:4px;background:var(--raised);margin-top:8px"></div></div><div style="width:90px;height:14px;border-radius:4px;background:var(--raised)"></div></div></sc-for></div></div>
-<span style="font-size:14px;color:var(--ink-3);margin-top:8px">Loading results…</span>
-</div>
-</sc-if>
-
 <sc-if value="{{ isNoProjects }}" hint-placeholder-val="{{ false }}">
 <h1 style="margin:0 0 24px;font:400 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</h1>
 <section style="max-width:640px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:28px 24px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card)"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">No projects yet</h2><p style="margin:0;font-size:15px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">Projects appear here once they’re registered and send their first report.</p><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:6px;font-size:15px">How testpulse is tested</a></section>
@@ -183,55 +151,62 @@ class Component extends DCLogic {
     const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
     const sc = this.props.scenario ?? 'healthy';
     const live = sc !== 'realtime disconnected';
-    const base = { isLoading: sc === 'loading', isError: sc === 'error', isReady: sc !== 'loading' && sc !== 'error' && sc !== 'no projects', isNoProjects: sc === 'no projects', six: [1, 2, 3], three: [1, 2, 3],
+    const base = { isError: sc === 'error', isReady: sc !== 'error' && sc !== 'no projects', /* v11 item 14: server-rendered; no loading page */ isNoProjects: sc === 'no projects', six: [1, 2, 3], three: [1, 2, 3],
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }), themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme' };
     if (!K) return base;
 
     const osto = { name: 'Ostomate2', tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
-      run: { status: 'passed', when: '4 min ago', branch: 'main', sha: '0e2d0b4', total: 154, failed: 0, skipped: 0, dur: '27 s' },
-      layers: { unit: 103, integration: 29, visual: 10, e2e: 12 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
-      reports: [['android/shared/jvm', 82], ['ios/shared/ios-sim', 82], ['android/composeApp/jvm', 60], ['ios/composeApp/ios-sim', 50], ['android/e2e/emulator', 7], ['ios/e2e/ios-sim', 5]], 
+      run: { status: 'passed', when: '4 min ago', branch: 'main', sha: '0e2d0b4', total: 160, failed: 0, skipped: 0, dur: '27 s' },
+      layers: { unit: 110, integration: 30, visual: 10, e2e: 10 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
+      reports: [['android/composeApp/jvm', 61], ['android/shared/jvm', 88], ['android-e2e/e2e/android-emulator', 8], ['ios/composeApp/ios-sim', 51], ['ios/shared/ios-sim', 86], ['ios-e2e/e2e/ios-sim', 5]], 
       declared: [] }; /* v10 item 3: Maestro flows now report */
     const route = { name: 'RouteServe', private: true, tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
-      run: { status: 'passed', when: '2 h ago', branch: 'main', sha: 'c238574', total: 1048, failed: 0, skipped: 0, dur: '29 s' },
-      layers: { unit: 608, component: 165, integration: 3, api: 269 }, cov: [['apps/backend', 96.1, 80], ['apps/mobile', 96.1, 80], ['packages/shared', 100, 80]],
-      reports: [['test/apps/backend/node', 498], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], 
+      run: { status: 'passed', when: '2 h ago', branch: 'main', sha: 'c238574', total: 1044, failed: 0, skipped: 0, dur: '29 s' },
+      layers: { unit: 607, component: 165, integration: 3, api: 269 }, cov: [['apps/backend', 96.1, 80], ['apps/mobile', 96.1, 80], ['packages/shared', 100, 80]],
+      reports: [['test/apps/backend/node', 497], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], 
       declared: [{ name: 'Maestro E2E (iOS)', layer: 'e2e', count: 13, status: 'authored_not_executed' }] };
+    /* v12: testpulse self-reports since 7 Oct. Distinct tests per layer from live production; the eight e2e report counts are a SAMPLE split of their 882 executions */
+    const tp = { name: 'testpulse', tagline: 'This dashboard, reporting on itself.',
+      run: { status: 'passed', when: '12 min ago', branch: 'main', sha: '8d3e1a2', total: 2598, failed: 0, skipped: 0, dur: '6 min' },
+      layers: { unit: 1528, component: 655, integration: 180, e2e: 235 }, cov: [['unit', 3125 / 3141 * 100, 90]],
+      reports: [['checks/unit/node', 2183], ['integration/integration/node', 180]].concat(['desktop-dark', 'desktop-light', 'phone-dark', 'phone-light', 'no-js', 'harness', 'leak-sweep', 'live'].map((p, i) => ['e2e/e2e/' + p, i === 0 ? 112 : 110])),
+      declared: [] };
     let rows = [
-      { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 154, dur: '27 s', when: '4 min ago' },
-      { status: 'passed', private: true, project: 'RouteServe', branch: 'main', sha: 'c238574', total: 1048, dur: '29 s', when: '2 h ago' },
+      { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 160, dur: '27 s', when: '4 min ago' },
+      { status: 'passed', private: true, project: 'RouteServe', branch: 'main', sha: 'c238574', total: 1044, dur: '29 s', when: '2 h ago' },
     ];
-    let heroTotal = '1,202', heroNote = 'automated tests across two projects. 100% passing on the latest runs, 0 skipped.'; /* v8 item 6 template in components.md HeroNote */
+    let heroTotal = '3,802', heroNote = 'automated tests across three projects. 100% passing on the latest runs, 0 skipped.'; /* v8 item 6 template in components.md HeroNote */
     const tile = (label, value, sub, attn) => ({ label, value, sub, attn: attn === true, fail: attn === 'fail', plain: !attn });
     const tiles = [
       tile('Pass rate', '100%', 'Latest runs · 0 skipped, excluded'),
-      tile('Projects reporting', '2 of 2', 'All within their expected cadence'),
-      tile('Runs in last 30 days', '24', 'Ostomate2 18 · RouteServe 6'),
-      tile('Projects passing', '2 of 2', 'Latest default-branch runs'),
+      tile('Projects reporting', '3 of 3', 'All within their expected cadence'),
+      tile('Runs in last 30 days', '26', 'Ostomate2 18 · RouteServe 6 · testpulse 2'),
+      tile('Projects passing', '3 of 3', 'Latest default-branch runs'),
     ];
+    const tpSample = 'testpulse card: the eight e2e report counts (an even split of their 882 executions), its duration, time and commit are illustrative.'; /* verifier fix: brief gives no per-report e2e counts */
     let sampleNote = '', feedNote = 'Updates as reports arrive', feedNoteInk = 'var(--ink-3)', footerNote = 'Last report received 4 min ago';
 
     if (sc === 'failed run') {
-      sampleNote = 'Ostomate2’s latest default-branch run shown failing 1 of 154 to illustrate the state.';
+      sampleNote = 'Ostomate2’s latest default-branch run shown failing 1 of 160 to illustrate the state.';
       osto.run = Object.assign({}, osto.run, { status: 'failed', sha: 'a41f9c2', failed: 1 });
       osto.failing = [{ suite: 'com.ostomate.app.ui.home.HomeViewModelTest', name: 'rendersToday', platform: 'ios-sim' }];
-      heroNote = 'automated tests across two projects. 1 failing on Ostomate2’s latest run, 0 skipped.';
-      tiles[0] = tile('Pass rate', '99.9%', '1,201 of 1,202 · 0 skipped, excluded');
-      tiles[3] = tile('Projects passing', '1 of 2', 'Ostomate2 red for 4m', 'fail');
-      rows[0] = { status: 'failed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: 'a41f9c2', total: 154, passed: 153, failed: 1, when: '4 min ago' };
+      heroNote = 'automated tests across three projects. 1 failing on Ostomate2’s latest run, 0 skipped.';
+      tiles[0] = tile('Pass rate', '99.9%', '3,801 of 3,802 · 0 skipped, excluded');
+      tiles[3] = tile('Projects passing', '2 of 3', 'Ostomate2 red for 4m', 'fail');
+      rows[0] = { status: 'failed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: 'a41f9c2', total: 160, passed: 159, failed: 1, when: '4 min ago' };
     } else if (sc === 'empty run') {
       sampleNote = 'Ostomate2’s latest run shown with zero tests executed to illustrate the state.';
       osto.run = Object.assign({}, osto.run, { status: 'empty' });
-      heroTotal = '1,048';
-      heroNote = 'automated tests across one project. Ostomate2’s latest run had no tests, so it isn’t counted.';
-      tiles[0] = tile('Pass rate', '100%', 'RouteServe only · 0 skipped, excluded');
-      tiles[3] = tile('Projects passing', '1 of 2', 'Ostomate2 last run empty');
+      heroTotal = '3,642';
+      heroNote = 'automated tests across two projects. Ostomate2’s latest run had no tests, so it isn’t counted.';
+      tiles[0] = tile('Pass rate', '100%', 'RouteServe and testpulse only · 0 skipped, excluded');
+      tiles[3] = tile('Projects passing', '2 of 3', 'Ostomate2 last run empty');
       rows[0] = { status: 'empty', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', reports: 4, when: '4 min ago' };
     } else if (sc === 'stale project') {
       sampleNote = 'RouteServe shown with no report for 12 days to illustrate the state.';
       route.stale = true; route.run = Object.assign({}, route.run, { when: '12 Sep' });
-      tiles[1] = tile('Projects reporting', '1 of 2', 'RouteServe silent 12 days', true);
-      heroNote = 'automated tests across two projects. 100% passing on the latest runs, 0 skipped. RouteServe hasn’t reported since 12 Sep.';
+      tiles[1] = tile('Projects reporting', '2 of 3', 'RouteServe silent 12 days', true);
+      heroNote = 'automated tests across three projects. 100% passing on the latest runs, 0 skipped. RouteServe hasn’t reported since 12 Sep.';
       rows[1] = Object.assign({}, rows[1], { when: '1 week ago' }); /* v9 item 5: feed rows use relative time; only the stale card shows a date */
     } else if (sc === 'coverage below floor') {
       sampleNote = 'Ostomate2 composeApp coverage shown under its floor to illustrate the state.';
@@ -239,7 +214,7 @@ class Component extends DCLogic {
     } else if (sc === 'live update') {
       sampleNote = 'A new Ostomate2 run arriving at the top of the feed.';
       osto.run = Object.assign({}, osto.run, { when: 'just now', sha: '7c1e05b', dur: '26 s' });
-      rows = [{ status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e05b', total: 154, dur: '26 s', when: 'just now', isNew: true }].concat(rows).slice(0, 3); /* v8 item 35: always 3 rows */
+      rows = [{ status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e05b', total: 160, dur: '26 s', when: 'just now', isNew: true }].concat(rows).slice(0, 3); /* v8 item 35: always 3 rows */
       footerNote = 'Last report received just now';
     } else if (!live) {
       feedNote = 'Offline. Showing runs as of 10:42 UTC; reconnecting'; feedNoteInk = 'var(--ink-2)';
@@ -249,7 +224,7 @@ class Component extends DCLogic {
 
     return Object.assign(base, {
       themeVars: K.themeVars(dark), liveDot, liveLabel: live ? 'Live' : 'Offline · reconnecting',
-      sampleNote, heroTotal, heroNote, tiles, cards: [K.card(osto), K.card(route)], feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
+      sampleNote: sampleNote ? sampleNote + ' ' + tpSample : tpSample, heroTotal, heroNote, tiles, cards: [K.card(osto), K.card(route), K.card(tp)], feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
     });
   }
 }

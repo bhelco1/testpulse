@@ -125,27 +125,27 @@ class Component extends DCLogic {
     const cov = (m, v, f) => ({ m, v: (v === 100 ? '100' : v.toFixed(1)) + '%', w: v + '%', fl: f + '%' });
     const L = (arr) => arr.map(([name, n, bg]) => ({ name, n, label: String(n), bg }));
 
-    const osto = { name: 'Ostomate2', private: false, st: ST.pass, frame: 'var(--line)', when: '4 min ago', whenInk: 'var(--ink-3)', sha: '0e2d0b4', total: '142',
+    const osto = { name: 'Ostomate2', private: false, st: ST.pass, frame: 'var(--line)', when: '4 min ago', whenInk: 'var(--ink-3)', sha: '0e2d0b4', total: '160',
       subParts: [part('0 failed ·'), part('0 skipped ·'), part('27 s')], failLine: '', failSub: '', showLayers: true,
-      layers: L([['Unit', 103, 'var(--layer-1)'], ['Integration', 29, 'var(--layer-3)'], ['Visual', 10, 'var(--layer-2)']]),
+      layers: L([['Unit', 110, 'var(--layer-1)'], ['Integration', 30, 'var(--layer-3)'], ['Visual', 10, 'var(--layer-2)'], ['E2E', 10, 'var(--layer-3)']]),
       cov: [cov('composeApp', 94.3, 93), cov('shared', 92.0, 91)], health: healthy };
-    const route = { name: 'RouteServe', private: true, st: ST.pass, frame: 'var(--line)', when: '2 h ago', whenInk: 'var(--ink-3)', sha: 'c238574', total: '1,048',
+    const route = { name: 'RouteServe', private: true, st: ST.pass, frame: 'var(--line)', when: '2 h ago', whenInk: 'var(--ink-3)', sha: 'c238574', total: '1,044',
       subParts: [part('0 failed ·'), part('0 skipped ·'), part('29 s')], failLine: '', failSub: '', showLayers: true,
-      layers: L([['Unit', 608, 'var(--layer-1)'], ['Component', 165, 'var(--layer-2)'], ['Integration', 3, 'var(--layer-3)'], ['API', 269, 'var(--layer-4)']]),
+      layers: L([['Unit', 607, 'var(--layer-1)'], ['Component', 165, 'var(--layer-2)'], ['Integration', 3, 'var(--layer-3)'], ['API', 269, 'var(--layer-4)']]),
       cov: [cov('apps/backend', 96.1, 80), cov('apps/mobile', 96.1, 80), cov('packages/shared', 100, 80)], health: healthy };
 
     const row = (st, project, branch, count, when, x = {}) => ({ st, project, branch, count, when, countInk: 'var(--ink-2)', countW: x.countInk ? 600 : 400, bg: 'var(--surface)', ...x });
     let feed = [
-      row(ST.pass, 'Ostomate2', 'main', '142 tests', '4 min ago'),
-      row(ST.pass, 'RouteServe', 'main', '1,048 tests', '2 h ago'),
+      row(ST.pass, 'Ostomate2', 'main', '160 tests', '4 min ago'),
+      row(ST.pass, 'RouteServe', 'main', '1,044 tests', '2 h ago'),
       row(ST.fail, 'Ostomate2', 'fix-today-count', '1 failed', 'yesterday', { countInk: 'var(--fail)' }),
     ];
     let overall = { label: 'All projects passing', ink: 'var(--pass)', tint: 'var(--pass-tint)', d: 'm8 12 3 3 5-6' };
-    let heroTotal = '1,190', heroInk = 'inherit', heroNote = '100% passing across two projects. 0 skipped or disabled.';
+    let heroTotal = '3,802', heroInk = 'inherit', heroNote = '100% passing across three projects. 0 skipped.';
     let tiles = [
       { label: 'Pass rate', value: '100%' },
-      { label: 'Projects reporting', value: '2' },
-      { label: 'Projects passing', value: '2 of 2' },
+      { label: 'Projects reporting', value: '3' },
+      { label: 'Projects passing', value: '3 of 3' },
     ];
     let lastReport = 'Last report 4 min ago';
 
@@ -153,14 +153,14 @@ class Component extends DCLogic {
       Object.assign(osto, { st: ST.fail, frame: 'var(--fail)', sha: 'a41f9c2', subParts: [part('1 failed', 'var(--fail)', 600), part('· 0 skipped ·'), part('27 s')], showLayers: false,
         failLine: 'HomeViewModelTest › rendersToday', failSub: 'ios-sim' });
       overall = { label: '1 project failing', ink: 'var(--fail)', tint: 'var(--fail-tint)', d: 'm15 9-6 6M9 9l6 6' };
-      heroNote = '1 failing on Ostomate2’s latest run. 0 skipped or disabled.';
+      heroNote = '1 failing on Ostomate2’s latest run. 0 skipped.';
       tiles[0] = { label: 'Pass rate', value: '99.9%' };
-      tiles[2] = { label: 'Ostomate2 red for 4m', value: '1 of 2', fail: true };
-      feed = [row(ST.fail, 'Ostomate2', 'main', '1 failed', '4 min ago', { countInk: 'var(--fail)' }), feed[1], row(ST.pass, 'Ostomate2', 'main', '142 tests', '6 h ago')];
+      tiles[2] = { label: 'Ostomate2 red for 4m', value: '2 of 3', fail: true };
+      feed = [row(ST.fail, 'Ostomate2', 'main', '1 failed', '4 min ago', { countInk: 'var(--fail)' }), feed[1], row(ST.pass, 'Ostomate2', 'main', '160 tests', '6 h ago')];
     } else if (sc === 'stale project') {
       Object.assign(route, { when: '12 Sep', whenInk: 'var(--attn)', frame: 'var(--attn)', health: { label: 'No report in 12 days', ink: 'var(--attn)', d: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0' } });
       overall = { label: '1 project silent', ink: 'var(--attn)', tint: 'var(--attn-tint)', d: 'M12 7v5l3 2' };
-      tiles[1] = { label: '1 silent 12 days', value: '1 of 2', attn: true, sample: false, labelInk: 'var(--attn)', labelW: 600 };
+      tiles[1] = { label: '1 silent 12 days', value: '2 of 3', attn: true, sample: false, labelInk: 'var(--attn)', labelW: 600 };
       feed[1] = { ...feed[1], when: '1 week ago' };
     }
 

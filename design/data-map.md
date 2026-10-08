@@ -6,7 +6,7 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 
 | UI element | Source |
 |---|---|
-| Hero total ("1,190") | Σ projects: distinct `tests` in latest run (§11 Total tests). Empty runs contribute 0 and are called out in the note. |
+| Hero total ("3,802" = Ostomate2 160 + RouteServe 1,044 + testpulse 2,598) | Σ projects: distinct `tests` in latest run (§11 Total tests). Empty runs contribute 0 and are called out in the note. |
 | Hero note | n = projects whose latest default-branch run has tests; failing = distinct failed/error tests per project; skipped from the same runs; empty = latest run total 0; stale = no report within `expected_cadence_days` (date = latest `finished_at`); never reported = project with no run. Templates in components.md Landing hero. Nothing stores disabled tests, so it isn't mentioned |
 | Hero note | pass rate, skipped count, projects count from the same runs. Skipped is excluded from pass rate and always shown separately |
 | Tile · Pass rate | passed / (passed + failed + error) over latest runs. Sub-line: Σ `runs.skipped` of latest runs, "N skipped, excluded" |
@@ -17,17 +17,17 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 | Card meta | `runs_public.finished_at` (relative) · `runs_public.branch` (the run’s branch, never hard-coded) · `runs_public.commit_sha` (7 chars). Public: link to the run page. Private: plain text, no link (`run_url` is null) |
 | Card name / private tag | `projects.name` · `projects.visibility = 'private'` |
 | Card description | `projects.tagline` |
-| Card total + sub | latest default-branch CI run: distinct `tests` executed (not `runs_public.total`, which counts executions: Ostomate2 192 = JVM + iOS), with passed, failed (failed or error on any platform) and skipped counted per distinct test from the same run; `duration_ms` of the run. Same denominator as the Pass rate tile ("1,189 of 1,190") |
+| Card total + sub | latest default-branch CI run: distinct `tests` executed (not `runs_public.total`, which counts executions across reports: Ostomate2 is 160 distinct tests in six reports), with passed, failed (failed or error on any platform) and skipped counted per distinct test from the same run; `duration_ms` of the run. Same denominator as the Pass rate tile ("3,801 of 3,802") |
 | Card failing test | first `results` with status failed/error in the latest run ⋈ `tests` (suite, name) + report platform → `failing: {suite, name, platform}[]`; the card shortens `suite` (last path or dotted segment, full name in `title`); "+N more" = remaining count. Shown for private projects too (names are public, §9) |
 | Layer bar | `LayerBar.layers: {label, count, tone}[]`: count distinct `tests` by `layer` in latest run; `tone` from the fixed layer → tone table in components.md |
 | Coverage rows | `CoverageBar {module, pct, floor}`: `module` is the stored key verbatim (`apps/backend`, `apps/mobile`, `packages/shared`, `shared`, `composeApp`), never shortened. `coverage` latest per `module`: `lines_covered / lines_total` when both are present, else `coverage.lines_pct` (spec §11); plotted against `projects.coverage_floors[module]`. Rows sorted by module key (code-point order); YAML order is not stored |
-| Per-report block | `reports` of latest run: `job/module/platform` + `total`; header side = platform split: platform is the last key segment, totals summed per platform, always with counts ("jvm 142 · ios-sim 132") |
+| Per-report block | `reports` of latest run: `job/module/platform` + `total`; header side = platform split: platform is the last key segment, totals summed per platform, always with counts ("jvm 149 · android-emulator 8 · ios-sim 142"; Ostomate2 reports android/composeApp/jvm 61, android/shared/jvm 88, android-e2e/e2e/android-emulator 8, ios/composeApp/ios-sim 51, ios/shared/ios-sim 86, ios-e2e/e2e/ios-sim 5; pyramid Unit 110, Integration 30, Visual 10, E2E 10, E2E counting distinct flows once across platforms) |
 | "Not counted" line | `ProjectCard.declared[]` = `projects.declared_suites`, summarised by the components.md template (one suite / several with one status / mixed statuses); empty list → left side blank |
 | Health marker | worked out from public data, never from `alerts`: stale = days since the latest `runs_public` row > the project’s expected cadence (`projects` YAML); empty = latest run total 0; below floor = any latest coverage module < its floor; else "Reporting healthy" |
 | Recent runs | view `runs_public` (anon-readable; public pages never read the `runs` table). Landing: default branch only (spec §18 Q4), newest first, always 3 rows (a new run pushes the oldest out), no "All runs" link. Project page: default branch by default, "All branches" filter adds pull request and other runs; 10 rows, "Load 20 more". Live updates: new rows in `runs_public` (live-update mechanism decided in Phase 5) |
 | Feed row title | From `runs.event` + `runs.branch` only: push → "Push to {branch}", pull_request → "Pull request from {branch}", schedule → "Scheduled run", workflow_dispatch → "Manual run", other → "Run on {branch}". Branch slot = `runs.branch` for every event. Commit messages and PR numbers are not stored. Private: lock + "Private repository" |
 | Feed row count | passed: `total` + duration; failed: `failed` + "`passed` of `total`"; empty: "0 tests" + report count |
-| Footer "Last report received" | max `reports.created_at` |
+| Footer "Last report received" | max `reports.received_at` (when testpulse received it; the same time dates a run) |
 
 ## Project `/p/[slug]`
 
@@ -41,8 +41,8 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 | Green streak | §11 Green streak over default-branch `runs_public`: current (consecutive `passed` from the latest; 0 when the latest is `failed`) and longest |
 | Time to green | §11 Time to green over default-branch `runs_public`, 90 days, calendar time (`finished_at` of the failed run → `finished_at` of the next passed): median, worst, count k. k = 0 → "None" / "No recoveries in 90 days". Red now: latest `failed` → now − `finished_at` of the first failed run of the episode |
 | Trends | Window: last 30 default-branch runs per chart. Coverage: one chart per module (module-key order), each with its own floor. Pass rate per run, coverage per run per module: default branch, CI and imported history. Test count per run: distinct tests, default branch, CI runs only (imported history is JVM-only; mixing it would jump when iOS results arrive). Duration per run: CI runs only (imported history has no durations). Runs per UTC day (bar): default branch, CI and imported history (spec §11) |
-| Last 40 runs strip | `StatusTimeline kind: 'runs'`, `runs[]` = `runs_public` {status, event, branch, sha, created_at} of the last 40 default-branch CI runs (`source = ci`; imported history excluded); `defaultBranch` = `projects.default_branch`; not interactive; one image name "Last {n} runs on {branch}: …" |
-| Flaky list | §11 Flaky test, 30 days. Rate: over the last 40 default-branch CI runs with a result for the test (m ≤ 40), n = runs with failed or error on any platform → "Failed {n} of last {m} runs"; n = 0 → "Flipped on {c} commits in 30 days" (c = commits in 30 days with both a pass and a fail on one platform) |
+| Last 40 runs strip | `StatusTimeline kind: 'runs'`, `runs[]` = `runs_public` {status, event, branch, sha, received_at} of the last 40 default-branch CI runs (`source = ci`; imported history excluded); `defaultBranch` = `projects.default_branch`; not interactive; one image name "Last {n} runs on {branch}: …" |
+| Flaky list | §11 Flaky test, 30 days. Rate: over the last 40 default-branch CI runs with a result for the test (m ≤ 40), n = runs drawn Failed (final failed or error on any platform, not part of a flip; either side of a flip is Flaky, spec §11) → "Failed {n} of last {m} runs"; n = 0 → "Flipped on {c} commits in 30 days" (c = commits in 30 days with both a pass and a fail on one platform) |
 | Repo link | `projects.repo_url`, public only |
 
 ## Run detail `/p/[slug]/runs/[id]`
@@ -66,7 +66,7 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 
 ## How it’s tested `/how-its-tested`
 
-Static copy from spec §3 and §16; live section reads project `testpulse` like any other (shows "Not reporting yet" until Phase 7).
+Static copy from spec §3 and §16; live section reads project `testpulse` like any other (reporting since 7 Oct: results card from the latest default-branch run like any project; "Coverage against the floor" from `coverage` latest per module for project testpulse — today one module, `unit`, 3,125 of 3,141 lines, floor `coverage_floors.unit` = 90).
 
 ## Admin `/admin`
 
@@ -91,7 +91,7 @@ Same queries as landing (via `runs_public`). Tiles: Pass rate, Projects reportin
 - `StatusTimeline`: `runs[]` (oldest → latest) with per-platform `results` for one test (`kind: 'results'`), or run `status` for the project strip (`kind: 'runs'`, not interactive)
 
 ## Time and rounding (v8)
-- Every relative time and date is computed on the server in UTC from the stored timestamp (`finished_at`, `created_at`, `received_at`); rules in components.md Relative time.
+- Every relative time and date is computed on the server in UTC from the stored timestamp (`finished_at`, `received_at`; runs are dated by `received_at` and have no `created_at`, spec 5.2); rules in components.md Relative time.
 - Percentages (pass rate, coverage) round down to one decimal before display; floor comparisons use the stored value.
 - Test history tiles, module and headline: from `results` for the test key over the strip's runs; module = the report's `module`; platforms are report platform keys, verbatim.
 - Pruned runs: `runs.results_pruned_at` not null → run rows read "Results pruned · {duration}"; the run page shows "Pruned on {results_pruned_at date}".
@@ -101,11 +101,19 @@ Same queries as landing (via `runs_public`). Tiles: Pass rate, Projects reportin
 - Test History duration: the project's last 30 default-branch CI `runs`, then the test's `results` in each; a run without a result on a platform is a gap (null) at its place.
 - New pill: `tests.first_seen_at` (survives pruning).
 - Durations are whole ms (`results.duration_ms`); 0 reads "<1 ms".
-- Privacy and How it's tested: static copy; Build progress reads spec §17 at build time.
+- Privacy and How it's tested: static copy; Build progress reads `docs/build-progress.json`, dated by its own `asOf`.
 
 ## v10
 - Run page "Received": `reports.received_at` (when testpulse received the report), not the file's finish time.
 - Last 40 strip notes: counted on the server over every run in the window.
-- Test History Failed tile and flaky-list rate: runs whose final result for the test was failed or error on any platform; flaky runs (retried to a pass) count as Flaky.
+- Test History Failed tile and flaky-list rate: runs whose final result for the test was failed or error on any platform and that aren't part of a flip; either side of a flip is Flaky.
 - Hero note stale date: the project's latest report on any branch.
-- Build progress (How it's tested): a phase data file, dated by that file.
+- Build progress (How it's tested): `docs/build-progress.json`, dated by its `asOf`.
+
+## v11
+| UI element | Source |
+|---|---|
+| How it's tested · coverage card | `coverage` rows of project `testpulse`'s latest default-branch run, one per `module` (today `unit`: `lines_covered` 3,125, `lines_total` 3,141), floor `projects.coverage_floors[module]` (90), module-key order, round down. Note per module: "{module}: {lines_covered} of {lines_total} lines covered." (no job name: coverage is stored per module) |
+| How it's tested · results card | latest default-branch run of `testpulse`, like any project card: distinct tests per layer (pyramid; layer from `projects/testpulse.yaml` rules as each result is received), total = distinct tests, sub-line failed/skipped/duration. Live 7 Oct: Unit 1,528, Component 655, Integration 180, E2E 235 = 2,598 |
+- Run times: a run is dated by its reports' `received_at`.
+- Flaky runs are never Failed: tiles, flaky-list rate and strip count final failed/error not part of a flip; either side of a flip is Flaky.

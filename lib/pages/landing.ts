@@ -47,12 +47,15 @@ export interface ReadyLandingView {
 /** No project is registered: the h1 and the "No projects yet" card only (design v8 item 10). */
 export type LandingView = ReadyLandingView | { readonly kind: 'none' };
 
-/** The page ErrorState's words when the database does not answer (Landing "error" scenario). */
+/**
+ * The page ErrorState's words when the database does not answer (components.md Landing, Error;
+ * design v10).
+ */
 export const LANDING_ERROR = {
   title: 'Results couldn’t be loaded',
   message:
-    'The database didn’t respond. Nothing is shown rather than numbers that might be out of ' +
-    'date. Test runs are still being received and will appear when it recovers.',
+    'The database isn’t answering, so nothing is shown rather than numbers that might be out ' +
+    'of date. Try again in a minute.',
 } as const;
 
 type NameOf = (slug: string) => string;

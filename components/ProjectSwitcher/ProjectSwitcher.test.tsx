@@ -147,6 +147,28 @@ describe('ProjectSwitcher', () => {
     expect(panel.hidden).toBe(true);
   });
 
+  // components.md (design v10): "the Projects menu opens to a single non-link line 'No projects
+  // yet' (14 --ink-3, 44 tall)".
+  it('opens to one non-link line, "No projects yet", when no project is registered', () => {
+    const { getByRole, container } = render(<ProjectSwitcher projects={[]} />);
+    const button = getByRole('button', { name: 'Projects' });
+    const panel = container.querySelector<HTMLElement>(
+      `[id="${button.getAttribute('aria-controls') ?? ''}"]`,
+    );
+    if (!panel) throw new Error('aria-controls does not point at the panel');
+    fireEvent.click(button);
+
+    expect(panel.hidden).toBe(false);
+    expect(panel.textContent).toBe('No projects yet');
+    expect(within(panel).queryAllByRole('link')).toEqual([]);
+    expect(within(panel).queryAllByRole('list')).toEqual([]);
+    expect(ruleFor(CSS, '.empty')).toMatchObject({
+      'min-height': 'var(--target-min)',
+      'font-size': '14px',
+      color: 'var(--ink-3)',
+    });
+  });
+
   it('draws the panel and rows as the design does, current and hover on the same fill', () => {
     expect(ruleFor(CSS, '.panel')).toMatchObject({
       width: '320px',

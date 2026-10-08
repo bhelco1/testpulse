@@ -67,27 +67,31 @@ export function ProjectSwitcher({ projects, currentHref }: ProjectSwitcherProps)
         Projects <Chevron size={14} strokeWidth={2.4} />
       </button>
       <div id={panelId} className={styles.panel} hidden={!open}>
-        <ul className={styles.list}>
-          {projects.map((project) => {
-            const current = project.href === currentHref;
-            return (
-              <li key={project.href}>
-                <Link
-                  href={project.href}
-                  className={styles.item}
-                  aria-current={current ? 'page' : undefined}
-                  onClick={() => setOpen(false)}
-                >
-                  <span className={styles.label}>
-                    <span className={styles.name}>{project.name}</span>
-                    {current && <span className={styles.current}>Current</span>}
-                  </span>
-                  <StatusBadge status={project.status} variant="inline" />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {projects.length === 0 ? (
+          <p className={styles.empty}>No projects yet</p>
+        ) : (
+          <ul className={styles.list}>
+            {projects.map((project) => {
+              const current = project.href === currentHref;
+              return (
+                <li key={project.href}>
+                  <Link
+                    href={project.href}
+                    className={styles.item}
+                    aria-current={current ? 'page' : undefined}
+                    onClick={() => setOpen(false)}
+                  >
+                    <span className={styles.label}>
+                      <span className={styles.name}>{project.name}</span>
+                      {current && <span className={styles.current}>Current</span>}
+                    </span>
+                    <StatusBadge status={project.status} variant="inline" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );

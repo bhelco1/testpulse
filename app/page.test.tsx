@@ -52,7 +52,12 @@ describe('the landing page', () => {
 
     expect(main.getByRole('alert')).toBeTruthy();
     expect(main.getByRole('heading', { level: 1 }).textContent).toBe('Results couldn’t be loaded');
-    expect(main.getByText(/^The database didn’t respond\./)).toBeTruthy();
+    // design/components.md Landing, Error (design v10).
+    expect(
+      main.getByText(
+        'The database isn’t answering, so nothing is shown rather than numbers that might be out of date. Try again in a minute.',
+      ),
+    ).toBeTruthy();
     expect(main.getByRole('link', { name: 'Try again' }).getAttribute('href')).toBe('/');
     expect(main.getByRole('link', { name: 'How it’s tested' }).getAttribute('href')).toBe(
       '/how-its-tested',

@@ -89,7 +89,7 @@ test.describe('the landing page', () => {
     await expect(ostomate2.locator('[data-part="total"]')).toHaveText('142');
     // 35,604 ms: the three JUnit files' testsuite times.
     await expect(ostomate2.locator('[data-part="sub"]')).toHaveText(
-      'tests ·0 failed·0 skipped ·36 s',
+      'tests ·0 failed·0 skipped ·35 s',
     );
     await expect(ostomate2.locator('[data-state]')).toHaveText([
       'composeApp94.3%floor 93%',
@@ -115,7 +115,7 @@ test.describe('the landing page', () => {
     await expect(routeserve.locator('[data-part="total"]')).toHaveText('1,041');
     // 115,412 + 68,719 + 19,989 ms.
     await expect(routeserve.locator('[data-part="sub"]')).toHaveText(
-      'tests ·1 failed·0 skipped ·204 s',
+      'tests ·1 failed·0 skipped ·3m 24s',
     );
     await expect(routeserve.locator('[data-part="failing"]')).toContainText(
       'asset.test.ts › assetCreateSchema accepts a minimal valid asset',
@@ -155,14 +155,14 @@ test.describe('the landing page', () => {
     // Distinct tests, as the cards count them, not the runs' executions.
     await expect(rows.nth(0)).toContainText('Push to main');
     await expect(rows.nth(0)).toContainText('Ostomate 2.0·main·');
-    await expect(rows.nth(0)).toContainText('142 tests· 36 s');
+    await expect(rows.nth(0)).toContainText('142 tests· 35 s');
     await expect(rows.nth(0)).toContainText('2 h ago');
     await expect(rows.nth(1)).toContainText('Private repository');
     await expect(rows.nth(1)).toContainText('1 failed· 1,040 of 1,041');
     await expect(rows.nth(1)).toContainText('3 h ago');
     // The 2026-10-04 scheduled run: 115,412 + 68,719 + 22,604 ms.
     await expect(rows.nth(2)).toContainText('Private repository');
-    await expect(rows.nth(2)).toContainText('1,041 tests· 207 s');
+    await expect(rows.nth(2)).toContainText('1,041 tests· 3m 26s');
     await expect(rows.nth(2)).toContainText('yesterday');
     await expect(rows.nth(0)).toHaveAttribute('href', /^\/p\/ostomate2\/runs\/[0-9a-f-]{36}$/);
   });

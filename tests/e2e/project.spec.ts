@@ -95,7 +95,7 @@ test.describe('Ostomate2 (public)', () => {
     await expect(card.locator('[data-part="figure"]')).toHaveText('142');
     // 35,604 ms: the three JUnit files' testsuite times.
     await expect(card.locator('[data-part="line"]')).toHaveText(
-      'tests · 142 passed · 0 failed · 0 skipped · 36 s',
+      'tests · 142 passed · 0 failed · 0 skipped · 35 s',
     );
     // 2,388 passed and none failed over 6 imported and 8 CI runs; 8 green CI runs, no recovery.
     await expect(card.locator('[data-part="stats"] > [data-part="cell"]')).toHaveText([
@@ -182,7 +182,7 @@ test.describe('Ostomate2 (public)', () => {
       'Held at 142 for the last 8 runs.',
       'Rose from 93.6% to 94.3% over 21 runs; above its 93% floor.',
       'Held at 93.2% over 21 runs; above its 91% floor.',
-      'Held at 36 s over the last 8 runs.',
+      'Held at 35 s over the last 8 runs.',
     ]);
     await expect(runStrip(page).getByRole('img')).toHaveAttribute(
       'aria-label',
@@ -197,7 +197,7 @@ test.describe('Ostomate2 (public)', () => {
     await expect(rows).toHaveCount(8);
     await expect(rows.first()).toContainText('Push to main');
     // Distinct tests, not the run's 192 executions.
-    await expect(rows.first()).toContainText('142 tests· 36 s');
+    await expect(rows.first()).toContainText('142 tests· 35 s');
     await expect(rows.first()).toContainText('2 h ago');
     await expect(page.getByRole('button', { name: 'Load 20 more' })).toHaveCount(0);
     await expect(page.getByText('No flaky tests in the last 30 days')).toBeVisible();
@@ -241,7 +241,7 @@ test.describe('RouteServe (private)', () => {
     await expect(card.locator('[data-part="figure"]')).toHaveText('1');
     // 1,041 tests, 1 failed; 115,412 + 68,719 + 19,989 = 204,120 ms.
     await expect(card.locator('[data-part="line"]')).toHaveText(
-      'failed · 1,040 of 1,041 passed · 204 s',
+      'failed · 1,040 of 1,041 passed · 3m 24s',
     );
     await expect(card.locator('[data-part="failing"]')).toContainText(
       'assetCreateSchema accepts a minimal valid asset',
@@ -264,14 +264,14 @@ test.describe('RouteServe (private)', () => {
     // covers apps/backend 1,862 / 1,968 = 94.61% and apps/mobile 1,496 / 1,551 = 96.45%; the four
     // red runs post packages/shared without coverage, so it has 6 runs of 102 / 102, and the
     // latest, red but not empty, adds no sentence. Green runs take 206,735 ms and red ones
-    // 204,120 ms; six green make the median 207 s.
+    // 204,120 ms; six green make the median 3m 26s.
     await expect(charts(page).locator('[data-part="caption"]')).toHaveText([
       '99.9% on the latest run. 4 of the last 10 runs failed.',
       'Held at 1,041 for the last 10 runs.',
       'Held at 94.6% over 10 runs; above its 80% floor.',
       'Held at 96.4% over 10 runs; above its 80% floor.',
       'Held at 100.0% over 6 runs; above its 80% floor.',
-      'Between 204 s and 207 s over the last 10 runs. Median 207 s.',
+      'Between 3m 24s and 3m 26s over the last 10 runs. Median 3m 26s.',
     ]);
     await expect(runStrip(page).getByRole('img')).toHaveAttribute(
       'aria-label',

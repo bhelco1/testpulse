@@ -71,7 +71,9 @@ test.describe('the page', () => {
       'href',
       `${REPO}/blob/main/docs/spec.md`,
     );
-    await expect(main).not.toContainText('Phase 7');
+    // Self-reporting is live, so nothing says it is still to come; Build progress names Phase 7
+    // only as Launch.
+    await expect(main).not.toContainText(/From Phase 7|starts in Phase 7|will report/);
   });
 
   test('lists the five principles, 01 ending with a recorded manual check', async ({ page }) => {
@@ -161,7 +163,7 @@ test.describe('the page', () => {
       'Since 7 Oct, testpulse’s CI posts its results to this site as the project testpulse, through the same shared GitHub Action Ostomate2 and RouteServe use.',
     );
     await expect(intro.locator('time')).toHaveAttribute('datetime', '2026-10-07T00:00:00.000Z');
-    await expect(self).not.toContainText('Phase 7');
+    await expect(self).not.toContainText(/From Phase 7|starts in Phase 7/);
     const run = self.getByRole('article');
     await expect(run.getByText('Failed', { exact: true })).toBeVisible();
     // 13 UTC days back reads in weeks (design v7 item 16), as on the landing card.

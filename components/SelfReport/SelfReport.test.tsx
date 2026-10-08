@@ -44,7 +44,7 @@ const SEEDED: SelfReportView = {
 };
 
 describe('SelfReport', () => {
-  describe('not reporting yet (production before Phase 7)', () => {
+  describe('not reporting yet (a database with no testpulse run)', () => {
     it('draws the design’s not-reporting card and its link to CI on GitHub', () => {
       const { container } = render(
         <SelfReport view={{ state: 'not_reporting' }} actionsHref={ACTIONS} progress={PROGRESS} />,
@@ -53,7 +53,7 @@ describe('SelfReport', () => {
         'Not reporting yet',
       );
       expect(screen.getByRole('heading', { level: 3 }).textContent).toBe(
-        'Self-reporting starts in Phase 7.',
+        'testpulse hasn’t reported here yet.',
       );
       expect(container.textContent).toContain(
         'Until then this section stays empty rather than showing numbers nobody measured. The suites already run in CI on every pull request; you can see them in the repository’s Actions tab.',

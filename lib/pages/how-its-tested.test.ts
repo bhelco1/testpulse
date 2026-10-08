@@ -68,13 +68,13 @@ describe('howItsTestedView', () => {
     expect(ACTIONS_URL).toBe('https://github.com/bhelco1/testpulse/actions');
   });
 
-  // Design v9 item 4: the hero no longer says testpulse reports itself, so the lede is the same
-  // in either state.
-  it('has the v9 lede, which does not claim testpulse reports here yet', () => {
+  // testpulse has reported here since 2026-10-07, so v9's "From Phase 7 it will report…" is false;
+  // interim wording until v11 (decision 2026-10-07). The lede is the same in either state.
+  it('says testpulse reports its own results here', () => {
     const lede = [
       'A test dashboard that isn’t tested is just a claim.',
       'testpulse is built test-first, and its own CI runs every suite on every pull request.',
-      'From Phase 7 it will report its results here alongside everything else.',
+      'It reports its own results here, alongside everything else.',
     ];
     expect(howItsTestedView(seeded, NOW).lede).toEqual(lede);
     expect(howItsTestedView(missing, NOW).lede).toEqual(lede);

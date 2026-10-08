@@ -5,8 +5,8 @@ import { loadProject, loadSummaryInput } from './project-summary.ts';
 
 // /how-its-tested (spec section 13; design/data-map.md, How it's tested): the live section reads
 // project `testpulse` like any other, as anon through projects_public, runs_public and the
-// results, tests and coverage tables. Production has no testpulse row until Phase 7 (decision
-// 2026-09-28), so a missing project is an ordinary answer, never an error. Time is read once, here.
+// results, tests and coverage tables. Production had no testpulse row until self-reporting went
+// live on 2026-10-07, so a missing project is an ordinary answer, never an error. Time is read once, here.
 
 /** testpulse's own slug, as projects/testpulse.yaml registers it. */
 export const SELF_SLUG = 'testpulse';
@@ -19,7 +19,7 @@ export interface SelfResults {
 }
 
 export interface HowItsTested {
-  /** Null while testpulse is not registered, as in production before Phase 7. */
+  /** Null while testpulse is not registered, as in production before 2026-10-07. */
   readonly self: SelfResults | null;
 }
 

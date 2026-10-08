@@ -94,7 +94,7 @@ describe('loadHowItsTested', () => {
   });
 
   it('answers no project, with no further query, when testpulse is not registered', async () => {
-    // Production before Phase 7 (decision 2026-09-28): the page must still render.
+    // As in production before 2026-10-07: the page must still render.
     const { client, queries } = fakeClient(answering({ projects: [] }));
 
     await expect(loadHowItsTested(client, NOW)).resolves.toEqual({ self: null });

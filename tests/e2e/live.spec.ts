@@ -172,8 +172,9 @@ test('a private run failing on two platforms shows each head, and no failure tex
   // the text the page leaves out, read with the secret key.
   const failing = page.locator('[data-part="test"]').first();
   await expect(failing.locator('[data-part="failure-head"]')).toHaveText([
-    /^node · Failed · \d+\.\d\d s$/,
-    /^node-24 · Failed · \d+\.\d\d s$/,
+    // The captured failure's 2 ms reads in whole ms (design v10 item 14, decision 2026-10-07).
+    'node · Failed · 2 ms',
+    'node-24 · Failed · 2 ms',
   ]);
   await expect(failing.locator('[data-part="private-notice"]')).toHaveCount(1);
   expect(html).toContain('Details hidden: private repository');

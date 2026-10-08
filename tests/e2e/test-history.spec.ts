@@ -702,7 +702,8 @@ test.describe('a private test history leaks nothing', { tag: '@js' }, () => {
     expect(html).toContain(FLAKY.name);
     expect(html).toContain('Private repository');
     expect(html).toContain(FLAKY.module);
-    expect(html).toContain('4 runs · node');
+    // The Failed tile: the flip's failing side is Flaky, never Failed (decision 2026-10-07).
+    expect(html).toContain('3 runs · node');
     expect(html).toMatch(/href="\/p\/routeserve\/runs\/[0-9a-f-]{36}" class="[^"]*runLink/);
 
     expect(leaksIn(texts, HIDDEN)).toEqual([]);

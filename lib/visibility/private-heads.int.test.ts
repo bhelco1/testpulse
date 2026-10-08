@@ -125,8 +125,10 @@ describe('a private run that failed on two platforms, read as anon', () => {
     ]);
 
     const html = renderToStaticMarkup(createElement(RunResults, { results: view.results }));
-    expect(html).toMatch(/node · Failed · \d+\.\d\d s/);
-    expect(html).toMatch(/node-24 · Failed · \d+\.\d\d s/);
+    // The captured failure took 2 ms, which reads in whole ms (design v10 item 14, decision
+    // 2026-10-07).
+    expect(html).toContain('node · Failed · 2 ms');
+    expect(html).toContain('node-24 · Failed · 2 ms');
     expect(html.match(/Details hidden: private repository/g)).toHaveLength(1);
 
     const serialized = `${JSON.stringify(detail)}\n${JSON.stringify(view)}\n${html}`;

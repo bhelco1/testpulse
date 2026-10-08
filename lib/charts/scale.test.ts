@@ -83,10 +83,17 @@ describe('trendYScale', () => {
       max: 1,
       ticks: [0, 1],
     });
-    expect(trendYScale({ ...line, values: OSTOMATE2_RUN_SECONDS, integer: true })).toEqual({
+    // Run durations of 24 to 31 s step in whole seconds, never 2.5.
+    expect(trendYScale({ ...line, values: [24, 25, 26, 27, 28, 29, 31], integer: true })).toEqual({
       min: 20,
       max: 35,
       ticks: [20, 25, 30, 35],
+    });
+    // Design v14's Ostomate2 series, as tp-charts.js nice() steps it.
+    expect(trendYScale({ ...line, values: OSTOMATE2_RUN_SECONDS, integer: true })).toEqual({
+      min: 600,
+      max: 800,
+      ticks: [600, 650, 700, 750, 800],
     });
   });
 

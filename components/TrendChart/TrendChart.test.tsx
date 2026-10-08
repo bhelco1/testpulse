@@ -19,6 +19,7 @@ import {
   IOS_SECONDS,
   JVM_GAP_SECONDS,
   JVM_SECONDS,
+  OSTOMATE2_RUN_SECONDS,
   PASS_RATE_30,
   RUNS_PER_DAY,
   TESTS_30,
@@ -152,6 +153,15 @@ const TESTS: TrendChartProps = {
   caption: 'Grew from 118 to 142 over the last 30 runs.',
   series: [{ name: 'Tests', values: TESTS_30 }],
   format: 'int',
+  unit: 'run',
+};
+
+const RUN_DURATION: TrendChartProps = {
+  title: 'Run duration',
+  scope: TREND_SCOPE.duration,
+  caption: durationCaption([OSTOMATE2_RUN_SECONDS], 'dur'),
+  series: [{ name: 'Duration', values: OSTOMATE2_RUN_SECONDS }],
+  format: 'dur',
   unit: 'run',
 };
 
@@ -817,6 +827,43 @@ describe('TrendChart tooltip', () => {
 
 // Design v7 item 9 (components.md TrendChart, "Missing values"; tp-charts.js): a null is a run
 // where the series has no value, such as a platform that did not run.
+// Design v14 item 3 (tp-charts.js dur): the y axis keeps whole-second ticks; the end labels,
+// tooltip, table and caption read as run durations do.
+describe('TrendChart run duration', () => {
+  it('ticks the y axis in whole seconds', () => {
+    const { container } = render(<TrendChart {...RUN_DURATION} />);
+    expect(parts(container, 'y-label').map((tick) => tick.textContent)).toEqual([
+      '600 s',
+      '650 s',
+      '700 s',
+      '750 s',
+      '800 s',
+    ]);
+  });
+
+  it('labels the first and last values, captions and tabulates in minutes and seconds', () => {
+    const { container, getByRole } = render(<TrendChart {...RUN_DURATION} />);
+    expect(parts(container, 'value-label').map((label) => label.textContent)).toEqual([
+      '10m 58s',
+      '11m 34s',
+    ]);
+    expect(container.querySelector('[data-part="caption"]')?.textContent).toBe(
+      'Between 10m 58s and 12m 22s over the last 30 runs. Median 11m 34s.',
+    );
+    fireEvent.click(getByRole('button', { name: 'Show table' }));
+    const rows = within(getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows[0]?.textContent).toBe('Latest11m 34s');
+    expect(rows[13]?.textContent).toBe('13 runs ago12m 22s');
+  });
+
+  it('reads the hovered run in minutes and seconds in the tooltip', () => {
+    const { container, getByRole } = render(<TrendChart {...RUN_DURATION} />);
+    fireEvent.focus(surfaceOf(container));
+    const panel = getByRole('status').querySelector('[data-part="tooltip"]');
+    expect(panel?.textContent).toBe('LatestDuration11m 34s');
+  });
+});
+
 describe('TrendChart with missing values', () => {
   const GAPS: TrendChartProps = {
     title: 'Duration, rendersToday',

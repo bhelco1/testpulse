@@ -207,19 +207,22 @@ class Component extends DCLogic {
       J('packages/shared/src/time.test.ts', 'formats durations across midnight', 'Unit', '0.01 s', { plats: [['node', 'dim']] }),
     ];
     const ostoReports = failed => [
-      { key: 'android/shared/jvm', tests: 82, failed: 0, received: '14:03:41', dur: '11 s' },
-      { key: 'android/composeApp/jvm', tests: 60, failed: 0, received: '14:03:58', dur: '16 s' },
-      { key: 'ios/shared/ios-sim', tests: 82, failed: 0, received: '14:06:12', dur: '9 s' },
-      { key: 'ios/composeApp/ios-sim', tests: 50, failed: failed ? 1 : 0, received: '14:06:30', dur: '7 s' },
+      /* v13 item 2: live report keys and counts (7 Oct); received times and durations SAMPLE */
+      { key: 'android/composeApp/jvm', tests: 61, failed: 0, received: '14:03:58', dur: '52 s' },
+      { key: 'android/shared/jvm', tests: 88, failed: 0, received: '14:03:41', dur: '41 s' },
+      { key: 'android-e2e/e2e/android-emulator', tests: 8, failed: 0, received: '14:09:20', dur: '4m 58s' },
+      { key: 'ios/composeApp/ios-sim', tests: 51, failed: failed ? 1 : 0, received: '14:06:30', dur: '47 s' },
+      { key: 'ios/shared/ios-sim', tests: 86, failed: 0, received: '14:06:12', dur: '38 s' },
+      { key: 'ios-e2e/e2e/ios-sim', tests: 5, failed: 0, received: '14:11:02', dur: '3m 38s' }, /* v14 item 4: run duration = Σ report durations (spec §5): 52 + 41 + 298 + 47 + 38 + 218 = 694 s = 11m 34s, Ostomate2's live time */
     ];
-    const common = { project: 'Ostomate2', reportsIn: '4', reportsNote: 'Each CI job posts its own report when it finishes. JVM and iOS simulator run the same shared suites, so a test that exists on both platforms is counted once in the totals.', reportsFoot: 'Totals count each test once; the iOS simulator re-runs 132 of the 142.' };
+    const common = { project: 'Ostomate2', reportsIn: '6', reportsNote: 'Each CI job posts its own report when it finishes. JVM and iOS simulator run the same shared suites, so a test that exists on both platforms is counted once in the totals.', reportsFoot: 'Reports add up to 299 executions; totals count each of the 160 distinct tests once.' };
     return {
-      'Ostomate2 · passed': Object.assign({}, common, { id: '35642780279', status: 'pass', title: 'Push to main', when: '4 min ago', branch: 'main', sha: '0e2d0b4', event: 'push', started: '24 Sep, 14:02 UTC', total: '142', passed: '142', failed: '0', skipped: '0', duration: '27 s', reports: ostoReports(false), rows: ostoRows(false) }),
-      'Ostomate2 · failed': Object.assign({}, common, { id: '35611904417', status: 'fail', title: 'Pull request from fix-today-count', when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', event: 'pull_request', started: '23 Sep, 17:40 UTC', total: '142', passed: '141', failed: '1', skipped: '0', duration: '31 s', sample: true, reports: ostoReports(true), rows: ostoRows(true),
+      'Ostomate2 · passed': Object.assign({}, common, { id: '35642780279', status: 'pass', title: 'Push to main', when: '4 min ago', branch: 'main', sha: '0e2d0b4', event: 'push', started: '24 Sep, 14:02 UTC', total: '160', passed: '160', failed: '0', skipped: '0', duration: '11m 34s', reports: ostoReports(false), rows: ostoRows(false) }),
+      'Ostomate2 · failed': Object.assign({}, common, { id: '35611904417', status: 'fail', title: 'Pull request from fix-today-count', when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', event: 'pull_request', started: '23 Sep, 17:40 UTC', total: '160', passed: '159', failed: '1', skipped: '0', duration: '11m 34s', sample: true, reports: ostoReports(true), rows: ostoRows(true),
         failHead: '1 test failed: HomeViewModelTest › rendersToday', failSub: 'In composeApp, Unit layer. Failed on ios-sim, passed on jvm in the same run.' }),
-      'RouteServe · failed (private)': { project: 'RouteServe', private: true, id: '35598127760', status: 'fail', title: '', when: 'yesterday', branch: 'main', sha: '5f0a2c9', event: 'push', started: '23 Sep, 09:15 UTC', total: '1,048', passed: '1,047', failed: '1', skipped: '0', duration: '30 s', sample: true, reportsIn: '3', reportsSample: true,
-        reportsNote: 'The monorepo reports once per workspace, so each report stays under the 4 MB request limit.', reportsFoot: 'Per-workspace counts are a sample split of the real 1,048 total.',
-        reports: [{ key: 'test/apps/backend/node', tests: 501, failed: 1, received: '09:16:02', dur: '14 s' }, { key: 'test/apps/mobile/node', tests: 468, failed: 0, received: '09:16:20', dur: '12 s' }, { key: 'test/packages/shared/node', tests: 79, failed: 0, received: '09:15:48', dur: '4 s' }],
+      'RouteServe · failed (private)': { project: 'RouteServe', private: true, id: '35598127760', status: 'fail', title: '', when: 'yesterday', branch: 'main', sha: '5f0a2c9', event: 'push', started: '23 Sep, 09:15 UTC', total: '1,044', passed: '1,043', failed: '1', skipped: '0', duration: '30 s', sample: true, reportsIn: '3', reportsSample: true,
+        reportsNote: 'The monorepo reports once per workspace, so each report stays under the 4 MB request limit.', reportsFoot: 'Reports add up to 1,048 executions of 1,044 distinct tests.',
+        reports: [{ key: 'test/apps/backend/node', tests: 501, failed: 1, received: '09:16:02', dur: '14 s' }, { key: 'test/apps/mobile/node', tests: 428, failed: 0, received: '09:16:20', dur: '12 s' }, { key: 'test/packages/shared/node', tests: 119, failed: 0, received: '09:15:48', dur: '4 s' }],
         rows: rsRows(), failHead: '1 test failed: returns 409 when job overlaps', failSub: 'In apps/backend, API layer. This repository is private, so failure messages and stack traces are hidden.' },
     };
   }

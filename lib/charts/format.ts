@@ -11,6 +11,20 @@ const grouped = new Intl.NumberFormat('en-US');
 // 56.99999999999999, which is still 57%.
 const tenthsDown = (value: number) => Math.floor(value * 10 + 1e-9) / 10;
 
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
+/**
+ * A run's duration in seconds as every page reads it (design v13 item 6, components.md "Run
+ * duration"): whole seconds rounded down; "27 s" under a minute, "11m 34s" under an hour, then
+ * "1h 05m". Ingest stores durations as non-negative integers; anything else reads "0 s".
+ */
+export function runDurationText(seconds: number): string {
+  const whole = seconds > 0 ? Math.floor(seconds) : 0;
+  if (whole < 60) return `${whole} s`;
+  if (whole < 3600) return `${Math.floor(whole / 60)}m ${pad2(whole % 60)}s`;
+  return `${Math.floor(whole / 3600)}h ${pad2(Math.floor((whole % 3600) / 60))}m`;
+}
+
 // Exact is for values read as figures (value labels, tooltip, table); axis ticks drop trailing
 // zeros. Both follow the design's tp-charts.js.
 export function formatTrendValue(value: number, format: ValueFormat, exact = false): string {
@@ -28,8 +42,10 @@ export function formatTrendValue(value: number, format: ValueFormat, exact = fal
       return `${exact ? value.toFixed(2) : String(Number(value.toFixed(2)))} s`;
     case 'ms':
       return `${exact && value < 0.5 ? '<1' : Math.round(value)} ms`;
+    // Ticks stay in whole seconds ("660 s"); a figure reads as every run duration does (design
+    // v14 item 3).
     case 'dur':
-      return `${Math.round(value)} s`;
+      return exact ? runDurationText(value) : `${Math.round(value)} s`;
     case 'int':
       return grouped.format(Math.round(value));
   }

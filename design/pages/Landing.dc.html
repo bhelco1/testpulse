@@ -156,23 +156,23 @@ class Component extends DCLogic {
     if (!K) return base;
 
     const osto = { name: 'Ostomate2', tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
-      run: { status: 'passed', when: '4 min ago', branch: 'main', sha: '0e2d0b4', total: 160, failed: 0, skipped: 0, dur: '27 s' },
+      run: { status: 'passed', when: '4 min ago', branch: 'main', sha: '0e2d0b4', total: 160, failed: 0, skipped: 0, dur: '17m 53s' },
       layers: { unit: 110, integration: 30, visual: 10, e2e: 10 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
       reports: [['android/composeApp/jvm', 61], ['android/shared/jvm', 88], ['android-e2e/e2e/android-emulator', 8], ['ios/composeApp/ios-sim', 51], ['ios/shared/ios-sim', 86], ['ios-e2e/e2e/ios-sim', 5]], 
       declared: [] }; /* v10 item 3: Maestro flows now report */
     const route = { name: 'RouteServe', private: true, tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
       run: { status: 'passed', when: '2 h ago', branch: 'main', sha: 'c238574', total: 1044, failed: 0, skipped: 0, dur: '29 s' },
       layers: { unit: 607, component: 165, integration: 3, api: 269 }, cov: [['apps/backend', 96.1, 80], ['apps/mobile', 96.1, 80], ['packages/shared', 100, 80]],
-      reports: [['test/apps/backend/node', 497], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], 
+      reports: [['test/apps/backend/node', 501], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], 
       declared: [{ name: 'Maestro E2E (iOS)', layer: 'e2e', count: 13, status: 'authored_not_executed' }] };
     /* v12: testpulse self-reports since 7 Oct. Distinct tests per layer from live production; the eight e2e report counts are a SAMPLE split of their 882 executions */
     const tp = { name: 'testpulse', tagline: 'This dashboard, reporting on itself.',
-      run: { status: 'passed', when: '12 min ago', branch: 'main', sha: '8d3e1a2', total: 2598, failed: 0, skipped: 0, dur: '6 min' },
+      run: { status: 'passed', when: '12 min ago', branch: 'main', sha: '8d3e1a2', total: 2598, failed: 0, skipped: 0, dur: '17m 53s' },
       layers: { unit: 1528, component: 655, integration: 180, e2e: 235 }, cov: [['unit', 3125 / 3141 * 100, 90]],
       reports: [['checks/unit/node', 2183], ['integration/integration/node', 180]].concat(['desktop-dark', 'desktop-light', 'phone-dark', 'phone-light', 'no-js', 'harness', 'leak-sweep', 'live'].map((p, i) => ['e2e/e2e/' + p, i === 0 ? 112 : 110])),
       declared: [] };
     let rows = [
-      { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 160, dur: '27 s', when: '4 min ago' },
+      { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 160, dur: '11m 34s', when: '4 min ago' },
       { status: 'passed', private: true, project: 'RouteServe', branch: 'main', sha: 'c238574', total: 1044, dur: '29 s', when: '2 h ago' },
     ];
     let heroTotal = '3,802', heroNote = 'automated tests across three projects. 100% passing on the latest runs, 0 skipped.'; /* v8 item 6 template in components.md HeroNote */
@@ -201,7 +201,7 @@ class Component extends DCLogic {
       heroNote = 'automated tests across two projects. Ostomate2’s latest run had no tests, so it isn’t counted.';
       tiles[0] = tile('Pass rate', '100%', 'RouteServe and testpulse only · 0 skipped, excluded');
       tiles[3] = tile('Projects passing', '2 of 3', 'Ostomate2 last run empty');
-      rows[0] = { status: 'empty', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', reports: 4, when: '4 min ago' };
+      rows[0] = { status: 'empty', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', reports: 6, when: '4 min ago' };
     } else if (sc === 'stale project') {
       sampleNote = 'RouteServe shown with no report for 12 days to illustrate the state.';
       route.stale = true; route.run = Object.assign({}, route.run, { when: '12 Sep' });
@@ -213,8 +213,8 @@ class Component extends DCLogic {
       osto.cov = [['shared', 92.0, 91], ['composeApp', 92.6, 93]]; osto.health = 'below_floor';
     } else if (sc === 'live update') {
       sampleNote = 'A new Ostomate2 run arriving at the top of the feed.';
-      osto.run = Object.assign({}, osto.run, { when: 'just now', sha: '7c1e05b', dur: '26 s' });
-      rows = [{ status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e05b', total: 160, dur: '26 s', when: 'just now', isNew: true }].concat(rows).slice(0, 3); /* v8 item 35: always 3 rows */
+      osto.run = Object.assign({}, osto.run, { when: 'just now', sha: '7c1e05b', dur: '11m 21s' });
+      rows = [{ status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e05b', total: 160, dur: '11m 21s', when: 'just now', isNew: true }].concat(rows).slice(0, 3); /* v8 item 35: always 3 rows */
       footerNote = 'Last report received just now';
     } else if (!live) {
       feedNote = 'Offline. Showing runs as of 10:42 UTC; reconnecting'; feedNoteInk = 'var(--ink-2)';

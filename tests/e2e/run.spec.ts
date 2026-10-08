@@ -96,7 +96,7 @@ test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => 
       'Passed142',
       'Failed0',
       'Skipped0',
-      'Duration36 s',
+      'Duration35 s',
     ]);
     await expect(tiles(page).nth(2)).not.toHaveAttribute('data-tone');
   });
@@ -117,8 +117,8 @@ test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => 
       '50 passed',
     ]);
     await expect(rows.locator('td:nth-child(4)')).toHaveText(['60', '82', '50']);
-    // 17,746 ms, 17,747 ms and 111 ms, in whole seconds as the run durations read.
-    await expect(rows.locator('td:nth-child(6)')).toHaveText(['18 s', '18 s', '0 s']);
+    // 17,746 ms, 17,747 ms and 111 ms, in whole seconds rounded down as the run durations read.
+    await expect(rows.locator('td:nth-child(6)')).toHaveText(['17 s', '17 s', '0 s']);
     await expect(rows.locator('td:nth-child(5) time')).toHaveText([
       /^\d\d:\d\d:\d\d$/,
       /^\d\d:\d\d:\d\d$/,
@@ -326,7 +326,7 @@ test.describe('RouteServe’s latest run (private, failed)', () => {
       'Passed1,040',
       'Failed1',
       'Skipped0',
-      'Duration204 s',
+      'Duration3m 24s',
     ]);
     await expect(reportRows(page).locator('td:nth-child(2)')).toHaveText([
       'test/apps/backend/node',

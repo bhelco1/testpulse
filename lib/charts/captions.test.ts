@@ -172,7 +172,7 @@ describe('coverageCaption', () => {
 describe('durationCaption', () => {
   it('gives the range and median of run durations', () => {
     expect(durationCaption([OSTOMATE2_RUN_SECONDS], 'dur')).toBe(
-      'Between 24 s and 31 s over the last 30 runs. Median 27 s.',
+      'Between 10m 58s and 12m 22s over the last 30 runs. Median 11m 34s.',
     );
     expect(durationCaption([ROUTESERVE_RUN_SECONDS], 'dur')).toBe(
       'Between 27 s and 31 s over the last 30 runs. Median 28 s.',
@@ -215,7 +215,7 @@ describe('durationCaption', () => {
   // precision reads "Held at".
   it('says the duration held when the range is one figure as displayed', () => {
     expect(durationCaption([[35.604, 35.61, 35.9]], 'dur')).toBe(
-      'Held at 36 s over the last 3 runs.',
+      'Held at 35 s over the last 3 runs.',
     );
     expect(durationCaption([[0.068, 0.07, 0.071]], 'sec')).toBe(
       'Held at 0.07 s over the last 3 runs.',

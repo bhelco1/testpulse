@@ -118,5 +118,7 @@
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const shortDate = (d, nowYear) => d.getUTCDate() + ' ' + MON[d.getUTCMonth()] + (d.getUTCFullYear() === (nowYear || 2026) ? '' : ' ' + d.getUTCFullYear());
   const relDays = (D, d) => D === 1 ? 'yesterday' : D < 7 ? D + ' days ago' : D < 28 ? (D < 14 ? '1 week ago' : Math.floor(D / 7) + ' weeks ago') : shortDate(d);
-window.TPKit = { down1, relDays, shortDate, DARK, LIGHT, themeVars, S, H, ORDER, TONE, NAME, layers, cov, card, row, pairs, ratio, n, runTitle, shortSuite, platformSplit, declaredSummary, qty };
+  /* v13 item 6: run durations. <60 s "{s} s"; <60 min "{m}m {ss}s"; else "{h}h {mm}m". Whole seconds, rounded down. */
+  const runDur = ms => { const t = Math.floor(ms / 1000); if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); if (t < 3600) return Math.floor(t / 60) + 'm ' + p(t % 60) + 's'; return Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
+window.TPKit = { runDur, down1, relDays, shortDate, DARK, LIGHT, themeVars, S, H, ORDER, TONE, NAME, layers, cov, card, row, pairs, ratio, n, runTitle, shortSuite, platformSplit, declaredSummary, qty };
 })();

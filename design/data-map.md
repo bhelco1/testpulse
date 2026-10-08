@@ -42,7 +42,7 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 | Time to green | §11 Time to green over default-branch `runs_public`, 90 days, calendar time (`finished_at` of the failed run → `finished_at` of the next passed): median, worst, count k. k = 0 → "None" / "No recoveries in 90 days". Red now: latest `failed` → now − `finished_at` of the first failed run of the episode |
 | Trends | Window: last 30 default-branch runs per chart. Coverage: one chart per module (module-key order), each with its own floor. Pass rate per run, coverage per run per module: default branch, CI and imported history. Test count per run: distinct tests, default branch, CI runs only (imported history is JVM-only; mixing it would jump when iOS results arrive). Duration per run: CI runs only (imported history has no durations). Runs per UTC day (bar): default branch, CI and imported history (spec §11) |
 | Last 40 runs strip | `StatusTimeline kind: 'runs'`, `runs[]` = `runs_public` {status, event, branch, sha, received_at} of the last 40 default-branch CI runs (`source = ci`; imported history excluded); `defaultBranch` = `projects.default_branch`; not interactive; one image name "Last {n} runs on {branch}: …" |
-| Flaky list | §11 Flaky test, 30 days. Rate: over the last 40 default-branch CI runs with a result for the test (m ≤ 40), n = runs drawn Failed (final failed or error on any platform, not part of a flip; either side of a flip is Flaky, spec §11) → "Failed {n} of last {m} runs"; n = 0 → "Flipped on {c} commits in 30 days" (c = commits in 30 days with both a pass and a fail on one platform) |
+| Flaky list | §11 Flaky test, 30 days. Rate: over the last 40 default-branch CI runs with a result for the test (m ≤ 40), n = runs drawn Failed (final failed or error on any platform, not part of a flip; spec §11: a flip is a pass and a fail on one commit and platform, in default-branch CI runs of the last 30 days, including inside one run; either side is Flaky; pull-request or older pairs aren't flips, so their failing side is Failed) → "Failed {n} of last {m} runs"; n = 0 → "Flipped on {c} commits in 30 days" (c = commits in 30 days with both a pass and a fail on one platform) |
 | Repo link | `projects.repo_url`, public only |
 
 ## Run detail `/p/[slug]/runs/[id]`
@@ -62,7 +62,7 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 
 ## Test history `/p/[slug]/tests/[testKey]`
 
-`StatusTimeline {kind: 'results', testName, runs: {title, branch, sha, when, href, results: {platform, status, duration}[]}[]}`: `results` for `tests.test_key` per report platform, grouped by run (title from `runs.event` + `runs.branch`, duration from `results.duration_ms`), ordered oldest → latest; strips are derived per platform; a run where the test has no result on that platform is a "not run" cell. Flaky cells: a pass and a fail on the same `commit_sha` and platform within 30 days (§11). Duration: TrendChart, one series per platform, CI runs only.
+`StatusTimeline {kind: 'results', testName, runs: {title, branch, sha, when, href, results: {platform, status, duration}[]}[]}`: `results` for `tests.test_key` per report platform, grouped by run (title from `runs.event` + `runs.branch`, duration from `results.duration_ms`), ordered oldest → latest; strips are derived per platform; a run where the test has no result on that platform is a "not run" cell. Flaky cells: a flip (§11): a pass and a fail on one `commit_sha` and platform, in default-branch CI runs of the last 30 days, including inside one run. A pull-request or older pair isn't a flip; its failing side is Failed. Duration: TrendChart, one series per platform, CI runs only.
 
 ## How it’s tested `/how-its-tested`
 
@@ -116,4 +116,11 @@ Same queries as landing (via `runs_public`). Tiles: Pass rate, Projects reportin
 | How it's tested · coverage card | `coverage` rows of project `testpulse`'s latest default-branch run, one per `module` (today `unit`: `lines_covered` 3,125, `lines_total` 3,141), floor `projects.coverage_floors[module]` (90), module-key order, round down. Note per module: "{module}: {lines_covered} of {lines_total} lines covered." (no job name: coverage is stored per module) |
 | How it's tested · results card | latest default-branch run of `testpulse`, like any project card: distinct tests per layer (pyramid; layer from `projects/testpulse.yaml` rules as each result is received), total = distinct tests, sub-line failed/skipped/duration. Live 7 Oct: Unit 1,528, Component 655, Integration 180, E2E 235 = 2,598 |
 - Run times: a run is dated by its reports' `received_at`.
-- Flaky runs are never Failed: tiles, flaky-list rate and strip count final failed/error not part of a flip; either side of a flip is Flaky.
+- Flaky runs are never Failed: tiles, flaky-list rate and strip count final failed/error not part of a flip (spec §11 window: one commit and platform, default-branch CI runs, last 30 days, including inside one run).
+
+## v13
+| UI element | Source |
+|---|---|
+| Run duration | `runs.duration_ms` = Σ `reports.duration_ms` (spec §5); reports table: `reports.duration_ms` each, formatted by `TPKit.runDur`: "27 s", "11m 34s", "1h 05m" |
+| Run totals vs reports | Σ `reports.total` = executions (RouteServe 1,048: backend 501, mobile 428, shared 119; Ostomate2 299); run total = distinct tests (RouteServe 1,044, Ostomate2 160). The reports table shows executions per report; the run header shows distinct tests. Any foot text says only "Reports add up to {executions} executions of {distinct} distinct tests." |
+| Kiosk cards | one per registered project (three today), same sources as the landing ProjectCard |

@@ -209,7 +209,7 @@ class Component extends DCLogic {
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
 
     return {
-      themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: tot.toLocaleString('en-US'), selfLine: 'tests · 0 failed · 0 skipped · 6 min', selfCovNote: 'unit: 3,125 of 3,141 lines covered.',
+      themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: tot.toLocaleString('en-US'), selfLine: 'tests · 0 failed · 0 skipped · 17m 53s', selfCovNote: 'unit: 3,125 of 3,141 lines covered.',
       reporting, notReporting: !reporting, asOf: '7 Oct', asOfIso: '2026-10-07', asOfTitle: '7 Oct 2026, 00:00 UTC', /* docs/build-progress.json asOf */
       silenceNow: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
       emptyNow: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',

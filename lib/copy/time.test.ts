@@ -161,11 +161,33 @@ describe('formatTestTime', () => {
   });
 });
 
+// Design v13 item 6 (components.md "Run duration", tp-kit.js runDur): whole seconds rounded down;
+// "{s} s" under a minute, "{m}m {ss}s" under an hour, then "{h}h {mm}m".
 describe('formatRunDuration', () => {
-  it('reads whole seconds, as the charts do', () => {
-    expect(formatRunDuration(35_604)).toBe('36 s');
-    expect(formatRunDuration(204_120)).toBe('204 s');
-    expect(formatRunDuration(0)).toBe('0 s');
+  it.each([
+    [0, '0 s'],
+    [999, '0 s'],
+    [27_400, '27 s'],
+    [35_604, '35 s'],
+    [59_999, '59 s'],
+    [60_000, '1m 00s'],
+    [107_999, '1m 47s'],
+    [204_120, '3m 24s'],
+    [694_000, '11m 34s'],
+    [1_073_000, '17m 53s'],
+    [3_599_999, '59m 59s'],
+    [3_600_000, '1h 00m'],
+    [3_912_000, '1h 05m'],
+    [90_000_000, '25h 00m'],
+  ])('reads %i ms as "%s"', (ms, text) => {
+    expect(formatRunDuration(ms)).toBe(text);
+  });
+
+  // Ingest stores durations as non-negative integers, so neither reaches a page; the guard keeps
+  // a bad value from printing "NaNh NaNm" or "-1 s".
+  it('reads a negative or missing duration as 0 s', () => {
+    expect(formatRunDuration(-1)).toBe('0 s');
+    expect(formatRunDuration(Number.NaN)).toBe('0 s');
   });
 });
 

@@ -256,8 +256,8 @@ describe('howItsTestedView', () => {
         { label: 'Integration', count: 180, tone: 3 },
         { label: 'E2E', count: 235, tone: 3 },
       ]);
-      // Whole seconds, as the landing card prints a run's duration; the mock's "6 min" is SAMPLE.
-      expect(view.self.run.duration).toBe('1073 s');
+      // The run-duration format the landing card uses (design v13 item 6).
+      expect(view.self.run.duration).toBe('17m 53s');
     });
 
     // Design v12 item 10 (data-map v11): a CoverageBar row per module and its line counts.
@@ -315,7 +315,7 @@ describe('howItsTestedView', () => {
       );
       if (view.self.state !== 'reporting') throw new Error('expected the reporting state');
       expect(view.self.layers.map(({ label }) => label)).toEqual(['Unit', 'Integration', 'E2E']);
-      expect(view.self.run.duration).toBe('2 s');
+      expect(view.self.run.duration).toBe('1 s');
     });
 
     it('reads one test in the singular', () => {

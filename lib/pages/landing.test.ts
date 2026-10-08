@@ -348,7 +348,7 @@ describe('landingView at the seed', () => {
         total: 142,
         failed: 0,
         skipped: 0,
-        duration: '36 s',
+        duration: '35 s',
       },
       layers: [
         { label: 'Unit', count: 103, tone: 1 },
@@ -382,7 +382,7 @@ describe('landingView at the seed', () => {
       total: 1041,
       failed: 1,
       skipped: 0,
-      duration: '204 s',
+      duration: '3m 24s',
     });
     expect(card?.failing).toEqual([
       {
@@ -427,7 +427,7 @@ describe('landingView at the seed', () => {
         title: 'Push to main',
         status: 'passed',
         total: 142,
-        duration: '36 s',
+        duration: '35 s',
       },
       {
         id: 'r-11',

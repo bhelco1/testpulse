@@ -13,7 +13,7 @@
   const fmtFor = f => f === 'pct' ? (v, e) => (e ? down1(v).toFixed(1) : String(down1(v))) + '%'
     : f === 'ms' ? (v, e) => (e && v < 0.5 ? '<1' : Math.round(v)) + ' ms'
     : f === 'sec' ? (v, e) => v < 0.01 && (e || v > 0) ? msStr(v) : /* v9 item 8: a stored 0 ms reads "<1 ms" */ (e ? v.toFixed(2) : String(+v.toFixed(2))) + ' s' /* v8 item 48: under 10 ms reads in ms */
-    : f === 'dur' ? v => Math.round(v) + ' s'
+    : f === 'dur' ? (v, e) => e ? runDurS(v) : Math.round(v) + ' s' /* v14 item 3: axis ticks in seconds; tooltip, table and end label in the run-duration format */
     : v => Math.round(v).toLocaleString('en-US');
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const p2 = x => String(x).padStart(2, '0');
@@ -23,6 +23,7 @@
   if (typeof document !== 'undefined' && !document.getElementById('tpc-style')) { const st = document.createElement('style'); st.id = 'tpc-style';
     st.textContent = '.tpc-row:hover{background:var(--raised)}.tpc-link{text-decoration:none}.tpc-link:hover{text-decoration:underline;text-decoration-color:currentColor}.tpc-link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:6px}';
     document.head.appendChild(st); }
+  const runDurS = v => { const t = Math.floor(v); if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); return t < 3600 ? Math.floor(t / 60) + 'm ' + p(t % 60) + 's' : Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
   const ago = (k, unit) => k === 0 ? 'Latest' : k + (unit === 'day' ? (k === 1 ? ' day ago' : ' days ago') : (k === 1 ? ' run ago' : ' runs ago'));
   const has = v => v != null && isFinite(v);
   let mctx = null;

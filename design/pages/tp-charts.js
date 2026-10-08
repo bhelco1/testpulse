@@ -33,7 +33,9 @@
     const raw = (hi - lo) / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
     let step = (whole ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10]).map(m => m * mag).find(s => s >= raw) || 10 * mag;
     if (whole) step = Math.max(1, Math.round(step));
-    if (hund) step = Math.max(0.01, Math.ceil(step * 100 - 1e-9) / 100); /* v10 item 12: seconds step on whole hundredths, never below 0.01 s, so tick labels never repeat */
+    /* v11 item 12: seconds — never below 0.01 s; skip any candidate (e.g. 2.5×10ⁿ) that isn't a whole number of hundredths */
+    if (hund) { const ok = v => v >= 0.01 - 1e-12 && Math.abs(v * 100 - Math.round(v * 100)) < 1e-6;
+      if (!ok(step)) { const c = []; for (let e = -2; e <= 6; e++) [1, 2, 2.5, 5].forEach(m => c.push(m * Math.pow(10, e))); step = c.filter(ok).sort((a, b) => a - b).find(v => v >= Math.max(raw, 0.01) - 1e-12) || step; } }
     let a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
     if (pct) { a = Math.max(0, a); b = Math.min(100, b); }
     const t = []; if (!(step > 0)) return { min: a, max: b, ticks: [a, b] }; for (let v = a, g = 0; v <= b + 1e-9 && g < 20; v += step, g++) t.push(+v.toFixed(6));

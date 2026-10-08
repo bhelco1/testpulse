@@ -40,7 +40,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <section style="padding:56px 0 64px;max-width:860px">
 <div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">How it’s tested</div>
 <h1 style="margin:14px 0 0;font:500 clamp(40px,5.5vw,68px)/1.04 'Source Serif 4',serif;letter-spacing:-.03em;text-wrap:balance">This dashboard is tested the same way as the projects it reports on.</h1>
-<p style="margin:24px 0 0;max-width:680px;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">A test dashboard that isn’t tested is just a claim. testpulse is built test-first, and its own CI runs every suite on every pull request. From Phase 7 it will report its results here alongside everything else.</p>
+<p style="margin:24px 0 0;max-width:680px;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">A test dashboard that isn’t tested is just a claim. testpulse is built test-first. Its own CI runs every suite on every pull request and reports the results here, alongside everything else.</p>
 <div style="display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:24px;font-size:14.5px">
 <a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;font-weight:600">Source on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
 <a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;color:var(--ink-2)">Read the specification<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
@@ -100,21 +100,15 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <!-- 04 LIVE -->
 <section style="padding:48px 0 64px;border-top:1px solid var(--line)">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px"><div style="max-width:720px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">04</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">testpulse’s own results</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">From Phase 7, testpulse’s CI posts its JUnit and coverage output to this site as the project <code style="font:13.5px 'JetBrains Mono',monospace">testpulse</code>, the same way the other projects do.</p></div></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px"><div style="max-width:720px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">04</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">testpulse’s own results</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Since 7 Oct, testpulse’s CI posts its results to this site as the project <code style="font:13.5px 'JetBrains Mono',monospace">testpulse</code>, through the same shared GitHub Action Ostomate2 and RouteServe use.</p></div></div>
 
 <sc-if value="{{ notReporting }}" hint-placeholder-val="{{ true }}">
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:28px 48px;align-items:start">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px">
 <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px">
 <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600;font-size:13.5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-dasharray="3.5 3"><circle cx="12" cy="12" r="10"></circle></svg>Not reporting yet</span>
-<div style="font:500 26px/1.25 'Source Serif 4',serif;text-wrap:balance">Self-reporting starts in Phase 7.</div>
-<p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Until then this section stays empty rather than showing numbers nobody measured. The suites already run in CI on every pull request; you can see them in the repository’s Actions tab.</p>
+<div style="font:500 26px/1.25 'Source Serif 4',serif;text-wrap:balance">No results received yet.</div>
+<p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">This section stays empty rather than showing numbers nobody measured. The suites run in CI on every pull request; you can see them in the repository’s Actions tab.</p>
 <a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;font-size:14.5px;font-weight:600">CI runs on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a>
-</div>
-<div>
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-bottom:12px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Build progress</span><span style="display:flex;gap:4px;font-size:13px;color:var(--ink-3)"><span>As of</span><time datetime="{{ asOfIso }}" title="{{ asOfTitle }}">{{ asOf }}</time></span></div>
-<sc-for list="{{ phases }}" as="ph" hint-placeholder-count="8">
-<div style="display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-3)">{{ ph.n }}</span><span>{{ ph.label }}</span><span style="display:flex;align-items:center;gap:6px;font-weight:600;color:{{ ph.ink }}"><svg style="flex:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="{{ ph.dash }}"><circle cx="12" cy="12" r="10"></circle><path d="{{ ph.d }}"></path></svg><span>{{ ph.status }}</span></span></div>
-</sc-for>
 </div>
 </div>
 </sc-if>
@@ -123,34 +117,45 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:flex;flex-direction:column;gap:16px">
 <article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span><span style="display:flex;align-items:center;gap:8px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>12 min ago · main · <span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">8d3e1a2</span></span></div>
-<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px"><span style="font:500 64px/1 'Source Serif 4',serif">{{ selfTotal }}</span><span style="font-size:15px;color:var(--ink-2)">tests · 0 failed · 0 skipped · 1m 48s</span></div>
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px"><span style="font:500 64px/1 'Source Serif 4',serif">{{ selfTotal }}</span><span style="font-size:15px;color:var(--ink-2)">{{ selfLine }}</span></div>
 <div style="display:flex;flex-direction:column;gap:6px;margin-top:24px">
-<sc-for list="{{ selfPyramid }}" as="l" hint-placeholder-count="3">
+<sc-for list="{{ selfPyramid }}" as="l" hint-placeholder-count="4">
 <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 120px;align-items:center;gap:16px;font-size:14px"><span style="text-align:right;color:var(--ink-2)">{{ l.name }}</span><div style="display:flex;justify-content:center"><div style="width:{{ l.w }};min-width:6px;height:30px;border-radius:4px;background:{{ l.bg }}"></div></div><span style="display:flex;align-items:baseline;gap:8px;white-space:nowrap"><b style="font-weight:600">{{ l.count }}</b><span style="font-size:13px;color:var(--ink-3)">{{ l.pct }}</span></span></div>
 </sc-for>
 </div>
-<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.</p>
+<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer testpulse’s layer rules give it, whichever report it arrived in.</p>
 <a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:6px;font-size:14.5px;font-weight:600">Full project page →</a>
 </article>
 <section aria-labelledby="selfcov" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
 <h3 id="selfcov" style="margin:0;font:500 20px 'Source Serif 4',serif">Coverage against the floor</h3>
-<div style="margin-top:2px;font-size:13px;color:var(--ink-3)">Lines, per module, latest default-branch run · floor 90%</div>
-<div style="display:flex;flex-direction:column;gap:14px;margin-top:18px">
-<sc-for list="{{ selfCov }}" as="c" hint-placeholder-count="4">
-<div style="display:grid;grid-template-columns:minmax(0,160px) minmax(0,1fr) auto;align-items:center;gap:14px;font-size:14px"><span style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2);overflow-wrap:anywhere">{{ c.m }}</span><div style="position:relative;height:8px;border-radius:99px;background:var(--raised)"><div style="width:{{ c.w }};height:100%;border-radius:99px;background:{{ c.bar }}"></div><div style="position:absolute;left:{{ c.fl }};top:-5px;width:2px;height:18px;background:var(--attn)"></div></div><span style="display:flex;gap:6px;white-space:nowrap"><b style="font-weight:600;color:{{ c.ink }}">{{ c.v }}</b><span style="color:{{ c.floorInk }}">{{ c.floorLabel }}</span></span></div>
+<div style="margin-top:2px;font-size:13px;color:var(--ink-3)">Lines, latest default-branch run</div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:18px">
+<sc-for list="{{ selfCov }}" as="v" hint-placeholder-count="1">
+<div style="display:grid;grid-template-columns:128px minmax(40px,1fr) auto;align-items:center;column-gap:14px;font-size:14px">
+<span title="{{ v.m }}" style="min-width:0;font:13px 'JetBrains Mono',monospace;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
+<div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};display:{{ v.flDisp }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
+<span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
+</div>
 </sc-for>
 </div>
-<div style="display:flex;align-items:center;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Module names and values are illustrative until testpulse reports its own coverage.</div>
+<p style="margin:14px 0 0;font-size:13.5px;color:var(--ink-3)">{{ selfCovNote }}</p>
 </section>
+
 </div>
 </sc-if>
+<section aria-labelledby="buildprog" style="margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-bottom:12px"><h3 id="buildprog" style="margin:0;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Build progress</h3><span style="display:flex;gap:4px;font-size:13px;color:var(--ink-3)"><span>As of</span><time datetime="{{ asOfIso }}" title="{{ asOfTitle }}">{{ asOf }}</time></span></div>
+<sc-for list="{{ phases }}" as="ph" hint-placeholder-count="8">
+<div style="display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-3)">{{ ph.n }}</span><span>{{ ph.label }}</span><span style="display:flex;align-items:center;gap:6px;font-weight:600;color:{{ ph.ink }}"><svg style="flex:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="{{ ph.dash }}"><circle cx="12" cy="12" r="10"></circle><path d="{{ ph.d }}"></path></svg><span>{{ ph.status }}</span></span></div>
+</sc-for>
+</section>
 </section>
 </main>
 
 <footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;selfReporting&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;not reporting yet&quot;,&quot;reporting (sample)&quot;],&quot;default&quot;:&quot;not reporting yet&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;selfReporting&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;reporting&quot;,&quot;not reporting yet&quot;],&quot;default&quot;:&quot;reporting&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null };
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0', 'layer-1':'#1c1a17', 'layer-2':'#57524b', 'layer-3':'#7a746b', 'layer-4':'#8f897f' };
@@ -162,11 +167,11 @@ class Component extends DCLogic {
     const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
     const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
     if (!dark) Object.keys(L).forEach(k => tv['--' + k] = L[k]);
-    const reporting = (this.props.selfReporting ?? 'not reporting yet') === 'reporting (sample)';
+    const reporting = (this.props.selfReporting ?? 'reporting') !== 'not reporting yet'; /* v11: reporting is the default */
 
     const principles = [
       ['Test-first', 'Every phase starts with failing tests written from its acceptance criteria. A phase is done when each criterion has a passing automated test.'],
-      ['Real fixtures', 'Parsers are tested against actual result files captured from Ostomate2 and RouteServe: Gradle JUnit XML, Jest JSON, JaCoCo and istanbul coverage.'],
+      ['Real fixtures', 'Parsers are tested against actual result files captured from Ostomate2, RouteServe and testpulse itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.'],
       ['Normalize on the server', 'Projects send the files their tools already produce. testpulse does the parsing, so a project’s CI step stays a few lines long.'],
       ['Never fail the caller’s build', 'If testpulse is down, a project’s CI stays green. The reporting step always exits 0 and logs a warning.'],
       ['No swallowed failures', 'In testpulse’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.'],
@@ -174,9 +179,9 @@ class Component extends DCLogic {
 
     /* v9 item 4: every row true today (Phases 0–4 done, 5 in progress). Phase 6 adds alert rules, bot classification, tracked links, admin sign-in and the prune job. */
     const layers = [
-      ['Unit', ['Vitest'], 'Parsers against real fixtures, layer resolution, stat calculations, token and key utilities. 90% line floor.', 'var(--layer-1)'],
-      ['Contract', ['Vitest'], 'The reporter script that projects copy into their CI, run against a local server. Runs in the unit job; counted as Unit.', 'transparent'],
-      ['Component', ['Vitest', 'jsdom'], 'Each component built from the design, rendered in jsdom: its words, states and links, and its stylesheet against the design’s values.', 'var(--layer-2)'],
+      ['Unit', ['Vitest'], 'Parsers against real fixtures, layer resolution, stat calculations, API key hashing. 90% line floor.', 'var(--layer-1)'],
+      ['Contract', ['Vitest'], 'The shared GitHub Action every project reports through, run against a local server. Runs in the unit job; counted as Unit.', 'transparent'],
+      ['Component', ['Vitest', 'Testing Library'], 'Each component built from the design, rendered in jsdom: its words, states and links, and its stylesheet against the design’s values.', 'var(--layer-2)'],
       ['Integration', ['Vitest', 'local Supabase'], 'The ingestion endpoint end to end against local Supabase: idempotent retries, transactions and rollups, and row-level security checked with the anonymous client, so private projects stay hidden.', 'var(--layer-3)'],
       ['E2E', ['Playwright'], 'A seeded database behind the landing, project, run and test-history pages; visibility rules in the rendered UI; every public page again with JavaScript turned off.', 'var(--layer-3)'],
       ['Accessibility', ['axe', 'Playwright', 'contrast script'], 'axe on every public page, counted with E2E. A script in the unit job checks the contrast of the design’s token pairs in both themes.', 'transparent'],
@@ -184,25 +189,28 @@ class Component extends DCLogic {
       ['Leak sweep', ['Playwright'], 'Crawls the whole site as a visitor and fails if any private project’s failure text, stack trace or source link appears anywhere. Counted with E2E.', 'transparent'],
     ].map(([name, tools, scope, swatch]) => ({ name, tools, scope, swatch, swBorder: swatch === 'transparent' ? '1.5px solid var(--line-strong)' : 'none' }));
 
-    /* v9 item 4: from spec §17 ("Phase n complete {date}" lines); as of the build date */
+    /* mirrors docs/build-progress.json (numbered phases 0–7), dated by its asOf */
     const ST = { done: ['Done', 'var(--pass)', 'm8 12 3 3 5-6', 'none'], prog: ['In progress', 'var(--ink-2)', 'M12 7v5l3 2', 'none'], plan: ['Planned', 'var(--ink-3)', '', '3.5 3'] };
     const phases = [
       ['Phase 0', 'Foundations', 'done'], ['Phase 1', 'Schema, parsers, ingestion', 'done'], ['Phase 2', 'Ostomate2 reporting live', 'done'],
       ['Phase 3', 'RouteServe reporting live', 'done'], ['Phase 4', 'Backfill', 'done'], ['Phase 5', 'Public site', 'done'],
-      ['Phase 6', 'Alerts, tracked links, admin', 'plan'], ['Phase 7', 'Self-reporting and launch', 'plan'],
+      ['Phase 6', 'Alerts, tracked links, admin', 'prog'], ['Phase 7', 'Launch', 'plan'],
     ].map(([n, label, k]) => ({ n, label, status: ST[k][0], ink: ST[k][1], d: ST[k][2], dash: ST[k][3] }));
 
-    const sp = [['E2E', 38, 'var(--layer-3)'], ['Integration', 70, 'var(--layer-3)'], ['Unit', 214, 'var(--layer-1)']];
-    const mx = 214;
-    const selfPyramid = sp.map(([name, c, bg]) => ({ name, count: String(c), pct: Math.round(c / 322 * 100) + '%', w: (c / mx * 100) + '%', bg }));
+    /* v12 item 1: distinct tests per layer (live production, 7 Oct); each test sits in its layer as received (projects/testpulse.yaml) */
+    const sp = [['E2E', 235, 'var(--layer-3)'], ['Integration', 180, 'var(--layer-3)'], ['Component', 655, 'var(--layer-2)'], ['Unit', 1528, 'var(--layer-1)']];
+    const tot = sp.reduce((a, l) => a + l[1], 0), mx = Math.max(...sp.map(l => l[1]));
+    const selfPyramid = sp.map(([name, c, bg]) => ({ name, count: c.toLocaleString('en-US'), pct: Math.round(c / tot * 100) + '%', w: (c / mx * 100) + '%', bg }));
     /* v10 item 22: canonical CoverageBar rows, module-key order, round down; real data replaces these */
-    const selfCov = [['lib/ingest', 96.8], ['lib/parsers', 98.1], ['lib/stats', 94.2], ['src/app', 89.7]].map(([m, v]) => { const fl = 90, below = v < fl; return { m, v: (Math.floor(v * 10 + 1e-9) / 10).toFixed(1) + '%', w: v + '%', fl: fl + '%', bar: below ? 'var(--attn)' : 'var(--ink)', ink: below ? 'var(--attn)' : 'var(--ink)', floorInk: below ? 'var(--attn)' : 'var(--ink-3)', floorLabel: below ? 'below floor 90%' : 'floor 90%' }; });
+    /* v11 item 2: one module, unit, 3,125 of 3,141 lines, floor 90 (canonical CoverageBar values) */
+    const cv = (m, v, f) => { const below = v < f; return { m, v: (v === 100 ? '100' : (Math.floor(v * 10 + 1e-9) / 10).toFixed(1)) + '%', w: v + '%', fl: f + '%', flDisp: 'block', below, ink: below ? 'var(--attn)' : 'var(--ink)', floorInk: below ? 'var(--attn)' : 'var(--ink-3)', floorLabel: below ? `below floor ${f}%` : `floor ${f}%` }; };
+    const selfCov = [cv('unit', 3125 / 3141 * 100, 90)];
 
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
 
     return {
-      themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: String(sp.reduce((a, l) => a + l[1], 0)),
-      reporting, notReporting: !reporting, asOf: '4 Oct', asOfIso: '2026-10-04', asOfTitle: '4 Oct 2026, 00:00 UTC', /* date of the phase data file */
+      themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: tot.toLocaleString('en-US'), selfLine: 'tests · 0 failed · 0 skipped · 6 min', selfCovNote: 'unit: 3,125 of 3,141 lines covered.',
+      reporting, notReporting: !reporting, asOf: '7 Oct', asOfIso: '2026-10-07', asOfTitle: '7 Oct 2026, 00:00 UTC', /* docs/build-progress.json asOf */
       silenceNow: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
       emptyNow: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),

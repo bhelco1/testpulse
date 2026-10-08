@@ -27,27 +27,54 @@ export interface ModuleCoverage {
 
 const compareText = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
+export interface ModuleCoverageWithLines extends ModuleCoverage {
+  /** The row's line counts; null for a recorded percentage (imported history). */
+  readonly lines: { readonly covered: number; readonly total: number } | null;
+}
+
 export function latestCoverage(
   runs: readonly StatsRun[],
   coverage: readonly StatsCoverage[],
   options: LatestCoverageOptions,
 ): ModuleCoverage[] {
+  return latestCoverageWithLines(runs, coverage, options).map(
+    ({ module, runId, pct, floor, belowFloor }) => ({ module, runId, pct, floor, belowFloor }),
+  );
+}
+
+/** latestCoverage, with the line counts of the row each module's percentage was read from. */
+export function latestCoverageWithLines(
+  runs: readonly StatsRun[],
+  coverage: readonly StatsCoverage[],
+  options: LatestCoverageOptions,
+): ModuleCoverageWithLines[] {
   const counted = new Map(
     runs.filter((run) => countsTowardTrends(run, options.defaultBranch)).map((r) => [r.id, r]),
   );
-  const latest = new Map<string, { run: StatsRun; pct: number }>();
+  const latest = new Map<string, { run: StatsRun; pct: number; row: StatsCoverage }>();
   for (const row of coverage) {
     const run = counted.get(row.runId);
     const pct = linesPct(row.lines);
     if (run === undefined || pct === null) continue;
     const held = latest.get(row.module);
-    if (held === undefined || byFinish(run, held.run) > 0) latest.set(row.module, { run, pct });
+    if (held === undefined || byFinish(run, held.run) > 0) {
+      latest.set(row.module, { run, pct, row });
+    }
   }
   return [...latest.entries()]
     .sort(([a], [b]) => compareText(a, b))
-    .map(([module, { run, pct }]) => {
+    .map(([module, { run, pct, row }]) => {
       // Object.hasOwn, so a module named like an Object.prototype key has no floor.
       const floor = Object.hasOwn(options.floors, module) ? (options.floors[module] ?? null) : null;
-      return { module, runId: run.id, pct, floor, belowFloor: floor !== null && pct < floor };
+      const lines =
+        row.lines.form === 'counts' ? { covered: row.lines.covered, total: row.lines.total } : null;
+      return {
+        module,
+        runId: run.id,
+        pct,
+        floor,
+        belowFloor: floor !== null && pct < floor,
+        lines,
+      };
     });
 }

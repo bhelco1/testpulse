@@ -1053,6 +1053,8 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       expect(self?.summary.totalTests).toBe(3);
       expect(self?.summary.layers).toEqual({ e2e: 3 });
       expect(self?.latestDurationMs).toBe(242);
+      // The seeded run sent no coverage, so How it's tested draws no coverage card (spec 13.7).
+      expect(self?.coverage).toEqual([]);
     });
 
     describe('a private project’s pages hold no failure text, repository links or full SHAs', () => {

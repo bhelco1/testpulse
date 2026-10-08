@@ -8,10 +8,6 @@
 }
 
 .notReporting {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-  gap: 28px 48px;
-  align-items: start;
   padding: 28px;
 }
 
@@ -45,11 +41,53 @@
   font-weight: 600;
 }
 
+/* Section 04's cards, each full width (design v12). */
 .reporting {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
-  align-items: start;
+}
+
+/* The coverage and Build progress cards: the canonical chart-card frame. */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+}
+
+.progress {
+  margin-top: var(--space-4);
+}
+
+.coverageTitle {
+  margin: 0;
+  font: 500 20px var(--font-serif);
+}
+
+.coverageScope {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.coverageRows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.coverageNotes {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.coverageNote {
+  display: block;
 }
 
 .run {
@@ -129,7 +167,7 @@
   color: var(--ink-3);
 }
 
-/* "Build progress", the not-reporting card's second column. */
+/* "Build progress", the last card. */
 .progressHead {
   display: flex;
   flex-wrap: wrap;
@@ -139,6 +177,7 @@
 }
 
 .progressTitle {
+  margin: 0;
   font: 600 12px var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -1,5 +1,5 @@
 import type { TimeLabel } from '../copy/time';
-import { formatRunDuration, relativeLabel } from '../copy/time';
+import { dateLabel, formatRunDuration, relativeLabel } from '../copy/time';
 import { formatCount } from '../copy/count';
 import { layerSegments, type LayerSegment } from '../design/layers';
 import type { RunStatus } from '../ingest/normalize';
@@ -11,21 +11,23 @@ import { SOURCE_URL } from './site';
 
 // /how-its-tested as its components take it (design/pages/How Its Tested.dc.html,
 // design/data-map.md "How it's tested"). Pure: the page passes the loader's result and now.
-// The copy is design v9's true-today copy (item 4) with Bobby's edits of 2026-09-30, each claim
-// checked against the repository (docs/spec.md 13.7).
+// The copy is design v12's (v11 items 1, 3 and 4), on design v9's true-today copy (item 4) with
+// Bobby's edits of 2026-09-30, each claim checked against the repository (docs/spec.md 13.7).
 
 export const TITLE = 'How it’s tested · testpulse';
 
 export const SPEC_URL = `${SOURCE_URL}/blob/main/docs/spec.md`;
 export const ACTIONS_URL = `${SOURCE_URL}/actions`;
 
-// The last sentence is interim wording until design v11 (decision 2026-10-07): v9's "From Phase 7
-// it will report…" became false when testpulse began reporting here.
 const LEDE = [
   'A test dashboard that isn’t tested is just a claim.',
-  'testpulse is built test-first, and its own CI runs every suite on every pull request.',
-  'It reports its own results here, alongside everything else.',
+  'testpulse is built test-first.',
+  'Its own CI runs every suite on every pull request and reports the results here, alongside everything else.',
 ] as const;
+
+// testpulse's first report to production (spec section 17, "Self-reporting"): section 04's
+// "Since 7 Oct, …" is a fact about the past, so it is fixed here rather than read from the runs.
+const SELF_REPORTING_SINCE = new Date('2026-10-07T00:00:00.000Z');
 
 export interface Principle {
   readonly n: string;
@@ -42,7 +44,7 @@ export const PRINCIPLES: readonly Principle[] = [
   ],
   [
     'Real fixtures',
-    'Parsers are tested against actual result files captured from Ostomate2 and RouteServe: Gradle JUnit XML, Jest JSON, JaCoCo and istanbul coverage.',
+    'Parsers are tested against actual result files captured from Ostomate2, RouteServe and testpulse itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
   ],
   [
     'Normalize on the server',
@@ -93,21 +95,22 @@ export interface StrategyRow {
 
 // "What runs, and what it covers" (v9 item 4), with Bobby's edits: "the design’s token pairs",
 // "walks every page that can show a private project", and a Component row, which section 8 has
-// and projects/testpulse.yaml gives the component tests. Phase 6 adds alert rules, bot
-// classification, the prune job, tracked links and admin sign-in.
+// and projects/testpulse.yaml gives the component tests; then design v10's contrast script and
+// v12's Unit and Contract scopes. Phase 6 adds alert rules, bot classification, the prune job,
+// tracked links, tracked-link tokens and admin sign-in.
 export const STRATEGY: readonly StrategyRow[] = [
   {
     name: 'Unit',
     tools: ['Vitest'],
     scope:
-      'Parsers against real fixtures, layer resolution, stat calculations, token and key utilities. 90% line floor.',
+      'Parsers against real fixtures, layer resolution, stat calculations, API key hashing. 90% line floor.',
     tone: LAYER_TONE.unit,
   },
   {
     name: 'Contract',
     tools: ['Vitest'],
     scope:
-      'The reporter script that projects copy into their CI, run against a local server. Runs in the unit job; counted as Unit.',
+      'The shared GitHub Action every project reports through, run against a local server. Runs in the unit job; counted as Unit.',
     tone: null,
   },
   {
@@ -133,7 +136,7 @@ export const STRATEGY: readonly StrategyRow[] = [
   },
   {
     name: 'Accessibility',
-    tools: ['axe', 'Playwright'],
+    tools: ['axe', 'Playwright', 'contrast script'],
     scope:
       'axe on every public page, counted with E2E. A script in the unit job checks the contrast of the design’s token pairs in both themes.',
     tone: null,
@@ -154,9 +157,10 @@ export const STRATEGY: readonly StrategyRow[] = [
   },
 ];
 
-// The note under the self-report's pyramid (v9 item 4: contract tests count as Unit).
+// The note under the self-report's pyramid (v9 item 4: contract tests count as Unit; v12 item 1:
+// no literal figures).
 export const PYRAMID_NOTE =
-  'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the reporter contract tests run in the unit job and count as Unit.';
+  'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer testpulse’s layer rules give it, whichever report it arrived in.';
 
 export interface SelfRun {
   readonly status: RunStatus;
@@ -172,6 +176,16 @@ export interface SelfRun {
   readonly duration: string;
 }
 
+/** A row of the coverage card: a CoverageBar and its line-count note. */
+export interface SelfCoverage {
+  readonly module: string;
+  /** Line coverage, 0 to 100, unrounded; CoverageBar rounds it down. */
+  readonly pct: number;
+  readonly floor: number | null;
+  /** "{module}: {covered} of {total} lines covered."; null for a recorded percentage. */
+  readonly note: string | null;
+}
+
 export type SelfReportView =
   | { readonly state: 'not_reporting' }
   | {
@@ -181,6 +195,8 @@ export type SelfReportView =
       readonly layers: readonly LayerSegment[];
       /** Distinct tests in the latest run; each layer's share is of this. */
       readonly total: number;
+      /** Module-key order; empty draws no coverage card. */
+      readonly coverage: readonly SelfCoverage[];
       readonly projectHref: string;
     };
 
@@ -188,15 +204,17 @@ export interface HowItsTestedView {
   readonly title: string;
   /** The hero paragraph's sentences. */
   readonly lede: readonly string[];
+  /** Section 04's "Since {date}, …". */
+  readonly since: TimeLabel;
   readonly self: SelfReportView;
-  /** "Build progress", shown while testpulse is not reporting, as the mock draws it. */
+  /** "Build progress", section 04's last card in either state. */
   readonly progress: BuildProgressView;
 }
 
 function selfReport(data: HowItsTested, now: Date): SelfReportView {
   const run = data.self?.summary.latestRun ?? null;
   if (data.self === null || run === null) return { state: 'not_reporting' };
-  const { summary, latestDurationMs } = data.self;
+  const { summary, latestDurationMs, coverage } = data.self;
   return {
     state: 'reporting',
     run: {
@@ -213,6 +231,15 @@ function selfReport(data: HowItsTested, now: Date): SelfReportView {
     },
     layers: layerSegments(summary.layers),
     total: summary.totalTests,
+    coverage: coverage.map(({ module, pct, floor, lines }) => ({
+      module,
+      pct,
+      floor,
+      note:
+        lines === null
+          ? null
+          : `${module}: ${formatCount(lines.covered)} of ${formatCount(lines.total)} lines covered.`,
+    })),
     projectHref: `/p/${encodeURIComponent(summary.project.slug)}`,
   };
 }
@@ -222,6 +249,7 @@ export function howItsTestedView(data: HowItsTested, now: Date): HowItsTestedVie
   return {
     title: TITLE,
     lede: LEDE,
+    since: dateLabel(SELF_REPORTING_SINCE, now),
     self,
     progress: buildProgressView(now),
   };

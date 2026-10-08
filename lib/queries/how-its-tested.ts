@@ -1,4 +1,5 @@
 import { now } from '../clock.ts';
+import { latestCoverageWithLines, type ModuleCoverageWithLines } from '../stats/coverage.ts';
 import { projectSummary, type ProjectSummary } from '../stats/summary.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
 import { loadProject, loadSummaryInput } from './project-summary.ts';
@@ -16,6 +17,11 @@ export interface SelfResults {
   readonly summary: ProjectSummary;
   /** The latest default-branch CI run's duration (runs.duration_ms); null before the first. */
   readonly latestDurationMs: number | null;
+  /**
+   * The coverage card's rows (design v12; data-map v11): the summary's latest coverage per
+   * module, with the line counts its note prints.
+   */
+  readonly coverage: readonly ModuleCoverageWithLines[];
 }
 
 export interface HowItsTested {
@@ -33,5 +39,9 @@ export async function loadHowItsTested(
   const summary = projectSummary(input, at);
   const latestId = summary.latestRun?.id;
   const latest = input.runs.find((run) => run.id === latestId);
-  return { self: { summary, latestDurationMs: latest?.durationMs ?? null } };
+  const coverage = latestCoverageWithLines(input.runs, input.coverage, {
+    defaultBranch: project.defaultBranch,
+    floors: project.coverageFloors,
+  });
+  return { self: { summary, latestDurationMs: latest?.durationMs ?? null, coverage } };
 }

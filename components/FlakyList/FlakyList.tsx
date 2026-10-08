@@ -20,7 +20,8 @@ export function FlakyList({ tests }: FlakyListProps) {
         Flaky tests
       </h3>
       <p className={styles.definition}>
-        Flaky: passed and failed on the same commit and platform within the last 30 days.
+        Flaky: passed and failed on the same commit and platform, in default-branch CI runs of the
+        last 30 days.
       </p>
       {tests.length === 0 ? (
         <div className={styles.none} data-part="none">
@@ -28,7 +29,7 @@ export function FlakyList({ tests }: FlakyListProps) {
           <div>
             <div className={styles.noneTitle}>No flaky tests in the last 30 days</div>
             <div className={styles.noneText}>
-              No test passed and failed on the same commit and platform.
+              No test passed and failed on the same commit and platform in default-branch CI runs.
             </div>
           </div>
         </div>

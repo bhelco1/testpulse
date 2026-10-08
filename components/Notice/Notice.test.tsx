@@ -15,7 +15,7 @@ const part = (root: Element, name: string) =>
   root.querySelector<HTMLElement>(`[data-part="${name}"]`);
 
 const PRIVATE_NOTE =
-  'This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.';
+  'This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real.';
 
 describe('Notice', () => {
   it('stale project: attn with a clock and a title in the tone ink', () => {

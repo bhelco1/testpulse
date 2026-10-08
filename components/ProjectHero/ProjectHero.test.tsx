@@ -25,7 +25,7 @@ const HERO: HeroView = {
 };
 
 const PRIVATE_NOTE =
-  'This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.';
+  'This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real.';
 
 describe('ProjectHero', () => {
   it('heads the page with the project name, then its tagline and description paragraphs', () => {
@@ -60,7 +60,9 @@ describe('ProjectHero', () => {
     expect(container.textContent).not.toContain(PRIVATE_NOTE);
   });
 
-  it('marks a private project with a lock in the heading and the private note, and no link', () => {
+  // Design v15 item 1: the private note is the one private-details notice, title and body, in the
+  // 620 px wrapper.
+  it('marks a private project with a lock in the heading and the private notice, and no link', () => {
     const { getByRole, queryByRole, container } = render(
       <ProjectHero hero={{ ...HERO, name: 'RouteServe', private: true, repoUrl: null }}>
         {null}
@@ -71,8 +73,13 @@ describe('ProjectHero', () => {
     expect(within(heading).getByRole('img', { name: 'Private repository' })).toBeTruthy();
     expect(heading.querySelector('svg')?.getAttribute('width')).toBe('26');
     expect(queryByRole('link', { name: 'Source on GitHub' })).toBeNull();
-    const note = container.querySelector<HTMLElement>('[data-tone="neutral"]');
-    expect(note?.textContent).toBe(PRIVATE_NOTE);
+    expect(container.querySelector('[data-tone="neutral"]')).toBeNull();
+    const notices = container.querySelectorAll<HTMLElement>('[data-part="private-notice"]');
+    expect(notices).toHaveLength(1);
+    const notice = notices[0] as HTMLElement;
+    expect(notice.parentElement?.className).toContain('privateNote');
+    expect(notice.textContent).toBe(`Details hidden: private repository${PRIVATE_NOTE}`);
+    expect(notice.querySelector('p')?.textContent).toBe(PRIVATE_NOTE);
   });
 
   it('leaves out the detail where the design draws none', () => {

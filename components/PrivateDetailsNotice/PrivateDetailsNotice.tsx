@@ -10,8 +10,8 @@ export function PrivateDetailsNotice() {
       <div>
         <div className={styles.title}>Details hidden: private repository</div>
         <p className={styles.text}>
-          This repository is private, so failure messages and stack traces are hidden. Test names
-          and counts are real.
+          This repository is private, so failure messages, stack traces and source links are hidden.
+          Test names, counts and trends are real.
         </p>
       </div>
     </div>

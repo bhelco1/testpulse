@@ -102,3 +102,10 @@ Same queries as landing (via `runs_public`). Tiles: Pass rate, Projects reportin
 - New pill: `tests.first_seen_at` (survives pruning).
 - Durations are whole ms (`results.duration_ms`); 0 reads "<1 ms".
 - Privacy and How it's tested: static copy; Build progress reads spec §17 at build time.
+
+## v10
+- Run page "Received": `reports.received_at` (when testpulse received the report), not the file's finish time.
+- Last 40 strip notes: counted on the server over every run in the window.
+- Test History Failed tile and flaky-list rate: runs whose final result for the test was failed or error on any platform; flaky runs (retried to a pass) count as Flaky.
+- Hero note stale date: the project's latest report on any branch.
+- Build progress (How it's tested): a phase data file, dated by that file.

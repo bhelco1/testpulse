@@ -27,12 +27,13 @@
   const has = v => v != null && isFinite(v);
   let mctx = null;
   const textW = (t, f) => { mctx = mctx || document.createElement('canvas').getContext('2d'); mctx.font = f; return mctx.measureText(t).width; };
-  function nice(lo, hi, count, pct, whole, zero) {
+  function nice(lo, hi, count, pct, whole, zero, hund) {
     if (!isFinite(lo) || !isFinite(hi)) { lo = 0; hi = 1; }
     if (hi === lo) { if (zero || lo === 0) { lo = Math.max(0, lo); hi = lo + 1; } else { hi = lo + 1; lo = lo - 1; } }
     const raw = (hi - lo) / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
     let step = (whole ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10]).map(m => m * mag).find(s => s >= raw) || 10 * mag;
     if (whole) step = Math.max(1, Math.round(step));
+    if (hund) step = Math.max(0.01, Math.ceil(step * 100 - 1e-9) / 100); /* v10 item 12: seconds step on whole hundredths, never below 0.01 s, so tick labels never repeat */
     let a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
     if (pct) { a = Math.max(0, a); b = Math.min(100, b); }
     const t = []; if (!(step > 0)) return { min: a, max: b, ticks: [a, b] }; for (let v = a, g = 0; v <= b + 1e-9 && g < 20; v += step, g++) t.push(+v.toFixed(6));
@@ -88,13 +89,16 @@
       const bar0 = props.kind === 'bar';
       /* v7 item 9: null = not run → gap in the line, "Not run" in tooltip and table */
       const endW = bar0 ? 0 : Math.max(0, ...series.filter(s => has(s.values[n - 1])).map(s => textW(f(s.values[n - 1], true), '600 13px ' + font)));
-      const L = phone ? 44 : 56, Rr = Math.max(phone ? 44 : 60, Math.ceil(8 + endW + 6)), T = 22, B = 30;
+      const Rr = Math.max(phone ? 44 : 60, Math.ceil(8 + endW + 6)), T = 22, B = 30;
       const all = series.flatMap(s => s.values).filter(has).concat(props.floor != null ? [props.floor] : []);
       const zero = bar || props.zero;
       const pct = fmt === 'pct';
       let lo = zero ? 0 : Math.min(...all), hi = Math.max(...all);
       if (!zero) { const pad = Math.max((hi - lo) * 0.12, pct ? 1 : (hi || 1) * 0.02); lo -= pad; hi += pad; }
-      const dom = nice(lo, hi, phone ? 2 : 3, pct, fmt === 'int' || fmt === 'dur' || fmt === 'ms', zero);
+      const dom = nice(lo, hi, phone ? 2 : 3, pct, fmt === 'int' || fmt === 'dur' || fmt === 'ms', zero, fmt === 'sec');
+      /* v10 item 11: left margin fits the widest y label (8 + width, rounded up), minimum 56 (phone 44) */
+      const L = Math.max(phone ? 44 : 56, Math.ceil(8 + Math.max(0, ...dom.ticks.map(t => textW(f(t), '12px ' + font)))));
+      const halo = { stroke: 'var(--surface)', strokeWidth: 3, paintOrder: 'stroke', strokeLinejoin: 'round' }; /* v10 item 13: value and floor labels sit on a 3 px surface halo */
       const X = bar ? (i => L + (i + 0.5) * (W - L - Rr) / n) : (i => L + i * (W - L - Rr) / (n - 1));
       const Y = v => T + (dom.max - v) / (dom.max - dom.min) * (H - T - B);
       const k = [];
@@ -104,7 +108,7 @@
       });
       if (props.floor != null) {
         k.push(h('line', { key: 'fl', x1: L, x2: W - Rr, y1: Y(props.floor), y2: Y(props.floor), stroke: 'var(--attn)', strokeWidth: 1.5, strokeDasharray: '5 4' }));
-        k.push(h('text', { key: 'flt', x: L + 6, y: Y(props.floor) - 6, fill: 'var(--attn)', fontSize: 12, fontWeight: 600 }, 'floor ' + f(props.floor)));
+        k.push(h('text', Object.assign({ key: 'flt', x: L + 6, y: Y(props.floor) - 6, fill: 'var(--attn)', fontSize: 12, fontWeight: 600 }, halo), 'floor ' + f(props.floor)));
       }
       if (bar) {
         const bw = Math.max(2, (W - L - Rr) / n * 0.62);
@@ -117,10 +121,14 @@
           segs.filter(g => g.length > 1).forEach((g, gi) => k.push(h('polyline', { key: 'l' + si + '-' + gi, points: g.map(i => X(i).toFixed(1) + ',' + Y(s.values[i]).toFixed(1)).join(' '), fill: 'none', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: si ? 2 : 2.5, strokeDasharray: s.dashed || si ? '6 4' : 'none', strokeLinejoin: 'round', strokeLinecap: 'round' })));
           if (n <= 12 && !phone) s.values.forEach((v, i) => { if (has(v) && i > 0 && i < n - 1) k.push(h('circle', { key: 'd' + si + i, cx: X(i), cy: Y(v), r: 3, fill: 'var(--surface)', stroke: si ? 'var(--ink-3)' : 'var(--ink)', strokeWidth: 1.5 })); });
           if (has(s.values[n - 1])) k.push(h('circle', { key: 'e' + si, cx: X(n - 1), cy: Y(s.values[n - 1]), r: 4.5, fill: si ? 'var(--ink-3)' : 'var(--ink)' }),
-            h('text', { key: 'ev' + si, x: X(n - 1) + 8, y: Y(s.values[n - 1]) + 4, fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, f(s.values[n - 1], true)));
+            h('text', Object.assign({ key: 'ev' + si, x: X(n - 1) + 8, y: Y(s.values[n - 1]) + 4, fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, halo), f(s.values[n - 1], true)));
           if (si === 0 && has(s.values[0])) {
             k.push(h('circle', { key: 's0', cx: X(0), cy: Y(s.values[0]), r: 4.5, fill: 'var(--ink)' }));
-            k.push(h('text', { key: 'sv', x: X(0) + 8, y: Y(s.values[0]) + (Y(s.values[0]) > H - B - 20 ? -10 : 18), fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, f(s.values[0], true)));
+            /* v10 item 13: start label 18 below its point; above (−10) if that hits the axis or the floor label; dropped if both collide (the caption states the first value) */
+            const y0 = Y(s.values[0]), flBox = props.floor != null ? [Y(props.floor) - 18, Y(props.floor) - 2] : null;
+            const hits = y => y > H - B - 2 || (flBox && y - 12 < flBox[1] && y + 2 > flBox[0]);
+            const ys = [y0 + 18, y0 - 10].find(y => !hits(y));
+            if (ys != null) k.push(h('text', Object.assign({ key: 'sv', x: X(0) + 8, y: ys, fill: 'var(--ink)', fontSize: 13, fontWeight: 600 }, halo), f(s.values[0], true)));
           }
         });
         (props.marks || []).forEach(m => { /* v9 item 13: mark sits on m.series (the platform it came from); if that series has no value there, on the first series that has one */

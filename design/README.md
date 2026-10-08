@@ -1,4 +1,4 @@
-# testpulse handoff v9
+# testpulse handoff v10
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -531,3 +531,69 @@ Same rules: the Design System page is canonical, components.md matches it, every
    - Skipped gaps read "Skipped", missing ones "Not run".
 
 Files changed in v9: Design System.dc.html, Privacy.dc.html, How Its Tested.dc.html, Test History.dc.html, Project Page.dc.html, Landing.dc.html, Kiosk.dc.html, Admin.dc.html, NotFound.dc.html, tp-charts.js, tp-kit.js, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v10
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing else was changed.
+
+**A. Owner decisions**
+1. Every page mock now draws the two-row phone header: row 1 has the wordmark with the tools at the right, row 2 the nav. Updated: Landing, Project Page, Privacy, How It's Tested, Test History, NotFound.
+   - The tools sit absolutely at the top right. A zero-height spacer of the tools' width ends the nav, so the nav wraps to row 2 by itself and then gets the full width there (Projects and How it's tested on one line).
+   - Desktop is unchanged.
+   - Rule in components.md (SiteHeader).
+2. "Live" removed from Test History, How It's Tested and Privacy; it stays on Landing and Project Page. NotFound never had it.
+3. Ostomate2 now counts its Maestro flows: 12 E2E (7 Android, 5 iOS). This adds two reports, android/e2e/emulator and ios/e2e/ios-sim.
+   - Total 154: 142 + 12, derived from your figures.
+   - Project Page: pyramid E2E bar; Declared suites card hidden when empty; caption "…The 12 Maestro flows (7 Android, 5 iOS) count as E2E."; run and run-list figures 154 / 153 of 154; tests chart ends at 154.
+   - Landing: Ostomate2 card has no "Not counted" footer; hero 1,202; pass rate "1,201 of 1,202".
+   - RouteServe keeps the declared-suite example, now named "Maestro E2E (iOS) · 13 flows · Authored, not yet executed".
+4. Ostomate2 "Tested with" now has a "Static analysis" group (detekt, ktlint, SwiftLint) and the E2E tag "Maestro 2.11.0".
+5. No change: hours-first, UTC, 24-hour, "UTC".
+6. How It's Tested copy as built:
+   - Accessibility row: tools "axe, Playwright, contrast script"; text as given.
+   - Component row added (Vitest, jsdom).
+   - Pyramid note starts "The axe, visual and leak-sweep checks…".
+   - Build progress footnote dropped. "As of" is the phase file's date, 4 Oct, with Phase 5 now Done.
+   - components.md "How it's tested page" rewritten.
+7. Privacy: sentence as given; summary-card titles are `h2` (serif 20).
+8. ErrorState page note now says HTTP 200, in components.md (ErrorState and Landing hero) and the Design System section 13 note.
+9. Confirmed: `reports.received_at`. Added to data-map.md (v10).
+10. Strip notes count every run in the window on the server. Updated in components.md and data-map.md.
+
+**B. Chart rules**
+11. Confirmed and in tp-charts.js: left margin = max(56, ceil(8 + widest y label)), phone 44.
+12. Confirmed and in tp-charts.js: the `sec` step is whole hundredths, never below 0.01 s.
+13. Replaced:
+   - The start label goes 18 px below its point.
+   - If that hits the axis or the floor label, it goes 10 px above.
+   - If both positions collide, it is dropped; the caption already states the first value.
+   - Start, end and floor labels carry a 3 px `--surface` halo, so a line crossing a label never cuts its digits ("93.6%" stays whole).
+14. Whole ms under 10 ms everywhere ("1 ms", 0 → "<1 ms"); "0.41 s" from 10 ms. Test History's tile and panel formatter is updated.
+15. Confirmed all four; the Project Page coverage charts drop their date labels to match. The dates are in the table's When column.
+
+**C. Gaps**
+16. Confirmed all. Written into components.md "Landing hero": "its latest run", the all-skipped sentence, k spelled out, "{names} haven't reported yet.", "automated tests so far.", and the stale date from any branch.
+17. Confirmed: the No projects card replaces the About section too.
+   - Error copy: "Results couldn't be loaded" + "The database isn't answering, so nothing is shown rather than numbers that might be out of date. Try again in a minute." (Landing mock updated).
+   - Project switcher with no projects: one non-link line, "No projects yet".
+   - Name lists: plain names always join with "and"; " · " only where each name carries its own figure.
+18. Replaced the Failed reading: the tile counts runs drawn Failed in the strip (final failed or error). A flaky run counts as Flaky, never Failed, so RouteServe reads 3 on the tile, the strip and the flaky list.
+   - New pill: confirmed, 7 UTC calendar days.
+   - Mismatch: confirmed, the run page's rule; a private run is named as runTitle names it.
+19. Fixed: an extra closing tag after the run panel closed the page container early. The Duration card and footer now sit inside it and inherit Public Sans.
+20. Confirmed all six. Changes to match:
+   - Design System: the empty-run card has one sentence; the private heads use bare platform keys and the standard dashed private notice.
+   - Run Detail: drops "0 passed"; "Failures first, then by suite" moves to the end of the filter row.
+   - components.md "Run page" covers Started wrapping and pruned rows keeping their when slot.
+21. components.md is right in every case:
+   - Strip note: Project Page is now 13 px `--ink-3`.
+   - "No CI runs yet": the Design System drawing keeps its scope line.
+   - Header tags: already 14 px with 8 × 14 gaps in Test History.
+   - Lede: the clamp already gives 20 px on phone (written down).
+   - Underlines: breadcrumb links on Project Page, Run Detail and Test History; the footer's current "Privacy".
+   - Privacy body: 16.5 / 1.7 (written down).
+22. Drawn (How It's Tested, "reporting (sample)"):
+   - Results card full width.
+   - A full-width "Coverage against the floor" card below it: canonical card frame, h3, scope line, CoverageBar rows in module-key order, values rounded down, below-floor rows amber (one sample row, src/app 89.7%, shows it).
+   - Module names and values are SAMPLE.
+
+Files changed in v10: Landing.dc.html, Project Page.dc.html, Privacy.dc.html, How Its Tested.dc.html, Test History.dc.html, NotFound.dc.html, Run Detail.dc.html, Design System.dc.html, tp-charts.js, design/README.md, design/components.md, design/data-map.md.

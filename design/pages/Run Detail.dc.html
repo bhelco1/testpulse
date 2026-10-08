@@ -32,7 +32,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 </nav>
 </header>
 
-<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;color:var(--ink-3)"><a href="#" style="min-height:44px;display:flex;align-items:center">Overview</a><span aria-hidden="true">/</span><a href="#" style="min-height:44px;display:flex;align-items:center">{{ r.project }}</a><span aria-hidden="true">/</span><span aria-current="page" style="min-height:44px;display:flex;align-items:center;gap:6px;color:var(--ink)"><span>Run</span><span>{{ r.id }}</span></span></nav>
+<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;color:var(--ink-3)"><a href="#" style="min-height:44px;display:flex;align-items:center;text-decoration:underline">Overview</a><span aria-hidden="true">/</span><a href="#" style="min-height:44px;display:flex;align-items:center;text-decoration:underline">{{ r.project }}</a><span aria-hidden="true">/</span><span aria-current="page" style="min-height:44px;display:flex;align-items:center;gap:6px;color:var(--ink)"><span>Run</span><span>{{ r.id }}</span></span></nav>
 
 <main id="main">
 <!-- SUMMARY -->
@@ -92,7 +92,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 
 <!-- RESULTS -->
 <section id="results" ref="{{ boxRef }}" style="padding:40px 0 64px;border-top:1px solid var(--line)">
-<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px"><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Results</h2><span style="font-size:14px;color:var(--ink-3)">Failures first, then by suite</span></div>
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:20px"><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Results</h2></div>
 
 <sc-if value="{{ pruned }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;gap:14px;align-items:flex-start;padding:24px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"><svg style="flex:none;margin-top:3px" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div><div style="font:500 22px 'Source Serif 4',serif">Per-test results retained for 180 days</div><p style="margin:6px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink-2)">This run is older than that, so its individual results were removed to keep the database small. Summary totals are permanent: {{ r.total }} tests, {{ r.passed }} passed, {{ r.failed }} failed.</p><div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE DATE</span>Pruned on 23 Mar 2027</div></div></div>
@@ -104,6 +104,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <sc-for list="{{ statusTabs }}" as="s" hint-placeholder-count="4"><button role="radio" aria-checked="{{ s.on }}" onClick="{{ s.pick }}" style="min-height:44px;padding:0 14px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;background:{{ s.bg }};color:{{ s.ink }};font:{{ s.weight }} 14px 'Public Sans',sans-serif"><span>{{ s.label }}</span><span>{{ s.n }}</span></button></sc-for>
 </div>
 <label style="display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px 0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);font-size:14px;color:var(--ink-3);box-sizing:border-box">Layer<select onChange="{{ onLayer }}" value="{{ layer }}" style="min-height:42px;border:none;background:transparent;color:var(--ink);font:500 14px 'Public Sans',sans-serif;cursor:pointer;padding-right:8px"><sc-for list="{{ layerOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></label>
+<span style="font-size:13px;color:var(--ink-3)">Failures first, then by suite</span>
 
 </div>
 
@@ -239,7 +240,7 @@ class Component extends DCLogic {
         const f = x.failed, sk = x.skipped || 0, pw = ((x.tests - f - sk) / x.tests * 100) + '%';
         return { key: x.key, pass: f === 0, fail: f > 0, skipW: (sk / x.tests * 100) + '%', skipMin: sk ? '4px' : '0px', tests: x.tests.toLocaleString('en-US'), received: x.received, dur: x.dur,
           passW: pw, failW: (f / x.tests * 100) + '%', failMin: f ? '4px' : '0px', rowBg: f ? 'var(--fail-tint)' : 'transparent',
-          res: [f ? `${f} failed` : '', `${x.tests - f - sk} passed`, sk ? `${sk} skipped` : ''].filter(Boolean).join(' · '), /* v8 item 26 */ resInk: f ? 'var(--fail)' : 'var(--ink-3)' };
+          res: [f ? `${f} failed` : '', x.tests - f - sk ? `${x.tests - f - sk} passed` : '', sk ? `${sk} skipped` : ''].filter(Boolean).join(' · '), /* v10 item 20: no "0 passed" */ /* v8 item 26 */ resInk: f ? 'var(--fail)' : 'var(--ink-3)' };
       }),
     });
 

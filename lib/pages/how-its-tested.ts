@@ -19,12 +19,12 @@ export const TITLE = 'How it’s tested · testpulse';
 export const SPEC_URL = `${SOURCE_URL}/blob/main/docs/spec.md`;
 export const ACTIONS_URL = `${SOURCE_URL}/actions`;
 
-// Phase 7 replaces the last sentence, when testpulse reports here (components.md, "As phases
-// land").
+// The last sentence is interim wording until design v11 (decision 2026-10-07): v9's "From Phase 7
+// it will report…" became false when testpulse began reporting here.
 const LEDE = [
   'A test dashboard that isn’t tested is just a claim.',
   'testpulse is built test-first, and its own CI runs every suite on every pull request.',
-  'From Phase 7 it will report its results here alongside everything else.',
+  'It reports its own results here, alongside everything else.',
 ] as const;
 
 export interface Principle {

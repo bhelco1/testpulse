@@ -23,14 +23,16 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <a href="#main" style="position:absolute;left:-9999px;top:12px;z-index:20;padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:600 14px 'Public Sans',sans-serif" style-focus="left:16px">Skip to content</a>
 <div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
 
-<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
-<a href="#" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
-<nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+<header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:4px 16px;padding:18px 0;flex-wrap:wrap">
+<a href="#" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<nav style="display:flex;align-items:center;gap:0 8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
-<span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}Live</span>
-<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+<span aria-hidden="true" style="flex:none;width:52px;height:0"></span>
 </nav>
+<div style="position:absolute;top:18px;right:0;display:flex;align-items:center;gap:4px">
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</div>
 </header>
 
 <main id="main" style="max-width:720px;padding:56px 0 72px">
@@ -48,7 +50,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:36px">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
-<div style="font:500 20px 'Source Serif 4',serif">What your browser does here</div>
+<h2 style="margin:0;font:500 20px 'Source Serif 4',serif">What your browser does here</h2>
 <ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Loads the pages</li>
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Opens one live connection to Supabase Realtime for new results</li>
@@ -56,7 +58,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </ul>
 </div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
-<div style="font:500 20px 'Source Serif 4',serif">What this site doesn’t do</div>
+<h2 style="margin:0;font:500 20px 'Source Serif 4',serif">What this site doesn’t do</h2>
 <ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Set cookies</li>
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Log page views or visits</li>
@@ -69,7 +71,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ isPhase6 }}" hint-placeholder-val="{{ false }}">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:36px">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
-<div style="font:500 20px 'Source Serif 4',serif">Recorded per page view</div>
+<h2 style="margin:0;font:500 20px 'Source Serif 4',serif">Recorded per page view</h2>
 <ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>A random session identifier</li>
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>The page address</li>
@@ -79,7 +81,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </ul>
 </div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
-<div style="font:500 20px 'Source Serif 4',serif">Never stored by this site</div>
+<h2 style="margin:0;font:500 20px 'Source Serif 4',serif">Never stored by this site</h2>
 <ul style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;color:var(--ink-2)">
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Your IP address itself</li>
 <li style="display:flex;gap:10px"><span style="color:var(--ink-3)">—</span>Your name or email</li>
@@ -125,7 +127,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <section style="margin-top:48px;padding-top:32px;border-top:1px solid var(--line)">
 <h2 style="margin:0 0 12px;font:500 28px/1.2 'Source Serif 4',serif">Live updates</h2>
 <div style="display:flex;flex-direction:column;gap:14px;font-size:16.5px;line-height:1.7;color:var(--ink-2);text-wrap:pretty">
-<p style="margin:0">Pages that update live open one WebSocket connection from your browser straight to Supabase Realtime, the database service behind this site. It only receives new test results; nothing about you is sent over it.</p>
+<p style="margin:0">Pages that update live open one WebSocket connection from your browser straight to Supabase Realtime, the database service behind this site. It only receives new test results; this site sends nothing about you over it.</p>
 <p style="margin:0">Like any server your browser connects to, Supabase sees your IP address. That is covered by Supabase’s own privacy policy, not by this site. Pages work without the connection: with JavaScript off, none is opened.</p>
 </div>
 </section>
@@ -151,7 +153,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </sc-if>
 </main>
 
-<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" aria-current="page" style="min-height:44px;display:flex;align-items:center;padding-right:16px;color:var(--ink);text-decoration-color:var(--ink)">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" aria-current="page" style="min-height:44px;display:flex;align-items:center;padding-right:16px;color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink)">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;phase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;today&quot;,&quot;after Phase 6&quot;],&quot;default&quot;:&quot;today&quot;,&quot;tsType&quot;:&quot;'today' | 'after Phase 6'&quot;},&quot;summary&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">

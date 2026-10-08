@@ -743,7 +743,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         'Property',
         'Visual',
         'Coverage',
-        'Static',
+        'Static analysis',
         'E2E',
       ]);
       expect(ostomate2.project.declaredSuites).toEqual([]);

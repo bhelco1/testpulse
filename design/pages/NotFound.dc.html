@@ -23,13 +23,16 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div data-screen-label="Not found" style="{{ themeVars }}">
 <div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;min-height:100vh;box-sizing:border-box">
 
-<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
+<header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:4px 16px;padding:18px 0;flex-wrap:wrap">
 <a href="#" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
-<nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+<nav style="display:flex;align-items:center;gap:0 8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
-<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+<span aria-hidden="true" style="flex:none;width:52px;height:0"></span>
 </nav>
+<div style="position:absolute;top:18px;right:0;display:flex;align-items:center;gap:4px">
+<button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
+</div>
 </header>
 
 <sc-if value="{{ inProject }}" hint-placeholder-val="{{ false }}">

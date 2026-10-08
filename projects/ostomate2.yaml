@@ -31,7 +31,7 @@ test_stack:
     items: [Roborazzi 1.68.0]
   - category: Coverage
     items: [JaCoCo 0.8.13]
-  - category: Static
+  - category: Static analysis
     items: [detekt 1.23.8, ktlint 1.0.1, SwiftLint]
   - category: E2E
     items: [Maestro 2.11.0]

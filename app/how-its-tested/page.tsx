@@ -24,9 +24,10 @@ import styles from './page.module.css';
 
 // /how-its-tested (spec section 13): testpulse's own strategy and live results, following
 // design/pages/How Its Tested.dc.html. Server-rendered as anon through lib/queries, per request,
-// with the time read once. testpulse has no project row in production until Phase 7, which the
-// loader answers as "not reporting yet", never as an error. The design gives the page no live
-// behaviour, so it has no realtime subscription and its header no live indicator (section 13.7).
+// with the time read once. A database without a testpulse project row, as production was before
+// 2026-10-07, is answered by the loader as "not reporting yet", never as an error. The design
+// gives the page no live behaviour, so it has no realtime subscription and its header no live
+// indicator (section 13.7).
 
 export const metadata: Metadata = { title: TITLE };
 
@@ -245,9 +246,9 @@ export default async function HowItsTestedPage() {
               <div className={styles.selfHead}>
                 {heading}
                 <p className={styles.intro}>
-                  From Phase 7, testpulse’s CI posts its JUnit and coverage output to this site as
-                  the project <code className={styles.selfCode}>testpulse</code>, the same way the
-                  other projects do.
+                  testpulse’s CI posts its JUnit and coverage output to this site as the project{' '}
+                  <code className={styles.selfCode}>testpulse</code>, the same way the other
+                  projects do.
                 </p>
               </div>
               <SelfReport view={view.self} actionsHref={ACTIONS_URL} progress={view.progress} />

@@ -25,14 +25,17 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <a href="#main" style="position:absolute;left:-9999px;top:12px;z-index:20;padding:10px 14px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:600 14px 'Public Sans',sans-serif" style-focus="left:16px">Skip to content</a>
 <div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
 
-<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap">
-<a href="#" aria-current="page" style="display:flex;align-items:center;gap:10px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
-<nav style="display:flex;align-items:center;gap:8px;font-size:15px;flex-wrap:wrap">
+<header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:4px 16px;padding:18px 0;flex-wrap:wrap">
+<a href="#" aria-current="page" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<nav style="display:flex;align-items:center;gap:0 8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
+<span aria-hidden="true" style="flex:none;width:200px;height:0"></span>
+</nav>
+<div style="position:absolute;top:18px;right:0;display:flex;align-items:center;gap:4px">
 <span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}<span>{{ liveLabel }}</span></span>
 <button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
-</nav>
+</div>
 </header>
 
 <main id="main" style="padding:28px 0 56px">
@@ -45,7 +48,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <section role="alert" style="max-width:640px;padding:40px 0 80px">
 <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600;font-size:14px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Error</span>
 <h1 style="margin:16px 0 0;font:500 clamp(34px,4.5vw,48px)/1.1 'Source Serif 4',serif;letter-spacing:-.02em;text-wrap:balance">Results couldn’t be loaded</h1>
-<p style="margin:14px 0 0;font:400 19px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">The database didn’t respond. Nothing is shown rather than numbers that might be out of date. Test runs are still being received and will appear when it recovers.</p>
+<p style="margin:14px 0 0;font:400 19px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">The database isn’t answering, so nothing is shown rather than numbers that might be out of date. Try again in a minute.</p>
 <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:20px"><a href="" style="display:inline-flex;align-items:center;text-decoration:none;height:44px;padding:0 16px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:600 15px 'Public Sans',sans-serif">Try again</a><a href="#" style="min-height:44px;display:flex;align-items:center;padding:0 8px;font-size:15px">How it’s tested</a></div>
 </section>
 </sc-if>
@@ -185,20 +188,20 @@ class Component extends DCLogic {
     if (!K) return base;
 
     const osto = { name: 'Ostomate2', tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
-      run: { status: 'passed', when: '4 min ago', branch: 'main', sha: '0e2d0b4', total: 142, failed: 0, skipped: 0, dur: '27 s' },
-      layers: { unit: 103, integration: 29, visual: 10 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
-      reports: [['android/shared/jvm', 82], ['ios/shared/ios-sim', 82], ['android/composeApp/jvm', 60], ['ios/composeApp/ios-sim', 50]], 
-      declared: [{ name: 'Maestro E2E (Android)', layer: 'e2e', count: 7, status: 'runs_in_ci_not_reported' }, { name: 'Maestro E2E (iOS)', layer: 'e2e', count: 5, status: 'runs_in_ci_not_reported' }] };
+      run: { status: 'passed', when: '4 min ago', branch: 'main', sha: '0e2d0b4', total: 154, failed: 0, skipped: 0, dur: '27 s' },
+      layers: { unit: 103, integration: 29, visual: 10, e2e: 12 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
+      reports: [['android/shared/jvm', 82], ['ios/shared/ios-sim', 82], ['android/composeApp/jvm', 60], ['ios/composeApp/ios-sim', 50], ['android/e2e/emulator', 7], ['ios/e2e/ios-sim', 5]], 
+      declared: [] }; /* v10 item 3: Maestro flows now report */
     const route = { name: 'RouteServe', private: true, tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
       run: { status: 'passed', when: '2 h ago', branch: 'main', sha: 'c238574', total: 1048, failed: 0, skipped: 0, dur: '29 s' },
       layers: { unit: 608, component: 165, integration: 3, api: 269 }, cov: [['apps/backend', 96.1, 80], ['apps/mobile', 96.1, 80], ['packages/shared', 100, 80]],
       reports: [['test/apps/backend/node', 498], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], 
-      declared: [{ name: 'Maestro E2E · iOS', layer: 'e2e', count: 13, status: 'authored_not_executed' }] };
+      declared: [{ name: 'Maestro E2E (iOS)', layer: 'e2e', count: 13, status: 'authored_not_executed' }] };
     let rows = [
-      { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 142, dur: '27 s', when: '4 min ago' },
+      { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 154, dur: '27 s', when: '4 min ago' },
       { status: 'passed', private: true, project: 'RouteServe', branch: 'main', sha: 'c238574', total: 1048, dur: '29 s', when: '2 h ago' },
     ];
-    let heroTotal = '1,190', heroNote = 'automated tests across two projects. 100% passing on the latest runs, 0 skipped.'; /* v8 item 6 template in components.md HeroNote */
+    let heroTotal = '1,202', heroNote = 'automated tests across two projects. 100% passing on the latest runs, 0 skipped.'; /* v8 item 6 template in components.md HeroNote */
     const tile = (label, value, sub, attn) => ({ label, value, sub, attn: attn === true, fail: attn === 'fail', plain: !attn });
     const tiles = [
       tile('Pass rate', '100%', 'Latest runs · 0 skipped, excluded'),
@@ -209,13 +212,13 @@ class Component extends DCLogic {
     let sampleNote = '', feedNote = 'Updates as reports arrive', feedNoteInk = 'var(--ink-3)', footerNote = 'Last report received 4 min ago';
 
     if (sc === 'failed run') {
-      sampleNote = 'Ostomate2’s latest default-branch run shown failing 1 of 142 to illustrate the state.';
+      sampleNote = 'Ostomate2’s latest default-branch run shown failing 1 of 154 to illustrate the state.';
       osto.run = Object.assign({}, osto.run, { status: 'failed', sha: 'a41f9c2', failed: 1 });
       osto.failing = [{ suite: 'com.ostomate.app.ui.home.HomeViewModelTest', name: 'rendersToday', platform: 'ios-sim' }];
       heroNote = 'automated tests across two projects. 1 failing on Ostomate2’s latest run, 0 skipped.';
-      tiles[0] = tile('Pass rate', '99.9%', '1,189 of 1,190 · 0 skipped, excluded');
+      tiles[0] = tile('Pass rate', '99.9%', '1,201 of 1,202 · 0 skipped, excluded');
       tiles[3] = tile('Projects passing', '1 of 2', 'Ostomate2 red for 4m', 'fail');
-      rows[0] = { status: 'failed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: 'a41f9c2', total: 142, passed: 141, failed: 1, when: '4 min ago' };
+      rows[0] = { status: 'failed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: 'a41f9c2', total: 154, passed: 153, failed: 1, when: '4 min ago' };
     } else if (sc === 'empty run') {
       sampleNote = 'Ostomate2’s latest run shown with zero tests executed to illustrate the state.';
       osto.run = Object.assign({}, osto.run, { status: 'empty' });
@@ -236,7 +239,7 @@ class Component extends DCLogic {
     } else if (sc === 'live update') {
       sampleNote = 'A new Ostomate2 run arriving at the top of the feed.';
       osto.run = Object.assign({}, osto.run, { when: 'just now', sha: '7c1e05b', dur: '26 s' });
-      rows = [{ status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e05b', total: 142, dur: '26 s', when: 'just now', isNew: true }].concat(rows).slice(0, 3); /* v8 item 35: always 3 rows */
+      rows = [{ status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e05b', total: 154, dur: '26 s', when: 'just now', isNew: true }].concat(rows).slice(0, 3); /* v8 item 35: always 3 rows */
       footerNote = 'Last report received just now';
     } else if (!live) {
       feedNote = 'Offline. Showing runs as of 10:42 UTC; reconnecting'; feedNoteInk = 'var(--ink-2)';

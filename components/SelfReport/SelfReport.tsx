@@ -64,7 +64,7 @@ function BuildProgress({ progress }: { progress: BuildProgressView }) {
 const cx = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(' ');
 
 // "testpulse’s own results" on /how-its-tested (design/pages/How Its Tested.dc.html, tweak
-// selfReporting). Not reporting yet until testpulse's CI posts its first report (Phase 7), with
+// selfReporting). Not reporting yet until testpulse's CI posts its first report, with
 // "Build progress" from docs/build-progress.json; then its latest run as the other projects'
 // cards show one, with the note on how the pyramid counts. Drawn nothing rather than guessed
 // (spec 13.7): the progress list's footnote, which says it is read from the specification; the
@@ -76,7 +76,7 @@ export function SelfReport({ view, actionsHref, progress }: SelfReportProps) {
       <div className={cx(styles.card, styles.notReporting)} data-state="not_reporting">
         <div className={styles.intro}>
           <StatusBadge status="not_reporting" />
-          <h3 className={styles.title}>Self-reporting starts in Phase 7.</h3>
+          <h3 className={styles.title}>testpulse hasn’t reported here yet.</h3>
           <p className={styles.body}>
             Until then this section stays empty rather than showing numbers nobody measured. The
             suites already run in CI on every pull request; you can see them in the repository’s

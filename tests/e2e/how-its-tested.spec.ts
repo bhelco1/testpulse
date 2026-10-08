@@ -6,8 +6,8 @@ import { open } from './support/open.ts';
 
 // /how-its-tested (spec section 13; docs/spec.md 13.7) against the seed (lib/seed/plan.ts) at
 // SEED_NOW, where testpulse has reported once: its Playwright fixture, 1 passed, 1 failed and 1
-// skipped, 13 days before SEED_NOW. Production has no testpulse project until Phase 7; that state
-// ("Not reporting yet") is proven in lib/pages/how-its-tested.test.ts and
+// skipped, 13 days before SEED_NOW. testpulse has reported to production since 2026-10-07; the
+// state without a run ("Not reporting yet") is proven in lib/pages/how-its-tested.test.ts and
 // components/SelfReport/SelfReport.test.tsx, since this harness cannot remove a seeded project
 // without changing the pages other specs check. Tags route tests to projects
 // (playwright.config.ts): @js where scripts run, @no-js where they do not, @visual in the four
@@ -52,9 +52,9 @@ test.describe('the page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'This dashboard is tested the same way as the projects it reports on.',
     );
-    // Design v9 item 4: the hero no longer says testpulse reports itself.
+    // Interim wording until v11 (decision 2026-10-07): testpulse reports here now.
     await expect(page.locator('[data-part="lede"]')).toHaveText(
-      'A test dashboard that isn’t tested is just a claim. testpulse is built test-first, and its own CI runs every suite on every pull request. From Phase 7 it will report its results here alongside everything else.',
+      'A test dashboard that isn’t tested is just a claim. testpulse is built test-first, and its own CI runs every suite on every pull request. It reports its own results here, alongside everything else.',
     );
     const main = page.getByRole('main');
     await expect(main.getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
@@ -65,6 +65,7 @@ test.describe('the page', () => {
       'href',
       `${REPO}/blob/main/docs/spec.md`,
     );
+    await expect(main).not.toContainText('Phase 7');
   });
 
   test('lists the five principles, 01 ending with a recorded manual check', async ({ page }) => {
@@ -137,9 +138,10 @@ test.describe('the page', () => {
 
   test('shows testpulse’s latest run from the seed', async ({ page }) => {
     const self = selfResults(page);
-    await expect(self).toContainText(
-      'From Phase 7, testpulse’s CI posts its JUnit and coverage output to this site as the project testpulse, the same way the other projects do.',
+    await expect(self.locator('p').filter({ hasText: 'CI posts its JUnit' })).toHaveText(
+      'testpulse’s CI posts its JUnit and coverage output to this site as the project testpulse, the same way the other projects do.',
     );
+    await expect(self).not.toContainText('Phase 7');
     const run = self.getByRole('article');
     await expect(run.getByText('Failed', { exact: true })).toBeVisible();
     // 13 UTC days back reads in weeks (design v7 item 16), as on the landing card.

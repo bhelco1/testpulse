@@ -681,6 +681,7 @@ function PointDot({
   // As tp-charts.js: only series 0 marks its first point; every other dot sits between the ends.
   if (index === 0 && seriesIndex > 0) return <g />;
   if (last || index === 0) {
+    const dy = last ? 4 : startLabelDy(layout, y, floorY);
     return (
       <g>
         <circle
@@ -690,14 +691,11 @@ function PointDot({
           fill={last ? strokeOf(seriesIndex) : 'var(--ink)'}
           data-part="end-dot"
         />
-        <text
-          x={x + 8}
-          y={y + (last ? 4 : startLabelDy(layout, y, floorY))}
-          className={styles.valueText}
-          data-part="value-label"
-        >
-          {formatTrendValue(value, format, true)}
-        </text>
+        {dy !== null && (
+          <text x={x + 8} y={y + dy} className={styles.valueText} data-part="value-label">
+            {formatTrendValue(value, format, true)}
+          </text>
+        )}
       </g>
     );
   }

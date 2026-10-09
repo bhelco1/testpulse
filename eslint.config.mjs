@@ -21,6 +21,15 @@ const INGEST = {
     'read through lib/queries/.',
 };
 
+// lib/jobs/cron.ts builds the secret client for the daily cron route, and lib/jobs/daily.ts writes
+// with it; only app/api may import them.
+const JOBS = {
+  regex: String.raw`(^|/)jobs/(cron|daily)(\.ts)?$`,
+  message:
+    'lib/jobs runs the daily job with the secret client and is only for app/api/cron. Public ' +
+    'pages read through lib/queries/.',
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -44,12 +53,13 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // The same files outside the ingestion route may not reach it through lib/ingest either.
+    // The same files outside the API routes may not reach the secret client through lib/ingest or
+    // lib/jobs either.
     // This object replaces the rule options above for the files it matches, so it repeats them.
     files: ['app/**', 'components/**', 'lib/queries/**'],
     ignores: ['app/api/**'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [SECRET_CLIENT, INGEST] }],
+      'no-restricted-imports': ['error', { patterns: [SECRET_CLIENT, INGEST, JOBS] }],
     },
   },
   prettier,

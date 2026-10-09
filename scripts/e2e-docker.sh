@@ -27,7 +27,7 @@ fi
 # variant, whose rendering is not guaranteed to match.
 # -e NAME forwards the host's value without printing it, and nothing if it is unset; locally
 # the Supabase variables come from .env.local instead, read by playwright.config.ts. The secret
-# key is for the live-feed spec's report writer only (tests/e2e/support/ingest.ts); the config
+# key is for the writing specs' client only (tests/e2e/support/ingest.ts); the config
 # withholds it from the server under test.
 docker run --rm --init --ipc=host --network=host --platform=linux/amd64 \
   --volume "$PWD:/work" --workdir /work \

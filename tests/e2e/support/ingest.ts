@@ -12,7 +12,8 @@ import { placeReport } from '../../../lib/seed/plan.ts';
 import { createSeedClient } from '../../../lib/seed/local.ts';
 import type { SecretClientEnv } from '../../../lib/supabase/server.ts';
 
-// Reports for the live-feed spec (tests/e2e/live.spec.ts), written while a page is open, through
+// Reports for the specs that write (tests/e2e/live.spec.ts, written while a page is open, and
+// tests/e2e/pruned.spec.ts, written and then pruned), through
 // the path the seed takes (lib/seed/seed.ts): a committed fixture through the real parser,
 // normalizeReport, placeReport and ingest_report, so a report lands at a planned instant before
 // SEED_NOW and the pages' relative times and order stay fixed. The route's own steps (key, rate
@@ -25,29 +26,36 @@ import type { SecretClientEnv } from '../../../lib/supabase/server.ts';
 
 export const LIVE_SLUGS = ['live-public', 'live-private'] as const;
 export type LiveSlug = (typeof LIVE_SLUGS)[number];
+export const PRUNED_SLUG = 'pruned-public';
+export type SpecSlug = LiveSlug | typeof PRUNED_SLUG;
 
 // Each spec project copies a seeded project's file under its own slug and name: public from
 // testpulse's, private from routeserve's.
-const SOURCES: Record<LiveSlug, { file: string; name: string }> = {
+const SOURCES: Record<SpecSlug, { file: string; name: string }> = {
   'live-public': { file: 'testpulse', name: 'Live public' },
   'live-private': { file: 'routeserve', name: 'Live private' },
+  'pruned-public': { file: 'testpulse', name: 'Pruned public' },
+};
+
+// testpulse's captured Playwright failure: 3 tests, 1 passed, 1 failed, 1 skipped.
+const PUBLIC_FIXTURE = {
+  job: 'e2e',
+  module: 'e2e',
+  platform: 'chromium',
+  parse: (): ParsedResults => ({
+    format: 'junit',
+    report: parseJunit([
+      readFileSync('fixtures/testpulse/junit/playwright-one-failure.xml', 'utf8'),
+    ]),
+  }),
 };
 
 const FIXTURES: Record<
-  LiveSlug,
+  SpecSlug,
   { job: string; module: string; platform: string; parse: () => ParsedResults }
 > = {
-  'live-public': {
-    job: 'e2e',
-    module: 'e2e',
-    platform: 'chromium',
-    parse: () => ({
-      format: 'junit',
-      report: parseJunit([
-        readFileSync('fixtures/testpulse/junit/playwright-one-failure.xml', 'utf8'),
-      ]),
-    }),
-  },
+  'live-public': PUBLIC_FIXTURE,
+  'pruned-public': PUBLIC_FIXTURE,
   // The captured routeserve failure: its message and stack trace must never reach anon.
   'live-private': {
     job: 'test',
@@ -87,22 +95,26 @@ let secret: SupabaseClient | undefined;
 /** The writer's client, made on first use so a spec that never writes never needs the key. */
 export const admin = (): SupabaseClient => (secret ??= writerClient());
 
-export async function removeLiveProjects(): Promise<void> {
+export async function removeProjects(slugs: readonly SpecSlug[]): Promise<void> {
   const { error } = await admin()
     .from('projects')
     .delete()
-    .in('slug', [...LIVE_SLUGS]);
-  if (error) throw failed('delete the live-feed projects', error);
+    .in('slug', [...slugs]);
+  if (error) throw failed(`delete ${slugs.join(', ')}`, error);
 }
 
-export async function registerLiveProjects(): Promise<void> {
-  await removeLiveProjects();
-  for (const slug of LIVE_SLUGS) {
+export const removeLiveProjects = (): Promise<void> => removeProjects(LIVE_SLUGS);
+
+export async function registerProjects(slugs: readonly SpecSlug[]): Promise<void> {
+  await removeProjects(slugs);
+  for (const slug of slugs) {
     const { file, name } = SOURCES[slug];
     // The key is dropped: these projects are written through ingest_report, as the seed's are.
     await addProject(admin(), { ...loadProjectFile(projectFilePath(file)), slug, name });
   }
 }
+
+export const registerLiveProjects = (): Promise<void> => registerProjects(LIVE_SLUGS);
 
 export interface LiveRun {
   readonly ciRunId: string;
@@ -116,7 +128,7 @@ export interface LiveRun {
  * renames the job and platform, so one run can hold the same fixture on a second platform.
  */
 export async function ingestLiveRun(
-  slug: LiveSlug,
+  slug: SpecSlug,
   run: LiveRun,
   report: { readonly job: string; readonly platform: string } | null = null,
 ): Promise<{ runId: string; reportId: string }> {

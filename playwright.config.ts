@@ -52,6 +52,9 @@ const withoutJs = /@js|@visual/;
 // skipped when a dependency fails. So a failing page test cannot stop the live feed's own checks
 // running (tests/e2e/harness/order.spec.ts).
 const LIVE_SPEC = '**/live.spec.ts';
+// The pruned-results spec writes a project of its own and prunes, so it runs in the same project,
+// after the live feed's spec and never beside it (tests/e2e/pruned.spec.ts).
+const PRUNED_SPEC = '**/pruned.spec.ts';
 const SEEDED = 'seeded';
 // The private-data leak sweep visits every page that can show a private project, so it runs once,
 // in a project of its own, rather than in every viewport and theme (tests/e2e/leak-sweep.spec.ts).
@@ -88,28 +91,28 @@ export default defineConfig({
     {
       name: 'desktop-dark',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
     {
       name: 'desktop-light',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'light' },
     },
     {
       name: 'phone-dark',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'dark' },
     },
     {
       name: 'phone-light',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, SWEEP_SPEC],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'light' },
     },
@@ -118,7 +121,7 @@ export default defineConfig({
       // page renders the same pixels as desktop-dark, so it takes no snapshot of its own.
       name: 'no-js',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, SWEEP_SPEC],
+      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, SWEEP_SPEC],
       grepInvert: withoutJs,
       use: { ...chrome, viewport: DESKTOP, javaScriptEnabled: false },
     },
@@ -139,7 +142,9 @@ export default defineConfig({
     },
     {
       name: 'live',
-      testMatch: LIVE_SPEC,
+      testMatch: [LIVE_SPEC, PRUNED_SPEC],
+      // One file at a time: each writes while the other's pages would be open.
+      workers: 1,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
   ],
@@ -147,7 +152,7 @@ export default defineConfig({
     // The fixed clock is given to `next start` only, so the instant the server logs at startup
     // (instrumentation.ts) comes from the process that serves the pages, not from the build.
     command: `npm run build && ${FIXED_NOW_VAR}=${SEED_NOW} npm run start -- --hostname 127.0.0.1`,
-    // The live-feed spec's writer holds the secret key; the server under test must not, so pages
+    // The writing specs' client holds the secret key; the server under test must not, so pages
     // are proven to render as anon. An empty value also stops Next.js loading it from .env.local.
     env: { ...supabaseEnv, SUPABASE_SECRET_KEY: '' },
     // Ready is printed when the server listens and register() runs just after it, so waiting for

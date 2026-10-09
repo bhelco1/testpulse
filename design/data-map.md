@@ -74,9 +74,9 @@ Static copy from spec §3 and §16; live section reads project `testpulse` like 
 |---|---|
 | Tracked link URL | shown and copied as `<site origin>/v/<token>`; origin comes from the running site, never hard-coded (domain undecided, spec open question 1) |
 | Tracked links | `tracked_links` + aggregates over `visits` (exclude `user_agent_class in ('bot','preview')`): first/last seen, distinct `session_id`, distinct `ip_hash`, pages, time per project |
-| Alerts | `alerts` open/resolved |
-| Sync status | `projects:sync` result per YAML file |
-| Scheduler | latest `heartbeats.created_at`; warning if > 36 h |
+| Alerts | `alerts` where open (not resolved, not acknowledged); kind ∈ stale, count_drop, empty_run, coverage_below_floor; payload gives the figures. Acknowledge (count_drop only) sets `acknowledged_at`; the other kinds are resolved by the daily job or ingestion |
+| Sync status | computed when the page loads: each `projects/*.yaml` deployed with the site vs its `projects` row by slug → In sync, Differs (field list), Not registered (file, no row), No YAML (row, no file) |
+| Daily job | latest job-run summary: started/finished, heartbeat written, stale alerts opened/closed (names), prune counts (results, failure text, visits, rate-limit buckets), failed step + error; none → "Never run"; finished > 36 h ago → overdue warning |
 | Key rotation | writes `projects.api_key_hash`; key shown once |
 
 ## Kiosk
@@ -124,3 +124,13 @@ Same queries as landing (via `runs_public`). Tiles: Pass rate, Projects reportin
 | Run duration | `runs.duration_ms` = Σ `reports.duration_ms` (spec §5); reports table: `reports.duration_ms` each, formatted by `TPKit.runDur`: "27 s", "11m 34s", "1h 05m" |
 | Run totals vs reports | Σ `reports.total` = executions (RouteServe 1,048: backend 501, mobile 428, shared 119; Ostomate2 299); run total = distinct tests (RouteServe 1,044, Ostomate2 160). The reports table shows executions per report; the run header shows distinct tests. Any foot text says only "Reports add up to {executions} executions of {distinct} distinct tests." |
 | Kiosk cards | one per registered project (three today), same sources as the landing ProjectCard |
+
+## v16
+| UI element | Source |
+|---|---|
+| Admin link detail | `tracked_links` (company, role, contact, lead_project_slug, sent_on, notes, token) + `visits` for that link, excluding `user_agent_class in ('bot','preview')`: first/last `created_at`, count distinct `session_id` (sessions), count distinct `ip_hash` (visitors), per path views and summed time, time summed per project slug |
+| Admin table SENT | `tracked_links.sent_on` (date; form defaults to today UTC) |
+| Admin table notes | `tracked_links.notes` (admin only, never on a public page) |
+| Delete link | deletes the `tracked_links` row; `visits.tracked_link_id` set null (history kept, unlinked) |
+| Landing card order | session's `tracked_links.lead_project_slug` → that card first; nothing about the link is rendered |
+| Sign-in | Supabase magic link to the one allowed address; the "sent" message is the same for every address |

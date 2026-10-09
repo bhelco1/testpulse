@@ -69,7 +69,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:18px 24px;border-bottom:1px solid var(--line);font-size:14.5px;align-items:start">
 <span style="display:flex;align-items:center;gap:10px;font-weight:600"><span style="width:12px;height:12px;border-radius:3px;flex:none;background:{{ l.swatch }};border:{{ l.swBorder }}"></span>{{ l.name }}</span>
 <span style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.tools }}" as="tl" hint-placeholder-count="1"><span style="padding:3px 9px;border-radius:6px;border:1px solid var(--line-strong);font-size:13.5px">{{ tl }}</span></sc-for></span>
-<span style="line-height:1.6;color:var(--ink-2);text-wrap:pretty">{{ l.scope }}</span>
+<span style="display:flex;flex-direction:column;gap:8px;line-height:1.6;color:var(--ink-2);text-wrap:pretty"><span>{{ l.scope }}</span><sc-if value="{{ l.p6 }}" hint-placeholder-val="{{ false }}"><span>{{ l.p6 }}</span></sc-if></span>
 </div>
 </sc-for>
 </div></div>
@@ -155,7 +155,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;selfReporting&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;reporting&quot;,&quot;not reporting yet&quot;],&quot;default&quot;:&quot;reporting&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;phase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;today&quot;,&quot;after Phase 6&quot;],&quot;default&quot;:&quot;today&quot;,&quot;tsType&quot;:&quot;'today' | 'after Phase 6'&quot;},&quot;selfReporting&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;reporting&quot;,&quot;not reporting yet&quot;],&quot;default&quot;:&quot;reporting&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null };
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0', 'layer-1':'#1c1a17', 'layer-2':'#57524b', 'layer-3':'#7a746b', 'layer-4':'#8f897f' };
@@ -177,6 +177,14 @@ class Component extends DCLogic {
       ['No swallowed failures', 'In testpulse’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.'],
     ].map(([title, body], i) => ({ n: String(i + 1).padStart(2, '0'), title, body }));
 
+    /* v16 item 22: after Phase 6 each row gains a second sentence for what Phase 6 added (components.md "How it’s tested page") */
+    const p6 = (this.props.phase ?? 'today') === 'after Phase 6';
+    const P6 = {
+      Unit: 'Alert rules (stale, count drop, empty report, below floor) against fixed run histories; bot and link-preview classification of user agents; tracked-link token generation and lookup.',
+      Integration: 'The daily job against local Supabase: heartbeat, opening and closing stale alerts, and pruning results at 180 days and visits at 365. Visit recording, with bots and previews kept out of every count.',
+      E2E: 'The tracked-link flow: open a link, see the lead project first, and find the visit on Admin. Admin sign-in by magic link, including an expired link and an address that isn’t the owner’s.',
+      'Leak sweep': 'Also checks that no page shows a tracked link’s company, role or contact.',
+    };
     /* v9 item 4: every row true today (Phases 0–4 done, 5 in progress). Phase 6 adds alert rules, bot classification, tracked links, admin sign-in and the prune job. */
     const layers = [
       ['Unit', ['Vitest'], 'Parsers against real fixtures, layer resolution, stat calculations, API key hashing. 90% line floor.', 'var(--layer-1)'],
@@ -187,14 +195,14 @@ class Component extends DCLogic {
       ['Accessibility', ['axe', 'Playwright', 'contrast script'], 'axe on every public page, counted with E2E. A script in the unit job checks the contrast of the design’s token pairs in both themes.', 'transparent'],
       ['Visual', ['Playwright'], 'Snapshots of each page at desktop and phone widths, light and dark, compared inside a pinned container image so rendering can’t drift. Counted with E2E.', 'transparent'],
       ['Leak sweep', ['Playwright'], 'Crawls the whole site as a visitor and fails if any private project’s failure text, stack trace or source link appears anywhere. Counted with E2E.', 'transparent'],
-    ].map(([name, tools, scope, swatch]) => ({ name, tools, scope, swatch, swBorder: swatch === 'transparent' ? '1.5px solid var(--line-strong)' : 'none' }));
+    ].map(([name, tools, scope, swatch]) => ({ name, tools, scope, swatch, swBorder: swatch === 'transparent' ? '1.5px solid var(--line-strong)' : 'none', p6: p6 ? (P6[name] || '') : '' }));
 
     /* mirrors docs/build-progress.json (numbered phases 0–7), dated by its asOf */
     const ST = { done: ['Done', 'var(--pass)', 'm8 12 3 3 5-6', 'none'], prog: ['In progress', 'var(--ink-2)', 'M12 7v5l3 2', 'none'], plan: ['Planned', 'var(--ink-3)', '', '3.5 3'] };
     const phases = [
       ['Phase 0', 'Foundations', 'done'], ['Phase 1', 'Schema, parsers, ingestion', 'done'], ['Phase 2', 'Ostomate2 reporting live', 'done'],
       ['Phase 3', 'RouteServe reporting live', 'done'], ['Phase 4', 'Backfill', 'done'], ['Phase 5', 'Public site', 'done'],
-      ['Phase 6', 'Alerts, tracked links, admin', 'prog'], ['Phase 7', 'Launch', 'plan'],
+      ['Phase 6', 'Alerts, tracked links, admin', p6 ? 'done' : 'prog'], ['Phase 7', 'Launch', 'plan'],
     ].map(([n, label, k]) => ({ n, label, status: ST[k][0], ink: ST[k][1], d: ST[k][2], dash: ST[k][3] }));
 
     /* v12 item 1: distinct tests per layer (live production, 7 Oct); each test sits in its layer as received (projects/testpulse.yaml) */
@@ -211,8 +219,8 @@ class Component extends DCLogic {
     return {
       themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: tot.toLocaleString('en-US'), selfLine: 'tests · 0 failed · 0 skipped · 17m 53s', selfCovNote: 'unit: 3,125 of 3,141 lines covered.',
       reporting, notReporting: !reporting, asOf: '7 Oct', asOfIso: '2026-10-07', asOfTitle: '7 Oct 2026, 00:00 UTC', /* docs/build-progress.json asOf */
-      silenceNow: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
-      emptyNow: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',
+      silenceNow: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.' + (p6 ? ' A daily check flags it and alerts the owner.' : ''),
+      emptyNow: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.' + (p6 ? ' A sudden drop in a report’s test count raises an alert too.' : ''),
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
     };

@@ -1,4 +1,4 @@
-# testpulse handoff v15
+# testpulse handoff v16
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -782,3 +782,96 @@ Same rules: the Design System page is canonical, components.md matches it, every
    - Project Page flaky caption: "Flaky: passed and failed on the same commit and platform, in default-branch CI runs of the last 30 days." Its empty state now says "in default-branch CI runs". The Test History caption now says "within default-branch CI runs of the last 30 days".
 
 Files changed in v15: Project Page.dc.html, Run Detail.dc.html, Design System.dc.html, Landing.dc.html, Kiosk.dc.html, Test History.dc.html, design/README.md, design/components.md.
+
+## Changes in v16
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px, existing tokens only (no new token). Admin is drawn in Admin.dc.html and its parts are specimens in the new Design System section 15. components.md has a new "Admin" section with the full spec. Admin.dc.html tweaks: view, detail, states (live / validation / busy / errors), alerts, sync, job, theme. Below a 760 px content width, every Admin table becomes a card list; check at 390 in both themes.
+
+**A. Sign-in**
+1. The form: an Email field and a full-width "Send sign-in link" button (view "sign-in").
+   - Busy: "Sending…" (view "sign-in · sending").
+   - Invalid address: "Enter an email address, like name@example.com" (view "sign-in · invalid address").
+2. One neutral message for every address: "Check your email". "If that address can sign in, a link is on its way. It expires in 1 hour." (view "link sent").
+3. Link expired or used: an attn notice above the form, "That sign-in link has expired or was already used", "Each link works once, within 1 hour of being sent. Send a new one below." (view "link expired").
+4. Not allowed: refused card "This account can’t open admin" naming the signed-in address, with Sign out; nothing else of Admin loads (view "not allowed").
+5. Signed out: a pass notice "You’re signed out" above the form (view "signed out"; Sign out also goes there).
+
+**B. Tracked links**
+6. Per-link detail, opened by the company name in the table (tweak detail).
+   - Breadcrumb, h1 company, role.
+   - Details: contact, lead project (lock if private), sent date, notes.
+   - The link with Copy.
+   - Tiles: First seen, Last seen, Sessions (distinct session cookies), Visitors (distinct salted IP hashes).
+   - Pages viewed with views and time; time per project.
+   - Delete link with a danger confirm: "The link stops working. Its visit history is kept, unlinked from this company and role."
+   - Not yet opened: tiles at "—"/0 and a dashed notice.
+   - Footnote fixed here and under the table: "Sessions are distinct session cookies; visitors are distinct salted IP hashes. Bot and link-preview visits are never counted."
+7. Table:
+   - SENT comes from `sent_on` ("18 Sep"; a new link shows its own date).
+   - Notes show as a one-line excerpt with a note glyph and a hidden "Note:" label, with the full text in the title.
+   - On phone the table becomes cards. The detail view stacks on phone.
+8. Create form:
+   - Notes is wired.
+   - New Sent date field (type=date, defaults to today UTC).
+   - "Company is required", drawn like the contact error (states "validation").
+   - Submitting: "Creating…", fields disabled (states "busy").
+   - Server error notice: "Nothing was saved; your entries are still here." (states "errors").
+   - The lead select lists every project; a private one reads "RouteServe (private)" and shows a lock with "Private: the visitor sees counts and trends, never failure text." when chosen.
+9. Clipboard refused: an attn line "Your browser blocked copying. Select the link and copy it." with a read-only field holding the URL, selected on focus. Live it appears whenever the clipboard rejects; states "errors" forces it on Acme.
+
+**C. Alerts**
+10. All four kinds drawn, each with a glyph and a kind word, in the attn tone:
+    - stale (clock)
+    - count_drop (trend-down), with your example copy; it replaces "last 5 runs averaged 50"
+    - empty_run (dashed ring)
+    - coverage_below_floor (arrow-down)
+    - Each row's meta line says how it closes.
+11. Acknowledge appears only on count_drop.
+    - Busy: "Acknowledging…".
+    - Error: "Couldn’t acknowledge. The alert is still open. Try again."
+12. Open alerts only. data-map Alerts row rewritten.
+
+**D. Projects**
+13. Masked key column removed. The intro says keys are stored only as a hash.
+14. Rotate key: busy "Rotating…" in the confirm. Error notice: "Couldn’t rotate the {name} key. The current key still works." with Try again.
+15. "Issue in Phase 7" branch removed. A Not registered row has no row and no key, so it shows "No row, no key" instead of Rotate.
+16. The four sync states are drawn (tweak sync "every state"; the two extra rows, demo-shop and routeserve-legacy, are SAMPLE):
+    - ✓ In sync
+    - ≠ Differs, with a field list
+    - + Not registered
+    - ? No YAML
+    - data-map Sync status rewritten: computed on page load.
+
+**E. Daily job**
+17. Tiles read the run summary:
+    - Last run
+    - Heartbeat
+    - Stale check ("1 opened · 0 closed")
+    - Prune ("Results 0 · failure text 0 · visits 0 · rate-limit buckets 12")
+
+    Job states (tweak job):
+    - Overdue (> 36 h): an attn warning notice plus an attn Last run tile.
+    - Never run: a neutral notice, tiles "Never run".
+    - Failed partway: a fail notice naming the step and error; "✕ Failed at prune" and a failed Prune tile.
+
+    The intro now states retention: results and failure text 180 days (5 most recent runs kept), visits 365 days, expired rate-limit buckets. data-map Scheduler row is replaced by "Daily job".
+
+**F. Page states and other pages**
+18. Admin page states:
+    - Loading: headings over skeleton blocks (view "signed in · loading").
+    - Error: ErrorState "Admin couldn’t load" with Try again (view "signed in · error").
+    - Session gone (401 on an action): an attn alert "Your session has ended" with Sign in again; the form keeps its values (view "session expired").
+19. components.md "Admin" covers sign-in, page states, the alert row, the table, the create form, the link detail, the projects table and the job tiles, including all confirms.
+20. Landing: the tracked visitor's lead project card moves to the front; nothing else changes and nothing names the company or the tracking (Landing tweak visitor). components.md "Landing: tracked visitor", data-map v16.
+    - Question, not drawn: should the project switcher and the run feed also lead with that project? I'd leave both as they are, because order alone is enough and a changed feed would misstate recency.
+21. Privacy after Phase 6: "Visit records are kept for 365 days, then deleted." ends "How a visit is recorded". In that state the Updated date carries a SAMPLE tag: "the build fills in the day this copy ships".
+22. How It's Tested: new tweak phase "after Phase 6".
+    - Unit, Integration, E2E and Leak sweep each gain a second sentence for Phase 6.
+    - The two incident cards gain their alert sentences.
+    - Phase 6 reads Done.
+    - components.md lists the exact copy.
+
+**Assumptions to check**
+- The schema names `sent_on`, `acknowledged_at`, a job-run summary table, and `visits.tracked_link_id` set null on delete. Correct data-map v16 if the build uses other names.
+- Alert and link figures, contacts and dates are SAMPLE.
+
+Files changed in v16: Admin.dc.html, Design System.dc.html, Landing.dc.html, Privacy.dc.html, How Its Tested.dc.html, design/README.md, design/components.md, design/data-map.md.

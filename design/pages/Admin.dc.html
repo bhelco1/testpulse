@@ -18,14 +18,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </helmet>
 <div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;background:var(--bg);color:var(--ink);min-height:100vh">
 <div style="{{ themeVars }}">
-<div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
+<div ref="{{ rootRef }}" style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
 
 <header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:4px 16px;padding:18px 0;flex-wrap:wrap">
 <div style="display:flex;align-items:center;gap:14px"><a href="#" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a><span style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;padding:3px 7px;border-radius:5px;background:var(--ink);color:var(--on-ink)">ADMIN</span></div>
 <nav style="display:flex;align-items:center;gap:0 8px;font-size:14.5px;flex-wrap:wrap">
-<span style="color:var(--ink-3);padding:0 8px">Signed in with magic link</span>
+<sc-if value="{{ signedIn }}" hint-placeholder-val="{{ true }}"><span style="color:var(--ink-3);padding:0 8px">Signed in with magic link</span></sc-if>
 <a href="#" style="height:44px;padding:0 12px;display:flex;align-items:center">View public site</a>
-<button style="height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign out</button>
+<sc-if value="{{ signedIn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ signOut }}" style="height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign out</button></sc-if>
 <span aria-hidden="true" style="flex:none;width:52px;height:0"></span>
 </nav>
 <div style="position:absolute;top:18px;right:0;display:flex;align-items:center;gap:4px">
@@ -33,19 +33,130 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </div>
 </header>
 
+<!-- SIGN-IN (signed out) -->
+<sc-if value="{{ isSignin }}" hint-placeholder-val="{{ false }}">
+<main style="padding:clamp(24px,8vh,88px) 0 64px;display:flex;justify-content:center">
+<div style="width:100%;max-width:440px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-direction:column;gap:8px"><h1 style="margin:0;font:500 40px/1.05 'Source Serif 4',serif;letter-spacing:-.02em">{{ si.h1 }}</h1><p style="margin:0;font-size:15px;line-height:1.55;color:var(--ink-2);text-wrap:pretty">{{ si.lede }}</p></div>
+
+<sc-if value="{{ si.signedOut }}"><div role="status" style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--pass-tint);border:1px solid var(--pass)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink)">You’re signed out</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">Your session on this browser has ended. Send a new link to sign in again.</p></div></div></sc-if>
+
+<sc-if value="{{ si.expired }}"><div role="alert" style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--attn)">That sign-in link has expired or was already used</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">Each link works once, within 1 hour of being sent. Send a new one below.</p></div></div></sc-if>
+
+<sc-if value="{{ si.showForm }}" hint-placeholder-val="{{ true }}">
+<form onSubmit="{{ sendLink }}" noValidate="{{ true }}" aria-busy="{{ si.sending }}" style="display:flex;flex-direction:column;gap:16px;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px">
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Email<input type="email" autoComplete="email" value="{{ si.email }}" onChange="{{ setEmail }}" disabled="{{ si.sending }}" aria-invalid="{{ si.invalid }}" aria-describedby="email-err" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ si.border }};background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><sc-if value="{{ si.invalid }}"><span id="email-err" style="font-weight:500;color:var(--fail)">Enter an email address, like name@example.com</span></sc-if></label>
+<button type="submit" disabled="{{ si.sending }}" aria-busy="{{ si.sending }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer;opacity:{{ si.btnOp }}">{{ si.btnLabel }}</button>
+</form>
+</sc-if>
+
+<sc-if value="{{ si.linkSent }}"><div role="status" style="display:flex;flex-direction:column;gap:12px;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px"><div style="display:flex;gap:12px;align-items:flex-start"><svg style="flex:none;margin-top:3px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg><div><h2 style="margin:0;font:500 22px 'Source Serif 4',serif">Check your email</h2><p style="margin:6px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink-2)">If that address can sign in, a link is on its way. It expires in 1 hour.</p></div></div><button onClick="{{ resetSignin }}" style="align-self:flex-start;min-height:44px;padding:0;border:none;background:none;color:var(--ink);font:600 14.5px 'Public Sans',sans-serif;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">Use a different address</button></div></sc-if>
+
+<sc-if value="{{ si.notAllowed }}"><div role="alert" style="display:flex;flex-direction:column;gap:14px;padding:24px;background:var(--surface);border:1px solid var(--fail);border-radius:20px"><div style="display:flex;gap:12px;align-items:flex-start"><svg style="flex:none;margin-top:3px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><div><h2 style="margin:0;font:500 22px 'Source Serif 4',serif">This account can’t open admin</h2><p style="margin:6px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:0 5px"><span>You’re signed in as</span><code style="font:13.5px 'JetBrains Mono',monospace;color:var(--ink)">{{ si.otherEmail }}</code><span>, which isn’t the owner’s address. Sign out, then sign in with the owner’s address.</span></p></div></div><button onClick="{{ signOut }}" style="align-self:flex-start;min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer">Sign out</button></div></sc-if>
+
+<p style="margin:0;font-size:13px;line-height:1.5;color:var(--ink-3)">Admin has one owner. Nothing here is public.</p>
+</div>
+</main>
+</sc-if>
+
+<!-- LOADING -->
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+<main aria-busy="true" style="padding:24px 0 64px;display:flex;flex-direction:column;gap:48px">
+<h1 style="margin:0;font:500 44px/1.05 'Source Serif 4',serif;letter-spacing:-.02em">Admin</h1>
+<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" role="status">Loading admin</span>
+<sc-for list="{{ skeleton }}" as="sk" hint-placeholder-count="4"><section style="display:flex;flex-direction:column;gap:14px"><h2 style="margin:0;font:500 26px 'Source Serif 4',serif;color:var(--ink-3)">{{ sk.h }}</h2><div style="height:{{ sk.hgt }};border-radius:16px;background:var(--raised)"></div></section></sc-for>
+</main>
+</sc-if>
+
+<!-- ERROR -->
+<sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+<main style="padding:24px 0 64px;display:flex;flex-direction:column;gap:24px">
+<h1 style="margin:0;font:500 44px/1.05 'Source Serif 4',serif;letter-spacing:-.02em">Admin</h1>
+<div role="alert" style="max-width:640px;display:flex;gap:14px;align-items:flex-start;padding:24px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"><svg style="flex:none;margin-top:3px" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg><div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">Admin couldn’t load</h2><p style="margin:0;font-size:15px;line-height:1.55;color:var(--ink-2);text-wrap:pretty">The database didn’t answer, so nothing here can be shown or changed right now. Nothing was lost.</p><a href="#" style="min-height:44px;display:inline-flex;align-items:center;font-weight:600;font-size:15px">Try again</a></div></div>
+</main>
+</sc-if>
+
+<!-- SIGNED IN: LINK DETAIL -->
+<sc-if value="{{ showDetail }}" hint-placeholder-val="{{ false }}">
+<main style="padding:8px 0 64px;display:flex;flex-direction:column;gap:32px">
+<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;font-size:14px;color:var(--ink-3)"><button onClick="{{ closeDetail }}" style="min-height:44px;padding:0;border:none;background:none;color:var(--ink-2);font:400 14px 'Public Sans',sans-serif;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">Admin</button><span aria-hidden="true">/</span><button onClick="{{ closeDetail }}" style="min-height:44px;padding:0;border:none;background:none;color:var(--ink-2);font:400 14px 'Public Sans',sans-serif;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">Tracked links</button><span aria-hidden="true">/</span><span aria-current="page" style="color:var(--ink)">{{ d.company }}</span></nav>
+
+<sc-if value="{{ sessionGone }}"><div role="alert" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div style="flex:1;min-width:min(100%,240px)"><div style="font-weight:600;font-size:14.5px;color:var(--attn)">Your session has ended</div><p style="margin:2px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">Sign in again to finish. Nothing was changed.</p></div><button onClick="{{ toSignin }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign in again</button></div></sc-if>
+
+<div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font:500 clamp(34px,5vw,44px)/1.05 'Source Serif 4',serif;letter-spacing:-.02em">{{ d.company }}</h1><span style="font-size:15px;color:var(--ink-2)">{{ d.role }}</span></div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start">
+<section aria-label="Link details" style="padding:20px 22px;background:var(--surface);border:1px solid var(--line);border-radius:16px">
+<dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 18px;font-size:14px;line-height:1.5">
+<dt style="color:var(--ink-3)">Contact</dt><dd style="margin:0;overflow-wrap:anywhere">{{ d.contact }}</dd>
+<dt style="color:var(--ink-3)">Lead project</dt><dd style="margin:0;display:flex;align-items:center;gap:8px"><span>{{ d.lead }}</span><sc-if value="{{ d.leadPrivate }}"><span style="display:flex;align-items:center;gap:5px;color:var(--ink-3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private</span></sc-if></dd>
+<dt style="color:var(--ink-3)">Sent</dt><dd style="margin:0">{{ d.sent }}</dd>
+<dt style="color:var(--ink-3)">Notes</dt><dd style="margin:0;white-space:pre-wrap;color:{{ d.notesInk }}">{{ d.notes }}</dd>
+</dl>
+</section>
+<section aria-label="Link" style="padding:20px 22px;background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;gap:12px">
+<span style="font-size:13.5px;color:var(--ink-3)">Link</span>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px"><code style="flex:1;min-width:0;display:flex;font:13px 'JetBrains Mono',monospace;color:var(--ink-2);overflow-wrap:anywhere"><span>&lt;site origin&gt;</span><span>{{ d.token }}</span></code><button onClick="{{ d.copy }}" aria-label="Copy link for {{ d.company }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer">{{ d.copyLabel }}</button></div>
+<sc-if value="{{ d.refused }}"><div role="status" style="display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--ink-2)"><span style="display:flex;gap:8px;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Your browser blocked copying. Select the link and copy it.</span><input readOnly="{{ true }}" value="{{ d.fullUrl }}" onFocus="{{ selectAll }}" aria-label="Link for {{ d.company }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--attn);background:var(--inset);color:var(--ink);font:13px 'JetBrains Mono',monospace"></div></sc-if>
+</section>
+</div>
+
+<section aria-labelledby="visits-h" style="display:flex;flex-direction:column;gap:14px">
+<h2 id="visits-h" style="margin:0;font:500 26px 'Source Serif 4',serif">Visits</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px">
+<sc-for list="{{ d.figures }}" as="fg" hint-placeholder-count="4"><div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px"><div style="font-size:13.5px;color:var(--ink-3)">{{ fg.label }}</div><div style="font:500 24px/1.2 'Source Serif 4',serif;margin-top:6px;color:{{ fg.ink }}">{{ fg.value }}</div><div style="font-size:13px;color:var(--ink-2);margin-top:4px">{{ fg.sub }}</div></div></sc-for>
+</div>
+<sc-if value="{{ d.unopened }}"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;border:1px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.4" stroke-dasharray="3.5 3" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Not yet opened</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">Visits appear here once someone opens the link in a browser. Link previews and bots are never counted.</p></div></div></sc-if>
+<sc-if value="{{ d.opened }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:16px;align-items:start">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<h3 style="margin:0;padding:16px 18px 10px;font:500 20px 'Source Serif 4',serif">Pages viewed</h3>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 56px 80px;gap:12px;padding:8px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>PAGE</span><span style="text-align:right">VIEWS</span><span style="text-align:right">TIME</span></div>
+<sc-for list="{{ d.pages }}" as="pg" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) 56px 80px;gap:12px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line);font-size:14px"><span style="min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:500">{{ pg.label }}</span><code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);overflow-wrap:anywhere">{{ pg.path }}</code></span><span style="text-align:right">{{ pg.views }}</span><span style="text-align:right;color:var(--ink-2)">{{ pg.time }}</span></div></sc-for>
+<p style="margin:0;padding:10px 18px 14px;font-size:13px;color:var(--ink-3)">Time on a page is measured until the next page or the tab closes.</p>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px 18px">
+<h3 style="margin:0 0 12px;font:500 20px 'Source Serif 4',serif">Time per project</h3>
+<div style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ d.perProject }}" as="pp" hint-placeholder-count="2"><div style="display:grid;grid-template-columns:minmax(90px,130px) minmax(40px,1fr) 70px;gap:12px;align-items:center;font-size:14px"><span style="font-weight:500">{{ pp.name }}</span><span style="height:8px;border-radius:99px;background:var(--inset);border:1px solid var(--line);overflow:hidden"><span style="display:block;height:100%;width:{{ pp.w }};background:var(--ink-2)"></span></span><span style="text-align:right;color:var(--ink-2)">{{ pp.time }}</span></div></sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+<p style="margin:0;font-size:13px;color:var(--ink-3)">Sessions are distinct session cookies; visitors are distinct salted IP hashes. Bot and link-preview visits are never counted.</p>
+</section>
+
+<section aria-labelledby="del-h" style="display:flex;flex-direction:column;gap:12px;padding-top:24px;border-top:1px solid var(--line)">
+<h2 id="del-h" style="margin:0;font:500 22px 'Source Serif 4',serif">Delete this link</h2>
+<sc-if value="{{ d.showDelBtn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ d.askDelete }}" style="align-self:flex-start;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 14px 'Public Sans',sans-serif;cursor:pointer">Delete link</button></sc-if>
+<sc-if value="{{ d.confirming }}"><div role="alertdialog" aria-labelledby="del-q" style="padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-wrap:wrap;gap:12px;align-items:center"><div style="flex:1;min-width:min(100%,260px);font-size:14px;line-height:1.5"><b id="del-q" style="color:var(--fail)">Delete the {{ d.company }} link?</b><span style="margin-left:5px">The link stops working. Its visit history is kept, unlinked from this company and role.</span></div><button onClick="{{ d.cancelDelete }}" disabled="{{ d.delBusy }}" style="min-height:44px;padding:0 12px;border:none;background:none;color:var(--ink);font:600 13.5px 'Public Sans',sans-serif;text-decoration:underline;cursor:pointer">Cancel</button><button onClick="{{ d.confirmDelete }}" disabled="{{ d.delBusy }}" aria-busy="{{ d.delBusy }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--fail);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer;opacity:{{ d.delOp }}">{{ d.delLabel }}</button></div></sc-if>
+<sc-if value="{{ d.delError }}"><div role="alert" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13.5px;color:var(--fail);font-weight:500"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Couldn’t delete the link. Nothing was removed. Try again.</div></sc-if>
+</section>
+</main>
+</sc-if>
+
+<!-- SIGNED IN: MAIN -->
+<sc-if value="{{ showMain }}" hint-placeholder-val="{{ true }}">
 <main style="padding:24px 0 64px;display:flex;flex-direction:column;gap:48px">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px"><h1 style="margin:0;font:500 44px/1.05 'Source Serif 4',serif;letter-spacing:-.02em">Admin</h1><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Alerts, keys and timestamps are illustrative</span></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px"><h1 style="margin:0;font:500 44px/1.05 'Source Serif 4',serif;letter-spacing:-.02em">Admin</h1><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Alerts, links, keys and timestamps are illustrative</span></div>
+
+<sc-if value="{{ sessionGone }}"><div role="alert" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div style="flex:1;min-width:min(100%,240px)"><div style="font-weight:600;font-size:14.5px;color:var(--attn)">Your session has ended</div><p style="margin:2px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">The link wasn’t created. Sign in again to finish; nothing was changed, and the form keeps what you typed until you leave this page.</p></div><button onClick="{{ toSignin }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign in again</button></div></sc-if>
 
 <!-- ALERTS -->
 <section aria-labelledby="alerts-h">
 <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px"><h2 id="alerts-h" style="margin:0;font:500 26px 'Source Serif 4',serif">Open alerts</h2><span style="font-size:14px;color:var(--ink-3)">{{ alertCount }}</span></div>
 <sc-if value="{{ hasAlerts }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;flex-direction:column;gap:10px">
-<sc-for list="{{ alerts }}" as="a" hint-placeholder-count="2">
-<div role="{{ a.role }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:{{ a.bg }};border:1px solid {{ a.line }}">
-<span style="flex:none;margin-top:1px;color:{{ a.ink }};font-weight:700">{{ a.glyph }}</span>
-<div style="flex:1;min-width:240px"><div style="font-weight:600;font-size:14.5px;color:{{ a.ink }}">{{ a.title }}</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">{{ a.body }}</div><div style="font-size:12.5px;color:var(--ink-3);margin-top:6px">Opened {{ a.opened }}</div></div>
-<button onClick="{{ a.dismiss }}" style="flex:none;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer">Acknowledge</button>
+<sc-for list="{{ alerts }}" as="a" hint-placeholder-count="4">
+<div role="group" aria-label="{{ a.aria }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)">
+<svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ a.dash }}" opacity="{{ a.ringOp }}"></circle><path d="{{ a.d }}"></path></svg>
+<div style="flex:1;min-width:min(100%,240px);display:flex;flex-direction:column;gap:3px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px"><span style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 6px;border-radius:4px;border:1px solid var(--attn);color:var(--attn)">{{ a.kindWord }}</span><span style="font-weight:600;font-size:14.5px;color:var(--attn)">{{ a.title }}</span></div>
+<div style="font-size:13.5px;line-height:1.5;color:var(--ink-2)">{{ a.body }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:12.5px;color:var(--ink-3);margin-top:3px"><span>Opened</span><span>{{ a.opened }}</span><span aria-hidden="true">·</span><span>{{ a.closes }}</span></div>
+<sc-if value="{{ a.ackError }}"><div role="alert" style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:13.5px;font-weight:500;color:var(--fail)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Couldn’t acknowledge. The alert is still open. Try again.</div></sc-if>
+</div>
+<sc-if value="{{ a.canAck }}"><button onClick="{{ a.ack }}" disabled="{{ a.acking }}" aria-busy="{{ a.acking }}" style="flex:none;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer;opacity:{{ a.ackOp }}">{{ a.ackLabel }}</button></sc-if>
 </div>
 </sc-for>
 </div>
@@ -60,156 +171,344 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px"><div style="display:flex;align-items:baseline;gap:12px"><h2 id="links-h" style="margin:0;font:500 26px 'Source Serif 4',serif">Tracked links</h2><span style="font-size:14px;color:var(--ink-3)">{{ linkCount }}</span></div><button onClick="{{ openForm }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer">New link</button></div>
 
 <sc-if value="{{ formOpen }}" hint-placeholder-val="{{ false }}">
-<form onSubmit="{{ submit }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px 20px;margin-bottom:16px;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px">
-<div style="grid-column:1/-1;font:500 22px 'Source Serif 4',serif">New tracked link</div>
-<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Company<input value="{{ f.company }}" onChange="{{ setCompany }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"></label>
+<form onSubmit="{{ submit }}" noValidate="{{ true }}" aria-busy="{{ fm.busy }}" style="margin-bottom:16px;padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:20px">
+<fieldset disabled="{{ fm.busy }}" style="margin:0;padding:0;border:none;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px 20px">
+<legend style="padding:0;margin-bottom:18px;font:500 22px 'Source Serif 4',serif">New tracked link</legend>
+<sc-if value="{{ fm.serverError }}"><div role="alert" style="grid-column:1/-1;display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--fail)">Couldn’t create the link</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">Nothing was saved; your entries are still here. Try again.</p></div></div></sc-if>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600"><span style="display:flex;gap:6px"><span>Company</span><span style="font-weight:400;color:var(--ink-3)">required</span></span><input value="{{ f.company }}" onChange="{{ setCompany }}" aria-invalid="{{ companyInvalid }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ companyBorder }};background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><sc-if value="{{ companyInvalid }}"><span style="font-weight:500;color:var(--fail)">Company is required</span></sc-if></label>
 <label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Role<input value="{{ f.role }}" onChange="{{ setRole }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"></label>
-<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Contact<input value="{{ f.contact }}" onChange="{{ setContact }}" placeholder="Name or email" aria-invalid="{{ contactInvalid }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ contactBorder }};background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><sc-if value="{{ contactInvalid }}"><span style="font-weight:500;color:var(--fail)">Add a contact so you can follow up</span></sc-if></label>
-<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Lead project<select value="{{ f.lead }}" onChange="{{ setLead }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><option value="">None, open the overview</option><option value="Ostomate2">Ostomate2</option><option value="RouteServe">RouteServe</option></select></label>
-<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Notes<textarea rows="2" placeholder="Optional" style="padding:10px 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif;resize:vertical"></textarea></label>
-<div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end"><button type="button" onClick="{{ closeForm }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:none;color:var(--ink);font:600 14.5px 'Public Sans',sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Cancel</button><button type="submit" style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer">Create link</button></div>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600"><span style="display:flex;gap:6px"><span>Contact</span><span style="font-weight:400;color:var(--ink-3)">required</span></span><input value="{{ f.contact }}" onChange="{{ setContact }}" placeholder="Name or email" aria-invalid="{{ contactInvalid }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ contactBorder }};background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><sc-if value="{{ contactInvalid }}"><span style="font-weight:500;color:var(--fail)">Add a contact so you can follow up</span></sc-if></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Lead project<select value="{{ f.lead }}" onChange="{{ setLead }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><option value="">None, open the overview</option><option value="Ostomate2">Ostomate2</option><option value="RouteServe">RouteServe (private)</option><option value="testpulse">testpulse</option></select><sc-if value="{{ leadPrivate }}"><span style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink-3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private: the visitor sees counts and trends, never failure text.</span></sc-if></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Sent<input type="date" value="{{ f.sent }}" onChange="{{ setSent }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif;color-scheme:{{ colorScheme }}"></label>
+<label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600"><span style="display:flex;gap:6px"><span>Notes</span><span style="font-weight:400;color:var(--ink-3)">optional, only you see them</span></span><textarea rows="2" value="{{ f.notes }}" onChange="{{ setNotes }}" style="padding:10px 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif;resize:vertical"></textarea></label>
+<div style="grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end"><button type="button" onClick="{{ closeForm }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:none;color:var(--ink);font:600 14.5px 'Public Sans',sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Cancel</button><button type="submit" aria-busy="{{ fm.busy }}" style="min-height:44px;padding:0 18px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer;opacity:{{ fm.op }}">{{ fm.label }}</button></div>
+</fieldset>
 </form>
 </sc-if>
 
-<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
-<div style="min-width:1000px">
-<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 90px 150px 130px minmax(0,1.1fr) 170px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>COMPANY / ROLE</span><span>SENT</span><span>VISITS</span><span>LAST SEEN</span><span>PAGES VIEWED</span><span>LINK</span></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+<div style="overflow-x:auto"><div style="min-width:1090px">
+<div style="display:grid;grid-template-columns:minmax(0,1.4fr) 80px 170px 120px minmax(0,1fr) 240px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>COMPANY / ROLE</span><span>SENT</span><span>OPENED</span><span>LAST SEEN</span><span>PAGES VIEWED</span><span>LINK</span></div>
 <sc-for list="{{ links }}" as="l" hint-placeholder-count="3">
-<div style="display:grid;grid-template-columns:minmax(0,1.3fr) 90px 150px 130px minmax(0,1.1fr) 170px;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;background:{{ l.bg }}">
-<div style="min-width:0"><div style="font-weight:600;display:flex;align-items:center;gap:8px">{{ l.company }}<sc-if value="{{ l.isNew }}"><span style="font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 6px;border-radius:4px;background:var(--ink);color:var(--on-ink)">NEW</span></sc-if></div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ l.role }}</div></div>
+<div style="border-bottom:1px solid var(--line);background:{{ l.bg }}">
+<div style="display:grid;grid-template-columns:minmax(0,1.4fr) 80px 170px 120px minmax(0,1fr) 240px;gap:14px;align-items:center;padding:6px 18px;font-size:14px">
+<div style="min-width:0;display:flex;flex-direction:column;gap:1px;padding:4px 0"><div style="display:flex;align-items:center;gap:8px"><button onClick="{{ l.open }}" style="min-height:44px;display:inline-flex;align-items:center;padding:0;border:none;background:none;color:var(--ink);font:600 14px 'Public Sans',sans-serif;text-align:left;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">{{ l.company }}</button><sc-if value="{{ l.isNew }}"><span style="font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 6px;border-radius:4px;background:var(--ink);color:var(--on-ink)">NEW</span></sc-if></div><div style="font-size:13px;color:var(--ink-3)">{{ l.role }}</div><sc-if value="{{ l.hasNote }}"><div title="{{ l.notes }}" style="display:flex;gap:6px;align-items:center;min-width:0;font-size:12.5px;color:var(--ink-3);margin-top:2px"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"></path></svg><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Note:</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.notes }}</span></div></sc-if></div>
 <span style="color:var(--ink-2)">{{ l.sent }}</span>
 <span style="color:{{ l.visitInk }};font-weight:{{ l.visitWeight }}">{{ l.visits }}</span>
 <span style="color:var(--ink-2)">{{ l.last }}</span>
-<span style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.pages }}" as="pg" hint-placeholder-count="1"><span style="padding:2px 8px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font-size:12.5px">{{ pg }}</span></sc-for><sc-if value="{{ l.noPages }}"><span style="color:var(--ink-3)">—</span></sc-if></span>
-<span style="display:flex;align-items:center;gap:8px"><code style="display:flex;font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)"><span>&lt;site origin&gt;</span><span>{{ l.token }}</span></code><button onClick="{{ l.copy }}" aria-label="Copy link for {{ l.company }}" style="min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 12.5px 'Public Sans',sans-serif;cursor:pointer">{{ l.copyLabel }}</button></span>
+<span style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.pageChips }}" as="pg" hint-placeholder-count="1"><span style="padding:2px 8px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font-size:12.5px">{{ pg }}</span></sc-for><sc-if value="{{ l.noPages }}"><span style="color:var(--ink-3)">—</span></sc-if></span>
+<span style="display:flex;align-items:center;gap:8px;min-width:0"><code style="display:flex;min-width:0;overflow:hidden;font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)"><span>&lt;site origin&gt;</span><span>{{ l.token }}</span></code><button onClick="{{ l.copy }}" aria-label="Copy link for {{ l.company }}" style="flex:none;min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 12.5px 'Public Sans',sans-serif;cursor:pointer">{{ l.copyLabel }}</button></span>
+</div>
+<sc-if value="{{ l.refused }}"><div role="status" style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:0 18px 14px;font-size:13.5px;color:var(--ink-2)"><span style="display:flex;gap:8px;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Your browser blocked copying. Select the link and copy it.</span><input readOnly="{{ true }}" value="{{ l.fullUrl }}" onFocus="{{ selectAll }}" aria-label="Link for {{ l.company }}" style="flex:1;min-width:260px;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--attn);background:var(--inset);color:var(--ink);font:13px 'JetBrains Mono',monospace"></div></sc-if>
 </div>
 </sc-for>
 </div></div>
-<p style="margin:10px 0 0;font-size:13px;color:var(--ink-3)">Distinct visitors are counted by session cookie. Bot traffic is excluded. Visitors can read what’s recorded on the privacy page.</p>
+</sc-if>
+<sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+<sc-for list="{{ links }}" as="l" hint-placeholder-count="3">
+<div style="padding:12px 16px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px;background:{{ l.bg }}">
+<div style="min-width:0;display:flex;flex-direction:column;gap:1px"><div style="display:flex;align-items:center;gap:8px"><button onClick="{{ l.open }}" style="min-height:44px;display:inline-flex;align-items:center;padding:0;border:none;background:none;color:var(--ink);font:600 15px 'Public Sans',sans-serif;text-align:left;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">{{ l.company }}</button><sc-if value="{{ l.isNew }}"><span style="font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 6px;border-radius:4px;background:var(--ink);color:var(--on-ink)">NEW</span></sc-if></div><div style="font-size:13.5px;color:var(--ink-3)">{{ l.role }}</div><sc-if value="{{ l.hasNote }}"><div style="display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--ink-3);margin-top:4px"><svg style="flex:none;margin-top:3px" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"></path></svg><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Note:</span><span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ l.notes }}</span></div></sc-if></div>
+<dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px"><dt style="color:var(--ink-3)">Sent</dt><dd style="margin:0;color:var(--ink-2)">{{ l.sent }}</dd><dt style="color:var(--ink-3)">Opened</dt><dd style="margin:0;color:{{ l.visitInk }};font-weight:{{ l.visitWeight }}">{{ l.visits }}</dd><dt style="color:var(--ink-3)">Last seen</dt><dd style="margin:0;color:var(--ink-2)">{{ l.last }}</dd><dt style="color:var(--ink-3)">Pages</dt><dd style="margin:0;display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.pageChips }}" as="pg" hint-placeholder-count="1"><span style="padding:2px 8px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font-size:12.5px">{{ pg }}</span></sc-for><sc-if value="{{ l.noPages }}"><span style="color:var(--ink-3)">—</span></sc-if></dd></dl>
+<div style="display:flex;align-items:center;gap:10px"><code style="flex:1;min-width:0;display:flex;overflow:hidden;font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)"><span>&lt;site origin&gt;</span><span>{{ l.token }}</span></code><button onClick="{{ l.copy }}" aria-label="Copy link for {{ l.company }}" style="flex:none;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer">{{ l.copyLabel }}</button></div>
+<sc-if value="{{ l.refused }}"><div role="status" style="display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--ink-2)"><span style="display:flex;gap:8px;align-items:flex-start"><svg style="flex:none;margin-top:2px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Your browser blocked copying. Select the link and copy it.</span><input readOnly="{{ true }}" value="{{ l.fullUrl }}" onFocus="{{ selectAll }}" aria-label="Link for {{ l.company }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--attn);background:var(--inset);color:var(--ink);font:13px 'JetBrains Mono',monospace"></div></sc-if>
+</div>
+</sc-for>
+</sc-if>
+</div>
+<p style="margin:10px 0 0;font-size:13px;color:var(--ink-3)">Sessions are distinct session cookies; visitors are distinct salted IP hashes. Bot and link-preview visits are never counted. Visitors can read what’s recorded on the privacy page.</p>
 </section>
 
 <!-- PROJECTS -->
 <section aria-labelledby="proj-h">
 <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px"><h2 id="proj-h" style="margin:0;font:500 26px 'Source Serif 4',serif">Projects</h2></div>
-<p style="margin:0 0 14px;font-size:13.5px;color:var(--ink-3)">Metadata syncs from <code style="font:12.5px 'JetBrains Mono',monospace">projects/*.yaml</code> on every deploy. API keys are never touched by the sync.</p>
-<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
-<div style="min-width:940px">
-<div style="display:grid;grid-template-columns:150px 110px 170px 170px minmax(0,1fr) 150px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>PROJECT</span><span>VISIBILITY</span><span>LAST REPORT</span><span>YAML SYNC</span><span>API KEY</span><span></span></div>
+<p style="margin:0 0 14px;font-size:13.5px;color:var(--ink-3)">YAML sync compares each <code style="font:12.5px 'JetBrains Mono',monospace">projects/*.yaml</code> file deployed with the site against its database row, when this page loads. API keys are stored only as a hash and never shown again after they’re issued.</p>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+<div style="overflow-x:auto"><div style="min-width:780px">
+<div style="display:grid;grid-template-columns:170px 120px 160px minmax(0,1fr) 150px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>PROJECT</span><span>VISIBILITY</span><span>LAST REPORT</span><span>YAML SYNC</span><span></span></div>
 <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
 <div style="border-bottom:1px solid var(--line)">
-<div style="display:grid;grid-template-columns:150px 110px 170px 170px minmax(0,1fr) 150px;gap:14px;align-items:center;padding:14px 18px;font-size:14px">
-<span style="font-weight:600">{{ p.name }}</span>
-<span style="color:var(--ink-2)">{{ p.vis }}</span>
+<div style="display:grid;grid-template-columns:170px 120px 160px minmax(0,1fr) 150px;gap:14px;align-items:center;padding:14px 18px;font-size:14px">
+<span style="font-weight:600;overflow-wrap:anywhere">{{ p.name }}</span>
+<span style="display:flex;align-items:center;gap:6px;color:var(--ink-2)"><sc-if value="{{ p.isPrivate }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>{{ p.vis }}</span>
 <span style="display:flex;align-items:center;gap:6px;color:{{ p.reportInk }};font-weight:{{ p.reportWeight }}">{{ p.report }}</span>
-<span style="display:flex;align-items:center;gap:6px;color:{{ p.syncInk }}">{{ p.sync }}</span>
-<code style="font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)">{{ p.key }}</code>
-<span style="display:flex;justify-content:flex-end"><button onClick="{{ p.rotate }}" disabled="{{ p.noKey }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid {{ p.btnLine }};background:none;color:{{ p.btnInk }};font:600 13.5px 'Public Sans',sans-serif;cursor:{{ p.btnCursor }}">{{ p.btnLabel }}</button></span>
+<span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:{{ p.syncInk }}">{{ p.sync }}</span><sc-if value="{{ p.syncSub }}"><span style="font-size:13px;line-height:1.45;color:var(--ink-2)">{{ p.syncSub }}</span></sc-if></span>
+<span style="display:flex;justify-content:flex-end"><sc-if value="{{ p.hasKey }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.rotate }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Rotate key</button></sc-if><sc-if value="{{ p.noRow }}"><span style="font-size:13px;color:var(--ink-3)">No row, no key</span></sc-if></span>
 </div>
-<sc-if value="{{ p.confirming }}">
-<div style="margin:0 18px 16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-wrap:wrap;gap:12px;align-items:center"><div style="flex:1;min-width:260px;font-size:14px;line-height:1.5"><b style="color:var(--fail)">Rotate the {{ p.name }} key?</b> The current key stops working immediately. Reports fail with 401 until the project’s CI secret is updated. Its build stays green either way.</div><button onClick="{{ p.cancel }}" style="min-height:44px;padding:0 12px;border:none;background:none;color:var(--ink);font:600 13.5px 'Public Sans',sans-serif;text-decoration:underline;cursor:pointer">Cancel</button><button onClick="{{ p.confirm }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--fail);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Rotate key</button></div>
-</sc-if>
-<sc-if value="{{ p.revealed }}">
-<div style="margin:0 18px 16px;padding:14px 16px;border-radius:12px;background:var(--inset);border:1px solid var(--line-strong)"><div style="font-size:14px;font-weight:600">New key. Copy it now; it won’t be shown again.</div><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px"><code style="flex:1;min-width:260px;padding:10px 12px;border-radius:8px;background:var(--surface);border:1px dashed var(--line-strong);font:13px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ p.newKey }}</code><button onClick="{{ p.done }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Copied, hide it</button></div></div>
-</sc-if>
+<sc-if value="{{ p.confirming }}"><div role="alertdialog" aria-label="Rotate the {{ p.name }} key" style="margin:0 18px 16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-wrap:wrap;gap:12px;align-items:center"><div style="flex:1;min-width:min(100%,260px);font-size:14px;line-height:1.5"><b style="color:var(--fail)">Rotate the {{ p.name }} key?</b><span style="margin-left:5px">The current key stops working immediately. Reports fail with 401 until the project’s CI secret is updated. Its build stays green either way.</span></div><button onClick="{{ p.cancel }}" disabled="{{ p.rotBusy }}" style="min-height:44px;padding:0 12px;border:none;background:none;color:var(--ink);font:600 13.5px 'Public Sans',sans-serif;text-decoration:underline;cursor:pointer">Cancel</button><button onClick="{{ p.confirm }}" disabled="{{ p.rotBusy }}" aria-busy="{{ p.rotBusy }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--fail);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer;opacity:{{ p.rotOp }}">{{ p.rotLabel }}</button></div></sc-if>
+<sc-if value="{{ p.rotError }}"><div role="alert" style="margin:0 18px 16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-wrap:wrap;gap:12px;align-items:center"><svg style="flex:none" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><div style="flex:1;min-width:min(100%,240px);font-size:14px;line-height:1.5"><b style="color:var(--fail)">Couldn’t rotate the {{ p.name }} key.</b><span style="margin-left:5px">The current key still works. Try again.</span></div><button onClick="{{ p.confirm }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Try again</button></div></sc-if>
+<sc-if value="{{ p.revealed }}"><div style="margin:0 18px 16px;padding:14px 16px;border-radius:12px;background:var(--inset);border:1px solid var(--line-strong)"><div style="font-size:14px;font-weight:600">New key. Copy it now; it won’t be shown again.</div><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px"><code style="flex:1;min-width:min(100%,260px);padding:10px 12px;border-radius:8px;background:var(--surface);border:1px dashed var(--line-strong);font:13px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ p.newKey }}</code><button onClick="{{ p.done }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Copied, hide it</button></div></div></sc-if>
 </div>
 </sc-for>
 </div></div>
+</sc-if>
+<sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+<sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
+<div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-weight:600;font-size:15px;overflow-wrap:anywhere">{{ p.name }}</span><span style="display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink-2)"><sc-if value="{{ p.isPrivate }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>{{ p.vis }}</span></div>
+<dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px"><dt style="color:var(--ink-3)">Last report</dt><dd style="margin:0;color:{{ p.reportInk }};font-weight:{{ p.reportWeight }}">{{ p.report }}</dd><dt style="color:var(--ink-3)">YAML sync</dt><dd style="margin:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:{{ p.syncInk }}">{{ p.sync }}</span><sc-if value="{{ p.syncSub }}"><span style="font-size:13px;line-height:1.45;color:var(--ink-2)">{{ p.syncSub }}</span></sc-if></dd></dl>
+<sc-if value="{{ p.hasKey }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.rotate }}" style="align-self:flex-start;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Rotate key</button></sc-if>
+<sc-if value="{{ p.confirming }}"><div role="alertdialog" aria-label="Rotate the {{ p.name }} key" style="padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;line-height:1.5"><b style="color:var(--fail)">Rotate the {{ p.name }} key?</b><span style="margin-left:5px">The current key stops working immediately. Reports fail with 401 until the project’s CI secret is updated. Its build stays green either way.</span></div><div style="display:flex;gap:10px;justify-content:flex-end"><button onClick="{{ p.cancel }}" disabled="{{ p.rotBusy }}" style="min-height:44px;padding:0 12px;border:none;background:none;color:var(--ink);font:600 13.5px 'Public Sans',sans-serif;text-decoration:underline;cursor:pointer">Cancel</button><button onClick="{{ p.confirm }}" disabled="{{ p.rotBusy }}" aria-busy="{{ p.rotBusy }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--fail);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer;opacity:{{ p.rotOp }}">{{ p.rotLabel }}</button></div></div></sc-if>
+<sc-if value="{{ p.rotError }}"><div role="alert" style="padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;line-height:1.5"><b style="color:var(--fail)">Couldn’t rotate the {{ p.name }} key.</b><span style="margin-left:5px">The current key still works. Try again.</span></div><button onClick="{{ p.confirm }}" style="align-self:flex-end;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Try again</button></div></sc-if>
+<sc-if value="{{ p.revealed }}"><div style="padding:14px 16px;border-radius:12px;background:var(--inset);border:1px solid var(--line-strong);display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:600">New key. Copy it now; it won’t be shown again.</div><code style="padding:10px 12px;border-radius:8px;background:var(--surface);border:1px dashed var(--line-strong);font:13px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ p.newKey }}</code><button onClick="{{ p.done }}" style="align-self:flex-end;min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Copied, hide it</button></div></sc-if>
+</div>
+</sc-for>
+</sc-if>
+</div>
 </section>
 
-<!-- SCHEDULED JOB -->
+<!-- DAILY JOB -->
 <section aria-labelledby="job-h">
 <h2 id="job-h" style="margin:0 0 6px;font:500 26px 'Source Serif 4',serif">Daily job</h2>
-<p style="margin:0 0 14px;font-size:13.5px;color:var(--ink-3)">Runs on Vercel cron. Keeps the free-tier database awake, flags stale projects, prunes old per-test results.</p>
+<p style="margin:0 0 14px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Runs once a day at 06:00 UTC on Vercel cron. Writes a heartbeat so the free-tier database stays awake, opens and closes stale alerts, and prunes: per-test results and failure text after 180 days (each project’s 5 most recent runs are kept), visit records after 365 days, and expired rate-limit buckets.</p>
+<sc-if value="{{ jobNotice.show }}" hint-placeholder-val="{{ false }}"><div role="{{ jobNotice.role }}" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;padding:14px 16px;border-radius:12px;background:{{ jobNotice.bg }};border:1px solid {{ jobNotice.line }}"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ jobNotice.ink }}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ jobNotice.dash }}"></circle><path d="{{ jobNotice.d }}"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:{{ jobNotice.titleInk }}">{{ jobNotice.title }}</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ jobNotice.body }}</p></div></div></sc-if>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px">
-<sc-for list="{{ job }}" as="j" hint-placeholder-count="4"><div style="background:var(--surface);border:1px solid {{ j.line }};border-radius:16px;padding:16px 18px"><div style="font-size:13.5px;color:var(--ink-3)">{{ j.label }}</div><div style="font:500 24px/1.2 'Source Serif 4',serif;margin-top:6px;color:{{ j.ink }}">{{ j.value }}</div><div style="font-size:13px;color:var(--ink-2);margin-top:4px">{{ j.sub }}</div></div></sc-for>
+<sc-for list="{{ job }}" as="j" hint-placeholder-count="4"><div style="background:var(--surface);border:1px solid {{ j.line }};border-radius:16px;padding:16px 18px"><div style="font-size:13.5px;color:var(--ink-3)">{{ j.label }}</div><div style="font:500 24px/1.2 'Source Serif 4',serif;margin-top:6px;color:{{ j.ink }}">{{ j.value }}</div><div style="font-size:13px;line-height:1.45;color:var(--ink-2);margin-top:4px">{{ j.sub }}</div></div></sc-for>
 </div>
 </section>
 </main>
+</sc-if>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;alerts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;signed in&quot;,&quot;signed in · loading&quot;,&quot;signed in · error&quot;,&quot;session expired&quot;,&quot;sign-in&quot;,&quot;sign-in · sending&quot;,&quot;sign-in · invalid address&quot;,&quot;link sent&quot;,&quot;link expired&quot;,&quot;not allowed&quot;,&quot;signed out&quot;],&quot;default&quot;:&quot;signed in&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;detail&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;Acme Health (opened)&quot;,&quot;Globex (not yet opened)&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;states&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;validation&quot;,&quot;busy&quot;,&quot;errors&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Actions&quot;},&quot;alerts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;sync&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all in sync&quot;,&quot;every state&quot;],&quot;default&quot;:&quot;all in sync&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;job&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;on time&quot;,&quot;overdue&quot;,&quot;never run&quot;,&quot;failed partway&quot;],&quot;default&quot;:&quot;on time&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
-  state = { theme: null, dismissed: {}, formOpen: false, touched: false, f: { company: '', role: '', contact: '', lead: '' }, added: [], copied: null, rotating: null, revealed: null };
+  state = { theme: null, w: 1200, dismissed: {}, acking: null, formOpen: false, touched: false, creating: false, f: Component.blank(), added: [], deleted: {}, copied: null, refused: null, rotating: null, rotBusy: null, revealed: null, detail: undefined, delConfirm: false, delBusy: false, email: '', emailTouched: false, sending: false, sent: false, signedOut: false };
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
+  static TODAY = '2026-10-08';
+  static blank() { return { company: '', role: '', contact: '', lead: '', sent: Component.TODAY, notes: '' }; }
+  rootRef = React.createRef();
 
-  componentDidUpdate(prev) { if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null }); }
-
-  tok() { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < 12; i++) s += c[Math.floor(Math.random() * c.length)]; return s; }
+  componentDidMount() {
+    const el = this.rootRef.current;
+    if (el && window.ResizeObserver) { this.ro = new ResizeObserver(e => { const w = e[0].contentRect.width; if (Math.abs(w - this.state.w) > 1) this.setState({ w }); }); this.ro.observe(el); }
+  }
+  componentWillUnmount() { this.ro && this.ro.disconnect(); clearTimeout(this.t); }
+  componentDidUpdate(prev) {
+    if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null });
+    if (prev.detail !== this.props.detail || prev.view !== this.props.view || prev.states !== this.props.states) this.setState({ detail: undefined, delConfirm: false, delBusy: false, sent: false, sending: false, signedOut: false, rotating: null, revealed: null, formOpen: false, touched: false, creating: false });
+  }
+  later(fn, ms) { clearTimeout(this.t); this.t = setTimeout(fn, ms || 800); }
   setF(k) { return e => { const v = e.target.value; this.setState(s => ({ f: Object.assign({}, s.f, { [k]: v }) })); }; }
+  tok() { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < 12; i++) s += c[Math.floor(Math.random() * c.length)]; return s; }
+  static fmtDate(iso) { const [y, m, d] = iso.split('-').map(Number); const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]; return d + ' ' + M + (y !== 2026 ? ' ' + y : ''); }
+  static dur(s) { return s < 60 ? s + ' s' : Math.floor(s / 60) + 'm ' + String(s % 60).padStart(2, '0') + 's'; }
 
   renderVals() {
     const L = Component.LIGHT;
     const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
     const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
     if (!dark) Object.keys(L).forEach(k => tv['--' + k] = L[k]);
+    const view = this.state.signedOut ? 'signed out' : (this.props.view ?? 'signed in');
+    const st = this.props.states ?? 'live';
+    const busyM = st === 'busy', errM = st === 'errors', valM = st === 'validation';
+    const sessionGone = view === 'session expired';
+    const wide = this.state.w >= 760;
     const showAlerts = this.props.alerts ?? true;
+    const jobMode = this.props.job ?? 'on time';
+    const syncMode = this.props.sync ?? 'all in sync';
 
-    const A = [
-      { id: 'stale', kind: 'attn', glyph: '◷', title: 'RouteServe hasn’t reported in 12 days', body: 'Expected every 8 days. The weekly scheduled run should have posted by 20 Sep.', opened: '21 Sep, 06:00 UTC' },
-      { id: 'drop', kind: 'attn', glyph: '↓', title: 'Test count fell 38% in ios/composeApp/ios-sim', body: 'Ostomate2 run on main reported 31 tests where the last 5 runs averaged 50.', opened: '24 Sep, 14:06 UTC' },
-    ].filter(a => showAlerts && !this.state.dismissed[a.id]).map(a => Object.assign({}, a, {
-      role: 'status', bg: 'var(--attn-tint)', line: 'var(--attn)', ink: 'var(--attn)',
-      dismiss: () => this.setState(s => ({ dismissed: Object.assign({}, s.dismissed, { [a.id]: true }) })),
-    }));
-
-    const base = [
-      { id: 'acme', company: 'Acme Health', role: 'Director of Quality Engineering', sent: '18 Sep', visits: '3 sessions · 2 visitors', last: '2 h ago', pages: ['Ostomate2', 'How it’s tested'], token: '/v/Qm8r2LxT0aZe' },
-      { id: 'nw', company: 'Northwind Software', role: 'Sr. Engineering Manager, QA', sent: '15 Sep', visits: '1 session', last: '1 week ago', pages: ['Overview'], token: '/v/Hn4kWp7cYs2d' },
-      { id: 'gx', company: 'Globex', role: 'QA Manager', sent: '12 Sep', visits: 'Not yet opened', last: '—', pages: [], token: '/v/Tb9eJx3mRq6u' },
-    ];
-    const links = this.state.added.concat(base).map(l => ({
-      company: l.company, role: l.role, sent: l.sent, visits: l.visits, last: l.last, pages: l.pages, noPages: l.pages.length === 0, token: l.token,
-      isNew: !!l.isNew, bg: l.isNew ? 'var(--raised)' : 'transparent',
-      visitInk: l.visits === 'Not yet opened' ? 'var(--ink-3)' : 'var(--ink)', visitWeight: l.visits === 'Not yet opened' ? 400 : 600,
-      copyLabel: this.state.copied === l.id ? 'Copied' : 'Copy',
-      copy: () => { try { navigator.clipboard && navigator.clipboard.writeText(window.location.origin + l.token); } catch (e) {} this.setState({ copied: l.id }); },
-    }));
-
-    const f = this.state.f, contactInvalid = this.state.touched && !f.contact.trim();
-    const submit = e => {
+    /* ---------- sign-in ---------- */
+    const SIGNIN = ['sign-in', 'sign-in · sending', 'sign-in · invalid address', 'link sent', 'link expired', 'not allowed', 'signed out'];
+    const isSignin = SIGNIN.includes(view);
+    const forcedEmail = { 'sign-in · sending': 'owner@example.com', 'sign-in · invalid address': 'owner@example' }[view];
+    const email = forcedEmail ?? this.state.email;
+    const sending = view === 'sign-in · sending' || this.state.sending;
+    const invalid = view === 'sign-in · invalid address' || (this.state.emailTouched && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.state.email));
+    const linkSent = view === 'link sent' || this.state.sent;
+    const notAllowed = view === 'not allowed';
+    const si = {
+      h1: notAllowed ? 'Admin' : 'Sign in to admin',
+      lede: notAllowed ? 'Signed in, but not as the owner.' : 'Enter your email and a sign-in link will be sent to it.',
+      signedOut: view === 'signed out' && !linkSent, expired: view === 'link expired' && !linkSent,
+      showForm: !linkSent && !notAllowed, linkSent: linkSent && !notAllowed, notAllowed,
+      email, sending, invalid, border: invalid ? '1.5px solid var(--fail)' : '1px solid var(--line-strong)',
+      btnLabel: sending ? 'Sending…' : 'Send sign-in link', btnOp: sending ? 0.7 : 1, otherEmail: 'someone@another-account.example',
+    };
+    const sendLink = e => {
       e.preventDefault();
-      if (!f.contact.trim() || !f.company.trim()) { this.setState({ touched: true }); return; }
-      const id = 'n' + Date.now();
-      this.setState(s => ({ added: [{ id, isNew: true, company: f.company, role: f.role || '—', sent: 'Today', visits: 'Not yet opened', last: '—', pages: [], token: '/v/' + this.tok() }].concat(s.added), formOpen: false, touched: false, f: { company: '', role: '', contact: '', lead: '' }, copied: null }));
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.state.email)) { this.setState({ emailTouched: true }); return; }
+      this.setState({ sending: true }); this.later(() => this.setState({ sending: false, sent: true }), 900);
     };
 
-    const P = [
-      { id: 'o2', name: 'Ostomate2', vis: 'Public', report: '4 min ago', sync: '✓ In sync', key: 'tp_••••••••••••7Qx2' },
-      { id: 'rs', name: 'RouteServe', vis: 'Private', report: showAlerts ? '◷ 1 week ago' : '2 h ago', stale: showAlerts, sync: '✓ In sync', key: 'tp_••••••••••••c9Lm' },
-      { id: 'tp', name: 'testpulse', vis: 'Public', report: '12 min ago', sync: '✓ In sync', key: 'tp_••••••••••••4hQx' }, /* v12 item 7: reporting since 7 Oct */
+    /* ---------- alerts (v16 item 10–11) ---------- */
+    const KINDS = {
+      stale: { word: 'STALE', dash: 'none', ringOp: 1, d: 'M12 7v5l3 2' },
+      count_drop: { word: 'COUNT DROP', dash: 'none', ringOp: 0, d: 'M3 7l6 6 4-4 8 8M21 11v6h-6' },
+      empty_run: { word: 'EMPTY REPORT', dash: '3.5 3', ringOp: 1, d: 'M8 12h8' },
+      coverage_below_floor: { word: 'BELOW FLOOR', dash: 'none', ringOp: 0, d: 'M12 4v16M6 14l6 6 6-6' },
+    };
+    const A0 = [
+      { id: 'drop', kind: 'count_drop', title: 'testpulse: test count fell 23%', body: 'E2E · chromium: 235 → 180 tests (−23%) since the previous default-branch run', opened: '8 Oct, 04:12 UTC', closes: 'Stays open until acknowledged' },
+      { id: 'stale', kind: 'stale', title: 'RouteServe: no report in 12 days', body: 'No report in 12 days. Expected every 8 days; last report 26 Sep.', opened: '4 Oct, 06:00 UTC', closes: 'Closes by itself when RouteServe reports' },
+      { id: 'empty', kind: 'empty_run', title: 'Ostomate2: a report held no tests', body: 'ios-e2e/e2e/ios-sim parsed with 0 tests on main (0e2d0b4).', opened: '7 Oct, 23:32 UTC', closes: 'Closes by itself when that key reports tests' },
+      { id: 'cov', kind: 'coverage_below_floor', title: 'RouteServe: coverage under its floor', body: 'packages/shared lines 79.9% under its 80% floor', opened: '26 Sep, 09:16 UTC', closes: 'Closes by itself when the module is back at its floor' },
     ];
+    const A = A0.filter(a => showAlerts && !this.state.dismissed[a.id]).map(a => {
+      const k = KINDS[a.kind], canAck = a.kind === 'count_drop';
+      const acking = canAck && (busyM || this.state.acking === a.id);
+      return Object.assign({}, a, {
+        kindWord: k.word, dash: k.dash, ringOp: k.ringOp, d: k.d, aria: k.word.toLowerCase() + ' alert',
+        canAck, acking, ackLabel: acking ? 'Acknowledging…' : 'Acknowledge', ackOp: acking ? 0.7 : 1, ackError: canAck && errM,
+        ack: () => { if (errM || busyM) return; this.setState({ acking: a.id }); this.later(() => this.setState(s => ({ acking: null, dismissed: Object.assign({}, s.dismissed, { [a.id]: true }) })), 700); },
+      });
+    });
+
+    /* ---------- tracked links (v16 items 6–9) ---------- */
+    const base = [
+      { id: 'acme', company: 'Acme Health', role: 'Director of Quality Engineering', contact: 'Dana Ruiz, dana.ruiz@acme.example', lead: 'Ostomate2', sentIso: '2026-09-18', notes: 'Met at the QA leaders meetup. Asked how flaky tests are handled.', token: '/v/Qm8r2LxT0aZe',
+        sessions: 3, visitors: 2, first: '18 Sep, 16:02 UTC', last: '2 h ago',
+        pages: [['Overview', '/', 2, 74], ['Ostomate2', '/p/ostomate2', 3, 412], ['Ostomate2 run', '/p/ostomate2/runs/…', 1, 95], ['RouteServe', '/p/routeserve', 1, 41], ['How it’s tested', '/how-its-tested', 1, 188]],
+        perProject: [['Ostomate2', 507], ['RouteServe', 41]] },
+      { id: 'nw', company: 'Northwind Software', role: 'Sr. Engineering Manager, QA', contact: 'j.okafor@northwind.example', lead: '', sentIso: '2026-09-15', notes: '', token: '/v/Hn4kWp7cYs2d',
+        sessions: 1, visitors: 1, first: '1 Oct, 13:40 UTC', last: '1 week ago', pages: [['Overview', '/', 1, 52]], perProject: [] },
+      { id: 'gx', company: 'Globex', role: 'QA Manager', contact: 'Sam Patel (recruiter)', lead: 'RouteServe', sentIso: '2026-09-12', notes: 'Referral from a former colleague.', token: '/v/Tb9eJx3mRq6u',
+        sessions: 0, visitors: 0, first: '', last: '', pages: [], perProject: [] },
+    ];
+    const all = this.state.added.concat(base).filter(l => !this.state.deleted[l.id]);
+    const refusedId = errM ? 'acme' : this.state.refused;
+    const mkCopy = l => () => {
+      const url = window.location.origin + l.token;
+      const no = () => this.setState({ refused: l.id, copied: null });
+      try { if (!navigator.clipboard) return no(); navigator.clipboard.writeText(url).then(() => this.setState({ copied: l.id, refused: null }), no); } catch (e) { no(); }
+    };
+    const pl = n => n === 1 ? '' : 's';
+    const links = all.map(l => {
+      const opened = l.sessions > 0;
+      return {
+        company: l.company, role: l.role || '—', sent: Component.fmtDate(l.sentIso), notes: l.notes, hasNote: !!l.notes, token: l.token, fullUrl: '<site origin>' + l.token,
+        visits: opened ? l.sessions + ' session' + pl(l.sessions) + ' · ' + l.visitors + ' visitor' + pl(l.visitors) : 'Not yet opened', last: opened ? l.last : '—',
+        pageChips: l.pages.map(p => p[0]).filter((p, i, a) => a.indexOf(p) === i && !/ run$/.test(p)), noPages: l.pages.length === 0,
+        isNew: !!l.isNew, bg: l.isNew ? 'var(--raised)' : 'transparent',
+        visitInk: opened ? 'var(--ink)' : 'var(--ink-3)', visitWeight: opened ? 600 : 400,
+        copyLabel: this.state.copied === l.id ? 'Copied' : 'Copy', copy: mkCopy(l), refused: refusedId === l.id,
+        open: () => this.setState({ detail: l.id, delConfirm: false, delBusy: false }),
+      };
+    });
+
+    const propDetail = { 'Acme Health (opened)': 'acme', 'Globex (not yet opened)': 'gx' }[this.props.detail ?? 'none'] || '';
+    const detailId = this.state.detail !== undefined ? this.state.detail : propDetail;
+    const dl = detailId ? all.find(l => l.id === detailId) : null;
+    let d = {};
+    if (dl) {
+      const opened = dl.sessions > 0, maxP = Math.max(1, ...dl.perProject.map(p => p[1]));
+      const confirming = busyM || this.state.delConfirm, delBusy = busyM || this.state.delBusy;
+      d = {
+        company: dl.company, role: dl.role || '—', contact: dl.contact, lead: dl.lead || 'None, opens the overview', leadPrivate: dl.lead === 'RouteServe',
+        sent: Component.fmtDate(dl.sentIso), notes: dl.notes || 'No notes', notesInk: dl.notes ? 'var(--ink)' : 'var(--ink-3)',
+        token: dl.token, fullUrl: '<site origin>' + dl.token, copy: mkCopy(dl), copyLabel: this.state.copied === dl.id ? 'Copied' : 'Copy', refused: refusedId === dl.id,
+        figures: [
+          { label: 'First seen', value: opened ? dl.first : '—', sub: opened ? 'First browser visit' : 'Not yet opened', ink: opened ? 'var(--ink)' : 'var(--ink-3)' },
+          { label: 'Last seen', value: opened ? dl.last : '—', sub: opened ? 'Latest browser visit' : 'Not yet opened', ink: opened ? 'var(--ink)' : 'var(--ink-3)' },
+          { label: 'Sessions', value: String(dl.sessions), sub: 'Distinct session cookies', ink: opened ? 'var(--ink)' : 'var(--ink-3)' },
+          { label: 'Visitors', value: String(dl.visitors), sub: 'Distinct salted IP hashes', ink: opened ? 'var(--ink)' : 'var(--ink-3)' },
+        ],
+        unopened: !opened, opened,
+        pages: dl.pages.map(([label, path, views, s]) => ({ label, path, views: String(views), time: Component.dur(s) })),
+        perProject: dl.perProject.length ? dl.perProject.map(([name, s]) => ({ name, time: Component.dur(s), w: Math.round(s / maxP * 100) + '%' })) : [{ name: 'None', time: '—', w: '0%' }],
+        showDelBtn: !confirming && !errM, confirming: confirming && !errM, delBusy, delOp: delBusy ? 0.7 : 1, delLabel: delBusy ? 'Deleting…' : 'Delete link', delError: errM,
+        askDelete: () => this.setState({ delConfirm: true }), cancelDelete: () => this.setState({ delConfirm: false }),
+        confirmDelete: () => { this.setState({ delBusy: true }); this.later(() => this.setState(s => ({ delBusy: false, delConfirm: false, detail: '', deleted: Object.assign({}, s.deleted, { [dl.id]: true }) })), 800); },
+      };
+    }
+
+    /* ---------- create form (item 8) ---------- */
+    const filled = { company: 'Initech', role: 'Head of QA', contact: 'Priya Shah', lead: 'RouteServe', sent: Component.TODAY, notes: 'Applied through their careers page.' };
+    const forcedForm = valM || busyM || errM || sessionGone;
+    const f = valM ? Object.assign(Component.blank(), { role: 'Head of QA' }) : (busyM || errM || sessionGone) ? filled : this.state.f;
+    const touched = valM || this.state.touched;
+    const companyInvalid = touched && !f.company.trim(), contactInvalid = touched && !f.contact.trim();
+    const fBusy = busyM || this.state.creating;
+    const fm = { busy: fBusy, label: fBusy ? 'Creating…' : 'Create link', op: fBusy ? 0.7 : 1, serverError: errM };
+    const submit = e => {
+      e.preventDefault();
+      if (forcedForm) return;
+      if (!f.contact.trim() || !f.company.trim()) { this.setState({ touched: true }); return; }
+      this.setState({ creating: true });
+      this.later(() => {
+        const id = 'n' + Date.now();
+        this.setState(s => ({ creating: false, added: [{ id, isNew: true, company: f.company, role: f.role, contact: f.contact, lead: f.lead, sentIso: f.sent || Component.TODAY, notes: f.notes, token: '/v/' + this.tok(), sessions: 0, visitors: 0, pages: [], perProject: [] }].concat(s.added), formOpen: false, touched: false, f: Component.blank(), copied: null }));
+      }, 800);
+    };
+
+    /* ---------- projects (items 13–16) ---------- */
+    const P = [
+      { id: 'o2', name: 'Ostomate2', vis: 'Public', report: '4 min ago', sync: 'ok' },
+      { id: 'rs', name: 'RouteServe', vis: 'Private', report: showAlerts ? '◷ 1 week ago' : '2 h ago', stale: showAlerts, sync: syncMode === 'every state' ? 'differs' : 'ok' },
+      { id: 'tp', name: 'testpulse', vis: 'Public', report: '12 min ago', sync: 'ok' },
+    ];
+    if (syncMode === 'every state') P.push(
+      { id: 'ds', name: 'demo-shop', vis: 'Public', report: '—', sync: 'unreg', noRow: true },
+      { id: 'lg', name: 'routeserve-legacy', vis: 'Private', report: '3 Feb', sync: 'noyaml' });
+    const SYNC = {
+      ok: ['✓ In sync', 'var(--pass)', ''],
+      differs: ['≠ Differs', 'var(--attn)', 'expected_cadence_days: YAML 7, database 8 · display_name: YAML “RouteServe”, database “Routeserve”'],
+      unreg: ['+ Not registered', 'var(--attn)', 'projects/demo-shop.yaml has no database row. The next deploy’s sync creates it.'],
+      noyaml: ['? No YAML', 'var(--attn)', 'A database row with no projects/*.yaml file. The sync leaves it as it is.'],
+    };
+    const rotTarget = (busyM || errM) ? 'rs' : this.state.rotating;
     const projects = P.map(p => {
-      const confirming = this.state.rotating === p.id, revealed = this.state.revealed === p.id;
+      const confirming = rotTarget === p.id && !errM, revealed = this.state.revealed === p.id && !forcedForm;
+      const rotBusy = busyM && p.id === 'rs' || this.state.rotBusy === p.id;
+      const s = SYNC[p.sync];
       return Object.assign({}, p, {
-        noKey: !!p.noKey, confirming, revealed,
-        reportInk: p.stale ? 'var(--attn)' : (p.report === 'Never' ? 'var(--ink-3)' : 'var(--ink-2)'), reportWeight: p.stale ? 600 : 400,
-        syncInk: p.syncWarn ? 'var(--ink-3)' : 'var(--pass)',
-        btnLabel: p.noKey ? 'Issue in Phase 7' : 'Rotate key', btnLine: p.noKey ? 'var(--line)' : 'var(--fail)', btnInk: p.noKey ? 'var(--ink-3)' : 'var(--fail)', btnCursor: p.noKey ? 'not-allowed' : 'pointer',
+        isPrivate: p.vis === 'Private', hasKey: !p.noRow, noRow: !!p.noRow, confirming, revealed, rotBusy,
+        rotLabel: rotBusy ? 'Rotating…' : 'Rotate key', rotOp: rotBusy ? 0.7 : 1, rotError: errM && p.id === 'rs',
+        reportInk: p.stale ? 'var(--attn)' : (p.report === '—' ? 'var(--ink-3)' : 'var(--ink-2)'), reportWeight: p.stale ? 600 : 400,
+        sync: s[0], syncInk: s[1], syncSub: s[2],
         newKey: 'tp_' + 'x7Kq2mZr9LwB4vNs1YtE8hGd3PaC6uFj0oRi5nMeWbQ',
         rotate: () => this.setState({ rotating: p.id, revealed: null }),
         cancel: () => this.setState({ rotating: null }),
-        confirm: () => this.setState({ rotating: null, revealed: p.id }),
+        confirm: () => { if (busyM || errM) return; this.setState({ rotBusy: p.id }); this.later(() => this.setState({ rotBusy: null, rotating: null, revealed: p.id }), 800); },
         done: () => this.setState({ revealed: null }),
       });
     });
 
-    const job = [
-      { label: 'Last run', value: 'Today, 06:00', sub: 'Next in 18 hours', ink: 'var(--ink)', line: 'var(--line)' },
-      { label: 'Heartbeat', value: '✓ Written', sub: 'Database active', ink: 'var(--pass)', line: 'var(--line)' },
-      { label: 'Stale check', value: showAlerts ? '1 flagged' : '✓ All current', sub: showAlerts ? 'RouteServe' : '3 projects checked', ink: showAlerts ? 'var(--attn)' : 'var(--pass)', line: 'var(--line)' },
-      { label: 'Prune', value: '0 rows', sub: 'Nothing older than 180 days yet', ink: 'var(--ink)', line: 'var(--line)' },
+    /* ---------- daily job (item 17) ---------- */
+    const okRun = [
+      { label: 'Last run', value: '8 Oct, 06:00 UTC', sub: '5 h ago · next at 06:00 UTC', ink: 'var(--ink)', line: 'var(--line)' },
+      { label: 'Heartbeat', value: '✓ Written', sub: 'Database kept awake', ink: 'var(--pass)', line: 'var(--line)' },
+      { label: 'Stale check', value: showAlerts ? '1 opened · 0 closed' : '0 opened · 0 closed', sub: showAlerts ? 'Opened: RouteServe' : '3 projects checked', ink: 'var(--ink)', line: 'var(--line)' },
+      { label: 'Prune', value: '12 rows removed', sub: 'Results 0 · failure text 0 · visits 0 · rate-limit buckets 12', ink: 'var(--ink)', line: 'var(--line)' },
     ];
+    let job = okRun, jobNotice = { show: false };
+    if (jobMode === 'overdue') {
+      job = okRun.map((t, i) => i === 0 ? Object.assign({}, t, { value: '◷ 6 Oct, 06:00 UTC', sub: '2 days ago · expected every 24 h', ink: 'var(--attn)', line: 'var(--attn)' }) : Object.assign({}, t, { sub: 'From that run · ' + t.sub }));
+      jobNotice = { show: true, role: 'status', bg: 'var(--attn-tint)', line: 'var(--attn)', ink: 'var(--attn)', titleInk: 'var(--attn)', dash: 'none', d: 'M12 7v5l3 2', title: 'The daily job is overdue', body: 'Its last run was 53 hours ago; it should run every 24 hours. Until it runs, no heartbeat is written, stale projects aren’t flagged and nothing is pruned. Check the cron in Vercel.' };
+    } else if (jobMode === 'never run') {
+      job = okRun.map(t => ({ label: t.label, value: 'Never run', sub: 'No run summary yet', ink: 'var(--ink-3)', line: 'var(--line)' }));
+      jobNotice = { show: true, role: 'status', bg: 'var(--neutral-tint)', line: 'var(--line-strong)', ink: 'var(--ink-2)', titleInk: 'var(--ink-2)', dash: '3.5 3', d: '', title: 'The daily job hasn’t run yet', body: 'Its first run is due at 06:00 UTC. If this still shows 36 hours after the deploy, check the cron in Vercel.' };
+    } else if (jobMode === 'failed partway') {
+      job = [
+        { label: 'Last run', value: '✕ Failed at prune', sub: '8 Oct, 06:00 UTC · 5 h ago', ink: 'var(--fail)', line: 'var(--fail)' },
+        okRun[1], okRun[2],
+        { label: 'Prune', value: '✕ Failed', sub: 'Nothing removed', ink: 'var(--fail)', line: 'var(--fail)' },
+      ];
+      jobNotice = { show: true, role: 'alert', bg: 'var(--fail-tint)', line: 'var(--fail)', ink: 'var(--fail)', titleInk: 'var(--fail)', dash: 'none', d: 'm15 9-6 6M9 9l6 6', title: 'The last run failed at the prune step', body: 'Heartbeat and stale check finished. Prune stopped with “canceling statement due to statement timeout”, so nothing was removed. The next run tries again at 06:00 UTC.' };
+    }
 
+    const signedInViews = ['signed in', 'session expired'];
+    const isLoading = view === 'signed in · loading', isError = view === 'signed in · error';
+    const isMainish = signedInViews.includes(view);
     return {
-      themeVars: tv,
+      rootRef: this.rootRef, themeVars: tv, colorScheme: dark ? 'dark' : 'light',
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
+      signedIn: !isSignin, isSignin, isLoading, isError, sessionGone,
+      showDetail: isMainish && !!dl, showMain: isMainish && !dl,
+      signOut: () => this.setState({ signedOut: true, sent: false, email: '', emailTouched: false }),
+      toSignin: () => this.setState({ signedOut: true }),
+      si, setEmail: e => this.setState({ email: e.target.value }), sendLink, resetSignin: () => this.setState({ sent: false, email: '', emailTouched: false }),
+      skeleton: [{ h: 'Open alerts', hgt: '84px' }, { h: 'Tracked links', hgt: '220px' }, { h: 'Projects', hgt: '180px' }, { h: 'Daily job', hgt: '110px' }],
       alerts: A, hasAlerts: A.length > 0, noAlerts: A.length === 0, alertCount: A.length ? A.length + ' open' : 'None',
-      links, linkCount: links.length + ' links',
-      formOpen: this.state.formOpen, openForm: () => this.setState({ formOpen: true }), closeForm: () => this.setState({ formOpen: false, touched: false }),
-      f, setCompany: this.setF('company'), setRole: this.setF('role'), setContact: this.setF('contact'), setLead: this.setF('lead'),
+      links, linkCount: links.length + ' links', wide, narrow: !wide, d, closeDetail: () => this.setState({ detail: '', delConfirm: false }),
+      selectAll: e => e.target.select(),
+      formOpen: forcedForm || this.state.formOpen, openForm: () => this.setState({ formOpen: true }), closeForm: () => this.setState({ formOpen: false, touched: false }),
+      f, fm, setCompany: this.setF('company'), setRole: this.setF('role'), setContact: this.setF('contact'), setLead: this.setF('lead'), setSent: this.setF('sent'), setNotes: this.setF('notes'),
+      leadPrivate: f.lead === 'RouteServe',
+      companyInvalid, companyBorder: companyInvalid ? '1.5px solid var(--fail)' : '1px solid var(--line-strong)',
       contactInvalid, contactBorder: contactInvalid ? '1.5px solid var(--fail)' : '1px solid var(--line-strong)', submit,
-      projects, job,
+      projects, job, jobNotice,
     };
   }
 }

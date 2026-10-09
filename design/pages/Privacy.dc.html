@@ -44,7 +44,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ isPhase6 }}" hint-placeholder-val="{{ false }}">
 <p style="margin:22px 0 0;font:400 21px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">Which pages you view and for how long. There are no accounts and no third-party analytics, and this site stores a hash of your IP address, never the address itself.</p>
 </sc-if>
-<div style="display:flex;gap:6px;margin-top:14px;font-size:14px;color:var(--ink-3)"><span>Updated</span><time datetime="{{ updatedIso }}" title="{{ updatedTitle }}">{{ updated }}</time></div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:14px;font-size:14px;color:var(--ink-3)"><span>Updated</span><time datetime="{{ updatedIso }}" title="{{ updatedTitle }}">{{ updated }}</time><sc-if value="{{ isPhase6 }}" hint-placeholder-val="{{ false }}"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span><span>the build fills in the day this copy ships</span></sc-if></div>
 
 <sc-if value="{{ showSummary }}" hint-placeholder-val="{{ true }}">
 <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
@@ -100,6 +100,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <p style="margin:0">After a page finishes loading, a small script on the page sends one record back to this site. Link previews and mail scanners usually fetch a page without running it, so most of them are never counted.</p>
 <p style="margin:0">Each record is labelled as a browser, a bot, or a link preview. Known bots and previews are kept under that label and left out of every visit count.</p>
 <p style="margin:0">Your IP address is combined with a secret value and hashed before it is stored. The hash can’t be turned back into an address; it is used only to count how many different visitors opened a link.</p>
+<p style="margin:0">Visit records are kept for 365 days, then deleted.</p>
 </div>
 </section>
 <section style="margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">

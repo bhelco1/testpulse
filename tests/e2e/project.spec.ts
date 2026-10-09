@@ -225,8 +225,14 @@ test.describe('RouteServe (private)', () => {
     const heading = page.getByRole('heading', { level: 1 });
     await expect(heading).toHaveText('RouteServe');
     await expect(heading.getByRole('img', { name: 'Private repository' })).toBeVisible();
+    const notice = page.getByRole('main').locator('[data-part="private-notice"]');
+    await expect(notice).toHaveCount(1);
+    await expect(notice.getByText('Details hidden: private repository')).toBeVisible();
     await expect(
-      page.getByRole('main').getByText(/^This repository is private, so failure details/),
+      notice.getByText(
+        'This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real.',
+        { exact: true },
+      ),
     ).toBeVisible();
     await expect(
       page.getByRole('main').getByRole('link', { name: 'Source on GitHub' }),

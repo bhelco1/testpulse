@@ -126,7 +126,7 @@ class Component extends DCLogic {
     const L = (arr) => arr.map(([name, n, bg]) => ({ name, n, label: n.toLocaleString('en-US'), bg }));
 
     const osto = { name: 'Ostomate2', private: false, st: ST.pass, frame: 'var(--line)', when: '4 min ago', whenInk: 'var(--ink-3)', sha: '0e2d0b4', total: '160',
-      subParts: [part('0 failed ·'), part('0 skipped ·'), part('17m 53s')], failLine: '', failSub: '', showLayers: true,
+      subParts: [part('0 failed ·'), part('0 skipped ·'), part('11m 34s')], failLine: '', failSub: '', showLayers: true,
       layers: L([['Unit', 110, 'var(--layer-1)'], ['Integration', 30, 'var(--layer-3)'], ['Visual', 10, 'var(--layer-2)'], ['E2E', 10, 'var(--layer-3)']]),
       cov: [cov('composeApp', 94.3, 93), cov('shared', 92.0, 91)], health: healthy };
     const route = { name: 'RouteServe', private: true, st: ST.pass, frame: 'var(--line)', when: '2 h ago', whenInk: 'var(--ink-3)', sha: 'c238574', total: '1,044',

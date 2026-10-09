@@ -1,4 +1,4 @@
-# testpulse handoff v14
+# testpulse handoff v15
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -761,3 +761,24 @@ Same rules: the Design System page is canonical, components.md matches it, every
    - RouteServe's reports foot now reads only "Reports add up to 1,048 executions of 1,044 distinct tests." (data-map v13 says the same).
 
 Files changed in v14: Kiosk.dc.html, Run Detail.dc.html, Landing.dc.html, How Its Tested.dc.html, Project Page.dc.html, Design System.dc.html, tp-charts.js, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v15
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px. Nothing else was changed.
+
+1. The Project Page uses the one notice; there is no separate component.
+   - Lock, title "Details hidden: private repository" (14.5/600 --ink-2), then one body (13.5/1.5 --ink-2, 4 below), in a dashed --line-strong box on --inset.
+   - The body is now one copy that is true on both pages: "This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real."
+   - Updated on the Project Page (max width 620), Run Detail, Design System sections 10, 11 and 13 (the NOTICE row now reads "neutral + lock + title"), and components.md (Notice uses, ResultRow private).
+2. Confirmed as built: "No projects yet" in the Projects menu.
+   - 14 px --ink-3, 44 px tall, with the items' 12 px side padding, text vertically centred.
+   - It isn't a link and isn't focusable.
+   - Written into components.md.
+3. Sample slips:
+   - Ostomate2's card reads 11m 34s on Landing, Kiosk and the Design System.
+   - components.md "Flaky meaning" now uses spec §11's wording.
+   - Design System "Showing 6 of 160". The same drawing's filter note (160 · 159 · 1) and pruned summary (160 tests, 159 passed, 1 failed) also read 142 and are corrected.
+   - Run Detail's Ostomate2 foot: "Reports add up to 299 executions of 160 distinct tests."
+   - The duplicate kiosk loading-bar statement at components.md:92 is removed.
+   - Project Page flaky caption: "Flaky: passed and failed on the same commit and platform, in default-branch CI runs of the last 30 days." Its empty state now says "in default-branch CI runs". The Test History caption now says "within default-branch CI runs of the last 30 days".
+
+Files changed in v15: Project Page.dc.html, Run Detail.dc.html, Design System.dc.html, Landing.dc.html, Kiosk.dc.html, Test History.dc.html, design/README.md, design/components.md.

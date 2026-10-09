@@ -166,7 +166,7 @@ Short and factual. Sentence case. No exclamation marks.
 
 - Site statement under the wordmark: "Live test results for every project I build."
 - About blurb: "I'm Bobby Helco, a quality engineering leader. Every project here reports its test results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard is tested the same way, and reports on itself."
-- Private project note: "This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real."
+- Private project note: "This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real."
 - Declared suite note: "These tests exist but don't report here yet. They aren't counted in any total."
 
 ## 9. Deliverables

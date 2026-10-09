@@ -19,7 +19,7 @@ describe('PrivateDetailsNotice', () => {
     expect(getByText('Details hidden: private repository')).toBeTruthy();
     expect(
       getByText(
-        'This repository is private, so failure messages and stack traces are hidden. Test names and counts are real.',
+        'This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real.',
       ).tagName,
     ).toBe('P');
     const lock = notice.querySelector('svg');

@@ -4,6 +4,7 @@ import type { HeroView } from '../../lib/pages/project';
 import { HealthMarker } from '../HealthMarker/HealthMarker';
 import { ExternalLinkIcon, LockIcon } from '../icons/icons';
 import { Notice } from '../Notice/Notice';
+import { PrivateDetailsNotice } from '../PrivateDetailsNotice/PrivateDetailsNotice';
 import { TimedText } from '../RelativeTime/RelativeTime';
 import styles from './ProjectHero.module.css';
 
@@ -12,9 +13,6 @@ export interface ProjectHeroProps {
   // The latest run card, beside the introduction.
   children: ReactNode;
 }
-
-const PRIVATE_NOTE =
-  'This repository is private, so failure details and source links are hidden. Counts, trends, and test names are real.';
 
 // The top of the project page (design/pages/Project Page.dc.html): a stale project's notice,
 // then the project's name, tagline, description and reporting health beside its latest run.
@@ -65,7 +63,7 @@ export function ProjectHero({ hero, children }: ProjectHeroProps) {
           </div>
           {hero.private && (
             <div className={styles.privateNote}>
-              <Notice tone="neutral" icon="lock" body={PRIVATE_NOTE} />
+              <PrivateDetailsNotice />
             </div>
           )}
         </div>

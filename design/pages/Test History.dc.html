@@ -132,7 +132,7 @@ class Component extends DCLogic {
       return {
         t: { name: 'insertsAndQueriesByDay', short: 'ChangeEventDaoTest', suite: 'com.ostomate.app.data.ChangeEventDaoTest', module: 'shared', layer: 'Integration', isFlaky: true, isMismatch: false, isNew: false, sampleTag: 'SAMPLE HISTORY', runCount: 40,
           stripNote: 'Oldest on the left', oldest: '39 runs ago',
-          caption: 'Failed and then passed on a retry of the same commit twice in 40 runs, both times on JVM. The iOS simulator has never failed it. It is listed as flaky on the project page while a pass and a fail on the same commit and platform fall within the last 30 days.' },
+          caption: 'Failed and then passed on a retry of the same commit twice in 40 runs, both times on JVM. The iOS simulator has never failed it. It is listed as flaky on the project page while a pass and a fail on the same commit and platform fall within default-branch CI runs of the last 30 days.' },
         runs, plats: ['jvm', 'ios-sim'],
         status: (p, i) => (p === 'jvm' && (i === 14 || i === 29)) ? 'flaky' : 'pass',
         dur: (p, r) => p === 'jvm' ? 1.12 + r.w * 0.12 + ((r.i === 14 || r.i === 29) ? 0.16 : 0) : 0.84 + r.w * 0.06,

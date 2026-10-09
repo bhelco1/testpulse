@@ -23,7 +23,7 @@ const FLAKY: FlakyView = {
 };
 
 const DEFINITION =
-  'Flaky: passed and failed on the same commit and platform within the last 30 days.';
+  'Flaky: passed and failed on the same commit and platform, in default-branch CI runs of the last 30 days.';
 
 describe('FlakyList', () => {
   it('heads the card, defines flaky, and links each test to its history', () => {
@@ -68,7 +68,8 @@ describe('FlakyList', () => {
     expect(queryByRole('list')).toBeNull();
     const none = container.querySelector<HTMLElement>('[data-part="none"]');
     expect(none?.textContent).toBe(
-      'No flaky tests in the last 30 daysNo test passed and failed on the same commit and platform.',
+      'No flaky tests in the last 30 days' +
+        'No test passed and failed on the same commit and platform in default-branch CI runs.',
     );
     expect(none?.querySelector('svg')?.getAttribute('width')).toBe('18');
   });

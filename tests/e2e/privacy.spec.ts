@@ -1,32 +1,31 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { SESSION_COOKIE } from '../../lib/visits/session.ts';
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
 import { open } from './support/open.ts';
 
 // The privacy page, /privacy (spec section 13.8), against the seed at SEED_NOW. It carries the
-// "today" copy of design/pages/Privacy.dc.html (v9 item 3) with Bobby's edits: nothing records a
-// visit, no cookie is set, no tracked link exists. The Phase 6 copy, which describes visit
-// logging that is not built, must not reach it. Tags route tests to projects
+// "after Phase 6" copy of design/pages/Privacy.dc.html, which ships with visit logging and
+// tracked links: what a page view records, the one session cookie, and what a tracked link
+// does; Live updates, Your theme choice and Hosting stay, Hosting with Bobby's edit. The "today"
+// copy, which said nothing is recorded, must not reach it. Tags route tests to projects
 // (playwright.config.ts): @js where scripts run, @no-js where they do not, @visual in the four
 // viewport × theme projects inside the Playwright image.
 
 const footer = (page: Page) => page.getByRole('contentinfo');
 
-// A phrase from each block of the mock's "after Phase 6" version: the lede, both summary cards,
-// "How a visit is recorded", "The cookie" and "If someone sent you a link".
-const PHASE_6 = [
-  'Which pages you view and for how long',
-  'no third-party analytics',
-  'Recorded per page view',
-  'A salted hash of your IP address',
-  'Never recorded',
-  'Device fingerprints',
-  'How a visit is recorded',
-  'Link previews and mail scanners',
-  'The cookie',
-  'httpOnly',
-  'If someone sent you a link',
-  'the site owner can see',
+// A phrase from each block of the mock's "today" version: the lede, both summary cards and
+// "If this changes".
+const TODAY = [
+  'Nothing. There are no accounts, no cookies',
+  'keeps no record of who visits',
+  'What your browser does here',
+  'Opens one live connection to Supabase Realtime for new results',
+  'What this site doesn’t do',
+  'Log page views or visits',
+  'Load analytics or ad scripts',
+  'If this changes',
+  'A later version will',
 ];
 
 test.describe('the privacy page', () => {
@@ -41,47 +40,97 @@ test.describe('the privacy page', () => {
     );
   });
 
-  test('says what is recorded today: nothing, dated by its copy', async ({ page }) => {
+  test('says what a visit records, dated by its copy', async ({ page }) => {
     await open(page, '/privacy');
     const main = page.getByRole('main');
     await expect(main.locator('[data-part="lede"]')).toHaveText(
-      'Nothing. There are no accounts, no cookies and no analytics, and this site keeps no record of who visits.',
+      'Which pages you view and for how long. There are no accounts and no third-party analytics, and this site stores a hash of your IP address, never the address itself.',
     );
     const updated = main.locator('[data-part="updated"]');
-    await expect(updated).toHaveText('Updated 1 Oct');
-    await expect(updated.locator('time')).toHaveAttribute('datetime', '2026-10-01T00:00:00.000Z');
-    await expect(updated.locator('time')).toHaveAttribute('title', '1 Oct 2026, 00:00 UTC');
+    await expect(updated).toHaveText('Updated 12 Oct');
+    await expect(updated.locator('time')).toHaveAttribute('datetime', '2026-10-12T00:00:00.000Z');
+    await expect(updated.locator('time')).toHaveAttribute('title', '12 Oct 2026, 00:00 UTC');
     await expect(main.getByRole('heading', { level: 2 })).toHaveText([
-      'What your browser does here',
-      'What this site doesn’t do',
+      'Recorded per page view',
+      'Never stored by this site',
+      'How a visit is recorded',
+      'The cookie',
+      'If someone sent you a link',
       'Live updates',
       'Your theme choice',
       'Hosting',
-      'If this changes',
     ]);
-    await expect(main).toContainText('Opens one live connection to Supabase Realtime');
+    await expect(main).toContainText('A salted hash of your IP address');
+    await expect(main).toContainText('Device fingerprints');
+    await expect(main).toContainText('Visit records are kept for 365 days, then deleted.');
+    await expect(main).toContainText(
+      'It is marked httpOnly, so scripts on the page can’t read it, and it is never shared with another site.',
+    );
+    await expect(main).toContainText('so the code doesn’t stay in your address bar.');
+    // The summary cards' items, each after its decorative dash, then the list that ends "If
+    // someone sent you a link".
+    await expect(main.locator('[data-part="summary"] li')).toHaveText(
+      [
+        'A random session identifier',
+        'The page address',
+        'Time spent on the page',
+        'Browser, bot, or link preview',
+        'A salted hash of your IP address',
+        'Your IP address itself',
+        'Your name or email',
+        'Device fingerprints',
+        'Anything sent to third-party analytics or ad networks',
+      ].map((item) => `—${item}`),
+    );
+    await expect(main.locator('section:not([data-part="summary"]) li')).toHaveText([
+      'when it was first and last opened',
+      'how many separate sessions used it',
+      'how many different IP hashes opened it, which shows whether it was passed around',
+      'which pages were viewed, and time spent on each project',
+    ]);
     await expect(main).toContainText('with JavaScript off, none is opened.');
     await expect(main).toContainText(
       'Both keep their own server logs, which aren’t described here; see each provider’s privacy policy.',
     );
-    await expect(main).toContainText(
-      'A later version will log every visit anonymously and count visits to links sent with job applications.',
-    );
   });
 
-  test('states nothing of the Phase 6 visit logging, which is not built', async ({ page }) => {
+  test('no longer carries the copy from before visits were logged', async ({ page }) => {
     await open(page, '/privacy');
     const body = page.locator('body');
-    for (const phrase of PHASE_6) await expect(body).not.toContainText(phrase);
+    for (const phrase of TODAY) await expect(body).not.toContainText(phrase);
   });
 
-  // What the copy says of the site, checked in the browser: no cookie after the visit, and
+  // What the copy says of the site, checked in the browser: once the beacon has recorded the
+  // view, one cookie, httpOnly, holding a random identifier and ending with the browser; and
   // nothing in localStorage until the toggle is pressed.
-  test('sets no cookie and stores nothing until the toggle', { tag: '@js' }, async ({ page }) => {
-    await open(page, '/privacy');
-    expect(await page.context().cookies()).toEqual([]);
-    expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
-  });
+  test(
+    'sets one httpOnly session cookie and stores nothing until the toggle',
+    { tag: '@js' },
+    async ({ page }) => {
+      const recorded = page.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname === '/api/visits' &&
+          response.request().method() === 'POST',
+      );
+      await open(page, '/privacy');
+      await recorded;
+      const cookies = await page.context().cookies();
+      expect(cookies).toEqual([
+        expect.objectContaining({
+          name: SESSION_COOKIE,
+          value: expect.stringMatching(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+          ),
+          path: '/',
+          httpOnly: true,
+          sameSite: 'Lax',
+          expires: -1,
+        }),
+      ]);
+      expect(await page.evaluate(() => document.cookie)).toBe('');
+      expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+    },
+  );
 
   // The design gives the page no live behaviour, as on the run page (section 13.5).
   test('shows neither “Live” nor “Offline”', async ({ page }) => {
@@ -175,8 +224,12 @@ test.describe('the privacy page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'What this site records about you',
     );
-    await expect(page.locator('[data-part="lede"]')).toContainText('Nothing.');
-    await expect(page.getByRole('heading', { name: 'If this changes' })).toBeVisible();
+    await expect(page.locator('[data-part="lede"]')).toContainText(
+      'Which pages you view and for how long.',
+    );
+    await expect(page.getByRole('heading', { name: 'If someone sent you a link' })).toBeVisible();
+    // Without scripts there is no beacon, so nothing is recorded and no cookie is set.
+    expect(await page.context().cookies()).toEqual([]);
     await expect(footer(page).getByRole('link', { name: 'Privacy' })).toHaveAttribute(
       'aria-current',
       'page',

@@ -19,8 +19,9 @@ export const StaleDetailSchema = z.strictObject({
 });
 
 /**
- * Executed tests (reports.total) for one (job, module, platform): the baseline the count fell
- * from, in the previous default-branch CI run, and the latest report's count.
+ * Executed tests (reports.total less reports.skipped) for one (job, module, platform): the
+ * baseline the count fell from, in the previous default-branch CI run, and the latest report's
+ * count.
  */
 export const CountDropDetailSchema = z.strictObject({
   job: Name,

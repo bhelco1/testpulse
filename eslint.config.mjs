@@ -30,6 +30,15 @@ const JOBS = {
     'pages read through lib/queries/.',
 };
 
+// lib/visits/record.ts and lib/tracked-links/arrive.ts build the secret client for the visit
+// routes and /v/<token>; only app/api may import them.
+const VISITS = {
+  regex: String.raw`(^|/)(visits/record|tracked-links/arrive)(\.ts)?$`,
+  message:
+    'lib/visits/record and lib/tracked-links/arrive write with the secret client and are only ' +
+    'for app/api. Public pages read through lib/queries/.',
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -53,13 +62,13 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // The same files outside the API routes may not reach the secret client through lib/ingest or
-    // lib/jobs either.
+    // The same files outside the API routes may not reach the secret client through lib/ingest,
+    // lib/jobs, lib/visits/record or lib/tracked-links/arrive either.
     // This object replaces the rule options above for the files it matches, so it repeats them.
     files: ['app/**', 'components/**', 'lib/queries/**'],
     ignores: ['app/api/**'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: [SECRET_CLIENT, INGEST, JOBS] }],
+      'no-restricted-imports': ['error', { patterns: [SECRET_CLIENT, INGEST, JOBS, VISITS] }],
     },
   },
   prettier,

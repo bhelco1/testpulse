@@ -139,7 +139,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>{{ footerNote }}</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;failed run&quot;,&quot;empty run&quot;,&quot;stale project&quot;,&quot;coverage below floor&quot;,&quot;live update&quot;,&quot;realtime disconnected&quot;,&quot;no projects&quot;,&quot;error&quot;],&quot;default&quot;:&quot;healthy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;visitor&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;direct&quot;,&quot;tracked link · lead RouteServe&quot;,&quot;tracked link · lead testpulse&quot;],&quot;default&quot;:&quot;direct&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;failed run&quot;,&quot;empty run&quot;,&quot;stale project&quot;,&quot;coverage below floor&quot;,&quot;live update&quot;,&quot;realtime disconnected&quot;,&quot;no projects&quot;,&quot;error&quot;],&quot;default&quot;:&quot;healthy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null };
   componentDidMount() { if (!window.TPKit) this.wait = setInterval(() => { if (window.TPKit) { clearInterval(this.wait); this.forceUpdate(); } }, 30); }
@@ -224,7 +224,7 @@ class Component extends DCLogic {
 
     return Object.assign(base, {
       themeVars: K.themeVars(dark), liveDot, liveLabel: live ? 'Live' : 'Offline · reconnecting',
-      sampleNote: sampleNote ? sampleNote + ' ' + tpSample : tpSample, heroTotal, heroNote, tiles, cards: [K.card(osto), K.card(route), K.card(tp)], feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
+      sampleNote: sampleNote ? sampleNote + ' ' + tpSample : tpSample, heroTotal, heroNote, tiles, cards: (() => { /* v16 item 20: a tracked visitor's lead project (tracked_links.lead_project_slug) moves to the front; nothing else changes and nothing says why */ const v = this.props.visitor ?? 'direct', lead = v.includes('RouteServe') ? route : v.includes('testpulse') ? tp : null; const order = [osto, route, tp]; return (lead ? [lead].concat(order.filter(c => c !== lead)) : order).map(c => K.card(c)); })(), feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
     });
   }
 }

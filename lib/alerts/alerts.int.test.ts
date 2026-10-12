@@ -41,6 +41,14 @@ const SEVEN = [CALENDAR];
 const FOUR = [CHANGE_SOURCE];
 const ONE = [MIGRATION];
 
+// The only captured files with skipped tests, one each (fixtures/README.md): 3 tests, 1 passed,
+// 1 failed, 1 skipped. Executed tests (decision 2026-10-12) leave skipped out.
+const VITEST_SKIP = fixture('testpulse/junit/vitest-one-failure.xml');
+const PLAYWRIGHT_SKIP = fixture('testpulse/junit/playwright-one-failure.xml');
+const SIX_RUN = [DIAGNOSTIC_LOG]; // 6 in total, 6 executed
+const SIX_FOUR_RUN = [VITEST_SKIP, PLAYWRIGHT_SKIP]; // 6 in total, 4 executed
+const SEVEN_FIVE_RUN = [VITEST_SKIP, PLAYWRIGHT_SKIP, MIGRATION]; // 7 in total, 5 executed
+
 // Lines 457 of 490 (93.265…%), 497 of 527 (94.307…%), and 102 of 102 (100%).
 const JACOCO_SHARED: CoverageInput = {
   format: 'jacoco',
@@ -520,6 +528,75 @@ describe('integrity alerts (spec section 12)', () => {
         current: 1,
         baseline_run_id: await runId(project.id, 'cd-12'),
         run_id: await runId(project.id, 'cd-post'),
+      });
+    });
+
+    // Decision 2026-10-12: executed tests are passed + failed + error, total less skipped, for
+    // the count, the baseline and recovery alike, so a suite that suddenly skips most of its
+    // tests opens the alert while its total holds.
+    describe('executed tests exclude skipped', () => {
+      let skipping: { id: string };
+
+      beforeAll(async () => {
+        skipping = await register('skipped');
+      });
+
+      it('opens when the total holds but skipped tests take executed down by more than 20% (6 to 4)', async () => {
+        await ingest(skipping.id, { ciRunId: 'sk-1', receivedAt: step(1), files: SIX_RUN });
+        await ingest(skipping.id, { ciRunId: 'sk-2', receivedAt: step(2), files: SIX_FOUR_RUN });
+
+        const alerts = await alertsOf(skipping.id, 'count_drop');
+        expect(alerts).toHaveLength(1);
+        expect(iso(alerts[0]?.opened_at ?? null)).toBe(step(2).toISOString());
+        expect(alerts[0]?.detail).toEqual({
+          job: 'android',
+          module: 'shared',
+          platform: 'jvm',
+          baseline: 6,
+          current: 4,
+          baseline_run_id: await runId(skipping.id, 'sk-1'),
+          run_id: await runId(skipping.id, 'sk-2'),
+        });
+      });
+
+      it('stays open, re-pointed, when the total is back at the baseline but executed is not', async () => {
+        await ingest(skipping.id, { ciRunId: 'sk-3', receivedAt: step(3), files: SIX_FOUR_RUN });
+
+        const open = await openOf(skipping.id, 'count_drop');
+        expect(open).toHaveLength(1);
+        expect(open[0]?.detail).toMatchObject({
+          baseline: 6,
+          current: 4,
+          run_id: await runId(skipping.id, 'sk-3'),
+        });
+      });
+
+      it('resolves when executed tests reach 80% of the baseline (5 of 6, 7 in total)', async () => {
+        await ingest(skipping.id, { ciRunId: 'sk-4', receivedAt: step(4), files: SEVEN_FIVE_RUN });
+
+        const alerts = await alertsOf(skipping.id, 'count_drop');
+        expect(alerts).toHaveLength(1);
+        expect(iso(alerts[0]?.resolved_at ?? null)).toBe(step(4).toISOString());
+      });
+
+      it('does not open on exactly 20% fewer executed tests, the baseline counted the same way (5 of 7 to 4)', async () => {
+        // The total falls from 7 to 4, more than 20%; executed tests fall from 5 to 4, exactly 20%.
+        await ingest(skipping.id, { ciRunId: 'sk-5', receivedAt: step(5), files: FOUR });
+        expect(await openOf(skipping.id, 'count_drop')).toEqual([]);
+      });
+
+      it('records executed tests, not totals, as the baseline and current (5 of 7 to 2 of 3)', async () => {
+        await ingest(skipping.id, { ciRunId: 'sk-6', receivedAt: step(6), files: SEVEN_FIVE_RUN });
+        await ingest(skipping.id, { ciRunId: 'sk-7', receivedAt: step(7), files: [VITEST_SKIP] });
+
+        const open = await openOf(skipping.id, 'count_drop');
+        expect(open).toHaveLength(1);
+        expect(open[0]?.detail).toMatchObject({
+          baseline: 5,
+          current: 2,
+          baseline_run_id: await runId(skipping.id, 'sk-6'),
+          run_id: await runId(skipping.id, 'sk-7'),
+        });
       });
     });
   });

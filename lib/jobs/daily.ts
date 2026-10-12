@@ -88,7 +88,12 @@ export interface PruneOutcome {
 }
 
 const removedAny = (batch: PruneBatch): boolean =>
-  batch.results + batch.result_failures + batch.visits + batch.rate_limit_buckets > 0;
+  batch.results +
+    batch.result_failures +
+    batch.visits +
+    batch.tracked_sessions +
+    batch.rate_limit_buckets >
+  0;
 
 function addProjects(totals: Map<string, PrunedProject>, projects: readonly PrunedProject[]): void {
   for (const project of projects) {
@@ -139,6 +144,7 @@ export async function pruneUntilDone(
       results: removed.results + batch.results,
       result_failures: removed.result_failures + batch.result_failures,
       visits: removed.visits + batch.visits,
+      tracked_sessions: removed.tracked_sessions + batch.tracked_sessions,
       rate_limit_buckets: removed.rate_limit_buckets + batch.rate_limit_buckets,
       runs_marked_pruned: removed.runs_marked_pruned + batch.runs_marked_pruned,
     };
@@ -259,7 +265,8 @@ export async function runDailyJob(
   const { removed } = prune;
   log.info(
     `${LOG_PREFIX} pruned ${removed.results} results, ${removed.result_failures} result_failures, ` +
-      `${removed.visits} visits, ${removed.rate_limit_buckets} rate_limit_buckets, ` +
+      `${removed.visits} visits, ${removed.tracked_sessions} tracked_sessions, ` +
+      `${removed.rate_limit_buckets} rate_limit_buckets, ` +
       `${removed.runs_marked_pruned} runs marked pruned in ${prune.batches} batches`,
   );
 

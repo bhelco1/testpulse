@@ -377,14 +377,18 @@ describe('schema and row-level security (spec sections 5 and 9)', () => {
       });
     });
 
-    it.each(['tracked_links', 'visits', 'alerts', 'heartbeats', 'rate_limit_buckets'])(
-      'is refused all access to %s',
-      async (table) => {
-        const result = await anon.from(table).select('*').limit(1);
-        expect(result.error?.code).toBe(PERMISSION_DENIED);
-        expect(result.data).toBeNull();
-      },
-    );
+    it.each([
+      'tracked_links',
+      'tracked_sessions',
+      'visits',
+      'alerts',
+      'heartbeats',
+      'rate_limit_buckets',
+    ])('is refused all access to %s', async (table) => {
+      const result = await anon.from(table).select('*').limit(1);
+      expect(result.error?.code).toBe(PERMISSION_DENIED);
+      expect(result.data).toBeNull();
+    });
 
     it('cannot insert into reports', async () => {
       const result = await anon.from('reports').insert({
@@ -440,6 +444,7 @@ describe('schema and row-level security (spec sections 5 and 9)', () => {
       'coverage',
       'alerts',
       'tracked_links',
+      'tracked_sessions',
       'visits',
       'heartbeats',
       'rate_limit_buckets',

@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 import { FIXED_NOW_VAR } from './lib/clock.ts';
 import { SEED_NOW } from './lib/seed/plan.ts';
+import { E2E_ADMIN_EMAIL } from './tests/e2e/support/admin.ts';
 
 const CI = Boolean(process.env.CI);
 
@@ -58,6 +59,10 @@ const PRUNED_SPEC = '**/pruned.spec.ts';
 // The tracked-link spec writes a link and, through a server of its own that holds the secret key,
 // the visits its browsers make, so it runs there too (tests/e2e/tracked-link.spec.ts).
 const TRACKED_SPEC = '**/tracked-link.spec.ts';
+// The admin mail spec signs the owner in through emailed links, and the owner has one sign-in
+// token at a time, so it runs there too, after the page projects' own admin sessions
+// (tests/e2e/admin-mail.spec.ts).
+const ADMIN_MAIL_SPEC = '**/admin-mail.spec.ts';
 const SEEDED = 'seeded';
 // The private-data leak sweep visits every page that can show a private project, so it runs once,
 // in a project of its own, rather than in every viewport and theme (tests/e2e/leak-sweep.spec.ts).
@@ -94,28 +99,56 @@ export default defineConfig({
     {
       name: 'desktop-dark',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC, SWEEP_SPEC],
+      testIgnore: [
+        '**/harness/**',
+        LIVE_SPEC,
+        PRUNED_SPEC,
+        TRACKED_SPEC,
+        ADMIN_MAIL_SPEC,
+        SWEEP_SPEC,
+      ],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
     {
       name: 'desktop-light',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC, SWEEP_SPEC],
+      testIgnore: [
+        '**/harness/**',
+        LIVE_SPEC,
+        PRUNED_SPEC,
+        TRACKED_SPEC,
+        ADMIN_MAIL_SPEC,
+        SWEEP_SPEC,
+      ],
       grepInvert: withJs,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'light' },
     },
     {
       name: 'phone-dark',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC, SWEEP_SPEC],
+      testIgnore: [
+        '**/harness/**',
+        LIVE_SPEC,
+        PRUNED_SPEC,
+        TRACKED_SPEC,
+        ADMIN_MAIL_SPEC,
+        SWEEP_SPEC,
+      ],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'dark' },
     },
     {
       name: 'phone-light',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC, SWEEP_SPEC],
+      testIgnore: [
+        '**/harness/**',
+        LIVE_SPEC,
+        PRUNED_SPEC,
+        TRACKED_SPEC,
+        ADMIN_MAIL_SPEC,
+        SWEEP_SPEC,
+      ],
       grepInvert: withJs,
       use: { ...phone, colorScheme: 'light' },
     },
@@ -124,7 +157,14 @@ export default defineConfig({
       // page renders the same pixels as desktop-dark, so it takes no snapshot of its own.
       name: 'no-js',
       dependencies: [SEEDED],
-      testIgnore: ['**/harness/**', LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC, SWEEP_SPEC],
+      testIgnore: [
+        '**/harness/**',
+        LIVE_SPEC,
+        PRUNED_SPEC,
+        TRACKED_SPEC,
+        ADMIN_MAIL_SPEC,
+        SWEEP_SPEC,
+      ],
       grepInvert: withoutJs,
       use: { ...chrome, viewport: DESKTOP, javaScriptEnabled: false },
     },
@@ -145,7 +185,7 @@ export default defineConfig({
     },
     {
       name: 'live',
-      testMatch: [LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC],
+      testMatch: [LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC, ADMIN_MAIL_SPEC],
       // One file at a time: each writes while the other's pages would be open.
       workers: 1,
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
@@ -159,7 +199,9 @@ export default defineConfig({
     // are proven to render as anon. An empty value also stops Next.js loading it from .env.local.
     // The visit routes need the secret client too, so on this server they store nothing and
     // answer 204; the tracked-link spec starts a server of its own to prove them.
-    env: { ...supabaseEnv, SUPABASE_SECRET_KEY: '' },
+    // ADMIN_EMAIL is the spec's test-only owner address (tests/e2e/support/admin.ts); admin runs
+    // on the publishable key and the owner's session, so it needs no secret key either.
+    env: { ...supabaseEnv, SUPABASE_SECRET_KEY: '', ADMIN_EMAIL: E2E_ADMIN_EMAIL },
     // Ready is printed when the server listens and register() runs just after it, so waiting for
     // both means requests will be served and the clock line was logged by that server. The
     // captured instant reaches tests as TESTPULSE_SERVER_FIXED_NOW.

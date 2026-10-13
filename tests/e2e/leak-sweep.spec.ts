@@ -382,6 +382,20 @@ test.describe('the private-data leak sweep', { tag: '@js' }, () => {
     ).toEqual([]);
   });
 
+  // Admin (spec section 15) is linked from no public page: expectLinksSwept fails on a link to
+  // any page it does not check, /admin included. Without a session it is the sign-in form alone.
+  test('admin without a session: the sign-in form alone, and nothing hidden', async ({
+    browser,
+  }) => {
+    const seen = await visit(browser, '/admin');
+
+    expect(seen.status).toBe(200);
+    expect(seen.heading).toBe('Sign in to admin');
+    expect(seen.html).not.toContain('Signed in with magic link');
+    expect([...new Set(seen.links.map(pathOf))].sort()).toEqual(['/', '/admin']);
+    expect(leaksIn(seen.texts, HIDDEN)).toEqual([]);
+  });
+
   test('every page as served without scripts, every seeded test’s history included', async ({
     page,
     request,
@@ -395,10 +409,11 @@ test.describe('the private-data leak sweep', { tag: '@js' }, () => {
       ...runPaths.map((path): [string, number, null] => [path, 200, null]),
       ...TESTS.map(({ key, name }): [string, number, string] => [testPath(key), 200, name]),
       ...NOT_FOUND.map((path): [string, number, null] => [path, 404, null]),
+      ['/admin', 200, 'Sign in to admin'],
     ];
 
-    // 3 site pages, 3 of the project page, 11 runs, 1,041 tests and 5 not found.
-    expect(pages).toHaveLength(1_063);
+    // 3 site pages, 3 of the project page, 11 runs, 1,041 tests, 5 not found and admin.
+    expect(pages).toHaveLength(1_064);
     const results = await fetchAll(
       request,
       pages.map(([path]) => path),

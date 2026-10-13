@@ -1,0 +1,62 @@
+/* design/pages/Admin.dc.html: SIGNED IN: MAIN and ERROR. */
+.main {
+  padding: 24px 0 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.errorMain {
+  gap: var(--space-6);
+}
+
+.h1 {
+  margin: 0;
+  font: 500 44px/1.05 var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+.error {
+  max-width: 640px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.errorIcon {
+  flex: none;
+  margin-top: 3px;
+  color: var(--fail);
+}
+
+.errorText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.h2 {
+  margin: 0;
+  font: 500 24px var(--font-serif);
+}
+
+.message {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.retry {
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 15px;
+}

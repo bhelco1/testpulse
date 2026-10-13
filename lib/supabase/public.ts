@@ -45,7 +45,17 @@ function isSecretKey(key: string): boolean {
   return key.startsWith('sb_secret_') || legacyRole(key) === 'service_role';
 }
 
-export function createPublicClient(env: PublicClientEnv = processEnv()): PublicClient {
+export interface PublishableConfig {
+  readonly url: string;
+  readonly key: string;
+}
+
+/**
+ * The project URL and publishable key, trimmed and checked: both present, the URL absolute http
+ * or https, and the key not a secret one. Shared by the anon client below and the admin session
+ * client (lib/admin/session.ts), which runs on the same key with the owner's session.
+ */
+export function publishableConfig(env: PublicClientEnv = processEnv()): PublishableConfig {
   const configuredUrl = env[URL_VAR] ?? '';
   const url = configuredUrl.trim();
   const key = (env[PUBLISHABLE_KEY_VAR] ?? '').trim();
@@ -76,6 +86,12 @@ export function createPublicClient(env: PublicClientEnv = processEnv()): PublicC
         'ever built or deployed.',
     );
   }
+
+  return { url, key };
+}
+
+export function createPublicClient(env: PublicClientEnv = processEnv()): PublicClient {
+  const { url, key } = publishableConfig(env);
 
   // The public client never carries a user session: a session would make it run as
   // authenticated rather than anon, and a magic-link token in the URL must not be picked up.

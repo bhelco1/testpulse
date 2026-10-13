@@ -95,6 +95,16 @@ describe('viewPath', () => {
     expect(viewPath(`/${'a'.repeat(511)}`)).toBe(`/${'a'.repeat(511)}`);
     expect(viewPath(`/${'a'.repeat(512)}`)).toBeNull();
   });
+
+  // The owner's admin pages are not visits (spec section 15, "Admin" as built): the beacon is in
+  // the root layout, so it runs there too, and records nothing.
+  it('sends nothing for an admin page, and only for admin pages', () => {
+    for (const path of ['/admin', '/admin/', '/admin/links/x', '/admin?notice=signed-out']) {
+      expect(viewPath(path), path).toBeNull();
+    }
+    expect(viewPath('/administer')).toBe('/administer');
+    expect(viewPath('/p/admin')).toBe('/p/admin');
+  });
 });
 
 describe('elapsedSeconds', () => {
@@ -262,5 +272,18 @@ describe('createVisitTracker', () => {
     await settle();
     expect(h.created()).toEqual([{ path: '/' }]);
     expect(h.timed()).toEqual([{ id: FIRST, seconds: 5 }]);
+  });
+
+  it('records no view of an admin page, and ends the public view before it', async () => {
+    const h = harness();
+    const tracker = createVisitTracker(h.deps);
+    tracker.view('/');
+    await settle();
+    h.setNow(3_000);
+    tracker.view('/admin');
+    tracker.view('/admin/links/0b7c6f2e-4f1a-4c39-9a51-2d6f3e8b9c10');
+    await settle();
+    expect(h.created()).toEqual([{ path: '/' }]);
+    expect(h.timed()).toEqual([{ id: FIRST, seconds: 3 }]);
   });
 });

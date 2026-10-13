@@ -11,17 +11,40 @@ afterEach(cleanup);
 
 const CSS = join(import.meta.dirname, 'AdminShell.module.css');
 
-// Admin signed in (design/pages/Admin.dc.html, SIGNED IN: MAIN and ERROR). Its sections (alerts,
-// tracked links, projects, daily job) arrive in the next pull request; this is the page frame.
+// Admin's loading and error states (design/pages/Admin.dc.html, LOADING and ERROR;
+// design/components.md, Admin, "Page states"). The signed-in sections are components/AdminMain and
+// the section components.
 describe('AdminShell', () => {
-  it('signed in: the page’s heading in the main landmark, and nothing invented under it', () => {
-    const { container } = render(<AdminShell state="ready" />);
+  it('loading: the heading and the four sections’ headings over blocks, busy, with a status', () => {
+    const { container } = render(<AdminShell state="loading" />);
 
     const main = screen.getByRole('main');
     expect(main.id).toBe('main');
+    expect(main.getAttribute('aria-busy')).toBe('true');
     expect(within(main).getByRole('heading', { level: 1 }).textContent).toBe('Admin');
-    expect(container.querySelectorAll('h2')).toHaveLength(0);
+    expect(
+      within(main)
+        .getAllByRole('heading', { level: 2 })
+        .map((heading) => heading.textContent),
+    ).toEqual(['Open alerts', 'Tracked links', 'Projects', 'Daily job']);
+    expect(within(main).getByRole('status').textContent).toBe('Loading admin');
+    expect(
+      [...container.querySelectorAll<HTMLElement>('[data-part="skeleton"]')].map((block) => [
+        block.style.height,
+        block.style.borderRadius,
+      ]),
+    ).toEqual([
+      ['84px', '16px'],
+      ['220px', '16px'],
+      ['180px', '16px'],
+      ['110px', '16px'],
+    ]);
     expect(screen.queryByRole('alert')).toBeNull();
+    expect(ruleFor(CSS, '.loadingH2')).toMatchObject({
+      font: '500 26px var(--font-serif)',
+      color: 'var(--ink-3)',
+    });
+    expect(ruleFor(CSS, '.loading')).toMatchObject({ gap: '14px' });
   });
 
   it('when Supabase did not answer: the drawn error card, with Try again reloading /admin', () => {

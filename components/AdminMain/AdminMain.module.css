@@ -1,0 +1,63 @@
+/* design/pages/Admin.dc.html: SIGNED IN: MAIN, LINK DETAIL and their session-expired alert. */
+.frame {
+  display: flex;
+  flex-direction: column;
+  /* The tables become card lists below a content width of 760 px (components.md, Admin). */
+  container: admin / inline-size;
+}
+
+.main {
+  padding: 24px 0 64px;
+  gap: 48px;
+}
+
+.detail {
+  padding: 8px 0 64px;
+  gap: var(--space-7);
+}
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--attn-tint);
+  border: 1px solid var(--attn);
+}
+
+.icon {
+  flex: none;
+  color: var(--attn);
+}
+
+.text {
+  flex: 1;
+  min-width: min(100%, 240px);
+}
+
+.title {
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--attn);
+}
+
+.body {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.signIn {
+  min-height: var(--target-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--on-ink);
+  font: 600 14.5px var(--font-sans);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}

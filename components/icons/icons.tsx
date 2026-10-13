@@ -187,3 +187,30 @@ export function MailIcon(props: IconProps) {
     </Svg>
   );
 }
+
+// Admin's count_drop alert: a line falling to the right, no ring (design v16, Admin.dc.html).
+export function TrendDownIcon(props: IconProps) {
+  return (
+    <Svg {...props} linecap="round" linejoin="round">
+      <path d="M3 7l6 6 4-4 8 8M21 11v6h-6" />
+    </Svg>
+  );
+}
+
+// Admin's coverage_below_floor alert: a long arrow down, no ring (design v16, Admin.dc.html).
+export function FloorIcon(props: IconProps) {
+  return (
+    <Svg {...props} linecap="round" linejoin="round">
+      <path d="M12 4v16M6 14l6 6 6-6" />
+    </Svg>
+  );
+}
+
+// A speech bubble: a tracked link's notes in Admin's table (design v16, Admin.dc.html).
+export function NoteIcon(props: IconProps) {
+  return (
+    <Svg {...props} linecap="round">
+      <path d="M4 4h16v12H8l-4 4z" />
+    </Svg>
+  );
+}

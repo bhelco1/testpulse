@@ -29,7 +29,12 @@ describe('every admin page, action and route starts with the guard', () => {
     expect(entries.map(({ id, kind }) => [id, kind])).toEqual([
       ['app/admin/actions.ts#requestSignInLinkAction', 'action'],
       ['app/admin/actions.ts#signOutAction', 'action'],
+      ['app/admin/actions.ts#createLinkAction', 'action'],
+      ['app/admin/actions.ts#acknowledgeAlertAction', 'action'],
+      ['app/admin/actions.ts#rotateKeyAction', 'action'],
+      ['app/admin/actions.ts#deleteLinkAction', 'action'],
       ['app/admin/auth/confirm/route.ts#GET', 'route'],
+      ['app/admin/links/[id]/page.tsx#default', 'page'],
       ['app/admin/page.tsx#default', 'page'],
     ]);
   });

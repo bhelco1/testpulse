@@ -15,6 +15,9 @@ export type AdminGate =
   // 401: not the owner's magic-link session (none, ended, refused); 503: Supabase did not answer.
   | { readonly ok: false; readonly status: 401 | 503 };
 
+/** The guard's yes: what admin's reads and writes ask for (lib/admin/data.ts). */
+export type AccessGranted = Extract<AdminGate, { readonly ok: true }>;
+
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
 /** The client's view of the request's cookies, writing back where the store allows it. */

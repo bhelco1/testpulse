@@ -122,8 +122,11 @@ test.describe('admin signed out', () => {
 });
 
 test.describe('admin signed in', () => {
+  // This server is given no secret key, so every page is proven to render as anon
+  // (playwright.config.ts); admin's sections cannot be read here and show the drawn error state.
+  // tests/e2e/admin-sections.spec.ts reads them on a server that holds the key.
   test(
-    'shows the owner the admin page with how they signed in, and passes axe',
+    'shows the owner the admin page with how they signed in, and its error state without the database, and passes axe',
     { tag: '@js' },
     async ({ page }) => {
       await signInAsOwner(page);
@@ -131,6 +134,16 @@ test.describe('admin signed in', () => {
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Admin');
       await expect(banner(page).getByRole('button', { name: 'Sign out' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Email' })).toHaveCount(0);
+      const error = page.getByRole('main').getByRole('alert');
+      await expect(error.getByRole('heading', { level: 2 })).toHaveText('Admin couldn’t load');
+      await expect(error).toContainText(
+        'The database didn’t answer, so nothing here can be shown or changed right now. Nothing was lost.',
+      );
+      await expect(error.getByRole('link', { name: 'Try again' })).toHaveAttribute(
+        'href',
+        '/admin',
+      );
+      await expect(page.getByRole('heading', { name: 'Open alerts' })).toHaveCount(0);
       await expectNoSeriousAxeViolations(page);
     },
   );
@@ -170,7 +183,8 @@ test.describe('admin signed in', () => {
 
   test('matches its visual snapshot', { tag: '@visual' }, async ({ page }) => {
     await signInAsOwner(page);
-    await expect(page).toHaveScreenshot('admin-signed-in.png', { fullPage: true });
+    await expect(page.getByRole('heading', { name: 'Admin couldn’t load' })).toBeVisible();
+    await expect(page).toHaveScreenshot('admin-unavailable.png', { fullPage: true });
   });
 });
 

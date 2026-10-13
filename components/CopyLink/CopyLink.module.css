@@ -1,0 +1,55 @@
+/* design/pages/Admin.dc.html: the refused-copy state of the links table and the link card. */
+.fallback {
+  display: flex;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.row {
+  flex-wrap: wrap;
+  gap: var(--space-2) 14px;
+  align-items: center;
+}
+
+.stacked {
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.say {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.icon {
+  flex: none;
+  color: var(--attn);
+}
+
+.field {
+  min-height: var(--target-min);
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--attn);
+  background: var(--inset);
+  color: var(--ink);
+  font: 13px var(--font-mono);
+}
+
+.row .field {
+  flex: 1;
+  min-width: 260px;
+}
+
+/* The table's address: the origin shrinks first, so the token stays whole. */
+.origin {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.path {
+  flex: none;
+}

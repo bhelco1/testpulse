@@ -50,12 +50,14 @@ function importsOf(file: string, root: string, options: ts.CompilerOptions): str
 /**
  * The first import chain from any entry to the target, entry first and target last, or null if
  * the target is unreachable. The target is a file, or a test of each file reached (such as "is
- * under lib/admin").
+ * under lib/admin"). Files `avoid` accepts are never entered, so a null answer then says the
+ * target is reachable only through them.
  */
 export function importPathTo(
   target: string | ((file: string) => boolean),
   entries: readonly string[],
   root: string,
+  avoid: (file: string) => boolean = () => false,
 ): string[] | null {
   const options = compilerOptions(root);
   const isGoal =
@@ -79,6 +81,7 @@ export function importPathTo(
       return path;
     }
     for (const imported of importsOf(next, root, options)) {
+      if (avoid(imported) && !isGoal(imported)) continue;
       if (!cameFrom.has(imported)) {
         cameFrom.set(imported, next);
         queue.push(imported);
@@ -109,4 +112,13 @@ export function publicEntryPoints(root: string): string[] {
     (file) => CODE_EXTENSIONS.has(extname(file)) && !TEST_FILE.test(file),
   );
   return [...pages, ...queries].sort();
+}
+
+/** Every module under app and components whose first statement is 'use client'. */
+export function clientModules(root: string): string[] {
+  return ['app', 'components']
+    .flatMap((directory) => filesUnder(join(root, directory)))
+    .filter((file) => CODE_EXTENSIONS.has(extname(file)) && !TEST_FILE.test(file))
+    .filter((file) => /^\s*(\/\/[^\n]*\n\s*)*['"]use client['"]/.test(readFileSync(file, 'utf8')))
+    .sort();
 }

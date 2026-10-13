@@ -1,0 +1,125 @@
+/* design/pages/Admin.dc.html, DAILY JOB; design/components.md, Admin, "Daily job tiles". */
+.h2 {
+  margin: 0 0 6px;
+  font: 500 26px var(--font-serif);
+}
+
+.intro {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+
+.notice {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+.noticeIcon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.notice-attn {
+  background: var(--attn-tint);
+  border: 1px solid var(--attn);
+}
+
+.notice-attn .noticeIcon,
+.notice-attn .noticeTitle {
+  color: var(--attn);
+}
+
+.notice-neutral {
+  background: var(--neutral-tint);
+  border: 1px solid var(--line-strong);
+}
+
+.notice-neutral .noticeIcon,
+.notice-neutral .noticeTitle {
+  color: var(--ink-2);
+}
+
+.notice-fail {
+  background: var(--fail-tint);
+  border: 1px solid var(--fail);
+}
+
+.notice-fail .noticeIcon,
+.notice-fail .noticeTitle {
+  color: var(--fail);
+}
+
+.noticeTitle {
+  font-weight: 600;
+  font-size: 14.5px;
+}
+
+.noticeBody {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-3);
+}
+
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) 18px;
+}
+
+.label {
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.value {
+  font: 500 24px/1.2 var(--font-serif);
+  margin-top: 6px;
+  color: var(--ink);
+}
+
+.sub {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  margin-top: var(--space-1);
+}
+
+.pass .value {
+  color: var(--pass);
+}
+
+.attn {
+  border-color: var(--attn);
+}
+
+.attn .value {
+  color: var(--attn);
+}
+
+.fail {
+  border-color: var(--fail);
+}
+
+.fail .value {
+  color: var(--fail);
+}
+
+.muted .value {
+  color: var(--ink-3);
+}

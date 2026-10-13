@@ -63,6 +63,10 @@ const TRACKED_SPEC = '**/tracked-link.spec.ts';
 // token at a time, so it runs there too, after the page projects' own admin sessions
 // (tests/e2e/admin-mail.spec.ts).
 const ADMIN_MAIL_SPEC = '**/admin-mail.spec.ts';
+// Admin's sections read and write with the secret client, which the server under test is not
+// given, so their spec starts a server of its own that is, seeds what admin shows and removes it
+// afterwards; it runs there too (tests/e2e/admin-sections.spec.ts).
+const ADMIN_SECTIONS_SPEC = '**/admin-sections.spec.ts';
 const SEEDED = 'seeded';
 // The private-data leak sweep visits every page that can show a private project, so it runs once,
 // in a project of its own, rather than in every viewport and theme (tests/e2e/leak-sweep.spec.ts).
@@ -105,6 +109,7 @@ export default defineConfig({
         PRUNED_SPEC,
         TRACKED_SPEC,
         ADMIN_MAIL_SPEC,
+        ADMIN_SECTIONS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withJs,
@@ -119,6 +124,7 @@ export default defineConfig({
         PRUNED_SPEC,
         TRACKED_SPEC,
         ADMIN_MAIL_SPEC,
+        ADMIN_SECTIONS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withJs,
@@ -133,6 +139,7 @@ export default defineConfig({
         PRUNED_SPEC,
         TRACKED_SPEC,
         ADMIN_MAIL_SPEC,
+        ADMIN_SECTIONS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withJs,
@@ -147,6 +154,7 @@ export default defineConfig({
         PRUNED_SPEC,
         TRACKED_SPEC,
         ADMIN_MAIL_SPEC,
+        ADMIN_SECTIONS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withJs,
@@ -163,6 +171,7 @@ export default defineConfig({
         PRUNED_SPEC,
         TRACKED_SPEC,
         ADMIN_MAIL_SPEC,
+        ADMIN_SECTIONS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withoutJs,
@@ -185,9 +194,11 @@ export default defineConfig({
     },
     {
       name: 'live',
-      testMatch: [LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC, ADMIN_MAIL_SPEC],
+      testMatch: [LIVE_SPEC, PRUNED_SPEC, TRACKED_SPEC, ADMIN_MAIL_SPEC, ADMIN_SECTIONS_SPEC],
       // One file at a time: each writes while the other's pages would be open.
       workers: 1,
+      // Admin's sections take their own viewport × theme snapshots, in the image only.
+      ...(IN_IMAGE ? {} : { grepInvert: /@visual/ }),
       use: { ...chrome, viewport: DESKTOP, colorScheme: 'dark' },
     },
   ],

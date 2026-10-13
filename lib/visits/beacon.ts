@@ -32,9 +32,17 @@ export interface VisitTracker {
 
 const VISIT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-/** The path to record: the pathname without a query or hash, or null if the server would refuse it. */
+// The owner's admin pages are not visits: the beacon is rendered by the root layout, so it runs
+// on them too, and records nothing there (spec section 15, "Admin" as built).
+const ADMIN_PATH = /^\/admin(\/|$)/;
+
+/**
+ * The path to record: the pathname without a query or hash, or null if the server would refuse it
+ * or it is an admin page.
+ */
 export function viewPath(pathname: string): string | null {
   const path = pathname.split(/[?#]/, 1)[0] ?? '';
+  if (ADMIN_PATH.test(path)) return null;
   return path.startsWith('/') && path.length <= PATH_LIMIT ? path : null;
 }
 

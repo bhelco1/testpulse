@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="39" failures="0" errors="0" time="0.6857945">
+    <testsuite name="tests/cli.test.ts" timestamp="2026-10-13T21:36:31.501Z" hostname="localhost" tests="10" failures="0" errors="0" skipped="0" time="0.026933542">
+        <testcase classname="tests/cli.test.ts" name="parseRunArgs &gt; expands --measures all to every measure in spec order" time="0.001772209">
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="parseRunArgs &gt; parses a diff range between two tags" time="0.000208542">
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="parseRunArgs &gt; rejects a diff range with a missing end" time="0.000499625">
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="parseRunArgs &gt; rejects an unknown measure" time="0.000177709">
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="parseRunArgs &gt; requires a tag so runs never default to a floating ref" time="0.00013975">
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="parseRunArgs &gt; rejects anything other than the run command" time="0.000119333">
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="run &gt; fails and logs each requested measure that is not implemented yet" time="0.011986375">
+            <system-err>
+inventory: not implemented yet
+run 20261013T213630Z: logs in runs/20261013T213630Z/
+
+            </system-err>
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="run &gt; writes a measure&apos;s result beside the run log after checking it against the measure&apos;s schema" time="0.004961208">
+            <system-err>
+inventory: wrote /tmp/atpr-run-xXPB8C/runs/20261013T213630Z/inventory.json
+run 20261013T213630Z: logs in runs/20261013T213630Z/
+
+            </system-err>
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="run &gt; fails the run when a measure&apos;s result does not match its schema" time="0.003594541">
+            <system-err>
+inventory: failed: [
+  {
+    &quot;expected&quot;: &quot;number&quot;,
+    &quot;code&quot;: &quot;invalid_type&quot;,
+    &quot;path&quot;: [
+      &quot;tests&quot;
+    ],
+    &quot;message&quot;: &quot;Invalid input: expected number, received string&quot;
+  }
+]
+run 20261013T213630Z: logs in runs/20261013T213630Z/
+
+            </system-err>
+        </testcase>
+        <testcase classname="tests/cli.test.ts" name="run &gt; refuses to start against a tag that is not pinned" time="0.002531458">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/inventory/coverage-and-e2e.test.ts" timestamp="2026-10-13T21:36:31.503Z" hostname="localhost" tests="5" failures="0" errors="0" skipped="0" time="0.008327125">
+        <testcase classname="tests/inventory/coverage-and-e2e.test.ts" name="coverage (captured from Actual v26.10.0) &gt; counts each config on its own" time="0.003376459">
+        </testcase>
+        <testcase classname="tests/inventory/coverage-and-e2e.test.ts" name="coverage (captured from Actual v26.10.0) &gt; adds hit counts across configs, so a line hit by either config is covered" time="0.000544375">
+        </testcase>
+        <testcase classname="tests/inventory/coverage-and-e2e.test.ts" name="coverage (captured from Actual v26.10.0) &gt; refuses to merge a file whose statement map differs between configs" time="0.000722875">
+        </testcase>
+        <testcase classname="tests/inventory/coverage-and-e2e.test.ts" name="readPlaywrightRun (captured from Actual v26.10.0) &gt; reads runtime, workers and outcome counts from a full run" time="0.002467167">
+        </testcase>
+        <testcase classname="tests/inventory/coverage-and-e2e.test.ts" name="readPlaywrightRun (captured from Actual v26.10.0) &gt; lists a test that only passed on retry as flaky, and a failing one as failed" time="0.0002645">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/inventory/parsers.test.ts" timestamp="2026-10-13T21:36:31.504Z" hostname="localhost" tests="11" failures="0" errors="0" skipped="0" time="0.010917416">
+        <testcase classname="tests/inventory/parsers.test.ts" name="readVitestReport (captured from Actual v26.10.0) &gt; reads every test with a package-relative file and its line" time="0.003365541">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="readVitestReport (captured from Actual v26.10.0) &gt; reports the two skipped sync property tests with their locations" time="0.000380458">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="findInconsistentTests &gt; flags a test that passes in one run and fails in another" time="0.00021925">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="findInconsistentTests &gt; flags a test that is missing from one run" time="0.000110459">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="findInconsistentTests &gt; does not flag a test that fails every time" time="0.000092625">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="readPlaywrightList (captured from Actual v26.10.0) &gt; counts 145 tests in 22 files with the config-level retry" time="0.002832833">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="readPlaywrightList (captured from Actual v26.10.0) &gt; treats a test.skip or test.fixme annotation as statically skipped" time="0.000429334">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="markers &gt; finds per-test retry options and ignores comments" time="0.000251417">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="markers &gt; counts both screenshot assertion styles used by the target" time="0.000140625">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="summarizeWorkflowRuns (captured for the v26.10.0 commit) &gt; reports that neither test workflow ran on the release commit" time="0.00125525">
+        </testcase>
+        <testcase classname="tests/inventory/parsers.test.ts" name="summarizeWorkflowRuns (captured for the v26.10.0 commit) &gt; records the conclusion when a test workflow did run" time="0.000734833">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/measure.test.ts" timestamp="2026-10-13T21:36:31.504Z" hostname="localhost" tests="2" failures="0" errors="0" skipped="0" time="0.006520458">
+        <testcase classname="tests/measure.test.ts" name="writeResult &gt; writes &lt;measure&gt;.json when the result matches its schema" time="0.004385125">
+        </testcase>
+        <testcase classname="tests/measure.test.ts" name="writeResult &gt; refuses to write a result that does not match its schema" time="0.00128325">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/schemas.test.ts" timestamp="2026-10-13T21:36:31.505Z" hostname="localhost" tests="1" failures="0" errors="0" skipped="0" time="0.004318834">
+        <testcase classname="tests/schemas.test.ts" name="committed JSON schemas &gt; inventory/schema.json matches the zod schema (run npm run schemas if this fails)" time="0.00353175">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/target.test.ts" timestamp="2026-10-13T21:36:31.505Z" hostname="localhost" tests="7" failures="0" errors="0" skipped="0" time="0.023859375">
+        <testcase classname="tests/target.test.ts" name="loadTarget &gt; loads the committed actual target with its pinned tag and commit" time="0.010495833">
+        </testcase>
+        <testcase classname="tests/target.test.ts" name="loadTarget &gt; rejects a branch name in place of a release tag" time="0.003020625">
+        </testcase>
+        <testcase classname="tests/target.test.ts" name="loadTarget &gt; rejects a short commit sha" time="0.002326666">
+        </testcase>
+        <testcase classname="tests/target.test.ts" name="loadTarget &gt; rejects the old bug_labels key now that ADR-002 replaced it" time="0.00296775">
+        </testcase>
+        <testcase classname="tests/target.test.ts" name="loadTarget &gt; rejects a file whose name field disagrees with its filename" time="0.00157875">
+        </testcase>
+        <testcase classname="tests/target.test.ts" name="requirePinnedTag &gt; refuses a tag other than the pinned one" time="0.001187792">
+        </testcase>
+        <testcase classname="tests/target.test.ts" name="requirePinnedTag &gt; accepts the pinned tag" time="0.001251834">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/worktree.test.ts" timestamp="2026-10-13T21:36:31.505Z" hostname="localhost" tests="3" failures="0" errors="0" skipped="0" time="0.60491775">
+        <testcase classname="tests/worktree.test.ts" name="worktrees &gt; adds a worktree at the pinned commit and removes it, leaving the clone clean" time="0.248950625">
+        </testcase>
+        <testcase classname="tests/worktree.test.ts" name="worktrees &gt; refuses to start when the clone has uncommitted changes" time="0.137230292">
+        </testcase>
+        <testcase classname="tests/worktree.test.ts" name="worktrees &gt; refuses and cleans up when the tag no longer points at the pinned commit" time="0.217591792">
+        </testcase>
+    </testsuite>
+</testsuites>

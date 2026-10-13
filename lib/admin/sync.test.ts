@@ -109,6 +109,7 @@ describe('readDeployedProjectFiles', () => {
   it('reads projects/ from the working directory, as next start and Vercel run it', () => {
     expect(deployedProjectsDir('/var/task')).toBe('/var/task/projects');
     expect(readDeployedProjectFiles().map(({ slug }) => slug)).toEqual([
+      'atpr',
       'ostomate2',
       'routeserve',
       'testpulse',

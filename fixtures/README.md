@@ -186,6 +186,22 @@ Each `testsuite` is one spec file in one Playwright project, the project's name 
 
 Three tests failed in this local run, on a machine running the amd64 image under emulation: two `phone-dark` run-page tests hit the 30 s test timeout, which Playwright writes as `<error message="Test timeout of 30000ms exceeded." type="Error">`, and one `desktop-light` test-history chart check found no marks within its 5 s wait (`<failure>`). They are kept as captured: they are the only `<error>` elements in the fixtures. Their `system-out` lists attachment paths relative to `test-results/`, and their stacks name `/work/`, the container's workspace. No scrub was needed: a grep for `bobby`, `/Users/`, `@gmail`, `sb_secret`, `sb_publishable` and `eyJhb` finds nothing.
 
+## ATPR
+
+Private repo `bhelco1/atpr`, its own Vitest suite, captured 2026-10-13 on a developer machine from a clean checkout of its `main` (its commit SHA is left out because the project is private) with Vitest 5.0.4 and Node 24, writing JUnit as its CI's test step does. CI also names the `github-actions` reporter, which writes annotations only and does not change the JUnit file.
+
+```
+npx vitest run --reporter=default --reporter=junit --outputFile.junit=<scratch>/junit.xml
+```
+
+| Path | Source | Counts |
+|---|---|---|
+| `atpr/junit/vitest.xml` | Vitest `junit` reporter (`testsuites` wrapper, one `testsuite` per test file, `classname` the repo-relative file, `name` the describe path joined by ` > `) | 7 suites, 39 tests, all passed; 3 in `tests/worktree.test.ts` |
+
+Three CLI testcases carry a `system-err` block with the CLI's own log lines: a run id, a measure's status and, in one, a Zod validation error. No source text is in the file.
+
+Scrub: two plain string substitutions. The machine's name in every `testsuite`'s `hostname` was replaced with `localhost` (7 replacements), and the macOS per-user temporary directory in one logged output path was replaced with `/tmp/` (1 replacement), the Linux runner's temporary directory. Nothing else changed; a diff against the raw capture shows those 8 lines only, and a grep for `bobby`, `helco`, `/Users/`, `/var/folders`, `/private`, `.lan`, `@gmail`, `token` and `secret` finds nothing. The raw capture is not committed.
+
 ## Known gaps
 
 - No fixture contains a Jest `pending`/`todo`/`skipped` result. The only JUnit `<error>` elements are Playwright's timeouts in `testpulse/junit/playwright-e2e.xml`. The parser tests for the Jest branches, and the older `<error>` tests, rewrite one of the captured files in the test itself and say so in a comment; no hand-written result sample exists.

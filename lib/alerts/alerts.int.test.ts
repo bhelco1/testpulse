@@ -455,19 +455,37 @@ describe('integrity alerts (spec section 12)', () => {
       it.each(['stale', 'empty_run', 'coverage_below_floor'] as const)(
         'refuses a %s alert, which resolves only by itself',
         async (kind) => {
+          // A detail in the kind's shape (lib/alerts/schema.ts), as every alert has: admin's
+          // integration tests read all open alerts, and one that does not parse fails the load.
+          const report = unwrap(
+            await admin
+              .from('reports')
+              .select('id, runs!inner(project_id)')
+              .eq('runs.project_id', project.id)
+              .limit(1)
+              .single(),
+            'a report',
+          );
+          const reportId = report.id as string;
+          const detail = {
+            stale: { last_report_at: step(12).toISOString(), expected_cadence_days: 8 },
+            empty_run: { job: 'j', module: 'm', platform: 'p', report_id: reportId },
+            coverage_below_floor: { module: 'm', floor: 80, lines_pct: 79.5, report_id: reportId },
+          }[kind];
           const row = unwrap(
             await admin
               .from('alerts')
               .insert({
                 project_id: project.id,
                 kind,
-                detail: {},
+                detail,
                 opened_at: step(13).toISOString(),
               })
-              .select('id')
+              .select('id, project_id, kind, detail, opened_at, resolved_at, acknowledged_at')
               .single(),
             'insert alert',
           );
+          AlertSchema.parse(row);
           await expect(acknowledgeAlert(admin, row.id as string, step(14))).rejects.toThrow(
             `acknowledge_alert: alert ${row.id as string} is ${kind}, and only count_drop can be acknowledged`,
           );

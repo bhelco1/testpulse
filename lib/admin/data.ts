@@ -35,11 +35,6 @@ const PROJECT_COLUMNS =
 
 const ALERT_COLUMNS = 'id, project_id, kind, detail, opened_at, resolved_at, acknowledged_at';
 
-function leftOutRow(id: unknown): [] {
-  console.error(`testpulse admin: alert ${String(id)} left out: its detail does not parse`);
-  return [];
-}
-
 const EmptyReportSchema = z.object({
   id: z.uuid(),
   runs: z.object({ branch: z.string(), commit_sha: z.string() }),
@@ -57,10 +52,7 @@ export async function loadProjectRows(client: SupabaseClient): Promise<AdminProj
 }
 
 /** Open alerts: not resolved, which an acknowledged alert always is (spec section 5.9). */
-export async function loadOpenAlerts(
-  client: SupabaseClient,
-  projects: readonly Pick<ProjectName, 'id' | 'name'>[],
-): Promise<OpenAlert[]> {
+export async function loadOpenAlerts(client: SupabaseClient): Promise<OpenAlert[]> {
   const { data, error } = await client
     .from('alerts')
     .select(ALERT_COLUMNS)
@@ -68,14 +60,21 @@ export async function loadOpenAlerts(
     .order('opened_at', { ascending: false });
   if (error) throw failed('alerts', error);
   // ingest_report and check_stale write every alert in its kind's shape (lib/alerts/schema.ts;
-  // lib/alerts/alerts.int.test.ts), so a row that does not parse was written by hand. It is left
-  // out and logged by its id, rather than taking the rest of admin down with it.
-  const alerts = data.flatMap((row: { id?: unknown }) => {
+  // lib/alerts/alerts.int.test.ts), so one that does not parse is a bug to be seen: the load fails
+  // and the page shows its error state. The log names the alert's id and kind, never its detail.
+  const alerts = data.map((row: { id?: unknown; kind?: unknown }) => {
     const parsed = AlertSchema.safeParse(row);
-    if (parsed.success) return [parsed.data];
-    return leftOutRow(row.id);
+    if (!parsed.success) {
+      throw new Error(`alert ${String(row.id)} (${String(row.kind)}): its detail does not parse`);
+    }
+    return parsed.data;
   });
 
+  // Read after the alerts, reports first and projects last. A project deleted in between takes
+  // its alerts and reports with it (on delete cascade), so an alert whose project the last read
+  // no longer finds is genuinely gone and is left out, logged by its id. A project the last read
+  // still finds existed when its reports were read, so an empty_run report missing then is a bug,
+  // and the load fails.
   const reportIds = alerts.flatMap((alert) =>
     alert.kind === 'empty_run' ? [alert.detail.report_id] : [],
   );
@@ -91,21 +90,23 @@ export async function loadOpenAlerts(
       runs.set(report.id, { branch: report.runs.branch, commitSha: report.runs.commit_sha });
     }
   }
+  const projectIds = [...new Set(alerts.map((alert) => alert.project_id))];
+  const names = new Map<string, string>();
+  if (projectIds.length > 0) {
+    const projects = await client.from('projects').select('id, name').in('id', projectIds);
+    if (projects.error) throw failed('alert projects', projects.error);
+    for (const row of projects.data as { id: string; name: string }[]) names.set(row.id, row.name);
+  }
 
-  // The reads are not one snapshot: a project registered after its row was read, or deleted (with
-  // its alerts and reports) after the alerts were, leaves an alert this load cannot name or place.
-  // It is left out and logged by its id; the next load reads it, or finds it gone.
-  const names = new Map(projects.map((project) => [project.id, project.name]));
-  const leftOut = (id: string, why: string): [] => {
-    console.error(`testpulse admin: alert ${id} left out: ${why}`);
-    return [];
-  };
   return alerts.flatMap((alert): OpenAlert[] => {
     const name = names.get(alert.project_id);
-    if (name === undefined) return leftOut(alert.id, 'its project was not read');
+    if (name === undefined) {
+      console.error(`testpulse admin: alert ${alert.id} left out: its project has been deleted`);
+      return [];
+    }
     if (alert.kind !== 'empty_run') return [{ alert, projectName: name, emptyReport: null }];
     const run = runs.get(alert.detail.report_id);
-    if (run === undefined) return leftOut(alert.id, 'its report was not read');
+    if (run === undefined) throw new Error(`alert ${alert.id} (empty_run): its report is missing`);
     return [{ alert, projectName: name, emptyReport: run }];
   });
 }
@@ -167,7 +168,7 @@ export async function loadAdminPage(client: SupabaseClient, now: Date): Promise<
   const files = readDeployedProjectFiles();
   const rows = await loadProjectRows(client);
   const [alerts, links, linkFigures, lastReports, job] = await Promise.all([
-    loadOpenAlerts(client, rows),
+    loadOpenAlerts(client),
     loadTrackedLinks(client),
     loadLinkVisitSummaries(client),
     loadLastReports(

@@ -21,7 +21,7 @@ import { API_KEY_PATTERN, hashApiKey } from '../projects/keys.ts';
 import { addProject } from '../projects/repo.ts';
 import { parseProjectFile } from '../projects/schema.ts';
 import { FakeCookieStore } from './cookie-store.test-support.ts';
-import { loadAdminPage, loadLinkDetail } from './data.ts';
+import { loadAdminPage, loadLinkDetail, readAdminPage } from './data.ts';
 import { handleConfirm } from './handlers.ts';
 
 vi.mock('next/headers', () => ({ cookies: vi.fn(), headers: vi.fn() }));
@@ -277,6 +277,35 @@ describe('admin’s reads', () => {
       expect.arrayContaining(['ostomate2', 'routeserve', 'testpulse']),
     );
     expect(page.job).toEqual(SUMMARY);
+  });
+
+  it('fails the whole load on an alert that does not parse, logging only its id and kind', async () => {
+    const bad = unwrap(
+      await admin
+        .from('alerts')
+        .insert({
+          project_id: projectId,
+          kind: 'stale',
+          detail: { written: 'by hand' },
+          opened_at: '2026-10-08T05:00:00Z',
+        })
+        .select('id')
+        .single(),
+      'bad alert',
+    ).id as string;
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, 'error').mockImplementation((line: string) => {
+      logged.push(line);
+    });
+    try {
+      await expect(readAdminPage({ ok: true, email: OWNER }, NOW)).resolves.toBeNull();
+      expect(logged).toEqual([
+        `testpulse admin: couldn’t load: alert ${bad} (stale): its detail does not parse`,
+      ]);
+    } finally {
+      spy.mockRestore();
+      await admin.from('alerts').delete().eq('id', bad);
+    }
   });
 
   it('counts a link’s browser visits only, and reads one link’s figures', async () => {

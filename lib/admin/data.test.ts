@@ -72,15 +72,20 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+const REPORTS = {
+  data: [{ id: REPORT, runs: { branch: 'main', commit_sha: 'abc1234' } }],
+  error: null,
+};
+const NAMED = { data: PROJECTS, error: null };
+
 describe('loadOpenAlerts', () => {
-  it('reads unresolved alerts newest first, with an empty report’s branch and commit', async () => {
+  it('reads unresolved alerts newest first, then their reports, then their projects', async () => {
     const { client, calls } = fakeClient({
       alerts: [{ data: [EMPTY], error: null }],
-      reports: [
-        { data: [{ id: REPORT, runs: { branch: 'main', commit_sha: 'abc1234' } }], error: null },
-      ],
+      reports: [REPORTS],
+      projects: [NAMED],
     });
-    expect(await loadOpenAlerts(client, PROJECTS)).toEqual([
+    expect(await loadOpenAlerts(client)).toEqual([
       {
         alert: EMPTY,
         projectName: 'Ostomate2',
@@ -90,50 +95,51 @@ describe('loadOpenAlerts', () => {
     expect(calls.map(({ table, steps }) => [table, steps.slice(1)])).toEqual([
       ['alerts', ['is("resolved_at", null)', 'order("opened_at", {"ascending":false})']],
       ['reports', [`in("id", ["${REPORT}"])`]],
+      ['projects', [`in("id", ["${P}"])`]],
+    ]);
+    expect(logged).toEqual([]);
+  });
+
+  it('fails the load on an alert whose detail does not parse, naming only its id and kind', async () => {
+    const { client } = fakeClient({
+      alerts: [{ data: [{ ...EMPTY, detail: { secret: 'value' } }], error: null }],
+    });
+    const failure = loadOpenAlerts(client);
+    await expect(failure).rejects.toThrow(
+      `alert ${EMPTY.id} (empty_run): its detail does not parse`,
+    );
+    await expect(failure).rejects.not.toThrow(/value/);
+  });
+
+  it('leaves out, and logs, an alert whose project was deleted after the alerts were read', async () => {
+    // The project's deletion took its reports too (on delete cascade).
+    const { client } = fakeClient({
+      alerts: [{ data: [EMPTY], error: null }],
+      reports: [{ data: [], error: null }],
+      projects: [{ data: [], error: null }],
+    });
+    expect(await loadOpenAlerts(client)).toEqual([]);
+    expect(logged).toEqual([
+      `testpulse admin: alert ${EMPTY.id} left out: its project has been deleted`,
     ]);
   });
 
-  it('leaves out, and logs, an alert whose project or report this load did not read', async () => {
-    const missingReport = fakeClient({
+  it('fails the load on an empty report missing while its project is still there', async () => {
+    const { client } = fakeClient({
       alerts: [{ data: [EMPTY], error: null }],
       reports: [{ data: [], error: null }],
+      projects: [NAMED],
     });
-    expect(await loadOpenAlerts(missingReport.client, PROJECTS)).toEqual([]);
-    const noProject = fakeClient({
-      alerts: [{ data: [EMPTY], error: null }],
-      reports: [
-        { data: [{ id: REPORT, runs: { branch: 'main', commit_sha: 'abc1234' } }], error: null },
-      ],
-    });
-    expect(await loadOpenAlerts(noProject.client, [])).toEqual([]);
-    expect(logged).toEqual([
-      `testpulse admin: alert ${EMPTY.id} left out: its report was not read`,
-      `testpulse admin: alert ${EMPTY.id} left out: its project was not read`,
-    ]);
+    await expect(loadOpenAlerts(client)).rejects.toThrow(
+      `alert ${EMPTY.id} (empty_run): its report is missing`,
+    );
+  });
+
+  it('fails the load when the database refuses a read', async () => {
     const failed = fakeClient({
       alerts: [{ data: null, error: { code: '42501', message: 'denied' } }],
     });
-    await expect(loadOpenAlerts(failed.client, PROJECTS)).rejects.toThrow('alerts: 42501 denied');
-  });
-});
-
-describe('an alert whose detail does not parse', () => {
-  it('is left out and logged by its id, and the rest are read', async () => {
-    const stale = {
-      ...EMPTY,
-      id: '00000000-0000-4000-8000-0000000000e2',
-      kind: 'stale',
-      detail: { last_report_at: '2026-10-01T00:00:00+00:00', expected_cadence_days: 8 },
-    };
-    const { client } = fakeClient({
-      alerts: [{ data: [{ ...EMPTY, detail: {} }, stale], error: null }],
-    });
-    expect(await loadOpenAlerts(client, PROJECTS)).toEqual([
-      { alert: stale, projectName: 'Ostomate2', emptyReport: null },
-    ]);
-    expect(logged).toEqual([
-      `testpulse admin: alert ${EMPTY.id} left out: its detail does not parse`,
-    ]);
+    await expect(loadOpenAlerts(failed.client)).rejects.toThrow('alerts: 42501 denied');
   });
 });
 

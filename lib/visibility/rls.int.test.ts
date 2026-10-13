@@ -177,7 +177,13 @@ async function seedProject(
   const alert = unwrap(
     await admin
       .from('alerts')
-      .insert({ project_id: project.id, kind: 'empty_run', detail: {}, opened_at: NOW })
+      .insert({
+        project_id: project.id,
+        kind: 'empty_run',
+        // In its kind's shape, as every alert is: admin's integration tests read all open alerts.
+        detail: { job: 'j', module: 'm', platform: 'p', report_id: report.id },
+        opened_at: NOW,
+      })
       .select('id')
       .single(),
     'insert alert',

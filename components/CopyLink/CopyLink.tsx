@@ -52,20 +52,25 @@ export function CopyButton({ company, state, copy, className }: CopyButtonProps)
   );
 }
 
-/** The site's origin and the link's path, as the table and the link card show them. */
+/**
+ * The site's origin and the link's path, as the table and the link card show them. In the table
+ * (`truncate`) the origin gives way first, ending in an ellipsis, so the token stays in view.
+ */
 export function LinkAddress({
   origin,
   path,
   className,
+  truncate = false,
 }: {
   origin: string;
   path: string;
   className?: string;
+  truncate?: boolean;
 }) {
   return (
     <code className={className}>
-      <span>{origin}</span>
-      <span>{path}</span>
+      <span className={truncate ? styles.origin : undefined}>{origin}</span>
+      <span className={truncate ? styles.path : undefined}>{path}</span>
     </code>
   );
 }

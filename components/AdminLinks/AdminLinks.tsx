@@ -141,7 +141,7 @@ function LinkRow({ link, origin, isNew }: { link: LinkRowView; origin: string; i
           </dd>
         </dl>
         <div className={styles.link}>
-          <LinkAddress origin={origin} path={link.path} className={styles.address} />
+          <LinkAddress origin={origin} path={link.path} className={styles.address} truncate />
           <CopyButton company={link.company} state={state} copy={copy} className={styles.copy} />
         </div>
       </div>

@@ -41,3 +41,15 @@
   flex: 1;
   min-width: 260px;
 }
+
+/* The table's address: the origin shrinks first, so the token stays whole. */
+.origin {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.path {
+  flex: none;
+}

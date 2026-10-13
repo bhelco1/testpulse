@@ -91,6 +91,9 @@ describe('AdminLinks table', () => {
     expect(within(acme).getByText(ORIGIN).parentElement?.textContent).toBe(
       `${ORIGIN}/v/Qm8r2LxT0aZe`,
     );
+    // The origin gives way to an ellipsis first, so the token stays in view.
+    expect(within(acme).getByText(ORIGIN).className).toContain('origin');
+    expect(within(acme).getByText('/v/Qm8r2LxT0aZe').className).toContain('path');
     expect(globex.querySelector('dl')?.textContent).toBe(
       'Sent—OpenedNot yet openedLast seen—Pages—',
     );

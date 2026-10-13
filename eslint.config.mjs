@@ -39,6 +39,15 @@ const VISITS = {
     'for app/api. Public pages read through lib/queries/.',
 };
 
+// Admin (lib/admin, app/admin) is reached only from app/admin: no public page or lib/queries
+// module may import it. lib/queries/boundary.test.ts proves the same for indirect imports.
+const ADMIN = {
+  regex: String.raw`(^|/)admin(/|$)`,
+  message:
+    'lib/admin and app/admin are for app/admin only (spec section 15). Public pages read ' +
+    'through lib/queries/.',
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -69,6 +78,18 @@ const eslintConfig = defineConfig([
     ignores: ['app/api/**'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [SECRET_CLIENT, INGEST, JOBS, VISITS] }],
+    },
+  },
+  {
+    // Public pages outside app/admin, and lib/queries, may not import admin either. This object
+    // replaces the rule options above for the files it matches, so it repeats them.
+    files: ['app/**', 'lib/queries/**'],
+    ignores: ['app/api/**', 'app/admin/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: [SECRET_CLIENT, INGEST, JOBS, VISITS, ADMIN] },
+      ],
     },
   },
   prettier,

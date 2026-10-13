@@ -49,15 +49,19 @@ function importsOf(file: string, root: string, options: ts.CompilerOptions): str
 
 /**
  * The first import chain from any entry to the target, entry first and target last, or null if
- * the target is unreachable.
+ * the target is unreachable. The target is a file, or a test of each file reached (such as "is
+ * under lib/admin").
  */
 export function importPathTo(
-  target: string,
+  target: string | ((file: string) => boolean),
   entries: readonly string[],
   root: string,
 ): string[] | null {
   const options = compilerOptions(root);
-  const goal = resolve(target);
+  const isGoal =
+    typeof target === 'string'
+      ? (file: string) => file === resolve(target)
+      : (file: string) => target(file);
   const cameFrom = new Map<string, string | null>();
   const queue: string[] = [];
   for (const entry of entries) {
@@ -69,7 +73,7 @@ export function importPathTo(
   }
 
   for (let next = queue.shift(); next !== undefined; next = queue.shift()) {
-    if (next === goal) {
+    if (isGoal(next)) {
       const path: string[] = [];
       for (let at: string | null | undefined = next; at; at = cameFrom.get(at)) path.unshift(at);
       return path;

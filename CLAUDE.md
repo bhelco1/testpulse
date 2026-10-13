@@ -47,6 +47,7 @@ lib/parsers/         junit, jest-json, jacoco, istanbul: pure functions
 lib/ingest/          validation, normalization, upsert, rollups
 lib/stats/           stat calculations (spec section 11)
 lib/alerts/          integrity alerts (spec section 12)
+lib/admin/           admin sign-in, session and the guard every admin page, action and route calls first
 lib/visits/          user-agent class, address hash, the admin's visit figures (spec section 14)
 lib/tracked-links/   tracked-link input, tokens and creation (spec section 14)
 lib/jobs/            the daily scheduled function (heartbeat, stale check, prune) and its cron route's auth
@@ -54,6 +55,7 @@ lib/visibility/      public/private rules shared by queries and UI
 lib/queries/         the only data source for public pages; publishable-key client only
 lib/supabase/        server.ts (secret key, server-only), public.ts (publishable key)
 lib/ci/              CI helpers: splitting Playwright's junit file by project
+proxy.ts             Next.js request proxy, for /admin only: refreshes the admin session
 components/          built from the design bundle
 projects/            one YAML per reporting project
 fixtures/            real result files captured from reporting projects

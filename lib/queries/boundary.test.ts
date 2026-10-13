@@ -50,6 +50,34 @@ describe('public read boundary (spec section 15)', () => {
   );
 });
 
+// Admin (spec section 15, "Admin" as built) lives under app/admin and lib/admin. No public page,
+// layout or lib/queries module may reach lib/admin, so nothing of admin can render on a public
+// page or ship in its bundle; only app/admin's own files may.
+describe('admin boundary (spec section 15)', () => {
+  const ADMIN_LIB = join(ROOT, 'lib', 'admin');
+  const isAdmin = (file: string) => file.startsWith(`${ADMIN_LIB}/`);
+  const outsideAdmin = publicEntryPoints(ROOT).filter(
+    (file) => !relative(ROOT, file).startsWith('app/admin/'),
+  );
+
+  it('checks every public entry point and leaves out only app/admin', () => {
+    const listed = outsideAdmin.map((file) => relative(ROOT, file));
+    expect(listed).toEqual(expect.arrayContaining(['app/layout.tsx', 'app/page.tsx']));
+    expect(listed.length).toBe(publicEntryPoints(ROOT).length - 1);
+    // The positive control: the admin page itself does reach lib/admin.
+    expect(importPathTo(isAdmin, [join(ROOT, 'app', 'admin', 'page.tsx')], ROOT)).not.toBeNull();
+  });
+
+  it.each(outsideAdmin.map((file) => [relative(ROOT, file), file]))(
+    '%s cannot reach lib/admin',
+    (_label, entry) => {
+      const path = importPathTo(isAdmin, [entry], ROOT);
+
+      expect(path && shown(path, ROOT)).toBeNull();
+    },
+  );
+});
+
 describe('importPathTo', () => {
   let root: string;
 
@@ -110,6 +138,18 @@ describe('importPathTo', () => {
     write('lib/queries/q.ts', source);
 
     expect(walk('lib/queries/q.ts')?.at(-1)).toBe(at('lib/supabase/server.ts'));
+  });
+
+  it('takes a test in place of a file, and finds the first file it accepts', () => {
+    write('app/page.tsx', "import { a } from '../lib/admin/guard';\nexport default a;\n");
+    write('lib/admin/guard.ts', "export const a = 'placeholder';\n");
+    const underAdmin = (file: string) => file.startsWith(`${at('lib/admin')}/`);
+
+    expect(importPathTo(underAdmin, [at('app/page.tsx')], root)).toEqual([
+      at('app/page.tsx'),
+      at('lib/admin/guard.ts'),
+    ]);
+    expect(importPathTo(underAdmin, [at('lib/supabase/public.ts')], root)).toBeNull();
   });
 
   it('returns null for a graph that only reaches the publishable-key client', () => {

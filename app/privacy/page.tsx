@@ -6,15 +6,15 @@ import { SiteFooter } from '../../components/SiteFooter/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader/SiteHeader';
 import { RelativeTime } from '../../components/RelativeTime/RelativeTime';
 import { now } from '../../lib/clock';
-import { PRIVACY, privacyView } from '../../lib/pages/privacy';
+import { PRIVACY, privacyView, type PrivacySection } from '../../lib/pages/privacy';
 import { SOURCE_URL, siteChromeView } from '../../lib/pages/site';
 import { loadSiteChrome } from '../../lib/queries/site';
 import styles from './page.module.css';
 
-// /privacy (spec section 13.8), following design/pages/Privacy.dc.html in its "today" phase (v9
-// item 3): what the site does now, from lib/pages/privacy.ts. The Phase 6 version, which
-// describes visit logging, ships with tracked links. The design gives the page no live
-// behaviour, so it has no realtime subscription and its header no live indicator.
+// /privacy (spec section 13.8), following design/pages/Privacy.dc.html in its "after Phase 6"
+// phase: what a visit records, the cookie and tracked links, then the sections the page has
+// always had, from lib/pages/privacy.ts. The design gives the page no live behaviour, so it has no
+// realtime subscription and its header no live indicator.
 
 export const metadata: Metadata = { title: 'Privacy · testpulse' };
 
@@ -24,10 +24,6 @@ export default async function PrivacyPage() {
   const at = now();
   const site = siteChromeView(await loadSiteChrome(undefined, at), at);
   const view = privacyView(at);
-  const cards = [
-    { title: 'What your browser does here', items: PRIVACY.browserDoes },
-    { title: 'What this site doesn’t do', items: PRIVACY.siteDoesNot },
-  ];
 
   return (
     <PageFrame>
@@ -44,7 +40,7 @@ export default async function PrivacyPage() {
           <span>Updated</span> <RelativeTime when={view.updated} />
         </div>
         <div className={styles.cards}>
-          {cards.map((card) => (
+          {PRIVACY.cards.map((card) => (
             <section key={card.title} className={styles.card} data-part="summary">
               <h2 className={styles.cardTitle}>{card.title}</h2>
               <ul className={styles.list}>
@@ -60,23 +56,36 @@ export default async function PrivacyPage() {
             </section>
           ))}
         </div>
-        {PRIVACY.sections.map((section, index) => (
-          <section
-            key={section.title}
-            className={index === 0 ? `${styles.section} ${styles.first}` : styles.section}
-          >
-            <h2 className={styles.h2}>{section.title}</h2>
-            <div className={styles.prose}>
-              {section.paragraphs.map((paragraph) => (
-                <p key={paragraph} className={styles.paragraph}>
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </section>
-        ))}
+        {/* Each group opens 48 px below what precedes it and the rest 40, as the mock spaces them. */}
+        {[PRIVACY.tracking, PRIVACY.standing].map((group) =>
+          group.map((section: PrivacySection, index) => (
+            <Section key={section.title} section={section} first={index === 0} />
+          )),
+        )}
       </main>
       <SiteFooter lastReport={site.lastReport} sourceHref={SOURCE_URL} current="privacy" />
     </PageFrame>
+  );
+}
+
+function Section({ section, first }: { section: PrivacySection; first: boolean }) {
+  return (
+    <section className={first ? `${styles.section} ${styles.first}` : styles.section}>
+      <h2 className={styles.h2}>{section.title}</h2>
+      <div className={styles.prose}>
+        {section.paragraphs.map((paragraph) => (
+          <p key={paragraph} className={styles.paragraph}>
+            {paragraph}
+          </p>
+        ))}
+        {section.list === undefined ? null : (
+          <ul className={styles.proseList}>
+            {section.list.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
   );
 }

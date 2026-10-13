@@ -215,6 +215,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
     result_failures: 0,
     runs_marked_pruned: 0,
     visits: 0,
+    tracked_sessions: 0,
     rate_limit_buckets: 0,
     projects: [],
   };
@@ -253,6 +254,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
         result_failures: 2,
         runs_marked_pruned: 2,
         visits: 0,
+        tracked_sessions: 0,
         rate_limit_buckets: 0,
         projects: [
           {
@@ -426,12 +428,27 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
     });
   });
 
-  describe('visits and rate-limit buckets', () => {
+  describe('visits, tracked sessions and rate-limit buckets', () => {
     const NOW = new Date('1993-06-15T12:00:00.000Z');
     const KEY_HASH = `prune-test-${suffix}`;
+    const LINK_COMPANY = `prune-link-${suffix}`;
+
+    // tracked_sessions belong to a link; deleting the link deletes them (on delete cascade).
+    async function trackedLink(): Promise<string> {
+      const row = unwrap(
+        await admin
+          .from('tracked_links')
+          .insert({ token: `P${suffix}abc`, company: LINK_COMPANY, role: 'prune test' })
+          .select('id')
+          .single(),
+        'insert tracked link',
+      );
+      return String(row.id);
+    }
 
     afterEach(async () => {
       unwrap(await admin.from('visits').delete().like('session_id', `prune-${suffix}-%`), 'visits');
+      unwrap(await admin.from('tracked_links').delete().eq('company', LINK_COMPANY), 'links');
       unwrap(
         await admin.from('rate_limit_buckets').delete().like('api_key_hash', `${KEY_HASH}%`),
         'buckets',
@@ -472,10 +489,51 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
         'insert buckets',
       );
 
+      const linkId = await trackedLink();
+      const session = (label: string, createdAt: Date) => ({
+        session_id: randomUUID(),
+        tracked_link_id: linkId,
+        created_at: createdAt.toISOString(),
+        label,
+      });
+      const tracked = [
+        session('expired', at(NOW, -365 * DAY_MS)),
+        session('older', at(NOW, -400 * DAY_MS)),
+        session('kept', at(NOW, -365 * DAY_MS + 1)),
+      ];
+      unwrap(
+        await admin.from('tracked_sessions').insert(
+          tracked.map(({ session_id, tracked_link_id, created_at }) => ({
+            session_id,
+            tracked_link_id,
+            created_at,
+          })),
+        ),
+        'insert tracked sessions',
+      );
+
       // 1 ms before, only the rows already past their window go.
-      expect(await prune(at(NOW, -1))).toEqual({ ...NOTHING, visits: 1, rate_limit_buckets: 1 });
-      expect(await prune(NOW)).toEqual({ ...NOTHING, visits: 1, rate_limit_buckets: 1 });
+      expect(await prune(at(NOW, -1))).toEqual({
+        ...NOTHING,
+        visits: 1,
+        tracked_sessions: 1,
+        rate_limit_buckets: 1,
+      });
+      expect(await prune(NOW)).toEqual({
+        ...NOTHING,
+        visits: 1,
+        tracked_sessions: 1,
+        rate_limit_buckets: 1,
+      });
       expect(await prune(NOW)).toEqual(NOTHING);
+
+      const sessions = unwrap(
+        await admin.from('tracked_sessions').select('session_id').eq('tracked_link_id', linkId),
+        'select tracked sessions',
+      );
+      expect(sessions.map((row) => row.session_id)).toEqual([
+        tracked.find(({ label }) => label === 'kept')?.session_id,
+      ]);
 
       const visits = unwrap(
         await admin.from('visits').select('session_id').like('session_id', `prune-${suffix}-%`),
@@ -492,7 +550,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
       expect(buckets.map((row) => row.api_key_hash)).toEqual([`${KEY_HASH}-kept`]);
     });
 
-    it('fills a batch with results first, then visits, then buckets', async () => {
+    it('fills a batch with results first, then visits, then tracked sessions, then buckets', async () => {
       const project = await register('mixed');
       const base = at(NOW, -300 * DAY_MS);
       for (let day = 0; day < 6; day += 1)
@@ -519,14 +577,32 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
         ),
         'insert buckets',
       );
+      const linkId = await trackedLink();
+      unwrap(
+        await admin.from('tracked_sessions').insert(
+          [1, 2, 3].map(() => ({
+            session_id: randomUUID(),
+            tracked_link_id: linkId,
+            created_at: at(NOW, -500 * DAY_MS).toISOString(),
+          })),
+        ),
+        'insert tracked sessions',
+      );
       // 3 results and 1 failure (4 rows), then 2 of the 3 visits fill a batch of 6.
       expect(await prune(NOW, 6)).toMatchObject({
         results: 3,
         result_failures: 1,
         visits: 2,
+        tracked_sessions: 0,
         rate_limit_buckets: 0,
       });
-      expect(await prune(NOW, 6)).toMatchObject({ results: 0, visits: 1, rate_limit_buckets: 2 });
+      // The last visit, then the 3 sessions, then 2 of the room's last 2: the buckets.
+      expect(await prune(NOW, 6)).toMatchObject({
+        results: 0,
+        visits: 1,
+        tracked_sessions: 3,
+        rate_limit_buckets: 2,
+      });
       expect(await prune(NOW, 6)).toEqual(NOTHING);
     });
   });
@@ -610,6 +686,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
           results: 3,
           result_failures: 1,
           visits: 0,
+          tracked_sessions: 0,
           rate_limit_buckets: 0,
           runs_marked_pruned: 1,
         },
@@ -686,6 +763,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
       results: 9,
       result_failures: 3,
       visits: 0,
+      tracked_sessions: 0,
       rate_limit_buckets: 0,
       runs_marked_pruned: 3,
     });

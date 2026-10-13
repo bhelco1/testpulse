@@ -253,7 +253,8 @@ function heroNote(
   return parts;
 }
 
-export function landingView(landing: Landing, now: Date): LandingView {
+/** `lead` is a tracked visitor's lead project slug (section 13.3); only the cards' order uses it. */
+export function landingView(landing: Landing, now: Date, lead: string | null = null): LandingView {
   const { headline, projects } = landing;
   if (projects.length === 0) return { kind: 'none' };
   const names = new Map(projects.map(({ project }) => [project.slug, project.name]));
@@ -274,7 +275,24 @@ export function landingView(landing: Landing, now: Date): LandingView {
         fail: passing.fail,
       },
     ],
-    cards: projects.map((summary) => card(summary, now)),
+    cards: leadFirst(projects, ({ project }) => project.slug, lead).map((summary) =>
+      card(summary, now),
+    ),
     recentRuns: landing.recentRuns.map((run) => feedRun(run, run.project, now)),
   };
+}
+
+/**
+ * The items with the lead's first and the rest in their order (components.md, "Landing: tracked
+ * visitor"): a visitor who arrived by a tracked link sees its lead project's card first. With no
+ * lead, or one no item has, the order is unchanged.
+ */
+export function leadFirst<T>(
+  items: readonly T[],
+  slugOf: (item: T) => string,
+  lead: string | null,
+): readonly T[] {
+  const index = lead === null ? -1 : items.findIndex((item) => slugOf(item) === lead);
+  if (index <= 0) return items;
+  return [...items.slice(index, index + 1), ...items.slice(0, index), ...items.slice(index + 1)];
 }

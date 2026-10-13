@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Landing, LandingProject, RecentRun } from '../queries/landing.ts';
 import type { LatestRunDetail } from '../queries/run-rows.ts';
 import { landingHeadline, type LatestRunSummary } from '../stats/summary.ts';
-import { landingView, type ReadyLandingView } from './landing.ts';
+import { leadFirst, landingView, type ReadyLandingView } from './landing.ts';
 
 // The landing page's view of the loader's output (design/pages/Landing.dc.html,
 // design/components.md, design/data-map.md "Landing"). Pure: the page passes the loader's result
@@ -836,5 +836,64 @@ describe('landingView hero note', () => {
 describe('landingView with no projects registered', () => {
   it('replaces the hero, tiles, cards and feed with the “No projects yet” card (v8 item 10)', () => {
     expect(landingView(landingOf([]), NOW)).toEqual({ kind: 'none' });
+  });
+});
+
+// A visitor who arrived by a tracked link sees the lead project's card first and the rest in
+// their usual order; nothing else changes and nothing says why (components.md, "Landing: tracked
+// visitor"; design v16 item 20; spec section 13.3).
+describe('leadFirst', () => {
+  const slugOf = (item: { slug: string }) => item.slug;
+  const items = [{ slug: 'ostomate2' }, { slug: 'routeserve' }, { slug: 'testpulse' }];
+
+  it('moves the lead to the front and keeps the others in order', () => {
+    expect(leadFirst(items, slugOf, 'testpulse').map(slugOf)).toEqual([
+      'testpulse',
+      'ostomate2',
+      'routeserve',
+    ]);
+    expect(leadFirst(items, slugOf, 'routeserve').map(slugOf)).toEqual([
+      'routeserve',
+      'ostomate2',
+      'testpulse',
+    ]);
+  });
+
+  it('leaves the order alone with no lead, a lead already first, or one that no longer exists', () => {
+    for (const lead of [null, 'ostomate2', 'retired-project', '']) {
+      expect(leadFirst(items, slugOf, lead)).toEqual(items);
+    }
+  });
+
+  it('does not change the list it is given', () => {
+    const before = items.map(slugOf);
+    leadFirst(items, slugOf, 'testpulse');
+    expect(items.map(slugOf)).toEqual(before);
+  });
+});
+
+describe('landingView for a tracked visitor', () => {
+  const titles = (view: ReadyLandingView) => view.cards.map((card) => card.project.name);
+
+  it('puts the lead project’s card first, a private one included', () => {
+    const view = landingView(SEEDED, NOW, 'routeserve');
+    if (view.kind !== 'ready') throw new Error('expected the landing page with projects');
+    expect(titles(view)).toEqual(['RouteServe', 'Ostomate 2.0', 'testpulse']);
+  });
+
+  it('changes nothing but the order of the cards', () => {
+    const usual = readyView(SEEDED);
+    const tracked = landingView(SEEDED, NOW, 'testpulse');
+    if (tracked.kind !== 'ready') throw new Error('expected the landing page with projects');
+    expect(titles(tracked)).toEqual(['testpulse', 'Ostomate 2.0', 'RouteServe']);
+    expect({ ...tracked, cards: [] }).toEqual({ ...usual, cards: [] });
+    expect([...tracked.cards].sort((a, b) => a.project.href.localeCompare(b.project.href))).toEqual(
+      [...usual.cards].sort((a, b) => a.project.href.localeCompare(b.project.href)),
+    );
+  });
+
+  it('is the usual page with no lead or an unknown one', () => {
+    expect(landingView(SEEDED, NOW, null)).toEqual(readyView(SEEDED));
+    expect(landingView(SEEDED, NOW, 'retired-project')).toEqual(readyView(SEEDED));
   });
 });

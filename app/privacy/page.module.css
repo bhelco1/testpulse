@@ -101,3 +101,12 @@
 .paragraph {
   margin: 0;
 }
+
+/* The list "If someone sent you a link" ends with. */
+.proseList {
+  margin: 0;
+  padding: 0 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

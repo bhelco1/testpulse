@@ -58,6 +58,7 @@ test.beforeAll(async () => {
       results: 3,
       result_failures: 1,
       visits: 0,
+      tracked_sessions: 0,
       rate_limit_buckets: 0,
       runs_marked_pruned: 1,
     },

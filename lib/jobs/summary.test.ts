@@ -65,7 +65,25 @@ describe('DailySummarySchema', () => {
     ['a negative count', { ...ok, pruned: { ...NOTHING_PRUNED, visits: -1 } }],
     ['a stale_closed count', { ...ok, stale_closed: 0 }],
     ['a project id that is not a UUID', { ...ok, stale_opened_project_ids: ['routeserve'] }],
+    [
+      'a negative tracked_sessions count',
+      { ...ok, pruned: { ...NOTHING_PRUNED, tracked_sessions: -1 } },
+    ],
   ])('refuses %s', (_, summary) => {
     expect(DailySummarySchema.safeParse(summary).success).toBe(false);
+  });
+
+  // Summaries written before tracked sessions existed (migration 20261012200000) have no
+  // tracked_sessions count; none were pruned then, so they read as 0.
+  it('reads a summary from before tracked sessions as having pruned none', () => {
+    const before = {
+      results: 0,
+      result_failures: 0,
+      visits: 4,
+      rate_limit_buckets: 0,
+      runs_marked_pruned: 0,
+    };
+    const parsed = DailySummarySchema.parse({ ...ok, pruned: before });
+    expect(parsed.pruned).toEqual({ ...NOTHING_PRUNED, visits: 4, tracked_sessions: 0 });
   });
 });

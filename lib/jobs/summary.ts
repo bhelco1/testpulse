@@ -16,12 +16,17 @@ export const PrunedCountsSchema = z.strictObject({
   results: Count,
   result_failures: Count,
   visits: Count,
+  /**
+   * Added with tracked sessions (migration 20261012200000_tracked_sessions.sql); a summary written
+   * before has none, and none were pruned then.
+   */
+  tracked_sessions: Count.default(0),
   rate_limit_buckets: Count,
   runs_marked_pruned: Count,
 });
 export type PrunedCounts = z.infer<typeof PrunedCountsSchema>;
 
-/** What prune_expired removed for one project; visits and buckets belong to no project. */
+/** What prune_expired removed for one project; visits, sessions and buckets belong to none. */
 export const PrunedProjectSchema = z.strictObject({
   project_id: z.uuid(),
   slug: z.string().min(1),
@@ -37,6 +42,7 @@ export const PruneBatchSchema = z.strictObject({
   result_failures: Count,
   runs_marked_pruned: Count,
   visits: Count,
+  tracked_sessions: Count,
   rate_limit_buckets: Count,
   projects: z.array(PrunedProjectSchema),
 });
@@ -83,6 +89,7 @@ export const NOTHING_PRUNED: PrunedCounts = {
   results: 0,
   result_failures: 0,
   visits: 0,
+  tracked_sessions: 0,
   rate_limit_buckets: 0,
   runs_marked_pruned: 0,
 };

@@ -35,6 +35,7 @@ const summary = (failed: boolean): DailySummary => ({
     results: 0,
     result_failures: 0,
     visits: 0,
+    tracked_sessions: 0,
     rate_limit_buckets: 0,
     runs_marked_pruned: 0,
   },

@@ -10,6 +10,8 @@ import LandingPage from './page';
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 // connection() needs a request; the render here is the page function called directly.
 vi.mock('next/server', () => ({ connection: () => Promise.resolve() }));
+// No session cookie: the visitor did not arrive by a tracked link, so no lead is asked for.
+vi.mock('next/headers', () => ({ cookies: () => Promise.resolve({ get: () => undefined }) }));
 vi.mock('next/navigation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/navigation')>()),
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),

@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { unstable_rethrow } from 'next/navigation';
 import { connection } from 'next/server';
@@ -14,13 +15,17 @@ import { now } from '../lib/clock';
 import { LANDING_ERROR, landingView, type ReadyLandingView } from '../lib/pages/landing';
 import { SOURCE_URL, siteChromeView } from '../lib/pages/site';
 import { loadLanding } from '../lib/queries/landing';
+import { loadLeadProject } from '../lib/queries/lead';
 import { loadSiteChrome } from '../lib/queries/site';
+import { parseSessionId, SESSION_COOKIE } from '../lib/visits/session';
 import styles from './page.module.css';
 
 // / (spec section 13): server-rendered as anon through lib/queries, so a private project's hidden
 // fields never reach this file. Time is read once per request. LiveUpdates re-renders the page
 // when a report arrives; without JavaScript the recent runs are the server-rendered list and
-// neither "Live" nor "Offline" is shown (section 13.3).
+// neither "Live" nor "Offline" is shown (section 13.3). A visitor whose session arrived by a
+// tracked link sees its lead project's card first, and nothing else changes (section 13.3); the
+// lead is all the page learns, through lead_project_for_session as anon.
 
 const LEDE = 'Live test results for every project I build.';
 
@@ -28,9 +33,14 @@ export default async function LandingPage() {
   // Rendered per request: the numbers are live data and the relative times move with the clock.
   await connection();
   const at = now();
+  const session = parseSessionId((await cookies()).get(SESSION_COOKIE)?.value);
   let loaded;
   try {
-    loaded = await Promise.all([loadLanding(undefined, at), loadSiteChrome(undefined, at)]);
+    loaded = await Promise.all([
+      loadLanding(undefined, at),
+      loadSiteChrome(undefined, at),
+      loadLeadProject(session),
+    ]);
   } catch (error) {
     // Next.js signals such as a dynamic-rendering bailout travel as errors; they are not ours.
     unstable_rethrow(error);
@@ -38,8 +48,8 @@ export default async function LandingPage() {
     console.error(error instanceof Error ? error.message : error);
     return <Unavailable />;
   }
-  const [landing, chrome] = loaded;
-  const view = landingView(landing, at);
+  const [landing, chrome, lead] = loaded;
+  const view = landingView(landing, at, lead);
   const site = siteChromeView(chrome, at);
 
   return (

@@ -64,6 +64,7 @@ const batch = (overrides: Partial<PruneBatch> = {}): PruneBatch => ({
   result_failures: 0,
   runs_marked_pruned: 0,
   visits: 0,
+  tracked_sessions: 0,
   rate_limit_buckets: 0,
   projects: [],
   ...overrides,
@@ -88,6 +89,7 @@ const removedB = batch({
   result_failures: 0,
   runs_marked_pruned: 1,
   visits: 7,
+  tracked_sessions: 2,
   rate_limit_buckets: 20,
   projects: [
     {
@@ -188,6 +190,7 @@ describe('runDailyJob', () => {
         results: 4_010,
         result_failures: 1_000,
         visits: 7,
+        tracked_sessions: 2,
         rate_limit_buckets: 20,
         runs_marked_pruned: 4,
       },
@@ -360,6 +363,7 @@ describe('runDailyJob', () => {
       results: 4_000,
       result_failures: 1_000,
       visits: 0,
+      tracked_sessions: 0,
       rate_limit_buckets: 0,
       runs_marked_pruned: 3,
     });
@@ -415,7 +419,7 @@ describe('runDailyJob', () => {
     expect(info).toEqual([
       'testpulse daily: pruned ostomate2: 6 results, 0 result_failures, 0 runs marked pruned',
       'testpulse daily: pruned routeserve: 4 results, 0 result_failures, 1 runs marked pruned',
-      'testpulse daily: pruned 10 results, 0 result_failures, 7 visits, 20 rate_limit_buckets, 1 runs marked pruned in 2 batches',
+      'testpulse daily: pruned 10 results, 0 result_failures, 7 visits, 2 tracked_sessions, 20 rate_limit_buckets, 1 runs marked pruned in 2 batches',
     ]);
     expect(errors).toEqual(['testpulse daily: stale_check failed: check_stale: XX000 stale broke']);
   });
@@ -436,6 +440,16 @@ describe('pruneUntilDone', () => {
     const outcome = await pruneUntilDone(fake.client, NOW, options());
     expect(outcome).toMatchObject({ batches: 3, complete: true, error: null });
     expect(outcome.removed.results).toBe(8_000);
+  });
+
+  it('keeps going while a batch removes only tracked sessions, and adds them up', async () => {
+    const sessionsOnly = batch({ tracked_sessions: 5_000 });
+    const fake = scripted({
+      prune: [{ data: sessionsOnly }, { data: batch({ tracked_sessions: 12 }) }, { data: batch() }],
+    });
+    const outcome = await pruneUntilDone(fake.client, NOW, options());
+    expect(outcome).toMatchObject({ batches: 3, complete: true, error: null });
+    expect(outcome.removed.tracked_sessions).toBe(5_012);
   });
 
   it('starts no batch once the budget is used, and says the prune is not complete', async () => {

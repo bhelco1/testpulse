@@ -71,6 +71,7 @@ describe('no raw address column (spec section 15)', () => {
       'coverage',
       'alerts',
       'tracked_links',
+      'tracked_sessions',
       'visits',
       'heartbeats',
       'rate_limit_buckets',

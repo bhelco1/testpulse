@@ -1,0 +1,376 @@
+/* design/pages/Admin.dc.html, PROJECTS; design/components.md, Admin, "Projects table". Below a
+   content width of 760 px each project is a card (the narrow drawing); from 760 px a table. */
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: 6px;
+}
+
+.h2 {
+  margin: 0;
+  font: 500 26px var(--font-serif);
+}
+
+.intro {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--ink-3);
+}
+
+.code {
+  font: 12.5px var(--font-mono);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.columns {
+  display: none;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+  padding: 14px var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.visibility {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.facts {
+  grid-column: 1 / -1;
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 14px;
+  font-size: 14px;
+}
+
+.facts dt {
+  color: var(--ink-3);
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.report {
+  color: var(--ink-2);
+}
+
+.never {
+  color: var(--ink-3);
+}
+
+.stale {
+  color: var(--attn);
+  font-weight: 600;
+}
+
+.sync {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.syncWord {
+  font-weight: 600;
+}
+
+.pass {
+  color: var(--pass);
+}
+
+.attn {
+  color: var(--attn);
+}
+
+.syncDetail {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.action {
+  grid-column: 1 / -1;
+  display: flex;
+}
+
+.noKey {
+  display: none;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.rotate,
+.retry {
+  min-height: var(--target-min);
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--fail);
+  background: none;
+  color: var(--fail);
+  font: 600 13.5px var(--font-sans);
+  cursor: pointer;
+}
+
+.panel {
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.danger {
+  background: var(--fail-tint);
+  border: 1px solid var(--fail);
+}
+
+.panelText {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.failInk {
+  color: var(--fail);
+}
+
+.after {
+  margin-left: 5px;
+}
+
+.failIcon {
+  display: none;
+  flex: none;
+  color: var(--fail);
+}
+
+.panelButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cancel {
+  min-height: var(--target-min);
+  padding: 0 12px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: 600 13.5px var(--font-sans);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.confirm {
+  min-height: var(--target-min);
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--fail);
+  color: var(--on-ink);
+  font: 600 13.5px var(--font-sans);
+  cursor: pointer;
+}
+
+.confirm:disabled,
+.retry:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.retry {
+  align-self: flex-end;
+}
+
+.reveal {
+  background: var(--inset);
+  border: 1px solid var(--line-strong);
+}
+
+.revealTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.revealLine {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.key {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px dashed var(--line-strong);
+  font: 13px var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.done {
+  align-self: flex-end;
+  min-height: var(--target-min);
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--ink);
+  color: var(--on-ink);
+  font: 600 13.5px var(--font-sans);
+  cursor: pointer;
+}
+
+@container admin (min-width: 760px) {
+  .scroll {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 780px;
+  }
+
+  .columns,
+  .line {
+    display: grid;
+    grid-template-columns: 170px 120px 160px minmax(0, 1fr) 150px;
+    gap: 14px;
+  }
+
+  .columns {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+    font: 600 12px var(--font-mono);
+    letter-spacing: 0.04em;
+    color: var(--ink-3);
+  }
+
+  .row {
+    padding: 0;
+    gap: 0;
+  }
+
+  .line {
+    align-items: center;
+    padding: 14px 18px;
+    font-size: 14px;
+  }
+
+  .name {
+    font-size: 14px;
+  }
+
+  .visibility {
+    font-size: 14px;
+  }
+
+  .facts {
+    display: contents;
+  }
+
+  .facts dt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .report,
+  .never,
+  .stale {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .action {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+
+  .noKey {
+    display: inline;
+  }
+
+  .panel {
+    margin: 0 18px var(--space-4);
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .panelText {
+    flex: 1;
+    min-width: min(100%, 260px);
+  }
+
+  .panelButtons {
+    gap: var(--space-3);
+  }
+
+  .danger[role='alert'] .panelText {
+    min-width: min(100%, 240px);
+  }
+
+  .failIcon {
+    display: block;
+  }
+
+  .retry {
+    align-self: auto;
+  }
+
+  .reveal {
+    display: block;
+  }
+
+  .revealLine {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .key {
+    flex: 1;
+    min-width: min(100%, 260px);
+  }
+
+  .done {
+    align-self: auto;
+  }
+}

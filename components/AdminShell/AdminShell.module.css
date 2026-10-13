@@ -1,4 +1,4 @@
-/* design/pages/Admin.dc.html: SIGNED IN: MAIN and ERROR. */
+/* design/pages/Admin.dc.html: LOADING and ERROR. */
 .main {
   padding: 24px 0 64px;
   display: flex;
@@ -59,4 +59,24 @@
   align-items: center;
   font-weight: 600;
   font-size: 15px;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.loadingH2 {
+  margin: 0;
+  font: 500 26px var(--font-serif);
+  color: var(--ink-3);
 }

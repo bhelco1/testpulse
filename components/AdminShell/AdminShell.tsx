@@ -1,19 +1,37 @@
 import { AlertCircleIcon } from '../icons/icons';
+import { Skeleton } from '../Skeleton/Skeleton';
 import styles from './AdminShell.module.css';
 
 export interface AdminShellProps {
-  // ready: the owner is signed in. unavailable: Supabase did not answer, so whether anyone is
-  // signed in is unknown and nothing of admin is shown.
-  state: 'ready' | 'unavailable';
+  // loading: the owner is signed in and the sections' data is on its way. unavailable: Supabase
+  // or the database did not answer, so nothing of admin can be shown.
+  state: 'loading' | 'unavailable';
 }
 
-// Admin's page frame once signed in (design/pages/Admin.dc.html, SIGNED IN: MAIN), and its error
-// state (ERROR). The sections it frames arrive with their data.
+// The four sections and the height of the block each stands in for while loading.
+const SKELETON = [
+  ['Open alerts', 84],
+  ['Tracked links', 220],
+  ['Projects', 180],
+  ['Daily job', 110],
+] as const;
+
+// Admin's loading and error states (design/pages/Admin.dc.html, LOADING and ERROR;
+// design/components.md, Admin, "Page states").
 export function AdminShell({ state }: AdminShellProps) {
-  if (state === 'ready') {
+  if (state === 'loading') {
     return (
-      <main id="main" className={styles.main}>
+      <main id="main" className={styles.main} aria-busy="true">
         <h1 className={styles.h1}>Admin</h1>
+        <span role="status" className={styles.hidden}>
+          Loading admin
+        </span>
+        {SKELETON.map(([heading, height]) => (
+          <section key={heading} className={styles.loading}>
+            <h2 className={styles.loadingH2}>{heading}</h2>
+            <Skeleton width="100%" height={height} radius={16} />
+          </section>
+        ))}
       </main>
     );
   }

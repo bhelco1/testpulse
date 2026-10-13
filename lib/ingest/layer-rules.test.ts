@@ -488,3 +488,25 @@ describe('testpulse acceptance against projects/testpulse.yaml', () => {
     ).toEqual({ e2e: 3 });
   });
 });
+
+// ATPR's one report, with the job, module and platform its ci.yml sends.
+describe('ATPR acceptance against projects/atpr.yaml', () => {
+  const resolve = compileLayerRules(loadProjectFile(projectFilePath('atpr')).layer_rules);
+  const cases = parseJunit([readFileSync(fixture('atpr/junit/vitest.xml'), 'utf8')]).tests.map(
+    (test) => ({
+      ...target({ job: 'test', module: 'atpr', platform: 'node', suite: test.suite }),
+      cases: 1,
+    }),
+  );
+
+  it('test/atpr/node: the git worktree tests are integration 3, everything else unit 36', () => {
+    expect(countByLayer(resolve, cases)).toEqual({ unit: 36, integration: 3 });
+  });
+
+  it('counts only tests/worktree.test.ts as integration', () => {
+    const integration = cases.filter((item) => resolve(item) === 'integration');
+    expect(new Set(integration.map((item) => item.suite))).toEqual(
+      new Set(['tests/worktree.test.ts']),
+    );
+  });
+});

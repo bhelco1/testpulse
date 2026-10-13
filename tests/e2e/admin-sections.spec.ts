@@ -396,6 +396,7 @@ test('shows every section from the database, and records no visit of admin', asy
     'RouteServePrivateLast report3 h agoYAML sync✓ In syncRotate key',
     'testpulsePublicLast report◷ 1 week agoYAML sync≠ Differsretention_days: YAML 180, database 365Rotate key',
     'routeserve-legacyPrivateLast report—YAML sync? No YAMLA database row with no projects/*.yaml file. The sync leaves it as it is.Rotate key',
+    'ATPRPrivateLast report—YAML sync+ Not registeredprojects/atpr.yaml has no database row. Register it with npm run project:add atpr.No row, no key',
   ]);
 
   const job = section(page, 'Daily job');

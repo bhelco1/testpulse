@@ -1,0 +1,35 @@
+slug: atpr
+name: ATPR
+tagline: Measures how far a test suite can be trusted, with evidence; first target is Actual Budget.
+description: >-
+  AI Trust and Product Readiness: a pipeline that answers how much leadership should trust a
+  codebase's test suite, and with what evidence. Rather than counting tests or pass rates, it
+  measures what the suite would catch if the code were broken, whether each test constrains
+  behaviour, and whether its past confidence matched the bugs that escaped, scoped to the release
+  diff. It audits its target from outside, never changing it; the first target is Actual Budget's
+  loot-core, pinned to a release tag.
+visibility: private
+default_branch: main
+expected_cadence_days: 8
+sort_order: 40
+
+dev_stack:
+  - category: Language
+    items: [Node 24, TypeScript 7]
+  - category: Libraries
+    items: [Zod 4, yaml]
+  - category: Delivery
+    items: [GitHub Actions]
+
+test_stack:
+  - category: Runners
+    items: [Vitest 5]
+
+# CI (.github/workflows/ci.yml in bhelco1/atpr) posts one Vitest JUnit report from its test job:
+# job test, module atpr, platform node, no coverage. The worktree tests create real git
+# repositories and worktrees on disk; every other file tests pure functions, or the CLI in process
+# against temporary directories.
+layer_rules:
+  - match: { module: atpr, suite: 'tests/worktree.test.ts' }
+    layer: integration
+  - default: unit

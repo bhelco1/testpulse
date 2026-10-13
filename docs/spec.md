@@ -1,6 +1,6 @@
 # testpulse: specification
 
-Version 0.65, 2026-10-13. Status: Phases 0 to 5, self-reporting and the design track complete; Phase 6 in progress, with the integrity alerts and the daily scheduled function of section 12 built, tracked links and visit logging built (section 14, "As built") with the Phase 6 privacy copy (13.8), admin's magic-link sign-in built (section 15, "Admin") and its sections built (13.9): open alerts, tracked links with their visits, projects with their YAML sync and key rotation, and the daily job. The public pages of Phase 5 are built (sections 13.2 to 13.8): the landing page, `/`, and the project page, `/p/[slug]`, with the live feed, and the run page, `/p/[slug]/runs/[id]`, the test history page, `/p/[slug]/tests/[testKey]`, the how-it's-tested page, `/how-its-tested`, and the privacy page, `/privacy`, without it.
+Version 0.66, 2026-10-13. Status: Phases 0 to 5, self-reporting and the design track complete; Phase 6 in progress, with the integrity alerts and the daily scheduled function of section 12 built, tracked links and visit logging built (section 14, "As built") with the Phase 6 privacy copy (13.8), admin's magic-link sign-in built (section 15, "Admin") and its sections built (13.9): open alerts, tracked links with their visits, projects with their YAML sync and key rotation, and the daily job. The public pages of Phase 5 are built (sections 13.2 to 13.8): the landing page, `/`, and the project page, `/p/[slug]`, with the live feed, and the run page, `/p/[slug]/runs/[id]`, the test history page, `/p/[slug]/tests/[testKey]`, the how-it's-tested page, `/how-its-tested`, and the privacy page, `/privacy`, without it.
 Source material: `docs/PROJECT_INVENTORY.md` (survey of Ostomate2 and routeserve, 2026-09-21; routeserve is private, so its part is a short summary).
 
 This document is the source of truth for what testpulse is and how it is built. When a decision changes during the build, update this file in the same commit. Standing rules for coding sessions (stack, commands, conventions) live in `CLAUDE.md` at the repo root; this file holds the what and the why.
@@ -1025,6 +1025,7 @@ Self-reporting, once part of this phase, moved ahead of Phase 6 (decision 2026-1
 | 2 | Should routeserve test names be public, or only counts? | Names shown, failures hidden (section 9) |
 | 3 | Email notifications for alerts | Off; admin page only |
 | 5 | Personalized greeting on tracked links | Off at launch; `lead_project_slug` ordering only |
+| 6 | How a project measured by an outside auditor (Actual Budget, measured by ATPR at a pinned tag) is shown, and what that changes in the standard, the API and the schema. Proposal: `docs/proposals/actual-via-atpr.md` | Not shown; no audited projects |
 
 ## 19. Decision log
 

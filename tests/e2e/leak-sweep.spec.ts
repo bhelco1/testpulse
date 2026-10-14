@@ -34,13 +34,15 @@ const UNKNOWN_UUID = '00000000-0000-4000-8000-000000000000';
 const SITE_PAGES = ['/', '/how-its-tested', '/privacy'] as const;
 
 // A registered private project's not-found answers: an unknown run, a run ID that is not a UUID,
-// an unknown test and a key that is not one, and a project that does not exist.
+// an unknown test and a key that is not one, a project that does not exist, and an address no
+// route answers, whose header still lists every project.
 const NOT_FOUND = [
   `/p/${SLUG}/runs/${UNKNOWN_UUID}`,
   `/p/${SLUG}/runs/not-a-uuid`,
   `/p/${SLUG}/tests/${'0'.repeat(64)}`,
   `/p/${SLUG}/tests/not-a-key`,
   '/p/nope',
+  '/no-such-page',
 ] as const;
 
 interface SeededTest {
@@ -370,6 +372,7 @@ test.describe('the private-data leak sweep', { tag: '@js' }, () => {
       'This test isn’t in RouteServe',
       'This test isn’t in RouteServe',
       'No project at this address',
+      'Nothing at this address',
     ]);
 
     const visits = [...own, ...missing];
@@ -412,8 +415,8 @@ test.describe('the private-data leak sweep', { tag: '@js' }, () => {
       ['/admin', 200, 'Sign in to admin'],
     ];
 
-    // 3 site pages, 3 of the project page, 11 runs, 1,041 tests, 5 not found and admin.
-    expect(pages).toHaveLength(1_064);
+    // 3 site pages, 3 of the project page, 11 runs, 1,041 tests, 6 not found and admin.
+    expect(pages).toHaveLength(1_065);
     const results = await fetchAll(
       request,
       pages.map(([path]) => path),

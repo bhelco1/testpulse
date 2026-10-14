@@ -366,7 +366,7 @@ test('shows every section from the database, and records no visit of admin', asy
   const alerts = section(page, 'Open alerts');
   await expect(alerts.getByText('4 open')).toBeVisible();
   await expect(alerts.getByRole('group')).toHaveText([
-    /^COUNT DROPOstomate 2\.0: test count fell 26%android\/shared\/jvm: 82 → 60 tests \(−26%\) since the previous default-branch runOpened5 Oct, 09:30 UTC·Closes by itself when the count recovers, or when acknowledgedAcknowledge$/,
+    /^COUNT DROPOstomate 2\.0: test count fell 26%android\/shared\/jvm: 82 → 60 tests \(−26%\) since the previous default-branch runOpened5 Oct, 09:30 UTC·Closes when the count recovers, or acknowledge it\.Acknowledge$/,
     /^EMPTY REPORTOstomate 2\.0: a report held no testsios\/composeApp\/ios-sim parsed with 0 tests on main \([0-9a-f]{7}\)\.Opened4 Oct, 23:32 UTC·Closes by itself when that key reports tests$/,
     /^STALEtestpulse: no report in 13 daysNo report in 13 days\. Expected every 8 days; last report 22 Sep\.Opened1 Oct, 04:12 UTC·Closes by itself when testpulse reports$/,
     /^BELOW FLOORRouteServe: coverage under its floorpackages\/shared lines 79\.9% under its 80% floorOpened30 Sep, 09:16 UTC·Closes by itself when the module is back at its floor$/,
@@ -482,6 +482,8 @@ test('shows a link’s detail, opened and not, and 404 for no such link', async 
   for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-link']) {
     const response = await page.goto(`/admin/links/${id}`);
     expect(response?.status(), id).toBe(404);
+    // Until an admin not-found is designed (asked in v18), the site-wide one answers.
+    await expect(page.getByRole('heading', { level: 1 }), id).toHaveText('Nothing at this address');
   }
 });
 

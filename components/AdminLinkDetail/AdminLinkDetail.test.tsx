@@ -42,17 +42,19 @@ const OPENED: LinkDetailView = {
   pages: [
     { label: 'Overview', path: '/', views: '2', time: '1m 14s' },
     { label: 'Ostomate2', path: '/p/ostomate2', views: '3', time: '6m 52s' },
+    { label: 'Ostomate2 run', path: '/p/ostomate2/runs/412', views: '1', time: null },
   ],
   perProject: [
     { name: 'Ostomate2', time: '6m 52s', share: '100%' },
     { name: 'RouteServe', time: '41 s', share: '10%' },
+    { name: 'testpulse', time: null, share: '0%' },
   ],
 };
 
 const UNOPENED: LinkDetailView = {
   ...OPENED,
   company: 'Globex',
-  contact: '—',
+  contact: null,
   lead: null,
   notes: null,
   opened: false,
@@ -103,17 +105,22 @@ describe('AdminLinkDetail', () => {
     expect([...(pages?.querySelectorAll('li') ?? [])].map((item) => item.textContent)).toEqual([
       'Overview/Views: 2Time: 1m 14s',
       'Ostomate2/p/ostomate2Views: 3Time: 6m 52s',
+      'Ostomate2 run/p/ostomate2/runs/412Views: 1Time: —',
     ]);
     expect(pages?.textContent).toContain(
-      'Time on a page is measured until the next page or the tab closes.',
+      'Time on a page runs until the next page, or until the tab is hidden or closed.',
     );
     const perProject = within(visits).getByRole('heading', { name: 'Time per project' })
       .parentElement as HTMLElement;
     const bars = [...perProject.querySelectorAll('li')];
-    expect(bars.map((bar) => bar.textContent)).toEqual(['Ostomate26m 52s', 'RouteServe41 s']);
+    expect(bars.map((bar) => bar.textContent)).toEqual([
+      'Ostomate26m 52s',
+      'RouteServe41 s',
+      'testpulse—',
+    ]);
     expect(
       bars.map((bar) => (bar.querySelector('span > span') as HTMLElement | null)?.style.width),
-    ).toEqual(['100%', '10%']);
+    ).toEqual(['100%', '10%', '0%']);
     expect(within(visits).queryByText('Not yet opened')).toBeNull();
   });
 
@@ -129,6 +136,23 @@ describe('AdminLinkDetail', () => {
     );
     expect(within(visits).queryByRole('heading', { name: 'Pages viewed' })).toBeNull();
     expect(within(visits).getAllByText('—')).toHaveLength(2);
+  });
+
+  it('draws a dash for no contact and for unmeasured time in the third ink', () => {
+    show({ ...OPENED, contact: null });
+    const details = screen.getByRole('region', { name: 'Link details' });
+    expect(within(details).getByText('—').className).toContain('unknown');
+    const visits = screen.getByRole('region', { name: 'Visits' });
+    const dashes = within(visits)
+      .getAllByText('—')
+      .map((dash) => dash.className);
+    expect(dashes).toHaveLength(2);
+    for (const name of dashes) expect(name).toContain('unknown');
+    const measured = within(visits).getAllByText('6m 52s', { selector: 'li > span' });
+    expect(measured).toHaveLength(2);
+    for (const time of measured) expect(time.className).toContain('time');
+    expect(ruleFor(CSS, '.unknown')).toEqual({ color: 'var(--ink-3)' });
+    expect(ruleFor(CSS, '.time')).toEqual({ color: 'var(--ink-2)' });
   });
 
   it('offers the address to select when the browser refuses to copy', async () => {

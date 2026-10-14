@@ -1,4 +1,4 @@
-# testpulse handoff v16
+# testpulse handoff v17
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -24,7 +24,7 @@ To view a page, open it in a browser from inside `pages/` (it needs `support.js`
 | `pages/Run Detail.dc.html` | `/p/[slug]/runs/[id]` — tweaks: run (passed, failed, failed-private), pruned |
 | `pages/Test History.dc.html` | `/p/[slug]/tests/[testKey]` |
 | `pages/How Its Tested.dc.html` | `/how-its-tested` — tweak: selfReporting |
-| `pages/Admin.dc.html` | `/admin` — tweak: alerts |
+| `pages/Admin.dc.html` | `/admin` — tweaks: view, detail, states, alerts, sync, job, theme |
 | `pages/Privacy.dc.html` | `/privacy` |
 | `pages/Kiosk.dc.html` | Kiosk, fixed 1920×1080, scaled to fit screen — tweak: scenario |
 | `pages/Phone Views.dc.html` | All pages at 390 px, a dark row and a light row |
@@ -875,3 +875,78 @@ Same rules: the Design System page is canonical, components.md matches it, every
 - Alert and link figures, contacts and dates are SAMPLE.
 
 Files changed in v16: Admin.dc.html, Design System.dc.html, Landing.dc.html, Privacy.dc.html, How Its Tested.dc.html, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v17
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px, existing tokens only (no new token). Nothing else was changed. Check Admin and NotFound at 390 in both themes.
+
+**Alerts**
+1. count_drop meta now reads "Closes when the count recovers, or acknowledge it." (Admin, Design System section 15, components.md "Alert row").
+   - components.md says when: a later default-branch report for that key gets back to 80% or more of the count it dropped from.
+   - Acknowledge stays, as before.
+2. count_drop body uses the report key, like empty_run: "e2e/app/chromium: 235 → 180 tests (−23%) since the previous default-branch run".
+   - The key is SAMPLE (it is the key the Design System's testpulse sample card uses).
+   - components.md says why there is no layer, and that {p} is rounded down to a whole number ("−20%" for a 20.4% drop). The title uses the same {p}.
+3. data-map Alerts row: only ingestion resolves alerts, and the row says which report resolves each kind. The daily job only opens stale alerts. The Daily job row now says "stale alerts opened (names; the job never closes one)".
+4. "No open alerts. Every project is reporting on schedule." The daily-job clause is gone (Admin, components.md).
+
+**Daily job**
+5. The Stale check tile reads "1 opened" (sub "Opened: RouteServe"); with no alerts, "0 opened".
+   - The Admin intro now says the job "opens stale alerts (a report arriving closes them)".
+   - Design System section 15 gains a Stale check tile specimen.
+   - Updated in components.md "Daily job tiles" and data-map "Daily job".
+6. Failed prune:
+   - Tile sub: "Removed 5,000 results before failing".
+   - Notice: "…stopped with “…” after removing 5,000 results; rows removed before the failure stay removed."
+   - Design System tile updated to match.
+   - components.md gives the template and says "Nothing removed" is never shown. When nothing was removed it reads "0 rows". data-map adds the removed counts to the failed-run summary.
+7. "around 06:00 UTC" everywhere the schedule appears:
+   - The Admin intro, the Last run sub ("next around 06:00 UTC"), the never-run notice and the failed-run notice.
+   - The Design System tile and components.md.
+   - Recorded run times ("8 Oct, 06:00 UTC") are sample timestamps, not the schedule, and are unchanged.
+
+**Projects**
+8. Not registered sub-line: "projects/demo-shop.yaml has no database row. Register it with `npm run project:add demo-shop`." The command is mono 12.5 `--ink`.
+   - Changed in Admin (desktop and phone), the Design System YAML sync specimen and components.md "Projects table".
+9. The phone card for a Not registered project now shows "No row, no key" (13 `--ink-3`) where Rotate would be, as the desktop row does.
+
+**Tracked links**
+10. Role is required: "required" beside the label and the error "Role is required", drawn like "Company is required". Contact is now "optional" and has no error.
+    - The "validation" state submits an empty form, so both errors show.
+    - The link detail shows "—" (`--ink-3`) for an empty contact.
+    - components.md "Create form" and "Link detail" updated.
+11. data-map: `sent_on` → `sent_at` (a timestamp, read as a date at UTC midnight), in the link detail and SENT rows. components.md's SENT line names `sent_at` too. Nothing visible changes.
+12. A page view whose time was never measured shows "—" in `--ink-3`, never "0 s".
+    - Drawn on Acme's "Ostomate2 run" row in the link detail, in Admin and in the new Design System link-detail specimen.
+    - Acme's Ostomate2 time per project is now 6m 52s, the measured views only.
+    - Written into components.md "Link detail" and data-map.
+
+**How it's tested**
+13. The Phase 6 Unit sentence now reads: "The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup."
+    - The Integration sentence now opens: "The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures."
+    - "closing stale alerts" is removed. The job sentence keeps "opening stale alerts".
+    - Updated in How Its Tested.dc.html and components.md.
+14. The incident line now reads "A daily check flags it on the admin page." (How Its Tested, components.md).
+
+**Design System and v15 leftovers**
+15. Design System section 15 now has specimens for every Admin part, alongside the alert row, YAML sync and job tiles. They are static markup copied from Admin.dc.html, and they follow the page theme toggle.
+    - Sign-in: the form invalid and sending, the expired and signed-out notices, "Check your email", and Not allowed.
+    - Tracked links table: a new row, an opened row with a note and the copy-refused line, and a not-yet-opened row showing "Copied". Also its 390 phone card.
+    - Create form: validation (Company and Role errors), busy, and the server-error notice.
+    - Link detail: details, link, visit tiles, pages viewed with a "—" row, time per project, the not-yet-opened notice and the footnote.
+    - Delete and rotate confirms: the button, the confirm, busy and error, and the rotate's new key shown once.
+    - With these in place, the v16 note (section 15 holds Admin's specimens) and components.md "Admin" (which now lists them) are true.
+16. The Design System StatusTimeline note now ends "Flaky: passed and failed on the same commit and platform, in default-branch CI runs of the last 30 days."
+17. The failed-run banner's private line now reads "This repository is private, so failure messages, stack traces and source links are hidden." Changed in the Design System banner, its note, and the Run Detail private failed run.
+18. The Files table lists Admin's tweaks: view, detail, states, alerts, sync, job, theme.
+
+**Not-found page**
+19. NotFound has a new kind "page" for any other address. It is drawn in Design System section 14 at 1280 and 390, in both themes through the page toggle.
+    - h1 "Nothing at this address", path chip "/no-such-page", body "There’s no page here. The link may be mistyped, or the page may have moved. Every project’s results start from the overview."
+    - Primary "Go to overview", link "How it’s tested". No breadcrumbs.
+    - It has the site header and footer, so the Privacy link is there. In the build it is the app's not-found page, replacing Next.js's default.
+    - Added to components.md "NotFound (page)".
+
+**Time on page**
+20. The footnote now reads "Time on a page runs until the next page, or until the tab is hidden or closed." Changed in Admin, the Design System link-detail specimen and components.md.
+
+Files changed in v17: Admin.dc.html, Design System.dc.html, NotFound.dc.html, How Its Tested.dc.html, Run Detail.dc.html, design/README.md, design/components.md, design/data-map.md.

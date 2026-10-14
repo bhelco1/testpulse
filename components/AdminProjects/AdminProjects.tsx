@@ -113,7 +113,14 @@ function ProjectRow({
               {project.sync.word}
             </span>
             {project.sync.detail !== null && (
-              <span className={styles.syncDetail}>{project.sync.detail}</span>
+              <span className={styles.syncDetail}>
+                {project.sync.detail}
+                {project.sync.command !== null && (
+                  <>
+                    <code className={styles.command}>{project.sync.command}</code>.
+                  </>
+                )}
+              </span>
             )}
           </dd>
         </dl>

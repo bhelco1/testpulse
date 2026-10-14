@@ -23,7 +23,7 @@ const PROJECTS: ProjectRowView[] = [
     visibility: 'Public',
     private: false,
     report: { when: when('4 min ago'), stale: false },
-    sync: { word: '✓ In sync', tone: 'pass', detail: null },
+    sync: { word: '✓ In sync', tone: 'pass', detail: null, command: null },
     rotateSlug: 'ostomate2',
   },
   {
@@ -32,7 +32,12 @@ const PROJECTS: ProjectRowView[] = [
     visibility: 'Private',
     private: true,
     report: { when: when('1 week ago'), stale: true },
-    sync: { word: '≠ Differs', tone: 'attn', detail: 'expected_cadence_days: YAML 7, database 8' },
+    sync: {
+      word: '≠ Differs',
+      tone: 'attn',
+      detail: 'expected_cadence_days: YAML 7, database 8',
+      command: null,
+    },
     rotateSlug: 'routeserve',
   },
   {
@@ -41,7 +46,12 @@ const PROJECTS: ProjectRowView[] = [
     visibility: 'Public',
     private: false,
     report: { when: null, stale: false },
-    sync: { word: '+ Not registered', tone: 'attn', detail: 'projects/demo-shop.yaml has no row.' },
+    sync: {
+      word: '+ Not registered',
+      tone: 'attn',
+      detail: 'projects/demo-shop.yaml has no database row. Register it with ',
+      command: 'npm run project:add demo-shop',
+    },
     rotateSlug: null,
   },
 ];
@@ -82,8 +92,13 @@ describe('AdminProjects', () => {
     ).toContain('stale');
     const demo = row('demo-shop');
     expect(demo.textContent).toBe(
-      'demo-shopPublicLast report—YAML sync+ Not registeredprojects/demo-shop.yaml has no row.No row, no key',
+      'demo-shopPublicLast report—YAML sync+ Not registeredprojects/demo-shop.yaml has no ' +
+        'database row. Register it with npm run project:add demo-shop.No row, no key',
     );
+    const command = within(demo).getByText('npm run project:add demo-shop');
+    expect(command.tagName).toBe('CODE');
+    expect(command.className).toContain('command');
+    expect(command.nextSibling?.textContent).toBe('.');
     expect(within(demo).queryByRole('button')).toBeNull();
   });
 
@@ -168,6 +183,10 @@ describe('AdminProjects', () => {
 
   it('draws the states as the design does', () => {
     expect(ruleFor(CSS, '.stale')).toMatchObject({ color: 'var(--attn)', 'font-weight': '600' });
+    expect(ruleFor(CSS, '.command')).toMatchObject({
+      font: '12.5px var(--font-mono)',
+      color: 'var(--ink)',
+    });
     expect(ruleFor(CSS, '.rotate, .retry')).toMatchObject({
       border: '1px solid var(--fail)',
       color: 'var(--fail)',

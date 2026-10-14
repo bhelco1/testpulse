@@ -162,7 +162,9 @@ describe('AdminLinks create form', () => {
     const form = screen.getByRole('group', { name: 'New tracked link' });
     expect(within(form).getByText('Company').parentElement?.textContent).toBe('Companyrequired');
     expect(within(form).getByText('Role').parentElement?.textContent).toBe('Rolerequired');
-    expect((field('Contact') as HTMLInputElement).placeholder).toBe('Name or email');
+    expect(within(form).getByText('Contact').parentElement?.textContent).toBe('Contactoptional');
+    expect(within(form).getByText('optional').className).toContain('tag');
+    expect((field(/^Contact/) as HTMLInputElement).placeholder).toBe('Name or email');
     const lead = within(form).getByRole('combobox', { name: 'Lead project' }) as HTMLSelectElement;
     expect([...lead.options].map((option) => option.textContent)).toEqual([
       'None, open the overview',
@@ -192,7 +194,7 @@ describe('AdminLinks create form', () => {
       field(/^Company/).getAttribute('aria-describedby'),
     );
     expect(screen.getByText('Role is required')).toBeTruthy();
-    expect(field('Contact').getAttribute('aria-invalid')).toBeNull();
+    expect(field(/^Contact/).getAttribute('aria-invalid')).toBeNull();
   });
 
   it('sends the fields, busy while it runs, then closes and marks the new row', async () => {
@@ -202,7 +204,7 @@ describe('AdminLinks create form', () => {
     open();
     type(/^Company/, 'Initech');
     type(/^Role/, 'Head of QA');
-    type('Contact', 'Priya Shah');
+    type(/^Contact/, 'Priya Shah');
     type(/^Notes/, 'Applied through their careers page.');
     fireEvent.change(screen.getByRole('combobox', { name: 'Lead project' }), {
       target: { value: 'routeserve' },

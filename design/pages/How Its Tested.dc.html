@@ -180,8 +180,8 @@ class Component extends DCLogic {
     /* v16 item 22: after Phase 6 each row gains a second sentence for what Phase 6 added (components.md "How it’s tested page") */
     const p6 = (this.props.phase ?? 'today') === 'after Phase 6';
     const P6 = {
-      Unit: 'Alert rules (stale, count drop, empty report, below floor) against fixed run histories; bot and link-preview classification of user agents; tracked-link token generation and lookup.',
-      Integration: 'The daily job against local Supabase: heartbeat, opening and closing stale alerts, and pruning results at 180 days and visits at 365. Visit recording, with bots and previews kept out of every count.',
+      Unit: 'The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup.',
+      Integration: 'The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures. The daily job against local Supabase: heartbeat, opening stale alerts, and pruning results at 180 days and visits at 365. Visit recording, with bots and previews kept out of every count.',
       E2E: 'The tracked-link flow: open a link, see the lead project first, and find the visit on Admin. Admin sign-in by magic link, including an expired link and an address that isn’t the owner’s.',
       'Leak sweep': 'Also checks that no page shows a tracked link’s company, role or contact.',
     };
@@ -219,7 +219,7 @@ class Component extends DCLogic {
     return {
       themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: tot.toLocaleString('en-US'), selfLine: 'tests · 0 failed · 0 skipped · 17m 53s', selfCovNote: 'unit: 3,125 of 3,141 lines covered.',
       reporting, notReporting: !reporting, asOf: '7 Oct', asOfIso: '2026-10-07', asOfTitle: '7 Oct 2026, 00:00 UTC', /* docs/build-progress.json asOf */
-      silenceNow: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.' + (p6 ? ' A daily check flags it and alerts the owner.' : ''),
+      silenceNow: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.' + (p6 ? ' A daily check flags it on the admin page.' : ''),
       emptyNow: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.' + (p6 ? ' A sudden drop in a report’s test count raises an alert too.' : ''),
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',

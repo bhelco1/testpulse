@@ -88,7 +88,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start">
 <section aria-label="Link details" style="padding:20px 22px;background:var(--surface);border:1px solid var(--line);border-radius:16px">
 <dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 18px;font-size:14px;line-height:1.5">
-<dt style="color:var(--ink-3)">Contact</dt><dd style="margin:0;overflow-wrap:anywhere">{{ d.contact }}</dd>
+<dt style="color:var(--ink-3)">Contact</dt><dd style="margin:0;overflow-wrap:anywhere;color:{{ d.contactInk }}">{{ d.contact }}</dd>
 <dt style="color:var(--ink-3)">Lead project</dt><dd style="margin:0;display:flex;align-items:center;gap:8px"><span>{{ d.lead }}</span><sc-if value="{{ d.leadPrivate }}"><span style="display:flex;align-items:center;gap:5px;color:var(--ink-3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private</span></sc-if></dd>
 <dt style="color:var(--ink-3)">Sent</dt><dd style="margin:0">{{ d.sent }}</dd>
 <dt style="color:var(--ink-3)">Notes</dt><dd style="margin:0;white-space:pre-wrap;color:{{ d.notesInk }}">{{ d.notes }}</dd>
@@ -112,8 +112,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
 <h3 style="margin:0;padding:16px 18px 10px;font:500 20px 'Source Serif 4',serif">Pages viewed</h3>
 <div style="display:grid;grid-template-columns:minmax(0,1fr) 56px 80px;gap:12px;padding:8px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>PAGE</span><span style="text-align:right">VIEWS</span><span style="text-align:right">TIME</span></div>
-<sc-for list="{{ d.pages }}" as="pg" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) 56px 80px;gap:12px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line);font-size:14px"><span style="min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:500">{{ pg.label }}</span><code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);overflow-wrap:anywhere">{{ pg.path }}</code></span><span style="text-align:right">{{ pg.views }}</span><span style="text-align:right;color:var(--ink-2)">{{ pg.time }}</span></div></sc-for>
-<p style="margin:0;padding:10px 18px 14px;font-size:13px;color:var(--ink-3)">Time on a page is measured until the next page or the tab closes.</p>
+<sc-for list="{{ d.pages }}" as="pg" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) 56px 80px;gap:12px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line);font-size:14px"><span style="min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:500">{{ pg.label }}</span><code style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);overflow-wrap:anywhere">{{ pg.path }}</code></span><span style="text-align:right">{{ pg.views }}</span><span style="text-align:right;color:{{ pg.timeInk }}">{{ pg.time }}</span></div></sc-for>
+<p style="margin:0;padding:10px 18px 14px;font-size:13px;color:var(--ink-3)">Time on a page runs until the next page, or until the tab is hidden or closed.</p>
 </div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px 18px">
 <h3 style="margin:0 0 12px;font:500 20px 'Source Serif 4',serif">Time per project</h3>
@@ -162,7 +162,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </div>
 </sc-if>
 <sc-if value="{{ noAlerts }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;border:1px dashed var(--line-strong);font-size:14px;color:var(--ink-2)"><span style="color:var(--pass);font-weight:700">✓</span>No open alerts. Every project is reporting on schedule and the daily job ran on time.</div>
+<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;border:1px dashed var(--line-strong);font-size:14px;color:var(--ink-2)"><span style="color:var(--pass);font-weight:700">✓</span>No open alerts. Every project is reporting on schedule.</div>
 </sc-if>
 </section>
 
@@ -176,8 +176,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <legend style="padding:0;margin-bottom:18px;font:500 22px 'Source Serif 4',serif">New tracked link</legend>
 <sc-if value="{{ fm.serverError }}"><div role="alert" style="grid-column:1/-1;display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--fail)">Couldn’t create the link</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">Nothing was saved; your entries are still here. Try again.</p></div></div></sc-if>
 <label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600"><span style="display:flex;gap:6px"><span>Company</span><span style="font-weight:400;color:var(--ink-3)">required</span></span><input value="{{ f.company }}" onChange="{{ setCompany }}" aria-invalid="{{ companyInvalid }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ companyBorder }};background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><sc-if value="{{ companyInvalid }}"><span style="font-weight:500;color:var(--fail)">Company is required</span></sc-if></label>
-<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Role<input value="{{ f.role }}" onChange="{{ setRole }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"></label>
-<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600"><span style="display:flex;gap:6px"><span>Contact</span><span style="font-weight:400;color:var(--ink-3)">required</span></span><input value="{{ f.contact }}" onChange="{{ setContact }}" placeholder="Name or email" aria-invalid="{{ contactInvalid }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ contactBorder }};background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><sc-if value="{{ contactInvalid }}"><span style="font-weight:500;color:var(--fail)">Add a contact so you can follow up</span></sc-if></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600"><span style="display:flex;gap:6px"><span>Role</span><span style="font-weight:400;color:var(--ink-3)">required</span></span><input value="{{ f.role }}" onChange="{{ setRole }}" aria-invalid="{{ roleInvalid }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:{{ roleBorder }};background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><sc-if value="{{ roleInvalid }}"><span style="font-weight:500;color:var(--fail)">Role is required</span></sc-if></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600"><span style="display:flex;gap:6px"><span>Contact</span><span style="font-weight:400;color:var(--ink-3)">optional</span></span><input value="{{ f.contact }}" onChange="{{ setContact }}" placeholder="Name or email" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"></label>
 <label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Lead project<select value="{{ f.lead }}" onChange="{{ setLead }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif"><option value="">None, open the overview</option><option value="Ostomate2">Ostomate2</option><option value="RouteServe">RouteServe (private)</option><option value="testpulse">testpulse</option></select><sc-if value="{{ leadPrivate }}"><span style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--ink-3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private: the visitor sees counts and trends, never failure text.</span></sc-if></label>
 <label style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600">Sent<input type="date" value="{{ f.sent }}" onChange="{{ setSent }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif;color-scheme:{{ colorScheme }}"></label>
 <label style="grid-column:1/-1;display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600"><span style="display:flex;gap:6px"><span>Notes</span><span style="font-weight:400;color:var(--ink-3)">optional, only you see them</span></span><textarea rows="2" value="{{ f.notes }}" onChange="{{ setNotes }}" style="padding:10px 12px;border-radius:10px;border:1px solid var(--line-strong);background:var(--inset);color:var(--ink);font:400 15px 'Public Sans',sans-serif;resize:vertical"></textarea></label>
@@ -233,7 +233,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <span style="font-weight:600;overflow-wrap:anywhere">{{ p.name }}</span>
 <span style="display:flex;align-items:center;gap:6px;color:var(--ink-2)"><sc-if value="{{ p.isPrivate }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>{{ p.vis }}</span>
 <span style="display:flex;align-items:center;gap:6px;color:{{ p.reportInk }};font-weight:{{ p.reportWeight }}">{{ p.report }}</span>
-<span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:{{ p.syncInk }}">{{ p.sync }}</span><sc-if value="{{ p.syncSub }}"><span style="font-size:13px;line-height:1.45;color:var(--ink-2)">{{ p.syncSub }}</span></sc-if></span>
+<span style="display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:{{ p.syncInk }}">{{ p.sync }}</span><sc-if value="{{ p.syncSub }}"><span style="font-size:13px;line-height:1.45;color:var(--ink-2)">{{ p.syncSub }}<sc-if value="{{ p.syncCmd }}"><code style="font:12.5px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ p.syncCmd }}</code>.</sc-if></span></sc-if></span>
 <span style="display:flex;justify-content:flex-end"><sc-if value="{{ p.hasKey }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.rotate }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Rotate key</button></sc-if><sc-if value="{{ p.noRow }}"><span style="font-size:13px;color:var(--ink-3)">No row, no key</span></sc-if></span>
 </div>
 <sc-if value="{{ p.confirming }}"><div role="alertdialog" aria-label="Rotate the {{ p.name }} key" style="margin:0 18px 16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-wrap:wrap;gap:12px;align-items:center"><div style="flex:1;min-width:min(100%,260px);font-size:14px;line-height:1.5"><b style="color:var(--fail)">Rotate the {{ p.name }} key?</b><span style="margin-left:5px">The current key stops working immediately. Reports fail with 401 until the project’s CI secret is updated. Its build stays green either way.</span></div><button onClick="{{ p.cancel }}" disabled="{{ p.rotBusy }}" style="min-height:44px;padding:0 12px;border:none;background:none;color:var(--ink);font:600 13.5px 'Public Sans',sans-serif;text-decoration:underline;cursor:pointer">Cancel</button><button onClick="{{ p.confirm }}" disabled="{{ p.rotBusy }}" aria-busy="{{ p.rotBusy }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--fail);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer;opacity:{{ p.rotOp }}">{{ p.rotLabel }}</button></div></sc-if>
@@ -247,8 +247,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <sc-for list="{{ projects }}" as="p" hint-placeholder-count="3">
 <div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-weight:600;font-size:15px;overflow-wrap:anywhere">{{ p.name }}</span><span style="display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink-2)"><sc-if value="{{ p.isPrivate }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>{{ p.vis }}</span></div>
-<dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px"><dt style="color:var(--ink-3)">Last report</dt><dd style="margin:0;color:{{ p.reportInk }};font-weight:{{ p.reportWeight }}">{{ p.report }}</dd><dt style="color:var(--ink-3)">YAML sync</dt><dd style="margin:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:{{ p.syncInk }}">{{ p.sync }}</span><sc-if value="{{ p.syncSub }}"><span style="font-size:13px;line-height:1.45;color:var(--ink-2)">{{ p.syncSub }}</span></sc-if></dd></dl>
+<dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px"><dt style="color:var(--ink-3)">Last report</dt><dd style="margin:0;color:{{ p.reportInk }};font-weight:{{ p.reportWeight }}">{{ p.report }}</dd><dt style="color:var(--ink-3)">YAML sync</dt><dd style="margin:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:{{ p.syncInk }}">{{ p.sync }}</span><sc-if value="{{ p.syncSub }}"><span style="font-size:13px;line-height:1.45;color:var(--ink-2)">{{ p.syncSub }}<sc-if value="{{ p.syncCmd }}"><code style="font:12.5px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ p.syncCmd }}</code>.</sc-if></span></sc-if></dd></dl>
 <sc-if value="{{ p.hasKey }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.rotate }}" style="align-self:flex-start;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Rotate key</button></sc-if>
+<sc-if value="{{ p.noRow }}"><span style="font-size:13px;color:var(--ink-3)">No row, no key</span></sc-if>
 <sc-if value="{{ p.confirming }}"><div role="alertdialog" aria-label="Rotate the {{ p.name }} key" style="padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;line-height:1.5"><b style="color:var(--fail)">Rotate the {{ p.name }} key?</b><span style="margin-left:5px">The current key stops working immediately. Reports fail with 401 until the project’s CI secret is updated. Its build stays green either way.</span></div><div style="display:flex;gap:10px;justify-content:flex-end"><button onClick="{{ p.cancel }}" disabled="{{ p.rotBusy }}" style="min-height:44px;padding:0 12px;border:none;background:none;color:var(--ink);font:600 13.5px 'Public Sans',sans-serif;text-decoration:underline;cursor:pointer">Cancel</button><button onClick="{{ p.confirm }}" disabled="{{ p.rotBusy }}" aria-busy="{{ p.rotBusy }}" style="min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--fail);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer;opacity:{{ p.rotOp }}">{{ p.rotLabel }}</button></div></div></sc-if>
 <sc-if value="{{ p.rotError }}"><div role="alert" style="padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail);display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;line-height:1.5"><b style="color:var(--fail)">Couldn’t rotate the {{ p.name }} key.</b><span style="margin-left:5px">The current key still works. Try again.</span></div><button onClick="{{ p.confirm }}" style="align-self:flex-end;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--fail);background:none;color:var(--fail);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Try again</button></div></sc-if>
 <sc-if value="{{ p.revealed }}"><div style="padding:14px 16px;border-radius:12px;background:var(--inset);border:1px solid var(--line-strong);display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:600">New key. Copy it now; it won’t be shown again.</div><code style="padding:10px 12px;border-radius:8px;background:var(--surface);border:1px dashed var(--line-strong);font:13px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ p.newKey }}</code><button onClick="{{ p.done }}" style="align-self:flex-end;min-height:44px;padding:0 14px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 13.5px 'Public Sans',sans-serif;cursor:pointer">Copied, hide it</button></div></sc-if>
@@ -261,7 +262,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <!-- DAILY JOB -->
 <section aria-labelledby="job-h">
 <h2 id="job-h" style="margin:0 0 6px;font:500 26px 'Source Serif 4',serif">Daily job</h2>
-<p style="margin:0 0 14px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Runs once a day at 06:00 UTC on Vercel cron. Writes a heartbeat so the free-tier database stays awake, opens and closes stale alerts, and prunes: per-test results and failure text after 180 days (each project’s 5 most recent runs are kept), visit records after 365 days, and expired rate-limit buckets.</p>
+<p style="margin:0 0 14px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Runs once a day around 06:00 UTC on Vercel cron. Writes a heartbeat so the free-tier database stays awake, opens stale alerts (a report arriving closes them), and prunes: per-test results and failure text after 180 days (each project’s 5 most recent runs are kept), visit records after 365 days, and expired rate-limit buckets.</p>
 <sc-if value="{{ jobNotice.show }}" hint-placeholder-val="{{ false }}"><div role="{{ jobNotice.role }}" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;padding:14px 16px;border-radius:12px;background:{{ jobNotice.bg }};border:1px solid {{ jobNotice.line }}"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ jobNotice.ink }}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ jobNotice.dash }}"></circle><path d="{{ jobNotice.d }}"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:{{ jobNotice.titleInk }}">{{ jobNotice.title }}</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ jobNotice.body }}</p></div></div></sc-if>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px">
 <sc-for list="{{ job }}" as="j" hint-placeholder-count="4"><div style="background:var(--surface);border:1px solid {{ j.line }};border-radius:16px;padding:16px 18px"><div style="font-size:13.5px;color:var(--ink-3)">{{ j.label }}</div><div style="font:500 24px/1.2 'Source Serif 4',serif;margin-top:6px;color:{{ j.ink }}">{{ j.value }}</div><div style="font-size:13px;line-height:1.45;color:var(--ink-2);margin-top:4px">{{ j.sub }}</div></div></sc-for>
@@ -339,7 +340,7 @@ class Component extends DCLogic {
       coverage_below_floor: { word: 'BELOW FLOOR', dash: 'none', ringOp: 0, d: 'M12 4v16M6 14l6 6 6-6' },
     };
     const A0 = [
-      { id: 'drop', kind: 'count_drop', title: 'testpulse: test count fell 23%', body: 'E2E · chromium: 235 → 180 tests (−23%) since the previous default-branch run', opened: '8 Oct, 04:12 UTC', closes: 'Stays open until acknowledged' },
+      { id: 'drop', kind: 'count_drop', title: 'testpulse: test count fell 23%', body: 'e2e/app/chromium: 235 → 180 tests (−23%) since the previous default-branch run', opened: '8 Oct, 04:12 UTC', closes: 'Closes when the count recovers, or acknowledge it.' },
       { id: 'stale', kind: 'stale', title: 'RouteServe: no report in 12 days', body: 'No report in 12 days. Expected every 8 days; last report 26 Sep.', opened: '4 Oct, 06:00 UTC', closes: 'Closes by itself when RouteServe reports' },
       { id: 'empty', kind: 'empty_run', title: 'Ostomate2: a report held no tests', body: 'ios-e2e/e2e/ios-sim parsed with 0 tests on main (0e2d0b4).', opened: '7 Oct, 23:32 UTC', closes: 'Closes by itself when that key reports tests' },
       { id: 'cov', kind: 'coverage_below_floor', title: 'RouteServe: coverage under its floor', body: 'packages/shared lines 79.9% under its 80% floor', opened: '26 Sep, 09:16 UTC', closes: 'Closes by itself when the module is back at its floor' },
@@ -358,8 +359,8 @@ class Component extends DCLogic {
     const base = [
       { id: 'acme', company: 'Acme Health', role: 'Director of Quality Engineering', contact: 'Dana Ruiz, dana.ruiz@acme.example', lead: 'Ostomate2', sentIso: '2026-09-18', notes: 'Met at the QA leaders meetup. Asked how flaky tests are handled.', token: '/v/Qm8r2LxT0aZe',
         sessions: 3, visitors: 2, first: '18 Sep, 16:02 UTC', last: '2 h ago',
-        pages: [['Overview', '/', 2, 74], ['Ostomate2', '/p/ostomate2', 3, 412], ['Ostomate2 run', '/p/ostomate2/runs/…', 1, 95], ['RouteServe', '/p/routeserve', 1, 41], ['How it’s tested', '/how-its-tested', 1, 188]],
-        perProject: [['Ostomate2', 507], ['RouteServe', 41]] },
+        pages: [['Overview', '/', 2, 74], ['Ostomate2', '/p/ostomate2', 3, 412], ['Ostomate2 run', '/p/ostomate2/runs/…', 1, null], ['RouteServe', '/p/routeserve', 1, 41], ['How it’s tested', '/how-its-tested', 1, 188]],
+        perProject: [['Ostomate2', 412], ['RouteServe', 41]] },
       { id: 'nw', company: 'Northwind Software', role: 'Sr. Engineering Manager, QA', contact: 'j.okafor@northwind.example', lead: '', sentIso: '2026-09-15', notes: '', token: '/v/Hn4kWp7cYs2d',
         sessions: 1, visitors: 1, first: '1 Oct, 13:40 UTC', last: '1 week ago', pages: [['Overview', '/', 1, 52]], perProject: [] },
       { id: 'gx', company: 'Globex', role: 'QA Manager', contact: 'Sam Patel (recruiter)', lead: 'RouteServe', sentIso: '2026-09-12', notes: 'Referral from a former colleague.', token: '/v/Tb9eJx3mRq6u',
@@ -394,7 +395,7 @@ class Component extends DCLogic {
       const opened = dl.sessions > 0, maxP = Math.max(1, ...dl.perProject.map(p => p[1]));
       const confirming = busyM || this.state.delConfirm, delBusy = busyM || this.state.delBusy;
       d = {
-        company: dl.company, role: dl.role || '—', contact: dl.contact, lead: dl.lead || 'None, opens the overview', leadPrivate: dl.lead === 'RouteServe',
+        company: dl.company, role: dl.role || '—', contact: dl.contact || '—', contactInk: dl.contact ? 'var(--ink)' : 'var(--ink-3)', lead: dl.lead || 'None, opens the overview', leadPrivate: dl.lead === 'RouteServe',
         sent: Component.fmtDate(dl.sentIso), notes: dl.notes || 'No notes', notesInk: dl.notes ? 'var(--ink)' : 'var(--ink-3)',
         token: dl.token, fullUrl: '<site origin>' + dl.token, copy: mkCopy(dl), copyLabel: this.state.copied === dl.id ? 'Copied' : 'Copy', refused: refusedId === dl.id,
         figures: [
@@ -404,7 +405,7 @@ class Component extends DCLogic {
           { label: 'Visitors', value: String(dl.visitors), sub: 'Distinct salted IP hashes', ink: opened ? 'var(--ink)' : 'var(--ink-3)' },
         ],
         unopened: !opened, opened,
-        pages: dl.pages.map(([label, path, views, s]) => ({ label, path, views: String(views), time: Component.dur(s) })),
+        pages: dl.pages.map(([label, path, views, s]) => ({ label, path, views: String(views), time: s == null ? '—' : Component.dur(s), timeInk: s == null ? 'var(--ink-3)' : 'var(--ink-2)' })),
         perProject: dl.perProject.length ? dl.perProject.map(([name, s]) => ({ name, time: Component.dur(s), w: Math.round(s / maxP * 100) + '%' })) : [{ name: 'None', time: '—', w: '0%' }],
         showDelBtn: !confirming && !errM, confirming: confirming && !errM, delBusy, delOp: delBusy ? 0.7 : 1, delLabel: delBusy ? 'Deleting…' : 'Delete link', delError: errM,
         askDelete: () => this.setState({ delConfirm: true }), cancelDelete: () => this.setState({ delConfirm: false }),
@@ -415,15 +416,15 @@ class Component extends DCLogic {
     /* ---------- create form (item 8) ---------- */
     const filled = { company: 'Initech', role: 'Head of QA', contact: 'Priya Shah', lead: 'RouteServe', sent: Component.TODAY, notes: 'Applied through their careers page.' };
     const forcedForm = valM || busyM || errM || sessionGone;
-    const f = valM ? Object.assign(Component.blank(), { role: 'Head of QA' }) : (busyM || errM || sessionGone) ? filled : this.state.f;
+    const f = valM ? Component.blank() : (busyM || errM || sessionGone) ? filled : this.state.f;
     const touched = valM || this.state.touched;
-    const companyInvalid = touched && !f.company.trim(), contactInvalid = touched && !f.contact.trim();
+    const companyInvalid = touched && !f.company.trim(), roleInvalid = touched && !f.role.trim();
     const fBusy = busyM || this.state.creating;
     const fm = { busy: fBusy, label: fBusy ? 'Creating…' : 'Create link', op: fBusy ? 0.7 : 1, serverError: errM };
     const submit = e => {
       e.preventDefault();
       if (forcedForm) return;
-      if (!f.contact.trim() || !f.company.trim()) { this.setState({ touched: true }); return; }
+      if (!f.company.trim() || !f.role.trim()) { this.setState({ touched: true }); return; }
       this.setState({ creating: true });
       this.later(() => {
         const id = 'n' + Date.now();
@@ -443,7 +444,7 @@ class Component extends DCLogic {
     const SYNC = {
       ok: ['✓ In sync', 'var(--pass)', ''],
       differs: ['≠ Differs', 'var(--attn)', 'expected_cadence_days: YAML 7, database 8 · display_name: YAML “RouteServe”, database “Routeserve”'],
-      unreg: ['+ Not registered', 'var(--attn)', 'projects/demo-shop.yaml has no database row. The next deploy’s sync creates it.'],
+      unreg: ['+ Not registered', 'var(--attn)', 'projects/demo-shop.yaml has no database row. Register it with ', 'npm run project:add demo-shop'],
       noyaml: ['? No YAML', 'var(--attn)', 'A database row with no projects/*.yaml file. The sync leaves it as it is.'],
     };
     const rotTarget = (busyM || errM) ? 'rs' : this.state.rotating;
@@ -455,7 +456,7 @@ class Component extends DCLogic {
         isPrivate: p.vis === 'Private', hasKey: !p.noRow, noRow: !!p.noRow, confirming, revealed, rotBusy,
         rotLabel: rotBusy ? 'Rotating…' : 'Rotate key', rotOp: rotBusy ? 0.7 : 1, rotError: errM && p.id === 'rs',
         reportInk: p.stale ? 'var(--attn)' : (p.report === '—' ? 'var(--ink-3)' : 'var(--ink-2)'), reportWeight: p.stale ? 600 : 400,
-        sync: s[0], syncInk: s[1], syncSub: s[2],
+        sync: s[0], syncInk: s[1], syncSub: s[2], syncCmd: s[3] || '',
         newKey: 'tp_' + 'x7Kq2mZr9LwB4vNs1YtE8hGd3PaC6uFj0oRi5nMeWbQ',
         rotate: () => this.setState({ rotating: p.id, revealed: null }),
         cancel: () => this.setState({ rotating: null }),
@@ -466,9 +467,9 @@ class Component extends DCLogic {
 
     /* ---------- daily job (item 17) ---------- */
     const okRun = [
-      { label: 'Last run', value: '8 Oct, 06:00 UTC', sub: '5 h ago · next at 06:00 UTC', ink: 'var(--ink)', line: 'var(--line)' },
+      { label: 'Last run', value: '8 Oct, 06:00 UTC', sub: '5 h ago · next around 06:00 UTC', ink: 'var(--ink)', line: 'var(--line)' },
       { label: 'Heartbeat', value: '✓ Written', sub: 'Database kept awake', ink: 'var(--pass)', line: 'var(--line)' },
-      { label: 'Stale check', value: showAlerts ? '1 opened · 0 closed' : '0 opened · 0 closed', sub: showAlerts ? 'Opened: RouteServe' : '3 projects checked', ink: 'var(--ink)', line: 'var(--line)' },
+      { label: 'Stale check', value: showAlerts ? '1 opened' : '0 opened', sub: showAlerts ? 'Opened: RouteServe' : '3 projects checked', ink: 'var(--ink)', line: 'var(--line)' },
       { label: 'Prune', value: '12 rows removed', sub: 'Results 0 · failure text 0 · visits 0 · rate-limit buckets 12', ink: 'var(--ink)', line: 'var(--line)' },
     ];
     let job = okRun, jobNotice = { show: false };
@@ -477,14 +478,14 @@ class Component extends DCLogic {
       jobNotice = { show: true, role: 'status', bg: 'var(--attn-tint)', line: 'var(--attn)', ink: 'var(--attn)', titleInk: 'var(--attn)', dash: 'none', d: 'M12 7v5l3 2', title: 'The daily job is overdue', body: 'Its last run was 53 hours ago; it should run every 24 hours. Until it runs, no heartbeat is written, stale projects aren’t flagged and nothing is pruned. Check the cron in Vercel.' };
     } else if (jobMode === 'never run') {
       job = okRun.map(t => ({ label: t.label, value: 'Never run', sub: 'No run summary yet', ink: 'var(--ink-3)', line: 'var(--line)' }));
-      jobNotice = { show: true, role: 'status', bg: 'var(--neutral-tint)', line: 'var(--line-strong)', ink: 'var(--ink-2)', titleInk: 'var(--ink-2)', dash: '3.5 3', d: '', title: 'The daily job hasn’t run yet', body: 'Its first run is due at 06:00 UTC. If this still shows 36 hours after the deploy, check the cron in Vercel.' };
+      jobNotice = { show: true, role: 'status', bg: 'var(--neutral-tint)', line: 'var(--line-strong)', ink: 'var(--ink-2)', titleInk: 'var(--ink-2)', dash: '3.5 3', d: '', title: 'The daily job hasn’t run yet', body: 'Its first run is due around 06:00 UTC. If this still shows 36 hours after the deploy, check the cron in Vercel.' };
     } else if (jobMode === 'failed partway') {
       job = [
         { label: 'Last run', value: '✕ Failed at prune', sub: '8 Oct, 06:00 UTC · 5 h ago', ink: 'var(--fail)', line: 'var(--fail)' },
         okRun[1], okRun[2],
-        { label: 'Prune', value: '✕ Failed', sub: 'Nothing removed', ink: 'var(--fail)', line: 'var(--fail)' },
+        { label: 'Prune', value: '✕ Failed', sub: 'Removed 5,000 results before failing', ink: 'var(--fail)', line: 'var(--fail)' },
       ];
-      jobNotice = { show: true, role: 'alert', bg: 'var(--fail-tint)', line: 'var(--fail)', ink: 'var(--fail)', titleInk: 'var(--fail)', dash: 'none', d: 'm15 9-6 6M9 9l6 6', title: 'The last run failed at the prune step', body: 'Heartbeat and stale check finished. Prune stopped with “canceling statement due to statement timeout”, so nothing was removed. The next run tries again at 06:00 UTC.' };
+      jobNotice = { show: true, role: 'alert', bg: 'var(--fail-tint)', line: 'var(--fail)', ink: 'var(--fail)', titleInk: 'var(--fail)', dash: 'none', d: 'm15 9-6 6M9 9l6 6', title: 'The last run failed at the prune step', body: 'Heartbeat and stale check finished. Prune stopped with “canceling statement due to statement timeout” after removing 5,000 results; rows removed before the failure stay removed. The next run tries again around 06:00 UTC.' };
     }
 
     const signedInViews = ['signed in', 'session expired'];
@@ -507,7 +508,7 @@ class Component extends DCLogic {
       f, fm, setCompany: this.setF('company'), setRole: this.setF('role'), setContact: this.setF('contact'), setLead: this.setF('lead'), setSent: this.setF('sent'), setNotes: this.setF('notes'),
       leadPrivate: f.lead === 'RouteServe',
       companyInvalid, companyBorder: companyInvalid ? '1.5px solid var(--fail)' : '1px solid var(--line-strong)',
-      contactInvalid, contactBorder: contactInvalid ? '1.5px solid var(--fail)' : '1px solid var(--line-strong)', submit,
+      roleInvalid, roleBorder: roleInvalid ? '1.5px solid var(--fail)' : '1px solid var(--line-strong)', submit,
       projects, job, jobNotice,
     };
   }

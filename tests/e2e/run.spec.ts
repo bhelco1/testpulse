@@ -32,7 +32,7 @@ const banner = (page: Page) => page.locator('[data-part="banner"]');
 const TESTPULSE_FAILURE =
   '1 test failed: zz-deliberate-failure.spec.ts › deliberately fails to capture a failing JUnit fixture';
 const PRIVATE_SENTENCE =
-  'This repository is private, so failure messages and stack traces are hidden.';
+  'This repository is private, so failure messages, stack traces and source links are hidden.';
 
 test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => {
   let path = '';
@@ -583,7 +583,8 @@ test.describe('a private run page leaks nothing', { tag: '@js' }, () => {
     expect(html).toContain(String(FAILING[0]?.name));
     expect(html).toContain('Details hidden: private repository');
     expect(html).toContain(`1 test failed: asset.test.ts › ${String(FAILING[0]?.name)}`);
-    expect(html).toContain(PRIVATE_SENTENCE);
+    // The details notice says the same words, so the banner's is matched with its lead-in.
+    expect(html).toContain(`Unit layer. ${PRIVATE_SENTENCE}`);
 
     expect(leaksIn(texts, HIDDEN)).toEqual([]);
   });

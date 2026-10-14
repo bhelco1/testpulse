@@ -138,7 +138,7 @@ const failuresOf = (row: RunTestRow, isPrivate: boolean): FailureDetail[] =>
   );
 
 const PRIVATE_SENTENCE =
-  'This repository is private, so failure messages and stack traces are hidden.';
+  'This repository is private, so failure messages, stack traces and source links are hidden.';
 
 // Code-unit order, so the lists read the same whatever the server's locale.
 const sortedUnique = (values: readonly string[]): string[] =>

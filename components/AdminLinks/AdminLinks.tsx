@@ -278,7 +278,10 @@ function LinkForm({
           )}
         </label>
         <label className={styles.label}>
-          Contact
+          <span className={styles.labelLine}>
+            <span>Contact</span>
+            <span className={styles.tag}>optional</span>
+          </span>
           <input
             value={fields.contact}
             onChange={set('contact')}

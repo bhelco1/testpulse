@@ -27,6 +27,11 @@ export type NotFoundProps =
       // The project's latest run page, "Latest {project} results"; null before it has a run,
       // when the primary is "Go to {project}" (design v9 item 12), a state of this kind.
       latestRunHref: string | null;
+    }
+  | {
+      // Any other address (design v17 item 19): the site-wide not-found page.
+      kind: 'page';
+      path: ReactNode;
     };
 
 // design/components.md "NotFound (page)": nothing failed, so there is no Error badge and no retry,
@@ -41,8 +46,10 @@ export function NotFound(props: NotFoundProps) {
         <NoProject {...props} />
       ) : props.kind === 'run' ? (
         <NoRun {...props} />
-      ) : (
+      ) : props.kind === 'test' ? (
         <NoTest {...props} />
+      ) : (
+        <NoPage {...props} />
       )}
     </main>
   );
@@ -126,6 +133,27 @@ function NoTest({ path, project, latestRunHref }: Extract<NotFoundProps, { kind:
         )}
         <Link href="/" className={styles.link}>
           Overview
+        </Link>
+      </div>
+    </>
+  );
+}
+
+function NoPage({ path }: Extract<NotFoundProps, { kind: 'page' }>) {
+  return (
+    <>
+      <h1 className={styles.title}>Nothing at this address</h1>
+      <Path path={path} />
+      <p className={styles.body}>
+        There’s no page here. The link may be mistyped, or the page may have moved. Every project’s
+        results start from the overview.
+      </p>
+      <div className={styles.actions}>
+        <Button href="/" variant="primary">
+          Go to overview
+        </Button>
+        <Link href="/how-its-tested" className={styles.link}>
+          How it’s tested
         </Link>
       </div>
     </>

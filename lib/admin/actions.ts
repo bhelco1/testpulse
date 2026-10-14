@@ -7,7 +7,7 @@ import { rotateProjectKey } from '../projects/repo.ts';
 import { SlugSchema } from '../projects/schema.ts';
 import { createTrackedLink } from '../tracked-links/create.ts';
 import { TrackedLinkInputSchema } from '../tracked-links/schema.ts';
-import { adminClient } from './data.ts';
+import { adminClient, alertIsOpen } from './data.ts';
 import type { AccessGranted, AdminGate } from './guard.ts';
 import type {
   AcknowledgeResult,
@@ -31,6 +31,7 @@ export interface ActionDeps {
   readonly now: () => Date;
   readonly create: typeof createTrackedLink;
   readonly acknowledgeAlert: typeof acknowledgeAlert;
+  readonly alertOpen: typeof alertIsOpen;
   readonly rotate: typeof rotateProjectKey;
   readonly remove: (client: SupabaseClient, id: string) => Promise<boolean>;
 }
@@ -47,6 +48,7 @@ export const DEFAULT_DEPS: ActionDeps = {
   now: () => now(),
   create: createTrackedLink,
   acknowledgeAlert,
+  alertOpen: alertIsOpen,
   rotate: rotateProjectKey,
   remove: deleteTrackedLink,
 };
@@ -106,9 +108,18 @@ export async function acknowledge(
   const id = z.uuid().safeParse(alertId);
   if (!id.success) return ERROR;
   try {
-    // The database acknowledges only an open count_drop (spec section 12) and refuses the rest.
-    await deps.acknowledgeAlert(deps.client(gate), id.data, deps.now());
-    return { status: 'acknowledged' };
+    const client = deps.client(gate);
+    try {
+      // The database acknowledges only an open count_drop (spec section 12) and refuses the rest.
+      await deps.acknowledgeAlert(client, id.data, deps.now());
+      return { status: 'acknowledged' };
+    } catch (refusal) {
+      // A count_drop can close by itself while the page is open; that is no failure (13.9). The
+      // alert is read again rather than the refusal's text matched, so a reworded exception
+      // cannot turn a real failure into a closed one.
+      if (!(await deps.alertOpen(client, id.data))) return { status: 'closed' };
+      throw refusal;
+    }
   } catch (error) {
     return logFailure('acknowledge an alert', error);
   }

@@ -53,7 +53,7 @@ export async function createLinkAction(input: unknown): Promise<CreateLinkResult
 export async function acknowledgeAlertAction(alertId: unknown): Promise<AcknowledgeResult> {
   const gate = await requireAdmin();
   const result = await acknowledge(gate, alertId);
-  // Refreshed either way: an alert that could not be acknowledged may have closed by itself.
+  // Refreshed unless the session ended: an alert that had already closed leaves the page.
   if (result.status !== 'session-ended') revalidatePath('/admin');
   return result;
 }

@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  alertIsOpen,
   loadLastReports,
   loadLatestJob,
   loadLinkDetail,
@@ -140,6 +141,24 @@ describe('loadOpenAlerts', () => {
       alerts: [{ data: null, error: { code: '42501', message: 'denied' } }],
     });
     await expect(loadOpenAlerts(failed.client)).rejects.toThrow('alerts: 42501 denied');
+  });
+});
+
+describe('alertIsOpen', () => {
+  it('answers whether the alert exists with resolved_at null, and fails on a refused read', async () => {
+    const { client, calls } = fakeClient({
+      alerts: [
+        { data: { resolved_at: null }, error: null },
+        { data: { resolved_at: '2026-10-08T10:00:00+00:00' }, error: null },
+        { data: null, error: null },
+        { data: null, error: { code: '08006', message: 'gone' } },
+      ],
+    });
+    expect(await alertIsOpen(client, EMPTY.id)).toBe(true);
+    expect(await alertIsOpen(client, EMPTY.id)).toBe(false);
+    expect(await alertIsOpen(client, EMPTY.id)).toBe(false);
+    await expect(alertIsOpen(client, EMPTY.id)).rejects.toThrow('alert: 08006 gone');
+    expect(calls[0]?.steps).toEqual(['select("resolved_at")', `eq("id", "${EMPTY.id}")`]);
   });
 });
 

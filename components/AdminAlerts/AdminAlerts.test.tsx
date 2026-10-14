@@ -111,6 +111,17 @@ describe('AdminAlerts', () => {
     expect(error.textContent).toBe('Couldn’t acknowledge. The alert is still open. Try again.');
   });
 
+  it('shows no error when the alert had already closed by itself', async () => {
+    show(vi.fn(async () => ({ status: 'closed' }) as const));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Acknowledge' }));
+    });
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Acknowledge' }).hasAttribute('disabled')).toBe(
+      false,
+    );
+  });
+
   it('raises the session-ended alert at the top of the page when the session has gone', async () => {
     show(vi.fn(async () => ({ status: 'session-ended' }) as const));
     await act(async () => {

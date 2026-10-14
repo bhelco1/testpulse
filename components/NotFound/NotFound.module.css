@@ -3,6 +3,11 @@
   padding: var(--space-8) 0 var(--space-11);
 }
 
+/* Admin draws it 32 px under its breadcrumb (Admin.dc.html, unknown link). */
+.admin {
+  padding-top: var(--space-7);
+}
+
 .eyebrow {
   font: var(--text-label);
   letter-spacing: 0.08em;

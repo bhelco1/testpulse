@@ -16,7 +16,7 @@ import styles from './AdminLinks.module.css';
 // Admin.dc.html TRACKED LINKS). One list serves both layouts: a table from a content width of
 // 760 px, a card per link below it, each row a definition list whose labels the table shows once
 // in its head. Company and Role are required and Contact optional, as the schema has them
-// (decision row of 2026-10-08, v16).
+// (decision row of 2026-10-08, v16). With no links, a dashed row stands in for the table (v18).
 
 export interface CreateLinkInput {
   readonly company: string;
@@ -66,25 +66,35 @@ export function AdminLinks({ view, leads, origin, today, create }: AdminLinksPro
           }}
         />
       )}
-      <div className={styles.card}>
-        <div className={styles.scroll}>
-          <div className={styles.table}>
-            <div className={styles.columns} aria-hidden="true">
-              <span>COMPANY / ROLE</span>
-              <span>SENT</span>
-              <span>OPENED</span>
-              <span>LAST SEEN</span>
-              <span>PAGES VIEWED</span>
-              <span>LINK</span>
+      {view.links.length === 0 ? (
+        <div className={styles.empty}>
+          <span className={styles.emptyTitle}>No tracked links yet</span>
+          <span>
+            Use New link to make one for each company and role you send the site to. Its visits show
+            here once it’s opened.
+          </span>
+        </div>
+      ) : (
+        <div className={styles.card}>
+          <div className={styles.scroll}>
+            <div className={styles.table}>
+              <div className={styles.columns} aria-hidden="true">
+                <span>COMPANY / ROLE</span>
+                <span>SENT</span>
+                <span>OPENED</span>
+                <span>LAST SEEN</span>
+                <span>PAGES VIEWED</span>
+                <span>LINK</span>
+              </div>
+              <ul className={styles.rows}>
+                {view.links.map((link) => (
+                  <LinkRow key={link.id} link={link} origin={origin} isNew={link.id === newId} />
+                ))}
+              </ul>
             </div>
-            <ul className={styles.rows}>
-              {view.links.map((link) => (
-                <LinkRow key={link.id} link={link} origin={origin} isNew={link.id === newId} />
-              ))}
-            </ul>
           </div>
         </div>
-      </div>
+      )}
       <p className={styles.foot}>
         Sessions are distinct session cookies; visitors are distinct salted IP hashes. Bot and
         link-preview visits are never counted. Visitors can read what’s recorded on the privacy
@@ -118,7 +128,7 @@ function LinkRow({ link, origin, isNew }: { link: LinkRowView; origin: string; i
         </div>
         <dl className={styles.facts}>
           <dt>Sent</dt>
-          <dd className={styles.muted}>{link.sent}</dd>
+          <dd className={link.sent === null ? styles.none : styles.muted}>{link.sent ?? '—'}</dd>
           <dt>Opened</dt>
           <dd className={link.opened.counted ? styles.opened : styles.unopened}>
             {link.opened.text}
@@ -141,7 +151,7 @@ function LinkRow({ link, origin, isNew }: { link: LinkRowView; origin: string; i
           </dd>
         </dl>
         <div className={styles.link}>
-          <LinkAddress origin={origin} path={link.path} className={styles.address} truncate />
+          <LinkAddress origin={origin} path={link.path} className={styles.address} short />
           <CopyButton company={link.company} state={state} copy={copy} className={styles.copy} />
         </div>
       </div>

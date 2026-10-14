@@ -25,26 +25,28 @@ export interface AdminLinkDetailProps {
 export function AdminLinkDetail(props: AdminLinkDetailProps) {
   const { view } = props;
   return (
-    <AdminMain
-      variant="detail"
-      top={
-        <nav aria-label="Breadcrumb" className={styles.crumbs}>
-          <Link href="/admin" className={styles.crumb}>
-            Admin
-          </Link>
-          <span aria-hidden="true">/</span>
-          <Link href="/admin#tracked-links" className={styles.crumb}>
-            Tracked links
-          </Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page" className={styles.current}>
-            {view.company}
-          </span>
-        </nav>
-      }
-    >
+    <AdminMain variant="detail" top={<TrackedLinkCrumbs current={view.company} />}>
       <Detail {...props} />
     </AdminMain>
+  );
+}
+
+/** "Admin / Tracked links / {current}", above a link's page or its not-found. */
+export function TrackedLinkCrumbs({ current }: { current: string }) {
+  return (
+    <nav aria-label="Breadcrumb" className={styles.crumbs}>
+      <Link href="/admin" className={styles.crumb}>
+        Admin
+      </Link>
+      <span aria-hidden="true">/</span>
+      <Link href="/admin#tracked-links" className={styles.crumb}>
+        Tracked links
+      </Link>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page" className={styles.current}>
+        {current}
+      </span>
+    </nav>
   );
 }
 
@@ -77,7 +79,7 @@ function Detail({ view, linkId, origin, remove }: AdminLinkDetailProps) {
               )}
             </dd>
             <dt>Sent</dt>
-            <dd>{view.sent}</dd>
+            <dd className={view.sent === null ? styles.unknown : undefined}>{view.sent ?? '—'}</dd>
             <dt>Notes</dt>
             <dd className={view.notes === null ? styles.noNotes : styles.notes}>
               {view.notes ?? 'No notes'}

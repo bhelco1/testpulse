@@ -21,7 +21,7 @@ import { API_KEY_PATTERN, hashApiKey } from '../projects/keys.ts';
 import { addProject } from '../projects/repo.ts';
 import { parseProjectFile } from '../projects/schema.ts';
 import { FakeCookieStore } from './cookie-store.test-support.ts';
-import { loadAdminPage, loadLinkDetail, readAdminPage } from './data.ts';
+import { loadAdminPage, loadLatestJob, loadLinkDetail, readAdminPage } from './data.ts';
 import { handleConfirm } from './handlers.ts';
 
 vi.mock('next/headers', () => ({ cookies: vi.fn(), headers: vi.fn() }));
@@ -276,7 +276,30 @@ describe('admin’s reads', () => {
     expect(page.projects.filter(({ file }) => file !== null).map(({ slug }) => slug)).toEqual(
       expect.arrayContaining(['ostomate2', 'routeserve', 'testpulse']),
     );
-    expect(page.job).toEqual(SUMMARY);
+    expect(page.job).toEqual({ latest: SUMMARY, lastFinished: null });
+  });
+
+  it('reads the latest finished run too while the latest has no finish', async () => {
+    const STARTED_AT = '2999-01-02T00:00:00.000Z';
+    const started: DailySummary = {
+      ...SUMMARY,
+      started_at: STARTED_AT,
+      finished_at: null,
+      status: 'failed',
+      error: 'The job started and has not finished.',
+      projects_checked: null,
+      stale_opened: null,
+      prune_complete: false,
+    };
+    unwrap(
+      await admin.from('heartbeats').insert({ created_at: STARTED_AT, summary: started }),
+      'started heartbeat',
+    );
+    try {
+      expect(await loadLatestJob(admin)).toEqual({ latest: started, lastFinished: SUMMARY });
+    } finally {
+      await admin.from('heartbeats').delete().eq('created_at', STARTED_AT);
+    }
   });
 
   it('fails the whole load on an alert that does not parse, logging only its id and kind', async () => {

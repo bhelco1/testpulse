@@ -44,7 +44,7 @@ const VIEW: LinksView = {
       company: 'Globex',
       role: 'QA Manager',
       notes: null,
-      sent: '—',
+      sent: null,
       opened: { text: 'Not yet opened', counted: false },
       lastSeen: null,
       pages: [],
@@ -88,20 +88,63 @@ describe('AdminLinks table', () => {
     expect(within(acme).getByTitle('Met at the QA leaders meetup.').textContent).toBe(
       'Note:Met at the QA leaders meetup.',
     );
-    expect(within(acme).getByText(ORIGIN).parentElement?.textContent).toBe(
-      `${ORIGIN}/v/Qm8r2LxT0aZe`,
-    );
-    // The origin gives way to an ellipsis first, so the token stays in view.
-    expect(within(acme).getByText(ORIGIN).className).toContain('origin');
-    expect(within(acme).getByText('/v/Qm8r2LxT0aZe').className).toContain('path');
+    // v18 item 12: "…/v/{token}", the origin dropped and the token whole; the full address is
+    // the cell's title.
+    const address = acme.querySelector('code');
+    expect(address?.textContent).toBe('…/v/Qm8r2LxT0aZe');
+    expect(address?.getAttribute('title')).toBe(`${ORIGIN}/v/Qm8r2LxT0aZe`);
+    expect(address?.firstElementChild?.textContent).toBe('…');
+    expect(address?.firstElementChild?.getAttribute('aria-hidden')).toBe('true');
+    expect(acme.textContent).not.toContain(ORIGIN);
     expect(globex.querySelector('dl')?.textContent).toBe(
       'Sent—OpenedNot yet openedLast seen—Pages—',
     );
+    // v18 item 11: no sent date reads "—" in --ink-3; a date reads in --ink-2.
+    const sent = (row: HTMLElement) => row.querySelector('dt + dd') as HTMLElement;
+    expect(sent(globex).className).toContain('none');
+    expect(sent(acme).className).toContain('muted');
     expect(within(globex).queryByText('Note:')).toBeNull();
     expect(section.textContent).toContain(
       'Sessions are distinct session cookies; visitors are distinct salted IP hashes. Bot and ' +
         'link-preview visits are never counted. Visitors can read what’s recorded on the privacy page.',
     );
+  });
+
+  // v18 item 10: with no links, a dashed row takes the table card's place; New link and the
+  // footnote stay.
+  it('says there are no tracked links yet, keeping New link and the footnote', () => {
+    render(
+      <AdminMain variant="main" top={<h1>Admin</h1>}>
+        <AdminLinks
+          view={{ count: 'None', links: [] }}
+          leads={LEADS}
+          origin={ORIGIN}
+          today="2026-10-08"
+          create={vi.fn()}
+        />
+      </AdminMain>,
+    );
+    const section = screen.getByRole('region', { name: /Tracked links/ });
+    expect(within(section).getByText('None')).toBeTruthy();
+    expect(within(section).queryByRole('list')).toBeNull();
+    expect(within(section).queryByText('COMPANY / ROLE')).toBeNull();
+    const empty = within(section).getByText('No tracked links yet').parentElement as HTMLElement;
+    expect(empty.textContent).toBe(
+      'No tracked links yetUse New link to make one for each company and role you send the site ' +
+        'to. Its visits show here once it’s opened.',
+    );
+    expect(empty.className).toContain('empty');
+    expect(within(section).getByRole('button', { name: 'New link' })).toBeTruthy();
+    expect(section.textContent).toContain('Sessions are distinct session cookies;');
+    expect(ruleFor(CSS, '.empty')).toMatchObject({
+      padding: '14px var(--space-4)',
+      'border-radius': 'var(--radius-md)',
+      border: '1px dashed var(--line-strong)',
+    });
+    expect(ruleFor(CSS, '.emptyTitle')).toMatchObject({
+      'font-weight': '600',
+      color: 'var(--ink-2)',
+    });
   });
 
   it('copies the full address, and reads Copied', async () => {

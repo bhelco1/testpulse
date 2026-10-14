@@ -187,6 +187,24 @@
   color: var(--ink-3);
 }
 
+/* v18: no links yet. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--line-strong);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.emptyTitle {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
 .link {
   display: flex;
   align-items: center;
@@ -199,6 +217,7 @@
   min-width: 0;
   display: flex;
   overflow: hidden;
+  white-space: nowrap;
   font: 12.5px var(--font-mono);
   color: var(--ink-3);
 }

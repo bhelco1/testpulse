@@ -49,6 +49,21 @@ describe('AdminHeader', () => {
     expect(button.closest('form')).not.toBeNull();
   });
 
+  // v18 item 13: below a content width of 760 px, two rows: the wordmark, ADMIN and the toggle,
+  // then View public site (left, padding 0) and Sign out (right). "Signed in with magic link" is
+  // not shown there, since Sign out already says so.
+  it('lays itself out in two rows on a phone, without the sign-in method', () => {
+    const PHONE = '(width < 760px)';
+    expect(ruleFor(CSS, '.header')).toMatchObject({ 'container-type': 'inline-size' });
+    expect(ruleFor(CSS, '.nav', PHONE)).toEqual({
+      'flex-basis': '100%',
+      'justify-content': 'space-between',
+    });
+    expect(ruleFor(CSS, '.link', PHONE)).toEqual({ padding: '0px' });
+    expect(ruleFor(CSS, '.method, .spacer', PHONE)).toEqual({ display: 'none' });
+    expect(ruleFor(CSS, '.link')).toMatchObject({ padding: '0px 12px' });
+  });
+
   it('draws the ADMIN tag and the toggle where the design puts them', () => {
     expect(ruleFor(CSS, '.tag')).toMatchObject({
       font: '600 11px var(--font-mono)',

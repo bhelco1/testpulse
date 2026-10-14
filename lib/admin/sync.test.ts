@@ -69,6 +69,19 @@ describe('compareProject', () => {
     });
   });
 
+  // v18 item 5: a value over 40 characters is named without values; 40 still prints.
+  it('prints a value of 40 characters, and names one of 41', () => {
+    const named = (name: string) => compareProject(routeserve, { ...rowOf(routeserve), name });
+    expect(named('r'.repeat(40))).toEqual({
+      kind: 'differs',
+      fields: [{ field: 'name', yaml: '“RouteServe”', database: `“${'r'.repeat(40)}”` }],
+    });
+    expect(named('r'.repeat(41))).toEqual({
+      kind: 'differs',
+      fields: [{ field: 'name', yaml: null, database: null }],
+    });
+  });
+
   it('reads a file without a row as not registered, and a row without a file as no YAML', () => {
     expect(compareProject(routeserve, undefined)).toEqual({
       kind: 'not-registered',

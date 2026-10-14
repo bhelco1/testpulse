@@ -75,7 +75,8 @@ function AlertRow({
       const result = await acknowledge(alert.id);
       if (result.status === 'session-ended') {
         sessionEnded(
-          'The alert wasn’t acknowledged. Sign in again to finish; nothing was changed.',
+          'The alert wasn’t acknowledged. Sign in again to finish; nothing was changed, and the ' +
+            'alert is still open.',
         );
       } else if (result.status === 'error') {
         setFailed(true);

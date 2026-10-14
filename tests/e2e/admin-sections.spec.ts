@@ -39,6 +39,7 @@ const ORPHAN = 'admin-e2e-legacy';
 const GONE = 'admin-e2e-gone';
 const ACME_TOKEN = 'Qm8r2LxT0aZe';
 const GLOBEX_TOKEN = 'Tb9eJx3mRq6u';
+const UNKNOWN_LINK = '00000000-0000-4000-8000-000000000000';
 const SESSIONS = ['admin-e2e-s1', 'admin-e2e-s2', 'admin-e2e-s3', 'admin-e2e-bot'];
 const RUN_PATH = '/p/ostomate2/runs/00000000-0000-4000-8000-000000000001';
 const HEARTBEAT_AT = '2026-10-05T04:12:00.000Z';
@@ -385,7 +386,9 @@ test('shows every section from the database, and records no visit of admin', asy
   await expect(rows.nth(0).locator('dl')).toHaveText(
     'Sent18 SepOpened3 sessions · 2 visitorsLast seen2 h agoPagesOverviewOstomate 2.0RouteServeHow it’s tested',
   );
-  await expect(rows.nth(0).locator('code')).toHaveText(`${BASE_URL}/v/${ACME_TOKEN}`);
+  // v18: "…/v/{token}" in the cell, the full address in its title.
+  await expect(rows.nth(0).locator('code')).toHaveText(`…/v/${ACME_TOKEN}`);
+  await expect(rows.nth(0).locator('code')).toHaveAttribute('title', `${BASE_URL}/v/${ACME_TOKEN}`);
   await expect(rows.nth(1).locator('dl')).toHaveText(
     'Sent12 SepOpenedNot yet openedLast seen—Pages—',
   );
@@ -425,6 +428,11 @@ test(
       await page.goto(`/admin/links/${ids.acme}`);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Acme Health');
       await expect(page).toHaveScreenshot(`admin-link-${name}.png`, { fullPage: true });
+      await page.goto(`/admin/links/${UNKNOWN_LINK}`);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+        'No tracked link at this address',
+      );
+      await expect(page).toHaveScreenshot(`admin-link-not-found-${name}.png`, { fullPage: true });
     }
   },
 );
@@ -437,6 +445,16 @@ test('lays the tables out as cards on a phone', async ({ browser }) => {
     links.getByRole('listitem').first().getByText('Opened', { exact: true }),
   ).toBeVisible();
   await expect(section(page, 'Projects').getByText('YAML SYNC', { exact: true })).toBeHidden();
+  // v18: the header's second row holds View public site and Sign out, without the sign-in method.
+  const banner = page.getByRole('banner');
+  await expect(banner.getByText('Signed in with magic link')).toBeHidden();
+  const viewSite = await banner.getByRole('link', { name: 'View public site' }).boundingBox();
+  const signOut = await banner.getByRole('button', { name: 'Sign out' }).boundingBox();
+  const wordmark = await banner.getByRole('link', { name: 'testpulse' }).boundingBox();
+  expect(viewSite?.x).toBe(wordmark?.x);
+  expect(viewSite?.y).toBe(signOut?.y);
+  expect(viewSite?.y).toBeGreaterThan((wordmark?.y ?? 0) + (wordmark?.height ?? 0) - 1);
+  expect((signOut?.x ?? 0) + (signOut?.width ?? 0)).toBeGreaterThan(390 - 21);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expectNoSeriousAxeViolations(page);
 });
@@ -479,11 +497,46 @@ test('shows a link’s detail, opened and not, and 404 for no such link', async 
   );
   await expectNoSeriousAxeViolations(page);
 
-  for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-link']) {
+  // v18 item 14: the admin's own not-found, inside the admin frame, never the public one.
+  for (const id of [UNKNOWN_LINK, 'not-a-link']) {
     const response = await page.goto(`/admin/links/${id}`);
     expect(response?.status(), id).toBe(404);
-    // Until an admin not-found is designed (asked in v18), the site-wide one answers.
-    await expect(page.getByRole('heading', { level: 1 }), id).toHaveText('Nothing at this address');
+    await expect(page, id).toHaveTitle('Not found · testpulse admin');
+    await expect(page.getByRole('navigation', { name: 'Breadcrumb' }), id).toHaveText(
+      'Admin/Tracked links/Not found',
+    );
+    const main = page.getByRole('main');
+    await expect(main.getByRole('heading', { level: 1 }), id).toHaveText(
+      'No tracked link at this address',
+    );
+    await expect(main, id).toContainText('404 · Not found');
+    await expect(main, id).toContainText(`/admin/links/${id}`);
+    await expect(main, id).toContainText(
+      'The link may have been deleted, or the address may be mistyped. Every tracked link is ' +
+        'listed on the admin page.',
+    );
+    await expect(main.getByRole('link', { name: 'Go to tracked links' })).toHaveAttribute(
+      'href',
+      '/admin#tracked-links',
+    );
+    const banner = page.getByRole('banner');
+    await expect(banner.getByText('ADMIN', { exact: true })).toBeVisible();
+    await expect(banner.getByRole('button', { name: 'Sign out' })).toBeVisible();
+    await expect(page.getByRole('contentinfo')).toHaveCount(0);
+    await expectNoSeriousAxeViolations(page);
+  }
+  await page.getByRole('link', { name: 'Go to tracked links' }).click();
+  await expect(page).toHaveURL('/admin#tracked-links');
+
+  // Signed out, the guard answers first, so an unknown id and a real one look the same.
+  const signedOut = await browser.newContext({ baseURL: BASE_URL });
+  contexts.push(signedOut);
+  const visitor = await signedOut.newPage();
+  for (const id of [UNKNOWN_LINK, ids.acme]) {
+    await visitor.goto(`/admin/links/${id}`);
+    await expect(visitor, id).toHaveURL('/admin');
+    await expect(visitor.getByRole('heading', { level: 1 }), id).toHaveText('Sign in to admin');
+    await expect(visitor.getByText('No tracked link at this address'), id).toHaveCount(0);
   }
 });
 
@@ -554,7 +607,11 @@ test('creates a link, marking its fields and the new row', async ({ browser }) =
   );
   expect(row).toMatchObject({ role: 'Head of QA', lead_project_slug: 'routeserve' });
   expect(new Date(row.sent_at as string).toISOString()).toBe('2026-10-05T00:00:00.000Z');
-  await expect(created.locator('code')).toHaveText(`${BASE_URL}/v/${row.token as string}`);
+  await expect(created.locator('code')).toHaveText(`…/v/${row.token as string}`);
+  await expect(created.locator('code')).toHaveAttribute(
+    'title',
+    `${BASE_URL}/v/${row.token as string}`,
+  );
   await expectNoSeriousAxeViolations(page);
 });
 
@@ -778,13 +835,24 @@ test('refuses every action once the session has gone, and changes nothing', asyn
   await expectNoSeriousAxeViolations(page);
 
   await section(page, 'Open alerts').getByRole('button', { name: 'Acknowledge' }).click();
-  await expect(notice).toContainText('The alert wasn’t acknowledged.');
+  await expect(notice).toContainText(
+    'The alert wasn’t acknowledged. Sign in again to finish; nothing was changed, and the alert ' +
+      'is still open.',
+  );
+  await expect(
+    section(page, 'Open alerts').getByRole('button', { name: 'Acknowledge' }),
+  ).toBeEnabled();
   const orphan = section(page, 'Projects')
     .getByRole('listitem')
     .filter({ hasText: 'routeserve-legacy' });
   await orphan.getByRole('button', { name: 'Rotate key' }).click();
   await orphan.getByRole('alertdialog').getByRole('button', { name: 'Rotate key' }).click();
-  await expect(notice).toContainText('The key wasn’t rotated.');
+  await expect(notice).toContainText(
+    'The routeserve-legacy key wasn’t rotated. Sign in again to finish; nothing was changed, and ' +
+      'the current key still works.',
+  );
+  await expect(orphan.getByRole('alertdialog')).toHaveCount(0);
+  await expect(orphan.getByRole('button', { name: 'Rotate key' })).toBeVisible();
 
   // The link page's own action, from a session that has gone.
   const detail = await ownerPage(browser);

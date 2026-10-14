@@ -33,8 +33,15 @@ export interface AdminPageData {
   readonly projects: readonly ProjectPair[];
   /** The latest CI report's finished_at per project id, at or before now; null if none. */
   readonly lastReports: ReadonlyMap<string, Date | null>;
-  /** The latest daily job's summary, with the heartbeat it is stored on; null if it never ran. */
-  readonly job: DailySummary | null;
+  /** The latest daily job's run; null if it never ran. */
+  readonly job: LatestJob | null;
+}
+
+/** The latest daily job's summary, and the latest finished one when that run has no finish. */
+export interface LatestJob {
+  readonly latest: DailySummary;
+  /** Read only when `latest` has no finish; null then if no run has finished. */
+  readonly lastFinished: DailySummary | null;
 }
 
 export interface LinkDetailData {

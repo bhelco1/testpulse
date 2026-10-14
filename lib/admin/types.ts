@@ -53,6 +53,8 @@ export type CreateLinkResult =
   | { readonly status: 'created'; readonly id: string; readonly url: string }
   | { readonly status: 'invalid'; readonly fields: readonly ('company' | 'role')[] }
   | Refused;
-export type AcknowledgeResult = { readonly status: 'acknowledged' } | Refused;
+/** closed: the alert was already resolved, or gone, so there was nothing left to acknowledge. */
+export type AcknowledgeResult =
+  { readonly status: 'acknowledged' } | { readonly status: 'closed' } | Refused;
 export type RotateKeyResult = { readonly status: 'rotated'; readonly key: string } | Refused;
 export type DeleteLinkResult = { readonly status: 'deleted' } | Refused;

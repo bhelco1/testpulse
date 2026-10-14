@@ -558,7 +558,9 @@ test('creates a link, marking its fields and the new row', async ({ browser }) =
   await expectNoSeriousAxeViolations(page);
 });
 
-test('acknowledges a count drop, and says so when one cannot be', async ({ browser }) => {
+test('acknowledges a count drop, and lets one that closed by itself leave without an error', async ({
+  browser,
+}) => {
   const page = await ownerPage(browser);
   await expectHydrated(page, 'button[aria-label="Copy link for Acme Health"]');
   const alerts = section(page, 'Open alerts');
@@ -576,7 +578,8 @@ test('acknowledges a count drop, and says so when one cannot be', async ({ brows
   expect(acknowledged.acknowledged_at).not.toBeNull();
   expect(acknowledged.resolved_at).toBe(acknowledged.acknowledged_at);
 
-  // A count drop that closes by itself while the page is open can no longer be acknowledged.
+  // A count drop that closes by itself while the page is open has nothing left to acknowledge:
+  // no error, and the refreshed page drops its row (spec section 13.9).
   const reopened = check(
     await admin()
       .from('alerts')
@@ -601,14 +604,25 @@ test('acknowledges a count drop, and says so when one cannot be', async ({ brows
   ids.alerts.again = reopened.id as string;
   await page.reload();
   await expectHydrated(page, 'button[aria-label="Copy link for Acme Health"]');
+  await expect(alerts.getByText('4 open')).toBeVisible();
   await admin()
     .from('alerts')
     .update({ resolved_at: SEED_NOW })
     .eq('id', reopened.id as string);
   await alerts.getByRole('button', { name: 'Acknowledge' }).click();
-  await expect(alerts.getByRole('alert')).toHaveText(
-    'Couldn’t acknowledge. The alert is still open. Try again.',
+  await expect(alerts.getByText('3 open')).toBeVisible();
+  await expect(alerts.getByRole('group', { name: 'count drop alert' })).toHaveCount(0);
+  await expect(alerts.getByRole('alert')).toHaveCount(0);
+  const closed = check(
+    await admin()
+      .from('alerts')
+      .select('acknowledged_at, resolved_at')
+      .eq('id', reopened.id as string)
+      .single(),
+    'closed',
   );
+  expect(closed.acknowledged_at).toBeNull();
+  expect(Date.parse(closed.resolved_at as string)).toBe(Date.parse(SEED_NOW));
   await expectNoSeriousAxeViolations(page);
 });
 

@@ -424,7 +424,39 @@ describe('admin’s actions with the owner’s session', () => {
     expect(acknowledged.resolved_at).toBe(acknowledged.acknowledged_at);
     expect(revalidatePath).toHaveBeenCalledWith('/admin');
     // Already resolved: refused, and the page is refreshed so the alert leaves it.
-    expect(await acknowledgeAlertAction(alertIds.count_drop)).toEqual({ status: 'error' });
+    expect(await acknowledgeAlertAction(alertIds.count_drop)).toEqual({ status: 'closed' });
+  });
+
+  it('answers closed for a count_drop that closed by itself, and does not acknowledge it', async () => {
+    const closed = unwrap(
+      await admin
+        .from('alerts')
+        .insert({
+          project_id: projectId,
+          kind: 'count_drop',
+          detail: {
+            job: 'e2e',
+            module: 'e2e',
+            platform: 'chromium',
+            baseline: 60,
+            current: 40,
+            baseline_run_id: runId,
+            run_id: runId,
+          },
+          opened_at: '2026-10-08T09:00:00.000Z',
+          resolved_at: '2026-10-08T10:00:00.000Z',
+        })
+        .select('id')
+        .single(),
+      'closed drop',
+    ).id as string;
+    vi.mocked(revalidatePath).mockClear();
+    expect(await acknowledgeAlertAction(closed)).toEqual({ status: 'closed' });
+    const row = await alertRow(closed);
+    expect(row.acknowledged_at).toBeNull();
+    expect(Date.parse(row.resolved_at as string)).toBe(Date.parse('2026-10-08T10:00:00.000Z'));
+    expect(revalidatePath).toHaveBeenCalledWith('/admin');
+    expect(await acknowledgeAlertAction(randomUUID())).toEqual({ status: 'closed' });
   });
 
   it('rotates the key: the old key stops working, the new one ingests, and it is never logged', async () => {

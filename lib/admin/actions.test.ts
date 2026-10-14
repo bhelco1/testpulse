@@ -21,6 +21,7 @@ let deps: ActionDeps & {
   client: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
   acknowledgeAlert: ReturnType<typeof vi.fn>;
+  alertOpen: ReturnType<typeof vi.fn>;
   rotate: ReturnType<typeof vi.fn>;
   remove: ReturnType<typeof vi.fn>;
 };
@@ -39,6 +40,7 @@ beforeEach(() => {
       link: { id: ID, token: 'Qm8r2LxT0aZe' },
     })),
     acknowledgeAlert: vi.fn(async () => undefined),
+    alertOpen: vi.fn(async () => true),
     rotate: vi.fn(async () => KEY),
     remove: vi.fn(async () => true),
   } as unknown as typeof deps;
@@ -133,8 +135,31 @@ describe('acknowledge', () => {
   it('refuses an id that is not one, and answers the database’s refusal as an error', async () => {
     expect(await acknowledge(ALLOWED, 'not-a-uuid', deps)).toEqual({ status: 'error' });
     expect(deps.acknowledgeAlert).not.toHaveBeenCalled();
-    deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: P0001 not open'));
+    deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: P0001 refused'));
     expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'error' });
+    expect(deps.alertOpen).toHaveBeenCalledWith(expect.anything(), ID);
+  });
+
+  it('answers closed when the alert closed by itself, or is gone, before it was acknowledged', async () => {
+    deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: P0001 refused'));
+    deps.alertOpen.mockResolvedValueOnce(false);
+    expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'closed' });
+    expect(deps.alertOpen).toHaveBeenCalledWith(expect.anything(), ID);
+  });
+
+  it('answers an error when the alert is still open after the refusal, or cannot be read', async () => {
+    deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: 08006 gone'));
+    deps.alertOpen.mockResolvedValueOnce(true);
+    expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'error' });
+    deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: 08006 gone'));
+    deps.alertOpen.mockRejectedValueOnce(new Error('alert: 08006 still gone'));
+    expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'error' });
+    expect(logged.join('\n')).toContain('08006 still gone');
+  });
+
+  it('does not read the alert when acknowledging succeeds', async () => {
+    expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'acknowledged' });
+    expect(deps.alertOpen).not.toHaveBeenCalled();
   });
 });
 

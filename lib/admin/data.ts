@@ -111,6 +111,20 @@ export async function loadOpenAlerts(client: SupabaseClient): Promise<OpenAlert[
   });
 }
 
+/**
+ * Whether the alert exists and is not resolved. Asked after acknowledging was refused, to tell an
+ * alert that closed by itself from a refusal of one still open (spec section 13.9).
+ */
+export async function alertIsOpen(client: SupabaseClient, alertId: string): Promise<boolean> {
+  const { data, error } = await client
+    .from('alerts')
+    .select('resolved_at')
+    .eq('id', alertId)
+    .maybeSingle<{ resolved_at: string | null }>();
+  if (error) throw failed('alert', error);
+  return data !== null && data.resolved_at === null;
+}
+
 /** Every tracked link, newest first. */
 export async function loadTrackedLinks(client: SupabaseClient): Promise<TrackedLinkRow[]> {
   const { data, error } = await client

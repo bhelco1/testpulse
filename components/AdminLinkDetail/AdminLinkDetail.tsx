@@ -63,7 +63,9 @@ function Detail({ view, linkId, origin, remove }: AdminLinkDetailProps) {
         <section aria-label="Link details" className={styles.card}>
           <dl className={styles.details}>
             <dt>Contact</dt>
-            <dd className={styles.anywhere}>{view.contact}</dd>
+            <dd className={view.contact === null ? styles.unknown : styles.anywhere}>
+              {view.contact ?? '—'}
+            </dd>
             <dt>Lead project</dt>
             <dd className={styles.lead}>
               <span>{view.lead === null ? 'None, opens the overview' : view.lead.name}</span>
@@ -148,15 +150,17 @@ function Detail({ view, linkId, origin, remove }: AdminLinkDetailProps) {
                       <span className={styles.hidden}>Views: </span>
                       {page.views}
                     </span>
-                    <span className={`${styles.right} ${styles.time}`}>
+                    <span
+                      className={`${styles.right} ${page.time === null ? styles.unknown : styles.time}`}
+                    >
                       <span className={styles.hidden}>Time: </span>
-                      {page.time}
+                      {page.time ?? '—'}
                     </span>
                   </li>
                 ))}
               </ul>
               <p className={styles.pagesFoot}>
-                Time on a page is measured until the next page or the tab closes.
+                Time on a page runs until the next page, or until the tab is hidden or closed.
               </p>
             </div>
             <div className={styles.projectsCard}>
@@ -171,7 +175,11 @@ function Detail({ view, linkId, origin, remove }: AdminLinkDetailProps) {
                     <span className={styles.bar} aria-hidden="true">
                       <span className={styles.fill} style={{ width: project.share }} />
                     </span>
-                    <span className={`${styles.right} ${styles.time}`}>{project.time}</span>
+                    <span
+                      className={`${styles.right} ${project.time === null ? styles.unknown : styles.time}`}
+                    >
+                      {project.time ?? '—'}
+                    </span>
                   </li>
                 ))}
               </ul>

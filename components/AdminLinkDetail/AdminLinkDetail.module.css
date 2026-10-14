@@ -280,6 +280,10 @@
   color: var(--ink-2);
 }
 
+.unknown {
+  color: var(--ink-3);
+}
+
 .hidden {
   position: absolute;
   width: 1px;

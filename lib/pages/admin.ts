@@ -92,7 +92,7 @@ function alertRow({ alert, projectName, emptyReport }: OpenAlert, now: Date): Al
         body:
           `${reportKey(alert.detail)}: ${formatCount(baseline)} → ${formatCount(current)} tests ` +
           `(−${fell}%) since the previous default-branch run`,
-        closes: 'Closes by itself when the count recovers, or when acknowledged',
+        closes: 'Closes when the count recovers, or acknowledge it.',
       };
     }
     case 'empty_run': {
@@ -208,7 +208,8 @@ export function linksView(
 export interface LinkDetailView {
   readonly company: string;
   readonly role: string;
-  readonly contact: string;
+  /** Null: none given, shown as "—" in --ink-3. */
+  readonly contact: string | null;
   /** Null: no lead project, so the link opens the overview. */
   readonly lead: { readonly name: string; readonly private: boolean } | null;
   readonly sent: string;
@@ -223,19 +224,21 @@ export interface LinkDetailView {
     readonly label: string;
     readonly path: string;
     readonly views: string;
-    readonly time: string;
+    /** Null: never measured, shown as "—" in --ink-3, never "0 s". */
+    readonly time: string | null;
   }[];
   readonly perProject: readonly {
     readonly name: string;
-    readonly time: string;
+    /** Null: never measured, shown as "—" in --ink-3. */
+    readonly time: string | null;
     /** The bar's width: this project's time as a share of the longest. */
     readonly share: string;
   }[];
 }
 
 // A time the beacon never reported is unknown, not 0 (decision row of 2026-10-08).
-const seconds = (value: number | null): string =>
-  value === null ? '—' : formatRunDuration(value * 1000);
+const seconds = (value: number | null): string | null =>
+  value === null ? null : formatRunDuration(value * 1000);
 
 export function linkDetailView(
   { link, figures, projects }: LinkDetailData,
@@ -250,7 +253,7 @@ export function linkDetailView(
   return {
     company: link.company,
     role: link.role,
-    contact: link.contact ?? '—',
+    contact: link.contact,
     lead:
       link.lead_project_slug === null
         ? null
@@ -293,7 +296,13 @@ export interface ProjectRowView {
   readonly private: boolean;
   /** The latest CI report; null when there is none, shown as "—". */
   readonly report: { readonly when: TimeLabel | null; readonly stale: boolean };
-  readonly sync: { readonly word: string; readonly tone: SyncTone; readonly detail: string | null };
+  readonly sync: {
+    readonly word: string;
+    readonly tone: SyncTone;
+    readonly detail: string | null;
+    /** A command the detail ends with, drawn in mono and followed by a full stop. */
+    readonly command: string | null;
+  };
   /** The slug to rotate the key of; null when there is no row, so no key. */
   readonly rotateSlug: string | null;
 }
@@ -302,7 +311,7 @@ function syncWords(pair: ProjectPair): ProjectRowView['sync'] {
   const { sync } = pair;
   switch (sync.kind) {
     case 'in-sync':
-      return { word: '✓ In sync', tone: 'pass', detail: null };
+      return { word: '✓ In sync', tone: 'pass', detail: null, command: null };
     case 'differs':
       return {
         word: '≠ Differs',
@@ -314,20 +323,21 @@ function syncWords(pair: ProjectPair): ProjectRowView['sync'] {
               : `${field}: YAML ${yaml}, database ${database}`,
           )
           .join(' · '),
+        command: null,
       };
     case 'not-registered':
       return {
         word: '+ Not registered',
         tone: 'attn',
-        detail:
-          `${sync.file} has no database row. Register it with ` +
-          `npm run project:add ${pair.slug}.`,
+        detail: `${sync.file} has no database row. Register it with `,
+        command: `npm run project:add ${pair.slug}`,
       };
     case 'no-yaml':
       return {
         word: '? No YAML',
         tone: 'attn',
         detail: 'A database row with no projects/*.yaml file. The sync leaves it as it is.',
+        command: null,
       };
   }
 }
@@ -410,6 +420,21 @@ const NEXT_RUN = `around ${DAILY_JOB_TIME}`;
 function rowsRemoved(summary: DailySummary): number {
   const p = summary.pruned;
   return p.results + p.result_failures + p.visits + p.tracked_sessions + p.rate_limit_buckets;
+}
+
+// v17 (components.md "Daily job tiles"): what a failed prune removed, each non-zero kind in the
+// Prune sub's order, or "0 rows" when none. Its batches each commit, so these stay removed.
+function removedCounts(summary: DailySummary): string {
+  const p = summary.pruned;
+  const kinds = [
+    [p.results, 'result'],
+    [p.result_failures, 'failure text'],
+    [p.visits, 'visit'],
+    [p.tracked_sessions, 'tracked session'],
+    [p.rate_limit_buckets, 'rate-limit bucket'],
+  ] as const;
+  const counts = kinds.filter(([n]) => n > 0).map(([n, unit]) => qty(n, unit));
+  return counts.length === 0 ? '0 rows' : joinNames(counts);
 }
 
 export function dailyJobView(
@@ -505,12 +530,7 @@ export function dailyJobView(
 
   const p = summary.pruned;
   const prune: JobTileView = failed.has('prune')
-    ? stopped(
-        'Prune',
-        removed === 0
-          ? 'Nothing removed'
-          : `${formatCount(removed)} rows removed before it stopped`,
-      )
+    ? stopped('Prune', `Removed ${removedCounts(summary)} before failing`)
     : unfinished
       ? notRecorded('Prune')
       : {
@@ -553,9 +573,7 @@ export function dailyJobView(
     const outcome =
       summary.failed_step !== 'prune'
         ? '.'
-        : removed === 0
-          ? ', so nothing was removed.'
-          : ` after removing ${formatCount(removed)} rows.`;
+        : ` after removing ${removedCounts(summary)}; rows removed before the failure stay removed.`;
     notice = {
       tone: 'fail',
       title: `The last run failed at the ${step} step`,

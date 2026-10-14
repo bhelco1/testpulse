@@ -19,7 +19,12 @@ const ON_TIME: DailyJobView = {
     { label: 'Last run', value: [at], sub: ['6 h ago · next around 04:00 UTC'], tone: 'normal' },
     { label: 'Heartbeat', value: ['✓ Written'], sub: ['Database kept awake'], tone: 'pass' },
     { label: 'Stale check', value: ['1 opened'], sub: ['Opened: RouteServe'], tone: 'normal' },
-    { label: 'Prune', value: ['✕ Failed'], sub: ['Nothing removed'], tone: 'fail' },
+    {
+      label: 'Prune',
+      value: ['✕ Failed'],
+      sub: ['Removed 5,000 results before failing'],
+      tone: 'fail',
+    },
   ],
 };
 
@@ -29,7 +34,8 @@ describe('AdminDailyJob', () => {
     const section = screen.getByRole('region', { name: 'Daily job' });
     expect(section.querySelector('p')?.textContent).toBe(
       'Runs once a day around 04:00 UTC on Vercel cron. Writes a heartbeat so the free-tier ' +
-        'database stays awake, opens stale alerts, and prunes: per-test results and failure text ' +
+        'database stays awake, opens stale alerts (a report arriving closes them), and prunes: ' +
+        'per-test results and failure text ' +
         'after 180 days (each project’s 5 most recent runs are kept), visit records and tracked ' +
         'sessions after 365 days, and expired rate-limit buckets.',
     );
@@ -38,7 +44,7 @@ describe('AdminDailyJob', () => {
       'Last run8 Oct, 04:12 UTC6 h ago · next around 04:00 UTC',
       'Heartbeat✓ WrittenDatabase kept awake',
       'Stale check1 openedOpened: RouteServe',
-      'Prune✕ FailedNothing removed',
+      'Prune✕ FailedRemoved 5,000 results before failing',
     ]);
     expect(tiles[0]?.querySelector('time')?.getAttribute('datetime')).toBe(at.datetime);
     expect(tiles.map((tile) => /(pass|attn|fail|muted)/.exec(tile.className)?.[1] ?? '')).toEqual([

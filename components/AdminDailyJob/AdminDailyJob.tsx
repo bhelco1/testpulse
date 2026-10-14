@@ -26,9 +26,9 @@ export function AdminDailyJob({ view }: { view: DailyJobView }) {
       </h2>
       <p className={styles.intro}>
         Runs once a day around {DAILY_JOB_TIME} on Vercel cron. Writes a heartbeat so the free-tier
-        database stays awake, opens stale alerts, and prunes: per-test results and failure text
-        after 180 days (each project’s 5 most recent runs are kept), visit records and tracked
-        sessions after 365 days, and expired rate-limit buckets.
+        database stays awake, opens stale alerts (a report arriving closes them), and prunes:
+        per-test results and failure text after 180 days (each project’s 5 most recent runs are
+        kept), visit records and tracked sessions after 365 days, and expired rate-limit buckets.
       </p>
       {notice !== null && (
         <div

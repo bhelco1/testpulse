@@ -113,7 +113,7 @@ describe('alertsView', () => {
         title: 'testpulse: test count fell 23%',
         body: 'e2e/e2e/chromium: 235 → 180 tests (−23%) since the previous default-branch run',
         opened: '8 Oct, 04:12 UTC',
-        closes: 'Closes by itself when the count recovers, or when acknowledged',
+        closes: 'Closes when the count recovers, or acknowledge it.',
         ack: true,
       },
       {
@@ -294,6 +294,7 @@ describe('projectsView', () => {
         sync: p.sync.word,
         tone: p.sync.tone,
         detail: p.sync.detail,
+        command: p.sync.command,
         rotate: p.rotateSlug,
       })),
     ).toEqual([
@@ -305,6 +306,7 @@ describe('projectsView', () => {
         sync: '✓ In sync',
         tone: 'pass',
         detail: null,
+        command: null,
         rotate: 'ostomate2',
       },
       {
@@ -317,6 +319,7 @@ describe('projectsView', () => {
         detail:
           'name: YAML “RouteServe”, database “Routeserve” · expected_cadence_days: YAML 7, ' +
           'database 8 · layer_rules differs',
+        command: null,
         rotate: 'routeserve',
       },
       {
@@ -327,6 +330,7 @@ describe('projectsView', () => {
         sync: '✓ In sync',
         tone: 'pass',
         detail: null,
+        command: null,
         rotate: 'testpulse',
       },
       {
@@ -336,9 +340,8 @@ describe('projectsView', () => {
         stale: false,
         sync: '+ Not registered',
         tone: 'attn',
-        detail:
-          'projects/demo-shop.yaml has no database row. Register it with ' +
-          'npm run project:add demo-shop.',
+        detail: 'projects/demo-shop.yaml has no database row. Register it with ',
+        command: 'npm run project:add demo-shop',
         rotate: null,
       },
       {
@@ -349,6 +352,7 @@ describe('projectsView', () => {
         sync: '? No YAML',
         tone: 'attn',
         detail: 'A database row with no projects/*.yaml file. The sync leaves it as it is.',
+        command: null,
         rotate: 'legacy',
       },
     ]);
@@ -532,12 +536,12 @@ describe('linkDetailView', () => {
       pages: [
         { label: 'Overview', path: '/', views: '2', time: '1m 14s' },
         { label: 'Ostomate2', path: '/p/ostomate2', views: '3', time: '6m 52s' },
-        { label: 'RouteServe', path: '/p/routeserve', views: '1', time: '—' },
+        { label: 'RouteServe', path: '/p/routeserve', views: '1', time: null },
       ],
       perProject: [
         { name: 'Ostomate2', time: '6m 52s', share: '100%' },
         { name: 'RouteServe', time: '41 s', share: '10%' },
-        { name: 'gone', time: '—', share: '0%' },
+        { name: 'gone', time: null, share: '0%' },
       ],
     });
   });
@@ -560,7 +564,7 @@ describe('linkDetailView', () => {
       NOW,
     );
     expect(view).toMatchObject({
-      contact: '—',
+      contact: null,
       lead: null,
       sent: '—',
       notes: null,
@@ -685,41 +689,59 @@ describe('dailyJobView', () => {
   });
 
   it('names the failed step, and the rows a failed prune had already removed', () => {
-    const failed = (removed: number): DailySummary => ({
+    const failed = (pruned: Partial<DailySummary['pruned']>): DailySummary => ({
       ...ON_TIME,
       status: 'failed',
       failed_step: 'prune',
       failed_steps: ['prune'],
       error: '57014 canceling statement due to statement timeout',
-      pruned: { ...ON_TIME.pruned, rate_limit_buckets: 0, results: removed },
+      pruned: { ...ON_TIME.pruned, rate_limit_buckets: 0, ...pruned },
       prune_complete: false,
     });
-    const none = dailyJobView(failed(0), NAMES, NOW);
+    const none = dailyJobView(failed({}), NAMES, NOW);
     expect(none.notice).toEqual({
       tone: 'fail',
       title: 'The last run failed at the prune step',
       body:
         'Heartbeat and stale check finished. Prune stopped with “57014 canceling statement due ' +
-        'to statement timeout”, so nothing was removed. The next run tries again around 04:00 UTC.',
+        'to statement timeout” after removing 0 rows; rows removed before the failure stay ' +
+        'removed. The next run tries again around 04:00 UTC.',
     });
     expect(tiles(none)).toEqual([
       ['Last run', '✕ Failed at prune', '8 Oct, 04:12 UTC · 6 h ago', 'fail'],
       ['Heartbeat', '✓ Written', 'Database kept awake', 'pass'],
       ['Stale check', '1 opened', 'Opened: RouteServe', 'normal'],
-      ['Prune', '✕ Failed', 'Nothing removed', 'fail'],
+      ['Prune', '✕ Failed', 'Removed 0 rows before failing', 'fail'],
     ]);
 
-    const some = dailyJobView(failed(5000), NAMES, NOW);
+    const some = dailyJobView(failed({ results: 5000 }), NAMES, NOW);
     expect(some.notice?.body).toBe(
       'Heartbeat and stale check finished. Prune stopped with “57014 canceling statement due to ' +
-        'statement timeout” after removing 5,000 rows. The next run tries again around 04:00 UTC.',
+        'statement timeout” after removing 5,000 results; rows removed before the failure stay ' +
+        'removed. The next run tries again around 04:00 UTC.',
     );
     expect(tiles(some)[3]).toEqual([
       'Prune',
       '✕ Failed',
-      '5,000 rows removed before it stopped',
+      'Removed 5,000 results before failing',
       'fail',
     ]);
+
+    const each = dailyJobView(
+      failed({
+        results: 5000,
+        result_failures: 1,
+        visits: 0,
+        tracked_sessions: 2,
+        rate_limit_buckets: 1,
+      }),
+      NAMES,
+      NOW,
+    );
+    expect(tiles(each)[3]?.[2]).toBe(
+      'Removed 5,000 results, 1 failure text, 2 tracked sessions and 1 rate-limit bucket ' +
+        'before failing',
+    );
   });
 
   it('marks every failed step, naming the first', () => {
@@ -746,7 +768,7 @@ describe('dailyJobView', () => {
     );
     expect(tiles(view).slice(2)).toEqual([
       ['Stale check', '✕ Failed', 'Stopped with the error above', 'fail'],
-      ['Prune', '✕ Failed', 'Nothing removed', 'fail'],
+      ['Prune', '✕ Failed', 'Removed 0 rows before failing', 'fail'],
     ]);
   });
 

@@ -44,7 +44,7 @@ export function AdminAlerts({ view, acknowledge }: AdminAlertsProps) {
           <span className={styles.check} aria-hidden="true">
             ✓
           </span>
-          No open alerts. Every project is reporting on schedule and the daily job ran on time.
+          No open alerts. Every project is reporting on schedule.
         </div>
       ) : (
         <div className={styles.list}>

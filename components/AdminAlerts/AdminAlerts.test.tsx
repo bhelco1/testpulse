@@ -78,7 +78,7 @@ describe('AdminAlerts', () => {
     show(vi.fn(), { count: 'None', alerts: [] });
     const section = screen.getByRole('region', { name: 'Open alerts' });
     expect(section.textContent).toBe(
-      'Open alertsNone✓No open alerts. Every project is reporting on schedule and the daily job ran on time.',
+      'Open alertsNone✓No open alerts. Every project is reporting on schedule.',
     );
     expect(within(section).queryByRole('group')).toBeNull();
   });

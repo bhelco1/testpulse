@@ -74,9 +74,9 @@ Static copy from spec §3 and §16; live section reads project `testpulse` like 
 |---|---|
 | Tracked link URL | shown and copied as `<site origin>/v/<token>`; origin comes from the running site, never hard-coded (domain undecided, spec open question 1) |
 | Tracked links | `tracked_links` + aggregates over `visits` (exclude `user_agent_class in ('bot','preview')`): first/last seen, distinct `session_id`, distinct `ip_hash`, pages, time per project |
-| Alerts | `alerts` where open (not resolved, not acknowledged); kind ∈ stale, count_drop, empty_run, coverage_below_floor; payload gives the figures. Acknowledge (count_drop only) sets `acknowledged_at`. Only ingestion resolves alerts: a report arriving resolves stale (any report from the project), empty_run (that key reports tests) and coverage_below_floor (the module back at its floor), and a count_drop when a later default-branch report for its key is back to 80% or more of the count it dropped from. The daily job only opens stale alerts; it never resolves one. count_drop figures: report key `job/module/platform` (no layer), percent change rounded down to a whole number |
+| Alerts | `alerts` where open (not resolved, not acknowledged); kind ∈ stale, count_drop, empty_run, coverage_below_floor; payload gives the figures. Acknowledge (count_drop only) sets `acknowledged_at`. Ingestion resolves alerts as reports arrive; acknowledging resolves a count_drop. A report arriving resolves stale (any report from the project), empty_run (that key reports tests) and coverage_below_floor (the module back at its floor), and a count_drop when a later default-branch report for its key is back to 80% or more of the count it dropped from. The daily job only opens stale alerts; it never resolves one. count_drop figures: report key `job/module/platform` (no layer), percent change rounded down to a whole number |
 | Sync status | computed when the page loads: each `projects/*.yaml` deployed with the site vs its `projects` row by slug → In sync, Differs (field list), Not registered (file, no row), No YAML (row, no file) |
-| Daily job | latest job-run summary: started/finished, heartbeat written, stale alerts opened (names; the job never closes one), prune counts (results, failure text, visits, rate-limit buckets), failed step + error, with the counts removed before a failed prune (batches commit as they go); none → "Never run"; finished > 36 h ago → overdue warning |
+| Daily job | latest job-run summary: started/finished, heartbeat written, stale alerts opened (names; the job never closes one), prune counts (results, failure text, visits, tracked sessions, rate-limit buckets), failed step + error, with the counts removed before a failed prune (batches commit as they go); none → "Never run"; finished > 36 h ago → overdue warning; heartbeat not written (failed step `heartbeat`, or the summary records no heartbeat) → heartbeat states; started with no finished time, over 15 minutes ago → "Didn’t finish" (v18) |
 | Key rotation | writes `projects.api_key_hash`; key shown once |
 
 ## Kiosk
@@ -134,3 +134,17 @@ Same queries as landing (via `runs_public`). Tiles: Pass rate, Projects reportin
 | Delete link | deletes the `tracked_links` row; `visits.tracked_link_id` set null (history kept, unlinked) |
 | Landing card order | session's `tracked_links.lead_project_slug` → that card first; nothing about the link is rendered |
 | Sign-in | Supabase magic link to the one allowed address; the "sent" message is the same for every address |
+
+## v18
+| UI element | Source |
+|---|---|
+| Daily job prune | also deletes tracked sessions (the cookie-to-link records) older than 365 days, with the visits; the summary counts them as "tracked sessions" |
+| Daily job, didn't finish | latest job-run summary has `started_at` and no finished time, started over 15 minutes ago; its step results are not recorded |
+| Daily job, heartbeat | failed step `heartbeat` (with its error), or a finished run whose summary says no heartbeat was written |
+| YAML sync, Differs | per differing field: scalar values shown as "YAML {a}, database {b}"; a list or object value (`layer_rules`, `declared_suites`, `coverage_floors`, stacks) or one over 40 characters → "{field} differs" |
+| Link detail, page label | from the visit's path: `/` Overview; `/p/{slug}` `projects.name`; `/p/{slug}/runs/{id}` "{name} run"; `/p/{slug}/tests/{key}` "{name} test history"; `/how-its-tested` How it's tested; `/privacy` Privacy; anything else "Other page" |
+| SENT, link detail Sent | `tracked_links.sent_at` null → "—" |
+| LINK column | "…" + `/v/{token}`; the full `<site origin>/v/{token}` in `title` and Copy |
+| Tracked links, none | no `tracked_links` rows → "No tracked links yet"; heading count "None" |
+| Admin not-found | `/admin/links/{id}` with no `tracked_links` row → 404 inside the admin frame (only after the admin guard passes) |
+| Sign-in email | Supabase magic-link template; the link is the template's confirmation URL |

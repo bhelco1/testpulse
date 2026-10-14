@@ -1,4 +1,4 @@
-# testpulse handoff v17
+# testpulse handoff v18
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -24,7 +24,7 @@ To view a page, open it in a browser from inside `pages/` (it needs `support.js`
 | `pages/Run Detail.dc.html` | `/p/[slug]/runs/[id]` — tweaks: run (passed, failed, failed-private), pruned |
 | `pages/Test History.dc.html` | `/p/[slug]/tests/[testKey]` |
 | `pages/How Its Tested.dc.html` | `/how-its-tested` — tweak: selfReporting |
-| `pages/Admin.dc.html` | `/admin` — tweaks: view, detail, states, alerts, sync, job, theme |
+| `pages/Admin.dc.html` | `/admin` — tweaks: view, detail, states, alerts, sync, job, links, theme |
 | `pages/Privacy.dc.html` | `/privacy` |
 | `pages/Kiosk.dc.html` | Kiosk, fixed 1920×1080, scaled to fit screen — tweak: scenario |
 | `pages/Phone Views.dc.html` | All pages at 390 px, a dark row and a light row |
@@ -950,3 +950,60 @@ Same rules: the Design System page is canonical, components.md matches it, every
 20. The footnote now reads "Time on a page runs until the next page, or until the tab is hidden or closed." Changed in Admin, the Design System link-detail specimen and components.md.
 
 Files changed in v17: Admin.dc.html, Design System.dc.html, NotFound.dc.html, How Its Tested.dc.html, Run Detail.dc.html, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v18
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px, existing tokens only (no new token). Nothing outside the list was changed. New Admin tweak values: view "session expired · acknowledge", "session expired · rotate key"; detail "Northwind Software (other pages, no sent date)", "unknown link (404)"; job "heartbeat failed", "heartbeat not written", "didn’t finish"; new tweak `links` (off = no links). Every new state is drawn in Admin.dc.html (desktop and phone by width, dark and light by the theme tweak) and as a specimen in Design System section 15 (both themes through the page toggle).
+
+**Corrections**
+1. "around 04:00 UTC" everywhere the schedule appears: the Admin intro, the Last run sub ("next around 04:00 UTC"), the never-run notice and the failed-run notice. Also in the Design System tile and components.md "Daily job tiles" (including the line on why it reads "around"). data-map had no "06:00" to change.
+   - The sample run times moved with the schedule: Last run "8 Oct, 04:00 UTC", overdue "◷ 6 Oct, 04:00 UTC", failed-run sub "8 Oct, 04:00 UTC · 5 h ago", and the stale alert, which the job opens, "Opened 4 Oct, 04:00 UTC". This replaces the v17 note that kept them at 06:00. The relative times are unchanged (5 h ago, 53 hours) because the sample "now" moved too.
+2. data-map Alerts row: "Ingestion resolves alerts as reports arrive; acknowledging resolves a count_drop." It is followed by which report resolves each kind, as before.
+3. Tracked sessions are pruned with the visits after 365 days:
+   - Admin intro: "…visit records and tracked sessions after 365 days…".
+   - Prune tile sub: "Results 0 · failure text 0 · visits 0 · tracked sessions 0 · rate-limit buckets 12". Drawn in Admin and as a new Design System tile.
+   - components.md lists tracked sessions among the kinds a failed prune reports. data-map lists it in the prune counts and in a v18 row.
+   - The on-time sub always lists every kind, zeros included. A failed prune's "Removed {counts} before failing" still lists only the non-zero kinds (v17 rule), so tracked sessions appear there only when some were removed, e.g. "Removed 5,000 results · 40 tracked sessions before failing".
+4. Confirmed: a failed prune that removed nothing reads "Removed 0 rows before failing", and the notice says "…after removing 0 rows". Written into components.md and drawn as a Design System tile.
+
+**Admin states**
+5. YAML sync Differs with a long or structured field: the field is named without values, "{field} differs". Short fields keep "YAML {a}, database {b}", and all of them are joined with " · ". A field is shown this way when its value is a list or an object, or is over 40 characters.
+   - Drawn with sync "every state": RouteServe reads "expected_cadence_days: YAML 7, database 8 · display_name: … · declared_suites differs", and testpulse reads "layer_rules differs". Both appear in the desktop table and the phone card.
+   - Added to the Design System YAML specimen, components.md "Projects table" and data-map.
+6. Heartbeat states (job "heartbeat failed" and "heartbeat not written"):
+   - Failed: fail Notice "The last run failed at the heartbeat step" / "Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep the database awake. Stale check and prune didn’t run. The next run tries again around 04:00 UTC." Tiles: Last run "✕ Failed at heartbeat", Heartbeat "✕ Not written" ("Stopped with an error"), and the later steps "Not run" ("The run stopped before this step").
+   - Row not written: fail Notice "The last run didn’t write a heartbeat" / "The run finished without an error, but its heartbeat row isn’t in the database…". Heartbeat "✕ Not written" ("No heartbeat row from this run"), other tiles as on time.
+   - Added to Design System section 15, components.md "Daily job tiles" and data-map.
+7. A run that started and never finished (job "didn’t finish"):
+   - fail Notice "The last run didn’t finish" / "It started 8 Oct, 04:00 UTC and never recorded a finish, so it was stopped partway and its step results weren’t saved. Rows a prune removed before it stopped stay removed. The next run tries again around 04:00 UTC; if this repeats, check the cron’s logs in Vercel."
+   - Tiles: Last run "✕ Didn’t finish" ("Started 8 Oct, 04:00 UTC · 5 h ago"), the other three "No result" ("Not recorded before the run stopped").
+   - Added to Design System section 15, components.md and data-map.
+8. The session-expired line names the action:
+   - Acknowledge: "The alert wasn’t acknowledged. Sign in again to finish; nothing was changed, and the alert is still open."
+   - Rotate key: "The RouteServe key wasn’t rotated. Sign in again to finish; nothing was changed, and the current key still works."
+   - The create-form line is unchanged.
+   - Drawn as view "session expired · acknowledge" and "session expired · rotate key". All four lines (create, acknowledge, rotate, delete) are in Design System section 15 and components.md "Page states".
+9. Pages viewed names: Privacy (`/privacy`), "{project} test history" (`/p/{slug}/tests/…`) and "Other page" for anything else, a not-found address included, with its path under it.
+   - Drawn on Northwind Software's detail: Overview, Privacy, "RouteServe test history" and "Other page" `/no-such-page`. Northwind's time per project is now RouteServe 35 s.
+   - The full label list is in components.md "Link detail" and data-map.
+10. Tracked links with no links (tweak `links` off): a dashed row replaces the table card, "No tracked links yet" / "Use New link to make one for each company and role you send the site to. Its visits show here once it’s opened." The count reads "None". Drawn in Admin and Design System, and written into components.md.
+11. Confirmed: no sent date reads "—" in `--ink-3` in the table, the phone card and the detail. Drawn on Northwind (its sent date is now empty) in Admin and Design System, and in components.md and data-map.
+12. The LINK column doesn't use the build's "https://…/v/{token}". The new form is "…/v/{token}":
+    - "https://…/v/Qm8r2LxT0aZe" is 24 mono characters, about 180 px at 12.5 px, and only about 168 px is left beside "Copied" in the 240 column. The token's end would be clipped.
+    - The origin is the same on every row, so it is dropped. The token is never cut.
+    - The full URL is in the cell's `title`, in Copy, and in the copy-refused field. The phone card uses the same form. The link detail keeps the full URL, wrapping.
+    - Changed in Admin and in the Design System table and phone card specimens, and written into components.md and data-map. The old "fits unclipped" note was removed.
+13. Phone header on Admin (content under 760 px): two rows. Row one: wordmark, ADMIN and the theme toggle. Row two: View public site on the left (padding 0, aligned with the wordmark) and Sign out on the right.
+    - "Signed in with magic link" isn't shown on a phone, because Sign out already says you are signed in. Signed out, row two holds View public site only.
+    - Drawn in Admin by width, and in Design System at 1280 and 390 (signed in and signed out). Written into components.md "Admin".
+14. Yes, admin has its own not-found inside the admin frame (detail "unknown link (404)"). It keeps Sign out and doesn't send the owner to the public header.
+    - Breadcrumb "Admin / Tracked links / Not found", eyebrow "404 · Not found", "No tracked link at this address", the path chip, "The link may have been deleted, or the address may be mistyped. Every tracked link is listed on the admin page." and primary "Go to tracked links".
+    - HTTP 404, title "Not found · testpulse admin". When signed out, the guard shows sign-in first, so nothing reveals whether an id exists.
+    - Drawn at 1280 and 390 in Design System, and written into components.md "Page states" and data-map.
+15. The sign-in email is written and drawn: subject "Sign in to testpulse admin", preview "The link works once and expires in 1 hour."
+    - Wordmark and ADMIN, then "Sign in to admin". Then "Use this button to sign in to testpulse admin. It works once and expires in 1 hour.", the button "Sign in to admin", the paste-the-address fallback with the link, "If you didn’t ask to sign in, ignore this email. Nobody can sign in without the link." and the footer "Sent by testpulse because a sign-in link was asked for with this address."
+    - It uses a fixed light palette from the light token values, because email clients ignore the site theme, so there is no dark drawing. It is drawn at 600 and 360 in Design System section 15. components.md "Sign-in" has the HTML and plain-text rules.
+
+**v17 leftover**
+16. Confirmed, no change: Design System line 489 (the banner note) and Run Detail line 226 (the private failed run) both read "…failure messages, stack traces and source links are hidden."
+
+Files changed in v18: Admin.dc.html, Design System.dc.html, design/README.md, design/components.md, design/data-map.md.

@@ -77,7 +77,10 @@ function ProjectRow({
       if (result.status === 'rotated') setState({ step: 'revealed', key: result.key });
       else if (result.status === 'session-ended') {
         setState({ step: 'idle' });
-        sessionEnded('The key wasn’t rotated. Sign in again to finish; nothing was changed.');
+        sessionEnded(
+          `The ${project.name} key wasn’t rotated. Sign in again to finish; nothing was changed, ` +
+            'and the current key still works.',
+        );
       } else setState({ step: 'failed' });
     });
   };

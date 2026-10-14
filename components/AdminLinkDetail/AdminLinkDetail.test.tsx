@@ -124,6 +124,43 @@ describe('AdminLinkDetail', () => {
     expect(within(visits).queryByText('Not yet opened')).toBeNull();
   });
 
+  // v18: Northwind Software's drawing. Every page has its name, "Other page" for an address that
+  // is none of the site's, a not-found one included, and every row shows its path; no sent date
+  // reads "—" in --ink-3. The card keeps the full address.
+  it('names other pages, shows every path, and reads no sent date as a muted dash', () => {
+    show({
+      ...OPENED,
+      company: 'Northwind Software',
+      sent: null,
+      pages: [
+        { label: 'Overview', path: '/', views: '1', time: '20 s' },
+        { label: 'Privacy', path: '/privacy', views: '1', time: '12 s' },
+        {
+          label: 'RouteServe test history',
+          path: '/p/routeserve/tests/k',
+          views: '1',
+          time: '35 s',
+        },
+        { label: 'Other page', path: '/no-such-page', views: '1', time: '4 s' },
+      ],
+    });
+    const details = screen.getByRole('region', { name: 'Link details' });
+    const sent = within(details).getByText('Sent').nextElementSibling as HTMLElement;
+    expect(sent.textContent).toBe('—');
+    expect(sent.className).toContain('unknown');
+    const pages = screen.getByRole('heading', { name: 'Pages viewed' }).parentElement;
+    expect([...(pages?.querySelectorAll('li') ?? [])].map((item) => item.textContent)).toEqual([
+      'Overview/Views: 1Time: 20 s',
+      'Privacy/privacyViews: 1Time: 12 s',
+      'RouteServe test history/p/routeserve/tests/kViews: 1Time: 35 s',
+      'Other page/no-such-pageViews: 1Time: 4 s',
+    ]);
+    expect(screen.getByRole('region', { name: 'Link' }).textContent).toBe(
+      `Link${ORIGIN}/v/Qm8r2LxT0aZeCopy`,
+    );
+    expect(ruleFor(CSS, '.unknown')).toMatchObject({ color: 'var(--ink-3)' });
+  });
+
   it('reads an unopened link as not yet opened, with no pages or time', () => {
     show(UNOPENED);
     expect(screen.getByRole('region', { name: 'Link details' }).textContent).toBe(

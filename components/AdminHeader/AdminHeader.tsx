@@ -10,7 +10,8 @@ export interface AdminHeaderProps {
 }
 
 // Admin's header (design/pages/Admin.dc.html): the site's wordmark with an ADMIN tag, then
-// "Signed in with magic link", View public site and Sign out, and the theme toggle top right.
+// "Signed in with magic link", View public site and Sign out, and the theme toggle top right; two
+// rows on a phone, without the sign-in method (v18).
 export function AdminHeader({ signOut }: AdminHeaderProps) {
   return (
     <>

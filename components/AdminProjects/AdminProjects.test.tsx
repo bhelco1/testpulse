@@ -174,10 +174,12 @@ describe('AdminProjects', () => {
       );
     });
     expect(screen.getAllByRole('alert')[0]?.textContent).toBe(
-      'Your session has endedThe key wasn’t rotated. Sign in again to finish; nothing was ' +
-        'changed.Sign in again',
+      'Your session has endedThe Ostomate2 key wasn’t rotated. Sign in again to finish; nothing ' +
+        'was changed, and the current key still works.Sign in again',
     );
+    // The confirm closes and the row shows Rotate key again.
     expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(within(row('Ostomate2')).getByRole('button', { name: 'Rotate key' })).toBeTruthy();
     expect(screen.queryByText(/^New key/)).toBeNull();
   });
 

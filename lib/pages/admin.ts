@@ -1,5 +1,5 @@
 import type { ProjectPair } from '../admin/sync';
-import type { LinkDetailData, OpenAlert, ProjectName } from '../admin/types';
+import type { LatestJob, LinkDetailData, OpenAlert, ProjectName } from '../admin/types';
 import type { AlertKind } from '../alerts/schema';
 import { formatCount, qty } from '../copy/count';
 import { joinNames } from '../copy/names';
@@ -11,8 +11,8 @@ import {
   type TimedText,
   type TimeLabel,
 } from '../copy/time';
-import { DAILY_JOB_TIME } from '../jobs/schedule';
-import type { DailyStep, DailySummary } from '../jobs/summary';
+import { DAILY_JOB_MAX_SECONDS, DAILY_JOB_TIME } from '../jobs/schedule';
+import { DAILY_STEPS, type DailyStep, type DailySummary } from '../jobs/summary';
 import { daysSince } from '../stats/health';
 import type { TrackedLinkRow } from '../tracked-links/create';
 import type { LinkVisitSummary } from '../visits/stats';
@@ -151,7 +151,8 @@ export interface LinkRowView {
   readonly company: string;
   readonly role: string;
   readonly notes: string | null;
-  readonly sent: string;
+  /** Null: no sent date, shown as "—" in --ink-3. */
+  readonly sent: string | null;
   readonly opened: { readonly text: string; readonly counted: boolean };
   readonly lastSeen: TimeLabel | null;
   /** The pages opened, by name, without run and test pages, as the design lists them. */
@@ -165,8 +166,8 @@ export interface LinksView {
   readonly links: readonly LinkRowView[];
 }
 
-const sentText = (link: TrackedLinkRow, now: Date): string =>
-  link.sent_at === null ? '—' : shortDate(new Date(link.sent_at), now);
+const sentText = (link: TrackedLinkRow, now: Date): string | null =>
+  link.sent_at === null ? null : shortDate(new Date(link.sent_at), now);
 
 const nameMap = (projects: readonly Pick<ProjectName, 'slug' | 'name'>[]) =>
   new Map(projects.map((project) => [project.slug, project.name]));
@@ -179,7 +180,7 @@ export function linksView(
 ): LinksView {
   const names = nameMap(projects);
   return {
-    count: qty(links.length, 'link'),
+    count: links.length === 0 ? 'None' : qty(links.length, 'link'),
     links: links.map((link) => {
       const seen = figures.get(link.id);
       const labels = (seen?.paths ?? []).map((path) => pageLabel(path, names));
@@ -212,7 +213,8 @@ export interface LinkDetailView {
   readonly contact: string | null;
   /** Null: no lead project, so the link opens the overview. */
   readonly lead: { readonly name: string; readonly private: boolean } | null;
-  readonly sent: string;
+  /** Null: no sent date, shown as "—" in --ink-3. */
+  readonly sent: string | null;
   readonly notes: string | null;
   readonly path: string;
   readonly opened: boolean;
@@ -408,6 +410,13 @@ export interface DailyJobView {
   readonly tiles: readonly JobTileView[];
 }
 
+/**
+ * A run with no finish this long after its start was stopped by the platform: the cron route's
+ * time limit, where v18 draws 15 minutes (decision row of 2026-10-14, a). Until then it may still
+ * be running.
+ */
+export const DIDNT_FINISH_AFTER_MS = DAILY_JOB_MAX_SECONDS * 1000;
+
 const STEP_NAME: Record<DailyStep, string> = {
   heartbeat: 'heartbeat',
   stale_check: 'stale check',
@@ -416,14 +425,16 @@ const STEP_NAME: Record<DailyStep, string> = {
 const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const LABELS = ['Last run', 'Heartbeat', 'Stale check', 'Prune'] as const;
 const NEXT_RUN = `around ${DAILY_JOB_TIME}`;
+const TRIES_AGAIN = `The next run tries again ${NEXT_RUN}.`;
 
 function rowsRemoved(summary: DailySummary): number {
   const p = summary.pruned;
   return p.results + p.result_failures + p.visits + p.tracked_sessions + p.rate_limit_buckets;
 }
 
-// v17 (components.md "Daily job tiles"): what a failed prune removed, each non-zero kind in the
-// Prune sub's order, or "0 rows" when none. Its batches each commit, so these stay removed.
+// v18 (components.md "Daily job tiles"): what a failed prune removed, each non-zero kind in the
+// Prune sub's order and joined as it joins them, or "0 rows" when none. Its batches each commit,
+// so these stay removed.
 function removedCounts(summary: DailySummary): string {
   const p = summary.pruned;
   const kinds = [
@@ -434,44 +445,94 @@ function removedCounts(summary: DailySummary): string {
     [p.rate_limit_buckets, 'rate-limit bucket'],
   ] as const;
   const counts = kinds.filter(([n]) => n > 0).map(([n, unit]) => qty(n, unit));
-  return counts.length === 0 ? '0 rows' : joinNames(counts);
+  return counts.length === 0 ? '0 rows' : counts.join(' · ');
 }
 
+const NEVER_RUN: DailyJobView = {
+  notice: {
+    tone: 'neutral',
+    title: 'The daily job hasn’t run yet',
+    body:
+      `Its first run is due ${NEXT_RUN}. If this still shows 36 hours after the deploy, ` +
+      'check the cron in Vercel.',
+  },
+  tiles: LABELS.map((label) => ({
+    label,
+    value: ['Never run'],
+    sub: ['No run summary yet'],
+    tone: 'muted',
+  })),
+};
+
+/** A run that started and never recorded a finish, so none of its step results were saved. */
+function didntFinishView(summary: DailySummary, now: Date): DailyJobView {
+  const started = new Date(summary.started_at);
+  const at = dateTimeLabel(started, now);
+  return {
+    notice: {
+      tone: 'fail',
+      title: 'The last run didn’t finish',
+      body:
+        `It started ${at.text} and never recorded a finish, so it was stopped partway and its ` +
+        'step results weren’t saved. Rows a prune removed before it stopped stay removed. ' +
+        `The next run tries again ${NEXT_RUN}; if this repeats, check the cron’s logs in Vercel.`,
+    },
+    tiles: [
+      {
+        label: 'Last run',
+        value: ['✕ Didn’t finish'],
+        sub: ['Started ', at, ' · ', relativeLabel(started, now)],
+        tone: 'fail',
+      },
+      ...LABELS.slice(1).map((label): JobTileView => ({
+        label,
+        value: ['No result'],
+        sub: ['Not recorded before the run stopped'],
+        tone: 'muted',
+      })),
+    ],
+  };
+}
+
+/**
+ * The latest run. A run with no finish is read as stopped once the cron route's time limit has
+ * passed since its start, in place of the overdue warning; before that it may still be running,
+ * and the latest finished run is shown instead.
+ */
 export function dailyJobView(
-  summary: DailySummary | null,
+  job: LatestJob | null,
   projects: readonly Pick<ProjectName, 'id' | 'name'>[],
   now: Date,
 ): DailyJobView {
-  if (summary === null) {
-    return {
-      notice: {
-        tone: 'neutral',
-        title: 'The daily job hasn’t run yet',
-        body:
-          `Its first run is due ${NEXT_RUN}. If this still shows 36 hours after the deploy, ` +
-          'check the cron in Vercel.',
-      },
-      tiles: LABELS.map((label) => ({
-        label,
-        value: ['Never run'],
-        sub: ['No run summary yet'],
-        tone: 'muted',
-      })),
-    };
+  if (job === null) return NEVER_RUN;
+  const { latest } = job;
+  if (latest.finished_at !== null) return finishedRunView(latest, projects, now);
+  if (now.getTime() - Date.parse(latest.started_at) > DIDNT_FINISH_AFTER_MS) {
+    return didntFinishView(latest, now);
   }
+  return job.lastFinished === null
+    ? NEVER_RUN
+    : finishedRunView(job.lastFinished, projects, now, new Date(latest.started_at));
+}
 
+function finishedRunView(
+  summary: DailySummary,
+  projects: readonly Pick<ProjectName, 'id' | 'name'>[],
+  now: Date,
+  /** The latest run's start, when one has started since this run and may still be going. */
+  latestStart: Date = new Date(summary.started_at),
+): DailyJobView {
   const started = new Date(summary.started_at);
   const at = dateTimeLabel(started, now);
   const ago = relativeLabel(started, now);
-  const hours = Math.floor((now.getTime() - started.getTime()) / HOUR_MS);
-  const overdue = now.getTime() - started.getTime() > OVERDUE_HOURS * HOUR_MS;
-  const unfinished = summary.status === 'failed' && summary.failed_step === null;
+  const sinceLatest = now.getTime() - latestStart.getTime();
+  const hours = Math.floor(sinceLatest / HOUR_MS);
+  const overdue = sinceLatest > OVERDUE_HOURS * HOUR_MS;
   const failed = new Set(summary.failed_steps);
   const removed = rowsRemoved(summary);
 
-  const lastRun: JobTileView = unfinished
-    ? { label: 'Last run', value: ['✕ Didn’t finish'], sub: [at, ' · ', ago], tone: 'fail' }
-    : summary.failed_step !== null
+  const lastRun: JobTileView =
+    summary.failed_step !== null
       ? {
           label: 'Last run',
           value: [`✕ Failed at ${STEP_NAME[summary.failed_step]}`],
@@ -499,17 +560,18 @@ export function dailyJobView(
     sub: [sub],
     tone: 'fail',
   });
+  const notWritten = (sub: string): JobTileView => ({
+    label: 'Heartbeat',
+    value: ['✕ Not written'],
+    sub: [sub],
+    tone: 'fail',
+  });
 
   const heartbeat: JobTileView = failed.has('heartbeat')
-    ? stopped('Heartbeat', 'Stopped with the error above')
+    ? notWritten('Stopped with an error')
     : summary.heartbeat_written
       ? { label: 'Heartbeat', value: ['✓ Written'], sub: ['Database kept awake'], tone: 'pass' }
-      : {
-          label: 'Heartbeat',
-          value: ['✕ Not written'],
-          sub: ['Database not touched'],
-          tone: 'fail',
-        };
+      : notWritten('No heartbeat row from this run');
 
   const names = new Map(projects.map((project) => [project.id, project.name]));
   const opened = summary.stale_opened;
@@ -531,21 +593,28 @@ export function dailyJobView(
   const p = summary.pruned;
   const prune: JobTileView = failed.has('prune')
     ? stopped('Prune', `Removed ${removedCounts(summary)} before failing`)
-    : unfinished
-      ? notRecorded('Prune')
-      : {
-          label: 'Prune',
-          value: [`${qty(removed, 'row')} removed`],
-          sub: [
-            `Results ${formatCount(p.results)} · failure text ${formatCount(p.result_failures)} · ` +
-              `visits ${formatCount(p.visits)} · tracked sessions ${formatCount(p.tracked_sessions)} · ` +
-              `rate-limit buckets ${formatCount(p.rate_limit_buckets)}`,
-          ],
-          tone: 'normal',
-        };
+    : {
+        label: 'Prune',
+        value: [`${qty(removed, 'row')} removed`],
+        sub: [
+          `Results ${formatCount(p.results)} · failure text ${formatCount(p.result_failures)} · ` +
+            `visits ${formatCount(p.visits)} · tracked sessions ${formatCount(p.tracked_sessions)} · ` +
+            `rate-limit buckets ${formatCount(p.rate_limit_buckets)}`,
+        ],
+        tone: 'normal',
+      };
 
   const fromThatRun = (tile: JobTileView): JobTileView =>
     overdue && tile.tone !== 'muted' ? { ...tile, sub: ['From that run · ', ...tile.sub] } : tile;
+
+  // The job runs every step whatever failed before it (lib/jobs/daily.ts), so each later step
+  // finished unless it failed too.
+  const finishedAfter = (step: DailyStep): string[] =>
+    DAILY_STEPS.slice(DAILY_STEPS.indexOf(step) + 1)
+      .filter((each) => !failed.has(each))
+      .map((each) => STEP_NAME[each]);
+  const finishedSentence = (steps: readonly string[]) =>
+    steps.length > 0 ? `${capital(joinNames(steps))} finished. ` : '';
 
   let notice: DailyJobView['notice'] = null;
   if (overdue) {
@@ -557,19 +626,20 @@ export function dailyJobView(
         'heartbeat is written, stale projects aren’t flagged and nothing is pruned. Check the ' +
         'cron in Vercel.',
     };
-  } else if (unfinished) {
+  } else if (summary.failed_step === 'heartbeat') {
+    // v18 draws "{later steps} didn't run"; this job runs them, so the notice says which finished
+    // (decision row of 2026-10-14, b).
     notice = {
       tone: 'fail',
-      title: 'The last run didn’t finish',
+      title: 'The last run failed at the heartbeat step',
       body:
-        `It started at ${at.text} and recorded no end, so the platform may have stopped it. ` +
-        `The next run tries again ${NEXT_RUN}.`,
+        `Heartbeat stopped with “${summary.error ?? ''}” before writing its row, so this run ` +
+        `didn’t keep the database awake. ${finishedSentence(finishedAfter('heartbeat'))}` +
+        TRIES_AGAIN,
     };
   } else if (summary.failed_step !== null) {
     const step = STEP_NAME[summary.failed_step];
-    const finished = (['heartbeat', 'stale_check', 'prune'] as const)
-      .filter((each) => !failed.has(each))
-      .map((each) => STEP_NAME[each]);
+    const finished = DAILY_STEPS.filter((each) => !failed.has(each)).map((each) => STEP_NAME[each]);
     const outcome =
       summary.failed_step !== 'prune'
         ? '.'
@@ -578,9 +648,17 @@ export function dailyJobView(
       tone: 'fail',
       title: `The last run failed at the ${step} step`,
       body:
-        (finished.length > 0 ? `${capital(joinNames(finished))} finished. ` : '') +
-        `${capital(step)} stopped with “${summary.error ?? ''}”${outcome} ` +
-        `The next run tries again ${NEXT_RUN}.`,
+        finishedSentence(finished) +
+        `${capital(step)} stopped with “${summary.error ?? ''}”${outcome} ${TRIES_AGAIN}`,
+    };
+  } else if (!summary.heartbeat_written) {
+    notice = {
+      tone: 'fail',
+      title: 'The last run didn’t write a heartbeat',
+      body:
+        'The run finished without an error, but its heartbeat row isn’t in the database, so ' +
+        'this run didn’t keep the database awake. The other steps finished. ' +
+        TRIES_AGAIN,
     };
   }
 

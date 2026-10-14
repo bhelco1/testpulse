@@ -22,11 +22,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 
 <header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:4px 16px;padding:18px 0;flex-wrap:wrap">
 <div style="display:flex;align-items:center;gap:14px"><a href="#" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a><span style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;padding:3px 7px;border-radius:5px;background:var(--ink);color:var(--on-ink)">ADMIN</span></div>
-<nav style="display:flex;align-items:center;gap:0 8px;font-size:14.5px;flex-wrap:wrap">
-<sc-if value="{{ signedIn }}" hint-placeholder-val="{{ true }}"><span style="color:var(--ink-3);padding:0 8px">Signed in with magic link</span></sc-if>
-<a href="#" style="height:44px;padding:0 12px;display:flex;align-items:center">View public site</a>
+<nav style="display:flex;align-items:center;gap:0 8px;font-size:14.5px;flex-wrap:wrap;flex-basis:{{ hdr.basis }};justify-content:{{ hdr.justify }}">
+<sc-if value="{{ hdr.note }}" hint-placeholder-val="{{ true }}"><span style="color:var(--ink-3);padding:0 8px">Signed in with magic link</span></sc-if>
+<a href="#" style="height:44px;padding:{{ hdr.linkPad }};display:flex;align-items:center">View public site</a>
 <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ signOut }}" style="height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign out</button></sc-if>
-<span aria-hidden="true" style="flex:none;width:52px;height:0"></span>
+<sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}"><span aria-hidden="true" style="flex:none;width:52px;height:0"></span></sc-if>
 </nav>
 <div style="position:absolute;top:18px;right:0;display:flex;align-items:center;gap:4px">
 <button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
@@ -76,6 +76,18 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </main>
 </sc-if>
 
+<!-- SIGNED IN: UNKNOWN LINK (v18 item 14) -->
+<sc-if value="{{ showMissing }}" hint-placeholder-val="{{ false }}">
+<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;font-size:14px;color:var(--ink-3)"><button onClick="{{ closeDetail }}" style="min-height:44px;padding:0;border:none;background:none;color:var(--ink-2);font:400 14px 'Public Sans',sans-serif;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">Admin</button><span aria-hidden="true">/</span><button onClick="{{ closeDetail }}" style="min-height:44px;padding:0;border:none;background:none;color:var(--ink-2);font:400 14px 'Public Sans',sans-serif;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">Tracked links</button><span aria-hidden="true">/</span><span aria-current="page" style="color:var(--ink)">Not found</span></nav>
+<main style="max-width:640px;padding:32px 0 80px">
+<div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">404 · Not found</div>
+<h1 style="margin:14px 0 0;font:500 clamp(34px,4.5vw,48px)/1.1 'Source Serif 4',serif;letter-spacing:-.02em;text-wrap:balance">No tracked link at this address</h1>
+<div style="margin-top:16px;display:inline-flex;max-width:100%;padding:6px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font:13.5px/1.5 'JetBrains Mono',monospace;color:var(--ink-2);overflow-wrap:anywhere">/admin/links/8f3c2a91-0d47-4b6e-9a15-c2e7f0b84d36</div>
+<p style="margin:16px 0 0;font:400 19px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">The link may have been deleted, or the address may be mistyped. Every tracked link is listed on the admin page.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:20px"><button onClick="{{ closeDetail }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer">Go to tracked links</button></div>
+</main>
+</sc-if>
+
 <!-- SIGNED IN: LINK DETAIL -->
 <sc-if value="{{ showDetail }}" hint-placeholder-val="{{ false }}">
 <main style="padding:8px 0 64px;display:flex;flex-direction:column;gap:32px">
@@ -90,7 +102,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 18px;font-size:14px;line-height:1.5">
 <dt style="color:var(--ink-3)">Contact</dt><dd style="margin:0;overflow-wrap:anywhere;color:{{ d.contactInk }}">{{ d.contact }}</dd>
 <dt style="color:var(--ink-3)">Lead project</dt><dd style="margin:0;display:flex;align-items:center;gap:8px"><span>{{ d.lead }}</span><sc-if value="{{ d.leadPrivate }}"><span style="display:flex;align-items:center;gap:5px;color:var(--ink-3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private</span></sc-if></dd>
-<dt style="color:var(--ink-3)">Sent</dt><dd style="margin:0">{{ d.sent }}</dd>
+<dt style="color:var(--ink-3)">Sent</dt><dd style="margin:0;color:{{ d.sentInk }}">{{ d.sent }}</dd>
 <dt style="color:var(--ink-3)">Notes</dt><dd style="margin:0;white-space:pre-wrap;color:{{ d.notesInk }}">{{ d.notes }}</dd>
 </dl>
 </section>
@@ -140,7 +152,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <main style="padding:24px 0 64px;display:flex;flex-direction:column;gap:48px">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px"><h1 style="margin:0;font:500 44px/1.05 'Source Serif 4',serif;letter-spacing:-.02em">Admin</h1><span style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Alerts, links, keys and timestamps are illustrative</span></div>
 
-<sc-if value="{{ sessionGone }}"><div role="alert" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div style="flex:1;min-width:min(100%,240px)"><div style="font-weight:600;font-size:14.5px;color:var(--attn)">Your session has ended</div><p style="margin:2px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">The link wasn’t created. Sign in again to finish; nothing was changed, and the form keeps what you typed until you leave this page.</p></div><button onClick="{{ toSignin }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign in again</button></div></sc-if>
+<sc-if value="{{ sessionGone }}"><div role="alert" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg style="flex:none" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div style="flex:1;min-width:min(100%,240px)"><div style="font-weight:600;font-size:14.5px;color:var(--attn)">Your session has ended</div><p style="margin:2px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">{{ sessionMsg }}</p></div><button onClick="{{ toSignin }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:none;background:var(--ink);color:var(--on-ink);font:600 14.5px 'Public Sans',sans-serif;cursor:pointer">Sign in again</button></div></sc-if>
 
 <!-- ALERTS -->
 <section aria-labelledby="alerts-h">
@@ -186,6 +198,10 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </form>
 </sc-if>
 
+<sc-if value="{{ noLinks }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:12px;border:1px dashed var(--line-strong);font-size:14px;line-height:1.5"><span style="font-weight:600;color:var(--ink-2)">No tracked links yet</span><span style="color:var(--ink-2)">Use New link to make one for each company and role you send the site to. Its visits show here once it’s opened.</span></div>
+</sc-if>
+<sc-if value="{{ hasLinks }}" hint-placeholder-val="{{ true }}">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
 <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
 <div style="overflow-x:auto"><div style="min-width:1090px">
@@ -194,11 +210,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <div style="border-bottom:1px solid var(--line);background:{{ l.bg }}">
 <div style="display:grid;grid-template-columns:minmax(0,1.4fr) 80px 170px 120px minmax(0,1fr) 240px;gap:14px;align-items:center;padding:6px 18px;font-size:14px">
 <div style="min-width:0;display:flex;flex-direction:column;gap:1px;padding:4px 0"><div style="display:flex;align-items:center;gap:8px"><button onClick="{{ l.open }}" style="min-height:44px;display:inline-flex;align-items:center;padding:0;border:none;background:none;color:var(--ink);font:600 14px 'Public Sans',sans-serif;text-align:left;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">{{ l.company }}</button><sc-if value="{{ l.isNew }}"><span style="font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 6px;border-radius:4px;background:var(--ink);color:var(--on-ink)">NEW</span></sc-if></div><div style="font-size:13px;color:var(--ink-3)">{{ l.role }}</div><sc-if value="{{ l.hasNote }}"><div title="{{ l.notes }}" style="display:flex;gap:6px;align-items:center;min-width:0;font-size:12.5px;color:var(--ink-3);margin-top:2px"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"></path></svg><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Note:</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.notes }}</span></div></sc-if></div>
-<span style="color:var(--ink-2)">{{ l.sent }}</span>
+<span style="color:{{ l.sentInk }}">{{ l.sent }}</span>
 <span style="color:{{ l.visitInk }};font-weight:{{ l.visitWeight }}">{{ l.visits }}</span>
 <span style="color:var(--ink-2)">{{ l.last }}</span>
 <span style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.pageChips }}" as="pg" hint-placeholder-count="1"><span style="padding:2px 8px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font-size:12.5px">{{ pg }}</span></sc-for><sc-if value="{{ l.noPages }}"><span style="color:var(--ink-3)">—</span></sc-if></span>
-<span style="display:flex;align-items:center;gap:8px;min-width:0"><code style="display:flex;min-width:0;overflow:hidden;font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)"><span>&lt;site origin&gt;</span><span>{{ l.token }}</span></code><button onClick="{{ l.copy }}" aria-label="Copy link for {{ l.company }}" style="flex:none;min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 12.5px 'Public Sans',sans-serif;cursor:pointer">{{ l.copyLabel }}</button></span>
+<span style="display:flex;align-items:center;gap:8px;min-width:0"><code title="{{ l.fullUrl }}" style="display:flex;min-width:0;overflow:hidden;white-space:nowrap;font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)"><span aria-hidden="true">…</span><span>{{ l.token }}</span></code><button onClick="{{ l.copy }}" aria-label="Copy link for {{ l.company }}" style="flex:none;min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 12.5px 'Public Sans',sans-serif;cursor:pointer">{{ l.copyLabel }}</button></span>
 </div>
 <sc-if value="{{ l.refused }}"><div role="status" style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:0 18px 14px;font-size:13.5px;color:var(--ink-2)"><span style="display:flex;gap:8px;align-items:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Your browser blocked copying. Select the link and copy it.</span><input readOnly="{{ true }}" value="{{ l.fullUrl }}" onFocus="{{ selectAll }}" aria-label="Link for {{ l.company }}" style="flex:1;min-width:260px;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--attn);background:var(--inset);color:var(--ink);font:13px 'JetBrains Mono',monospace"></div></sc-if>
 </div>
@@ -209,13 +225,14 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <sc-for list="{{ links }}" as="l" hint-placeholder-count="3">
 <div style="padding:12px 16px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px;background:{{ l.bg }}">
 <div style="min-width:0;display:flex;flex-direction:column;gap:1px"><div style="display:flex;align-items:center;gap:8px"><button onClick="{{ l.open }}" style="min-height:44px;display:inline-flex;align-items:center;padding:0;border:none;background:none;color:var(--ink);font:600 15px 'Public Sans',sans-serif;text-align:left;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer">{{ l.company }}</button><sc-if value="{{ l.isNew }}"><span style="font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 6px;border-radius:4px;background:var(--ink);color:var(--on-ink)">NEW</span></sc-if></div><div style="font-size:13.5px;color:var(--ink-3)">{{ l.role }}</div><sc-if value="{{ l.hasNote }}"><div style="display:flex;gap:6px;align-items:flex-start;font-size:13px;color:var(--ink-3);margin-top:4px"><svg style="flex:none;margin-top:3px" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"></path></svg><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Note:</span><span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ l.notes }}</span></div></sc-if></div>
-<dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px"><dt style="color:var(--ink-3)">Sent</dt><dd style="margin:0;color:var(--ink-2)">{{ l.sent }}</dd><dt style="color:var(--ink-3)">Opened</dt><dd style="margin:0;color:{{ l.visitInk }};font-weight:{{ l.visitWeight }}">{{ l.visits }}</dd><dt style="color:var(--ink-3)">Last seen</dt><dd style="margin:0;color:var(--ink-2)">{{ l.last }}</dd><dt style="color:var(--ink-3)">Pages</dt><dd style="margin:0;display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.pageChips }}" as="pg" hint-placeholder-count="1"><span style="padding:2px 8px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font-size:12.5px">{{ pg }}</span></sc-for><sc-if value="{{ l.noPages }}"><span style="color:var(--ink-3)">—</span></sc-if></dd></dl>
-<div style="display:flex;align-items:center;gap:10px"><code style="flex:1;min-width:0;display:flex;overflow:hidden;font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)"><span>&lt;site origin&gt;</span><span>{{ l.token }}</span></code><button onClick="{{ l.copy }}" aria-label="Copy link for {{ l.company }}" style="flex:none;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer">{{ l.copyLabel }}</button></div>
+<dl style="margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px"><dt style="color:var(--ink-3)">Sent</dt><dd style="margin:0;color:{{ l.sentInk }}">{{ l.sent }}</dd><dt style="color:var(--ink-3)">Opened</dt><dd style="margin:0;color:{{ l.visitInk }};font-weight:{{ l.visitWeight }}">{{ l.visits }}</dd><dt style="color:var(--ink-3)">Last seen</dt><dd style="margin:0;color:var(--ink-2)">{{ l.last }}</dd><dt style="color:var(--ink-3)">Pages</dt><dd style="margin:0;display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.pageChips }}" as="pg" hint-placeholder-count="1"><span style="padding:2px 8px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font-size:12.5px">{{ pg }}</span></sc-for><sc-if value="{{ l.noPages }}"><span style="color:var(--ink-3)">—</span></sc-if></dd></dl>
+<div style="display:flex;align-items:center;gap:10px"><code title="{{ l.fullUrl }}" style="flex:1;min-width:0;display:flex;overflow:hidden;white-space:nowrap;font:12.5px 'JetBrains Mono',monospace;color:var(--ink-3)"><span aria-hidden="true">…</span><span>{{ l.token }}</span></code><button onClick="{{ l.copy }}" aria-label="Copy link for {{ l.company }}" style="flex:none;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:none;color:var(--ink);font:500 13.5px 'Public Sans',sans-serif;cursor:pointer">{{ l.copyLabel }}</button></div>
 <sc-if value="{{ l.refused }}"><div role="status" style="display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--ink-2)"><span style="display:flex;gap:8px;align-items:flex-start"><svg style="flex:none;margin-top:2px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Your browser blocked copying. Select the link and copy it.</span><input readOnly="{{ true }}" value="{{ l.fullUrl }}" onFocus="{{ selectAll }}" aria-label="Link for {{ l.company }}" style="min-height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--attn);background:var(--inset);color:var(--ink);font:13px 'JetBrains Mono',monospace"></div></sc-if>
 </div>
 </sc-for>
 </sc-if>
 </div>
+</sc-if>
 <p style="margin:10px 0 0;font-size:13px;color:var(--ink-3)">Sessions are distinct session cookies; visitors are distinct salted IP hashes. Bot and link-preview visits are never counted. Visitors can read what’s recorded on the privacy page.</p>
 </section>
 
@@ -262,7 +279,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <!-- DAILY JOB -->
 <section aria-labelledby="job-h">
 <h2 id="job-h" style="margin:0 0 6px;font:500 26px 'Source Serif 4',serif">Daily job</h2>
-<p style="margin:0 0 14px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Runs once a day around 06:00 UTC on Vercel cron. Writes a heartbeat so the free-tier database stays awake, opens stale alerts (a report arriving closes them), and prunes: per-test results and failure text after 180 days (each project’s 5 most recent runs are kept), visit records after 365 days, and expired rate-limit buckets.</p>
+<p style="margin:0 0 14px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Runs once a day around 04:00 UTC on Vercel cron. Writes a heartbeat so the free-tier database stays awake, opens stale alerts (a report arriving closes them), and prunes: per-test results and failure text after 180 days (each project’s 5 most recent runs are kept), visit records and tracked sessions after 365 days, and expired rate-limit buckets.</p>
 <sc-if value="{{ jobNotice.show }}" hint-placeholder-val="{{ false }}"><div role="{{ jobNotice.role }}" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;padding:14px 16px;border-radius:12px;background:{{ jobNotice.bg }};border:1px solid {{ jobNotice.line }}"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{ jobNotice.ink }}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ jobNotice.dash }}"></circle><path d="{{ jobNotice.d }}"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:{{ jobNotice.titleInk }}">{{ jobNotice.title }}</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ jobNotice.body }}</p></div></div></sc-if>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px">
 <sc-for list="{{ job }}" as="j" hint-placeholder-count="4"><div style="background:var(--surface);border:1px solid {{ j.line }};border-radius:16px;padding:16px 18px"><div style="font-size:13.5px;color:var(--ink-3)">{{ j.label }}</div><div style="font:500 24px/1.2 'Source Serif 4',serif;margin-top:6px;color:{{ j.ink }}">{{ j.value }}</div><div style="font-size:13px;line-height:1.45;color:var(--ink-2);margin-top:4px">{{ j.sub }}</div></div></sc-for>
@@ -272,7 +289,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </sc-if>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;signed in&quot;,&quot;signed in · loading&quot;,&quot;signed in · error&quot;,&quot;session expired&quot;,&quot;sign-in&quot;,&quot;sign-in · sending&quot;,&quot;sign-in · invalid address&quot;,&quot;link sent&quot;,&quot;link expired&quot;,&quot;not allowed&quot;,&quot;signed out&quot;],&quot;default&quot;:&quot;signed in&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;detail&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;Acme Health (opened)&quot;,&quot;Globex (not yet opened)&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;states&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;validation&quot;,&quot;busy&quot;,&quot;errors&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Actions&quot;},&quot;alerts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;sync&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all in sync&quot;,&quot;every state&quot;],&quot;default&quot;:&quot;all in sync&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;job&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;on time&quot;,&quot;overdue&quot;,&quot;never run&quot;,&quot;failed partway&quot;],&quot;default&quot;:&quot;on time&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;signed in&quot;,&quot;signed in · loading&quot;,&quot;signed in · error&quot;,&quot;session expired&quot;,&quot;session expired · acknowledge&quot;,&quot;session expired · rotate key&quot;,&quot;sign-in&quot;,&quot;sign-in · sending&quot;,&quot;sign-in · invalid address&quot;,&quot;link sent&quot;,&quot;link expired&quot;,&quot;not allowed&quot;,&quot;signed out&quot;],&quot;default&quot;:&quot;signed in&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;detail&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;Acme Health (opened)&quot;,&quot;Globex (not yet opened)&quot;,&quot;Northwind Software (other pages, no sent date)&quot;,&quot;unknown link (404)&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;states&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;validation&quot;,&quot;busy&quot;,&quot;errors&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Actions&quot;},&quot;alerts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;sync&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all in sync&quot;,&quot;every state&quot;],&quot;default&quot;:&quot;all in sync&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;job&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;on time&quot;,&quot;overdue&quot;,&quot;never run&quot;,&quot;failed partway&quot;,&quot;heartbeat failed&quot;,&quot;heartbeat not written&quot;,&quot;didn’t finish&quot;],&quot;default&quot;:&quot;on time&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;links&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null, w: 1200, dismissed: {}, acking: null, formOpen: false, touched: false, creating: false, f: Component.blank(), added: [], deleted: {}, copied: null, refused: null, rotating: null, rotBusy: null, revealed: null, detail: undefined, delConfirm: false, delBusy: false, email: '', emailTouched: false, sending: false, sent: false, signedOut: false };
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
@@ -303,7 +320,14 @@ class Component extends DCLogic {
     const view = this.state.signedOut ? 'signed out' : (this.props.view ?? 'signed in');
     const st = this.props.states ?? 'live';
     const busyM = st === 'busy', errM = st === 'errors', valM = st === 'validation';
-    const sessionGone = view === 'session expired';
+    const sessionGone = view.indexOf('session expired') === 0;
+    const sessionCreate = view === 'session expired';
+    /* v18 item 8: the line names the action that got the 401 */
+    const sessionMsg = {
+      'session expired · acknowledge': 'The alert wasn’t acknowledged. Sign in again to finish; nothing was changed, and the alert is still open.',
+      'session expired · rotate key': 'The RouteServe key wasn’t rotated. Sign in again to finish; nothing was changed, and the current key still works.',
+    }[view] || 'The link wasn’t created. Sign in again to finish; nothing was changed, and the form keeps what you typed until you leave this page.';
+    const showLinks = this.props.links ?? true;
     const wide = this.state.w >= 760;
     const showAlerts = this.props.alerts ?? true;
     const jobMode = this.props.job ?? 'on time';
@@ -341,7 +365,7 @@ class Component extends DCLogic {
     };
     const A0 = [
       { id: 'drop', kind: 'count_drop', title: 'testpulse: test count fell 23%', body: 'e2e/app/chromium: 235 → 180 tests (−23%) since the previous default-branch run', opened: '8 Oct, 04:12 UTC', closes: 'Closes when the count recovers, or acknowledge it.' },
-      { id: 'stale', kind: 'stale', title: 'RouteServe: no report in 12 days', body: 'No report in 12 days. Expected every 8 days; last report 26 Sep.', opened: '4 Oct, 06:00 UTC', closes: 'Closes by itself when RouteServe reports' },
+      { id: 'stale', kind: 'stale', title: 'RouteServe: no report in 12 days', body: 'No report in 12 days. Expected every 8 days; last report 26 Sep.', opened: '4 Oct, 04:00 UTC', closes: 'Closes by itself when RouteServe reports' },
       { id: 'empty', kind: 'empty_run', title: 'Ostomate2: a report held no tests', body: 'ios-e2e/e2e/ios-sim parsed with 0 tests on main (0e2d0b4).', opened: '7 Oct, 23:32 UTC', closes: 'Closes by itself when that key reports tests' },
       { id: 'cov', kind: 'coverage_below_floor', title: 'RouteServe: coverage under its floor', body: 'packages/shared lines 79.9% under its 80% floor', opened: '26 Sep, 09:16 UTC', closes: 'Closes by itself when the module is back at its floor' },
     ];
@@ -361,12 +385,14 @@ class Component extends DCLogic {
         sessions: 3, visitors: 2, first: '18 Sep, 16:02 UTC', last: '2 h ago',
         pages: [['Overview', '/', 2, 74], ['Ostomate2', '/p/ostomate2', 3, 412], ['Ostomate2 run', '/p/ostomate2/runs/…', 1, null], ['RouteServe', '/p/routeserve', 1, 41], ['How it’s tested', '/how-its-tested', 1, 188]],
         perProject: [['Ostomate2', 412], ['RouteServe', 41]] },
-      { id: 'nw', company: 'Northwind Software', role: 'Sr. Engineering Manager, QA', contact: 'j.okafor@northwind.example', lead: '', sentIso: '2026-09-15', notes: '', token: '/v/Hn4kWp7cYs2d',
-        sessions: 1, visitors: 1, first: '1 Oct, 13:40 UTC', last: '1 week ago', pages: [['Overview', '/', 1, 52]], perProject: [] },
+      { id: 'nw', company: 'Northwind Software', role: 'Sr. Engineering Manager, QA', contact: 'j.okafor@northwind.example', lead: '', sentIso: '', notes: '', token: '/v/Hn4kWp7cYs2d',
+        sessions: 1, visitors: 1, first: '1 Oct, 13:40 UTC', last: '1 week ago',
+        /* v18 items 9 and 11: no sent date; Privacy, a test history page and any other page */
+        pages: [['Overview', '/', 1, 52], ['Privacy', '/privacy', 1, 23], ['RouteServe test history', '/p/routeserve/tests/…', 1, 35], ['Other page', '/no-such-page', 1, 4]], perProject: [['RouteServe', 35]] },
       { id: 'gx', company: 'Globex', role: 'QA Manager', contact: 'Sam Patel (recruiter)', lead: 'RouteServe', sentIso: '2026-09-12', notes: 'Referral from a former colleague.', token: '/v/Tb9eJx3mRq6u',
         sessions: 0, visitors: 0, first: '', last: '', pages: [], perProject: [] },
     ];
-    const all = this.state.added.concat(base).filter(l => !this.state.deleted[l.id]);
+    const all = this.state.added.concat(showLinks ? base : []).filter(l => !this.state.deleted[l.id]);
     const refusedId = errM ? 'acme' : this.state.refused;
     const mkCopy = l => () => {
       const url = window.location.origin + l.token;
@@ -377,7 +403,7 @@ class Component extends DCLogic {
     const links = all.map(l => {
       const opened = l.sessions > 0;
       return {
-        company: l.company, role: l.role || '—', sent: Component.fmtDate(l.sentIso), notes: l.notes, hasNote: !!l.notes, token: l.token, fullUrl: '<site origin>' + l.token,
+        company: l.company, role: l.role || '—', sent: l.sentIso ? Component.fmtDate(l.sentIso) : '—', sentInk: l.sentIso ? 'var(--ink-2)' : 'var(--ink-3)', notes: l.notes, hasNote: !!l.notes, token: l.token, fullUrl: '<site origin>' + l.token,
         visits: opened ? l.sessions + ' session' + pl(l.sessions) + ' · ' + l.visitors + ' visitor' + pl(l.visitors) : 'Not yet opened', last: opened ? l.last : '—',
         pageChips: l.pages.map(p => p[0]).filter((p, i, a) => a.indexOf(p) === i && !/ run$/.test(p)), noPages: l.pages.length === 0,
         isNew: !!l.isNew, bg: l.isNew ? 'var(--raised)' : 'transparent',
@@ -387,16 +413,16 @@ class Component extends DCLogic {
       };
     });
 
-    const propDetail = { 'Acme Health (opened)': 'acme', 'Globex (not yet opened)': 'gx' }[this.props.detail ?? 'none'] || '';
+    const propDetail = { 'Acme Health (opened)': 'acme', 'Globex (not yet opened)': 'gx', 'Northwind Software (other pages, no sent date)': 'nw', 'unknown link (404)': 'missing' }[this.props.detail ?? 'none'] || '';
     const detailId = this.state.detail !== undefined ? this.state.detail : propDetail;
-    const dl = detailId ? all.find(l => l.id === detailId) : null;
+    const dl = detailId && detailId !== 'missing' ? all.find(l => l.id === detailId) : null;
     let d = {};
     if (dl) {
       const opened = dl.sessions > 0, maxP = Math.max(1, ...dl.perProject.map(p => p[1]));
       const confirming = busyM || this.state.delConfirm, delBusy = busyM || this.state.delBusy;
       d = {
         company: dl.company, role: dl.role || '—', contact: dl.contact || '—', contactInk: dl.contact ? 'var(--ink)' : 'var(--ink-3)', lead: dl.lead || 'None, opens the overview', leadPrivate: dl.lead === 'RouteServe',
-        sent: Component.fmtDate(dl.sentIso), notes: dl.notes || 'No notes', notesInk: dl.notes ? 'var(--ink)' : 'var(--ink-3)',
+        sent: dl.sentIso ? Component.fmtDate(dl.sentIso) : '—', sentInk: dl.sentIso ? 'var(--ink)' : 'var(--ink-3)', notes: dl.notes || 'No notes', notesInk: dl.notes ? 'var(--ink)' : 'var(--ink-3)',
         token: dl.token, fullUrl: '<site origin>' + dl.token, copy: mkCopy(dl), copyLabel: this.state.copied === dl.id ? 'Copied' : 'Copy', refused: refusedId === dl.id,
         figures: [
           { label: 'First seen', value: opened ? dl.first : '—', sub: opened ? 'First browser visit' : 'Not yet opened', ink: opened ? 'var(--ink)' : 'var(--ink-3)' },
@@ -415,8 +441,8 @@ class Component extends DCLogic {
 
     /* ---------- create form (item 8) ---------- */
     const filled = { company: 'Initech', role: 'Head of QA', contact: 'Priya Shah', lead: 'RouteServe', sent: Component.TODAY, notes: 'Applied through their careers page.' };
-    const forcedForm = valM || busyM || errM || sessionGone;
-    const f = valM ? Component.blank() : (busyM || errM || sessionGone) ? filled : this.state.f;
+    const forcedForm = valM || busyM || errM || sessionCreate;
+    const f = valM ? Component.blank() : (busyM || errM || sessionCreate) ? filled : this.state.f;
     const touched = valM || this.state.touched;
     const companyInvalid = touched && !f.company.trim(), roleInvalid = touched && !f.role.trim();
     const fBusy = busyM || this.state.creating;
@@ -436,14 +462,16 @@ class Component extends DCLogic {
     const P = [
       { id: 'o2', name: 'Ostomate2', vis: 'Public', report: '4 min ago', sync: 'ok' },
       { id: 'rs', name: 'RouteServe', vis: 'Private', report: showAlerts ? '◷ 1 week ago' : '2 h ago', stale: showAlerts, sync: syncMode === 'every state' ? 'differs' : 'ok' },
-      { id: 'tp', name: 'testpulse', vis: 'Public', report: '12 min ago', sync: 'ok' },
+      { id: 'tp', name: 'testpulse', vis: 'Public', report: '12 min ago', sync: syncMode === 'every state' ? 'differsLong' : 'ok' },
     ];
     if (syncMode === 'every state') P.push(
       { id: 'ds', name: 'demo-shop', vis: 'Public', report: '—', sync: 'unreg', noRow: true },
       { id: 'lg', name: 'routeserve-legacy', vis: 'Private', report: '3 Feb', sync: 'noyaml' });
     const SYNC = {
       ok: ['✓ In sync', 'var(--pass)', ''],
-      differs: ['≠ Differs', 'var(--attn)', 'expected_cadence_days: YAML 7, database 8 · display_name: YAML “RouteServe”, database “Routeserve”'],
+      differs: ['≠ Differs', 'var(--attn)', 'expected_cadence_days: YAML 7, database 8 · display_name: YAML “RouteServe”, database “Routeserve” · declared_suites differs'],
+      /* v18 item 5: a long or structured field is named without its values */
+      differsLong: ['≠ Differs', 'var(--attn)', 'layer_rules differs'],
       unreg: ['+ Not registered', 'var(--attn)', 'projects/demo-shop.yaml has no database row. Register it with ', 'npm run project:add demo-shop'],
       noyaml: ['? No YAML', 'var(--attn)', 'A database row with no projects/*.yaml file. The sync leaves it as it is.'],
     };
@@ -465,30 +493,53 @@ class Component extends DCLogic {
       });
     });
 
-    /* ---------- daily job (item 17) ---------- */
+    /* ---------- daily job (v17 item 17; v18 items 1, 3, 4, 6, 7) ---------- */
     const okRun = [
-      { label: 'Last run', value: '8 Oct, 06:00 UTC', sub: '5 h ago · next around 06:00 UTC', ink: 'var(--ink)', line: 'var(--line)' },
+      { label: 'Last run', value: '8 Oct, 04:00 UTC', sub: '5 h ago · next around 04:00 UTC', ink: 'var(--ink)', line: 'var(--line)' },
       { label: 'Heartbeat', value: '✓ Written', sub: 'Database kept awake', ink: 'var(--pass)', line: 'var(--line)' },
       { label: 'Stale check', value: showAlerts ? '1 opened' : '0 opened', sub: showAlerts ? 'Opened: RouteServe' : '3 projects checked', ink: 'var(--ink)', line: 'var(--line)' },
-      { label: 'Prune', value: '12 rows removed', sub: 'Results 0 · failure text 0 · visits 0 · rate-limit buckets 12', ink: 'var(--ink)', line: 'var(--line)' },
+      { label: 'Prune', value: '12 rows removed', sub: 'Results 0 · failure text 0 · visits 0 · tracked sessions 0 · rate-limit buckets 12', ink: 'var(--ink)', line: 'var(--line)' },
     ];
+    const FAIL = { show: true, role: 'alert', bg: 'var(--fail-tint)', line: 'var(--fail)', ink: 'var(--fail)', titleInk: 'var(--fail)', dash: 'none', d: 'm15 9-6 6M9 9l6 6' };
+    const notRun = label => ({ label, value: 'Not run', sub: 'The run stopped before this step', ink: 'var(--ink-3)', line: 'var(--line)' });
     let job = okRun, jobNotice = { show: false };
     if (jobMode === 'overdue') {
-      job = okRun.map((t, i) => i === 0 ? Object.assign({}, t, { value: '◷ 6 Oct, 06:00 UTC', sub: '2 days ago · expected every 24 h', ink: 'var(--attn)', line: 'var(--attn)' }) : Object.assign({}, t, { sub: 'From that run · ' + t.sub }));
+      job = okRun.map((t, i) => i === 0 ? Object.assign({}, t, { value: '◷ 6 Oct, 04:00 UTC', sub: '2 days ago · expected every 24 h', ink: 'var(--attn)', line: 'var(--attn)' }) : Object.assign({}, t, { sub: 'From that run · ' + t.sub }));
       jobNotice = { show: true, role: 'status', bg: 'var(--attn-tint)', line: 'var(--attn)', ink: 'var(--attn)', titleInk: 'var(--attn)', dash: 'none', d: 'M12 7v5l3 2', title: 'The daily job is overdue', body: 'Its last run was 53 hours ago; it should run every 24 hours. Until it runs, no heartbeat is written, stale projects aren’t flagged and nothing is pruned. Check the cron in Vercel.' };
     } else if (jobMode === 'never run') {
       job = okRun.map(t => ({ label: t.label, value: 'Never run', sub: 'No run summary yet', ink: 'var(--ink-3)', line: 'var(--line)' }));
-      jobNotice = { show: true, role: 'status', bg: 'var(--neutral-tint)', line: 'var(--line-strong)', ink: 'var(--ink-2)', titleInk: 'var(--ink-2)', dash: '3.5 3', d: '', title: 'The daily job hasn’t run yet', body: 'Its first run is due around 06:00 UTC. If this still shows 36 hours after the deploy, check the cron in Vercel.' };
+      jobNotice = { show: true, role: 'status', bg: 'var(--neutral-tint)', line: 'var(--line-strong)', ink: 'var(--ink-2)', titleInk: 'var(--ink-2)', dash: '3.5 3', d: '', title: 'The daily job hasn’t run yet', body: 'Its first run is due around 04:00 UTC. If this still shows 36 hours after the deploy, check the cron in Vercel.' };
     } else if (jobMode === 'failed partway') {
       job = [
-        { label: 'Last run', value: '✕ Failed at prune', sub: '8 Oct, 06:00 UTC · 5 h ago', ink: 'var(--fail)', line: 'var(--fail)' },
+        { label: 'Last run', value: '✕ Failed at prune', sub: '8 Oct, 04:00 UTC · 5 h ago', ink: 'var(--fail)', line: 'var(--fail)' },
         okRun[1], okRun[2],
         { label: 'Prune', value: '✕ Failed', sub: 'Removed 5,000 results before failing', ink: 'var(--fail)', line: 'var(--fail)' },
       ];
-      jobNotice = { show: true, role: 'alert', bg: 'var(--fail-tint)', line: 'var(--fail)', ink: 'var(--fail)', titleInk: 'var(--fail)', dash: 'none', d: 'm15 9-6 6M9 9l6 6', title: 'The last run failed at the prune step', body: 'Heartbeat and stale check finished. Prune stopped with “canceling statement due to statement timeout” after removing 5,000 results; rows removed before the failure stay removed. The next run tries again around 06:00 UTC.' };
+      jobNotice = Object.assign({}, FAIL, { title: 'The last run failed at the prune step', body: 'Heartbeat and stale check finished. Prune stopped with “canceling statement due to statement timeout” after removing 5,000 results; rows removed before the failure stay removed. The next run tries again around 04:00 UTC.' });
+    } else if (jobMode === 'heartbeat failed') {
+      job = [
+        { label: 'Last run', value: '✕ Failed at heartbeat', sub: '8 Oct, 04:00 UTC · 5 h ago', ink: 'var(--fail)', line: 'var(--fail)' },
+        { label: 'Heartbeat', value: '✕ Not written', sub: 'Stopped with an error', ink: 'var(--fail)', line: 'var(--fail)' },
+        notRun('Stale check'), notRun('Prune'),
+      ];
+      jobNotice = Object.assign({}, FAIL, { title: 'The last run failed at the heartbeat step', body: 'Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep the database awake. Stale check and prune didn’t run. The next run tries again around 04:00 UTC.' });
+    } else if (jobMode === 'heartbeat not written') {
+      job = [
+        okRun[0],
+        { label: 'Heartbeat', value: '✕ Not written', sub: 'No heartbeat row from this run', ink: 'var(--fail)', line: 'var(--fail)' },
+        okRun[2], okRun[3],
+      ];
+      jobNotice = Object.assign({}, FAIL, { title: 'The last run didn’t write a heartbeat', body: 'The run finished without an error, but its heartbeat row isn’t in the database, so this run didn’t keep the database awake. The other steps finished. The next run tries again around 04:00 UTC.' });
+    } else if (jobMode === 'didn’t finish') {
+      const unknown = label => ({ label, value: 'No result', sub: 'Not recorded before the run stopped', ink: 'var(--ink-3)', line: 'var(--line)' });
+      job = [
+        { label: 'Last run', value: '✕ Didn’t finish', sub: 'Started 8 Oct, 04:00 UTC · 5 h ago', ink: 'var(--fail)', line: 'var(--fail)' },
+        unknown('Heartbeat'), unknown('Stale check'), unknown('Prune'),
+      ];
+      jobNotice = Object.assign({}, FAIL, { title: 'The last run didn’t finish', body: 'It started 8 Oct, 04:00 UTC and never recorded a finish, so it was stopped partway and its step results weren’t saved. Rows a prune removed before it stopped stay removed. The next run tries again around 04:00 UTC; if this repeats, check the cron’s logs in Vercel.' });
     }
 
-    const signedInViews = ['signed in', 'session expired'];
+    const signedInViews = ['signed in', 'session expired', 'session expired · acknowledge', 'session expired · rotate key'];
     const isLoading = view === 'signed in · loading', isError = view === 'signed in · error';
     const isMainish = signedInViews.includes(view);
     return {
@@ -496,13 +547,15 @@ class Component extends DCLogic {
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
       signedIn: !isSignin, isSignin, isLoading, isError, sessionGone,
-      showDetail: isMainish && !!dl, showMain: isMainish && !dl,
+      showDetail: isMainish && !!dl, showMain: isMainish && !dl && detailId !== 'missing', showMissing: isMainish && detailId === 'missing', sessionMsg,
+      /* v18 item 13: on a phone the header is two rows: wordmark, ADMIN and theme; then View public site and Sign out. The "Signed in" note is dropped there. */
+      hdr: { note: !isSignin && wide, basis: wide ? 'auto' : '100%', justify: wide ? 'flex-start' : 'space-between', linkPad: wide ? '0 12px' : '0' },
       signOut: () => this.setState({ signedOut: true, sent: false, email: '', emailTouched: false }),
       toSignin: () => this.setState({ signedOut: true }),
       si, setEmail: e => this.setState({ email: e.target.value }), sendLink, resetSignin: () => this.setState({ sent: false, email: '', emailTouched: false }),
       skeleton: [{ h: 'Open alerts', hgt: '84px' }, { h: 'Tracked links', hgt: '220px' }, { h: 'Projects', hgt: '180px' }, { h: 'Daily job', hgt: '110px' }],
       alerts: A, hasAlerts: A.length > 0, noAlerts: A.length === 0, alertCount: A.length ? A.length + ' open' : 'None',
-      links, linkCount: links.length + ' links', wide, narrow: !wide, d, closeDetail: () => this.setState({ detail: '', delConfirm: false }),
+      links, linkCount: links.length ? links.length + (links.length === 1 ? ' link' : ' links') : 'None', hasLinks: links.length > 0, noLinks: links.length === 0, wide, narrow: !wide, d, closeDetail: () => this.setState({ detail: '', delConfirm: false }),
       selectAll: e => e.target.select(),
       formOpen: forcedForm || this.state.formOpen, openForm: () => this.setState({ formOpen: true }), closeForm: () => this.setState({ formOpen: false, touched: false }),
       f, fm, setCompany: this.setF('company'), setRole: this.setF('role'), setContact: this.setF('contact'), setLead: this.setF('lead'), setSent: this.setF('sent'), setNotes: this.setF('notes'),

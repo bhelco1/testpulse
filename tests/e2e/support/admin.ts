@@ -71,7 +71,8 @@ export async function signInAsOwner(page: Page): Promise<void> {
     await page.goto(confirmPath(hash));
   });
   await expect(page).toHaveURL('/admin');
-  await expect(page.getByRole('banner').getByText('Signed in with magic link')).toBeVisible();
+  // Sign out is in the header at every width; "Signed in with magic link" only from 760 px (v18).
+  await expect(page.getByRole('banner').getByRole('button', { name: 'Sign out' })).toBeVisible();
 }
 
 /**

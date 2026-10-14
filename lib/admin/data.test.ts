@@ -186,7 +186,82 @@ describe('loadLastReports', () => {
   });
 });
 
+const FINISHED_RUN = {
+  started_at: '2026-10-07T04:12:00.000Z',
+  finished_at: '2026-10-07T04:12:03.000Z',
+  status: 'ok',
+  failed_step: null,
+  error: null,
+  failed_steps: [],
+  heartbeat_written: true,
+  projects_checked: 3,
+  stale_opened: 0,
+  stale_opened_project_ids: [],
+  pruned: {
+    results: 0,
+    result_failures: 0,
+    visits: 0,
+    tracked_sessions: 0,
+    rate_limit_buckets: 0,
+    runs_marked_pruned: 0,
+  },
+  pruned_by_project: [],
+  prune_batches: 1,
+  prune_complete: true,
+};
+const UNFINISHED_RUN = {
+  ...FINISHED_RUN,
+  started_at: '2026-10-08T04:12:00.000Z',
+  finished_at: null,
+  status: 'failed',
+  error: 'The job started and has not finished.',
+  projects_checked: null,
+  stale_opened: null,
+  prune_batches: 0,
+  prune_complete: false,
+};
+
 describe('loadLatestJob', () => {
+  it('reads only the latest run when it finished', async () => {
+    const { client, calls } = fakeClient({
+      heartbeats: [{ data: [{ summary: FINISHED_RUN }], error: null }],
+    });
+    expect(await loadLatestJob(client)).toEqual({ latest: FINISHED_RUN, lastFinished: null });
+    expect(calls).toHaveLength(1);
+  });
+
+  // design/components.md, "Daily job tiles", Didn't finish: while the latest run may still be
+  // running, the previous finished run is shown, so it is read too.
+  it('reads the latest finished run as well when the latest has no finish', async () => {
+    const { client, calls } = fakeClient({
+      heartbeats: [
+        { data: [{ summary: UNFINISHED_RUN }], error: null },
+        { data: [{ summary: FINISHED_RUN }], error: null },
+      ],
+    });
+    expect(await loadLatestJob(client)).toEqual({
+      latest: UNFINISHED_RUN,
+      lastFinished: FINISHED_RUN,
+    });
+    expect(calls[1]?.steps).toEqual([
+      'select("summary")',
+      'not("summary->>finished_at", "is", null)',
+      'order("created_at", {"ascending":false})',
+      'limit(1)',
+    ]);
+
+    const none = fakeClient({
+      heartbeats: [
+        { data: [{ summary: UNFINISHED_RUN }], error: null },
+        { data: [], error: null },
+      ],
+    });
+    expect(await loadLatestJob(none.client)).toEqual({
+      latest: UNFINISHED_RUN,
+      lastFinished: null,
+    });
+  });
+
   it('answers null when no heartbeat has a summary, and refuses one that does not parse', async () => {
     expect(
       await loadLatestJob(fakeClient({ heartbeats: [{ data: [], error: null }] }).client),

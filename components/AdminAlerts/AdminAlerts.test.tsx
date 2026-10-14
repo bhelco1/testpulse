@@ -130,8 +130,12 @@ describe('AdminAlerts', () => {
     const [notice] = screen.getAllByRole('alert');
     expect(notice?.textContent).toBe(
       'Your session has endedThe alert wasn’t acknowledged. Sign in again to finish; nothing was ' +
-        'changed.Sign in again',
+        'changed, and the alert is still open.Sign in again',
     );
+    // design/components.md, "Page states": the row stays as it was, its button back to Acknowledge.
+    const button = screen.getByRole('button', { name: 'Acknowledge' });
+    expect(button.hasAttribute('disabled')).toBe(false);
+    expect(screen.queryByText(/Couldn’t acknowledge/)).toBeNull();
     expect(
       within(notice as HTMLElement)
         .getByRole('link')

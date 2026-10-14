@@ -241,3 +241,34 @@ describe('NotFound (page)', () => {
     expect(links[1]?.className).toContain('link');
   });
 });
+
+// design/components.md, Admin, "Page states", Unknown link (v18 item 14): NotFound's layout inside
+// the admin frame, for /admin/links/{id} with no such link.
+describe('NotFound (tracked link)', () => {
+  it('says no tracked link is at the address, shows the path and points to the list', () => {
+    const { getByRole, getAllByRole, container } = render(
+      <NotFound kind="tracked-link" path="/admin/links/8f3c2a91-0d47-4b6e-9a15-c2e7f0b84d36" />,
+    );
+    const main = getByRole('main');
+
+    expect(main.id).toBe('main');
+    expect(container.querySelector('[data-part="eyebrow"]')?.textContent).toBe('404 · Not found');
+    expect(getByRole('heading', { level: 1 }).textContent).toBe('No tracked link at this address');
+    expect(container.querySelector('[data-part="path"]')?.textContent).toBe(
+      '/admin/links/8f3c2a91-0d47-4b6e-9a15-c2e7f0b84d36',
+    );
+    expect(main.querySelector('p')?.textContent).toBe(
+      'The link may have been deleted, or the address may be mistyped. Every tracked link is ' +
+        'listed on the admin page.',
+    );
+    const links = getAllByRole('link');
+    expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['Go to tracked links', '/admin#tracked-links'],
+    ]);
+    expect(links[0]?.dataset.variant).toBe('primary');
+    // Admin.dc.html draws it 32 px under the breadcrumb, where the public page has 40 under the
+    // header.
+    expect(main.className).toContain('admin');
+    expect(ruleFor(CSS, '.admin')).toEqual({ 'padding-top': 'var(--space-7)' });
+  });
+});

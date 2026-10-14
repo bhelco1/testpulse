@@ -28,6 +28,7 @@ describe('public read boundary (spec section 15)', () => {
       expect.arrayContaining([
         'app/layout.tsx',
         'app/page.tsx',
+        'app/not-found.tsx',
         'app/privacy/page.tsx',
         'app/p/[slug]/runs/[id]/page.tsx',
         'app/p/[slug]/runs/[id]/not-found.tsx',

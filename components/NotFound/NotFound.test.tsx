@@ -206,3 +206,38 @@ describe('NotFound (test)', () => {
     expect(getByRole('heading', { level: 1 }).textContent).toBe('This test isn’t in Ostomate 2.0');
   });
 });
+
+// design/components.md "NotFound (page)", page kind (v17): any other address, as
+// design/pages/NotFound.dc.html draws it.
+describe('NotFound (page)', () => {
+  it('says nothing is at the address, shows the path and points to the overview', () => {
+    const { getByRole, container, queryByRole } = render(
+      <NotFound kind="page" path="/no-such-page" />,
+    );
+    const main = getByRole('main');
+
+    expect(main.id).toBe('main');
+    expect(container.querySelector('[data-part="eyebrow"]')?.textContent).toBe('404 · Not found');
+    expect(getByRole('heading', { level: 1 }).textContent).toBe('Nothing at this address');
+    expect(container.querySelector('[data-part="path"]')?.textContent).toBe('/no-such-page');
+    expect(main.querySelector('p')?.textContent).toBe(
+      'There’s no page here. The link may be mistyped, or the page may have moved. Every project’s results start from the overview.',
+    );
+    expect(queryByRole('list', { name: 'Projects' })).toBeNull();
+    expect(queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
+    expect(queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
+
+  it('offers the overview as the primary link and How it’s tested as a plain one', () => {
+    const { getAllByRole } = render(<NotFound kind="page" path="/no-such-page" />);
+    const links = getAllByRole('link');
+
+    expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['Go to overview', '/'],
+      ['How it’s tested', '/how-its-tested'],
+    ]);
+    expect(links[0]?.dataset.variant).toBe('primary');
+    expect(links[1]?.dataset.variant).toBeUndefined();
+    expect(links[1]?.className).toContain('link');
+  });
+});

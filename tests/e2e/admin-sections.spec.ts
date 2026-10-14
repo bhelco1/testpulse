@@ -482,6 +482,8 @@ test('shows a link’s detail, opened and not, and 404 for no such link', async 
   for (const id of ['00000000-0000-4000-8000-000000000000', 'not-a-link']) {
     const response = await page.goto(`/admin/links/${id}`);
     expect(response?.status(), id).toBe(404);
+    // Until an admin not-found is designed (asked in v18), the site-wide one answers.
+    await expect(page.getByRole('heading', { level: 1 }), id).toHaveText('Nothing at this address');
   }
 });
 

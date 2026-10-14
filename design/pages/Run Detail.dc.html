@@ -223,7 +223,7 @@ class Component extends DCLogic {
       'RouteServe · failed (private)': { project: 'RouteServe', private: true, id: '35598127760', status: 'fail', title: '', when: 'yesterday', branch: 'main', sha: '5f0a2c9', event: 'push', started: '23 Sep, 09:15 UTC', total: '1,044', passed: '1,043', failed: '1', skipped: '0', duration: '30 s', sample: true, reportsIn: '3', reportsSample: true,
         reportsNote: 'The monorepo reports once per workspace, so each report stays under the 4 MB request limit.', reportsFoot: 'Reports add up to 1,048 executions of 1,044 distinct tests.',
         reports: [{ key: 'test/apps/backend/node', tests: 501, failed: 1, received: '09:16:02', dur: '14 s' }, { key: 'test/apps/mobile/node', tests: 428, failed: 0, received: '09:16:20', dur: '12 s' }, { key: 'test/packages/shared/node', tests: 119, failed: 0, received: '09:15:48', dur: '4 s' }],
-        rows: rsRows(), failHead: '1 test failed: returns 409 when job overlaps', failSub: 'In apps/backend, API layer. This repository is private, so failure messages and stack traces are hidden.' },
+        rows: rsRows(), failHead: '1 test failed: returns 409 when job overlaps', failSub: 'In apps/backend, API layer. This repository is private, so failure messages, stack traces and source links are hidden.' },
     };
   }
 

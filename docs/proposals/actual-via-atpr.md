@@ -2,6 +2,8 @@
 
 Status: **proposal, not approved.** Written 2026-10-13 from a handoff by ATPR's session. Nothing here is built, and nothing in `docs/spec.md` or `docs/reporting-standard.md` changes until Bobby decides the questions at the end. Spec section 18 lists this as open question 6.
 
+Revised 2026-10-14 (revision 2), from a second ATPR handoff and Bobby's review of the first sketch: "I'm not sure it is answering the question 'Is the product healthy and ready to ship?'" Section 1a says what changed. The revised sketch is https://claude.ai/artifact/EMBaBopex6N3eDWSym2aMj (private to Bobby).
+
 ## 1. The problem
 
 ATPR (`bhelco1/atpr`, private) measures other codebases' test suites from outside. Its first target is Actual Budget (`actualbudget/actual`, public, MIT), pinned at tag `v26.10.0`, commit `2bebdbaae0b701120a8cad9d56aafd64fa04c577`. Bobby wants Actual visible on testpulse before ATPR's Week 4 summary panel.
@@ -16,6 +18,14 @@ What ATPR measures today (Measure 0, run `20261013T211242Z`, ADR-003 in ATPR):
 | Actual's own Test (`check.yml`) and E2E (`e2e-test.yml`) workflows | **Did not run** on the release commit, which sits on Actual's `release` branch | Read from Actual's workflow runs with `gh` |
 
 Every testpulse project today reports its own CI. Actual would be the first project whose results come from someone else's pipeline, about a commit that project's CI never tested. The question is how to show that without implying otherwise.
+
+## 1a. Revision 2: lead with the trust grade
+
+The first version led Actual's card with "1,350 tests · 0 failed" and its run page with line coverage. Those are the numbers ATPR's spec (Purpose) says do not answer the question: they report activity, and a test that cannot fail also passes. For an audited project the headline is ATPR's **trust grade**, so this revision makes the ATPR summary panel (option B's panel) the headline element for audited projects, and demotes pass count, test count, coverage and scope to a secondary line. The provenance labelling of option A is unchanged.
+
+The panel, in ATPR's report order (ATPR spec, "Report"): the grade (High, Medium, Low, or **pending**) and the sentences that justify it; the surviving semantic mutants, "how this could fail"; then the four numbers per package, each with a plain-English sentence (`honesty_ratio` "of tests check real behaviour", `mutation_mechanical` "of planted code slips caught", `mutation_semantic` "of realistic bugs caught", `survivors_critical` "serious bugs missed"); then the calibration sparkline once it exists.
+
+Where ATPR stands today against `v26.10.0` (honesty run `20261014T214610Z`, checked in ATPR's `runs/`): 1,205 tests in `loot-core`, 1,034 constrain behaviour, 140 weak, 26 snapshot, 3 tautology, 2 unreachable, so `honesty_ratio` 0.86 (1,034 / 1,203), with its spot-check not yet done. ATPR's hard rule 3 says an AI judgement is never shown without its spot-check, so testpulse shows that number marked **unverified**. Mutation testing (ATPR Week 3) and calibration (Week 4) are not built, so there is no grade and no survivor list yet: the panel reads "Trust: pending", shows honesty 0.86 unverified and the other three numbers as not yet measured. **Showing a grade depends on ATPR's Weeks 3 and 4.**
 
 ## 2. Where this meets the standard (v1)
 
@@ -76,7 +86,7 @@ Using the first timed run matches ADR-003, which reads skip and todo from it. Se
 - **Project file.** `projects/actual.yaml`: `visibility: public`, `repo_url` Actual's upstream, `audit: {auditor: atpr, scope: …}`, layer rules (`module: packages/desktop-client` to `e2e`, default `unit`), no `coverage_floors` (Actual enforces none, and standard §6 says floors mirror the project's CI), `expected_cadence_days` matched to ATPR's cadence (decision 4). Fixtures: real Vitest and Playwright JUnit and the istanbul summary captured from an ATPR run, with layer-rule tests. Actual is public and MIT, so scrubbing is runner paths only.
 - **Reporter.** The shared action gains optional inputs `commit`, `branch`, `ref`, `auditor-commit` and `target-ci`, used only when set. The script's contract test covers both forms. The action's `v1` tag moves; every existing caller is unaffected.
 - **Standard.** A new section, "Audited projects", is a v2 (it adds MUSTs). For an audited project: rules 2.7 and 2.8 apply to the auditor's workflow, not the target's; §1's scope covers only the suites the auditor runs; §4's identity is the target's commit and the auditor fills `ref`, `auditor_commit` and `target_ci`; §8's key is held in the auditor's repository as `TESTPULSE_TOKEN_<SLUG>`; §11's conformance statement lives in the auditor's repository, naming each target; suites of the target outside the audit's scope are not declared one by one but stated in the project's scope sentence. Nothing changes for own-CI projects; their move from v1 to v2 is a one-line edit of their statement.
-- **Site.** Needs design first (v17); nothing below has a drawing yet:
+- **Site.** Needs design first (now a v19 or later round); nothing below has a drawing yet. Revision 2: the card and the run page lead with the ATPR summary panel (section 1a); everything in this list is the provenance around it, and the pass and coverage figures sit on a secondary line.
   - Project card and project page: an "Audited by ATPR at v26.10.0" marker with the scope sentence, linking to ATPR's project page (`/p/atpr`, whose repository link is already hidden).
   - Run title: "ATPR audit of v26.10.0" in place of "Scheduled run"; event still shown as stored.
   - The run page's header: Ref, Auditor (ATPR, commit to 7 characters, unlinked), and **"Actual's own CI: did not run on this commit"** (or passed / failed), from `target_ci_status`.
@@ -112,9 +122,9 @@ ATPR's spec plan: ATPR posts its whole `report.json`, and testpulse renders an "
 
 B alone shows Actual's ATPR grade but none of its test results: no pyramid, no tests, no run page. And it cannot start before ATPR Week 4.
 
-### C. A now, B later (recommended)
+### C. A and B together, the panel as the headline (recommended)
 
-A ships on the Measure 0 data that exists today; B adds the summary panel to the same Actual project page when `report.json` exists. They share everything that matters: the audited-project idea, the `projects.audit` column, the target's key, `ref`, `auditor_commit` and `target_ci`. B then adds only its endpoint, table and panel, and the standard's v2 can be written once with both in it if B's schema is settled by then, or v2 for A and v3 for B.
+Revision 2: the ATPR summary panel is not an add-on for later but the headline of an audited project, so C ships A's provenance with B's panel leading. Before Week 3 the panel shows the pending state (section 1a), which needs ATPR to send a `report.json` carrying only what is measured, marked as such; the grade fills in when Weeks 3 and 4 land. They share everything that matters: the audited-project idea, the `projects.audit` column, the target's key, `ref`, `auditor_commit` and `target_ci`. B then adds only its endpoint, table and panel, and the standard's v2 can be written once with both in it if B's schema is settled by then, or v2 for A and v3 for B.
 
 ### Considered and set aside
 
@@ -132,21 +142,22 @@ The rule: **wherever an audited result appears, the reader can tell who measured
 - **What the auditor added is labelled.** Coverage "measured by ATPR (V8); Actual configures no coverage tool". No floor is drawn, since Actual enforces none.
 - **Scope is stated.** "`loot-core` unit tests and the desktop E2E suite only", on the card and the page, so 1,350 tests is not read as all of Actual.
 - **Not counted as Bobby's.** Audited projects stay out of the landing headline and sit in their own group.
+- **The grade leads, and an unchecked number says so.** The ATPR summary panel comes before any pass count; an AI-judged number without its spot-check reads "unverified", and a measure not yet run reads "not yet measured", never a placeholder value.
 - **Recovery stats are not shown.** Time to green and streaks describe a team fixing its own build; between pinned tags they would mean nothing.
 
 ## 5. Recommendation
 
-Take option C. Build A now as an "audited project": ATPR posts Actual's JUnit and coverage with Actual's key, identity is Actual's tagged commit plus `ref`, `auditor_commit` and `target_ci`, and the site marks every audited result as measured by ATPR at the pin, with Actual's own CI status shown. Add B's ATPR summary panel to the same project page once ATPR's `report.json` schema exists in Week 4.
+Take option C, with the ATPR summary panel as the headline element for audited projects (section 1a) and the grade shown once ATPR's Weeks 3 and 4 exist. Build A as an "audited project": ATPR posts Actual's JUnit and coverage with Actual's key, identity is Actual's tagged commit plus `ref`, `auditor_commit` and `target_ci`, and the site marks every audited result as measured by ATPR at the pin, with Actual's own CI status shown. Add B's ATPR summary panel to the same project page once ATPR's `report.json` schema exists in Week 4.
 
 Order of work once approved, each its own PR: standard v2 and spec (decision rows, 5.1, 5.2, 6.2, 9, 11, 13); design request (v17) for the audited marker, run header, coverage note and landing group; migration and ingestion with tests; reporter inputs; `projects/actual.yaml` with captured fixtures; site. ATPR's side (its workflow step and the target key) is ATPR's own change, made in its repository.
 
 ## 6. Decisions for Bobby
 
-1. **Option**: C, A now and B in Week 4 (recommended); A only; or B only, with nothing on testpulse until Week 4.
+1. **Option**: C, A's provenance with B's panel leading, pending until ATPR's Weeks 3 and 4 (recommended); A only; or B only, with nothing on testpulse until Week 4.
 2. **Audited projects in the headline**: leave them out and show them in their own landing group (recommended), or count them in the portfolio totals.
 3. **Standard version**: one v2 with an "Audited projects" section now, B's audit-report rules added as v3 when `report.json` exists (recommended); or wait and do one v2 with both.
 4. **Cadence**: ATPR re-audits the pinned tag weekly, keeping §2.8's staleness meaning and ~130 Actions minutes a month (recommended); or only when the pin moves to a new release, with `expected_cadence_days` around 35.
 5. **Branch for audited runs**: report `release`, the branch the tag's commit is on, and set Actual's `default_branch: release` so the trends read audited runs (recommended); or teach the stats that an audited project's "default branch" is every audited run, whatever its branch.
 6. **Slug and name**: `actual`, "Actual Budget" (recommended), or something naming the scope, like `actual-loot-core`.
-7. **The design round**: approve sending the audited marker, run header, coverage note and landing group to Claude Design as v17 items before any site work.
-8. **Fourth number** (only for B): which four numbers the ATPR summary panel shows; ATPR's spec names three ratios plus `survivors_critical`. ATPR's session can propose it with the `report.json` schema.
+7. **The design round**: approve sending the ATPR summary panel (pending and graded states), the audited marker, run header, coverage note and landing group to the designer before any site work.
+8. **Fourth number**: which four numbers the ATPR summary panel shows; ATPR's spec names three ratios plus `survivors_critical`. ATPR's session can propose it with the `report.json` schema.

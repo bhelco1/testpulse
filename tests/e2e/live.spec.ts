@@ -180,7 +180,7 @@ test('a private run failing on two platforms shows each head, and no failure tex
   expect(html).toContain('Details hidden: private repository');
   // Both platforms failed, so there is no mismatch sentence.
   await expect(page.locator('[data-part="banner"] [data-part="body"]')).toHaveText(
-    'In packages/shared, Unit layer. This repository is private, so failure messages and stack traces are hidden.',
+    'In packages/shared, Unit layer. This repository is private, so failure messages, stack traces and source links are hidden.',
   );
   const failures = await admin()
     .from('result_failures')

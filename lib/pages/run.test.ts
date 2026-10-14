@@ -572,8 +572,8 @@ describe('runPageView: a private failing run', () => {
     expect(view.banner).toEqual({
       title: '1 test failed: asset.test.ts › assetCreateSchema accepts a minimal valid asset',
       body:
-        'In packages/shared, Unit layer. This repository is private, so failure messages and ' +
-        'stack traces are hidden.',
+        'In packages/shared, Unit layer. This repository is private, so failure messages, ' +
+        'stack traces and source links are hidden.',
       action: 'Show failure',
       filter: 'failed',
     });

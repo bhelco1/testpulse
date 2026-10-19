@@ -177,7 +177,7 @@ describe('howItsTestedView', () => {
   it('carries the build progress in both states, phases 0 to 7 of its data file', () => {
     for (const data of [missing, seeded]) {
       const { progress } = howItsTestedView(data, NOW);
-      expect(progress.asOf.text).toBe('2 Oct');
+      expect(progress.asOf.text).toBe('19 Oct');
       expect(progress.phases.map(({ n, label, status }) => `${n} ${label}: ${status}`)).toEqual([
         'Phase 0 Foundations: done',
         'Phase 1 Schema, parsers, ingestion: done',
@@ -185,8 +185,8 @@ describe('howItsTestedView', () => {
         'Phase 3 RouteServe reporting live: done',
         'Phase 4 Backfill: done',
         'Phase 5 Public site: done',
-        'Phase 6 Alerts, tracked links, admin: in_progress',
-        'Phase 7 Launch: planned',
+        'Phase 6 Alerts, tracked links, admin: done',
+        'Phase 7 Launch: in_progress',
       ]);
     }
   });

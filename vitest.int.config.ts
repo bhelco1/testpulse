@@ -8,6 +8,9 @@ export default defineConfig({
     include: ['**/*.int.test.ts'],
     exclude: [...configDefaults.exclude, '.next/**', 'tests/e2e/**'],
     setupFiles: ['tests/int/setup.ts'],
+    // Every file shares one database, and their cleanups delete projects whose cascades lock the
+    // same tables; run in parallel, two cleanups can deadlock (40P01).
+    fileParallelism: false,
     testTimeout: 20_000,
     hookTimeout: 30_000,
   },

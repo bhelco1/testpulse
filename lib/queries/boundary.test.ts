@@ -72,8 +72,12 @@ describe('admin boundary (spec section 15)', () => {
       publicEntryPoints(ROOT)
         .filter(underAdminApp)
         .map((file) => relative(ROOT, file)),
-    ).toEqual(['app/admin/links/[id]/page.tsx', 'app/admin/page.tsx']);
-    expect(listed.length).toBe(publicEntryPoints(ROOT).length - 2);
+    ).toEqual([
+      'app/admin/links/[id]/not-found.tsx',
+      'app/admin/links/[id]/page.tsx',
+      'app/admin/page.tsx',
+    ]);
+    expect(listed.length).toBe(publicEntryPoints(ROOT).length - 3);
     // The positive control: the admin page itself does reach lib/admin.
     expect(importPathTo(isAdmin, [join(ROOT, 'app', 'admin', 'page.tsx')], ROOT)).not.toBeNull();
   });

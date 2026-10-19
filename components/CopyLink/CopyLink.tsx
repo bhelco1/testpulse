@@ -53,24 +53,33 @@ export function CopyButton({ company, state, copy, className }: CopyButtonProps)
 }
 
 /**
- * The site's origin and the link's path, as the table and the link card show them. In the table
- * (`truncate`) the origin gives way first, ending in an ellipsis, so the token stays in view.
+ * A link's address. The link card shows it whole; the table (`short`) shows "…/v/{token}", the
+ * origin dropped since every row shares it, and keeps the whole address in the title
+ * (design/components.md, Admin, "Tracked links table", LINK; v18 item 12).
  */
 export function LinkAddress({
   origin,
   path,
   className,
-  truncate = false,
+  short = false,
 }: {
   origin: string;
   path: string;
   className?: string;
-  truncate?: boolean;
+  short?: boolean;
 }) {
+  if (!short) {
+    return (
+      <code className={className}>
+        <span>{origin}</span>
+        <span>{path}</span>
+      </code>
+    );
+  }
   return (
-    <code className={className}>
-      <span className={truncate ? styles.origin : undefined}>{origin}</span>
-      <span className={truncate ? styles.path : undefined}>{path}</span>
+    <code className={className} title={`${origin}${path}`}>
+      <span aria-hidden="true">…</span>
+      <span>{path}</span>
     </code>
   );
 }

@@ -32,13 +32,21 @@ export type NotFoundProps =
       // Any other address (design v17 item 19): the site-wide not-found page.
       kind: 'page';
       path: ReactNode;
+    }
+  | {
+      // /admin/links/{id} with no such link (design v18 item 14), inside the admin frame.
+      kind: 'tracked-link';
+      path: ReactNode;
     };
 
 // design/components.md "NotFound (page)": nothing failed, so there is no Error badge and no retry,
 // only a way forward. The page serves it with HTTP 404.
 export function NotFound(props: NotFoundProps) {
   return (
-    <main id="main" className={styles.main}>
+    <main
+      id="main"
+      className={props.kind === 'tracked-link' ? `${styles.main} ${styles.admin}` : styles.main}
+    >
       <div className={styles.eyebrow} data-part="eyebrow">
         404 · Not found
       </div>
@@ -48,6 +56,8 @@ export function NotFound(props: NotFoundProps) {
         <NoRun {...props} />
       ) : props.kind === 'test' ? (
         <NoTest {...props} />
+      ) : props.kind === 'tracked-link' ? (
+        <NoTrackedLink {...props} />
       ) : (
         <NoPage {...props} />
       )}
@@ -155,6 +165,24 @@ function NoPage({ path }: Extract<NotFoundProps, { kind: 'page' }>) {
         <Link href="/how-its-tested" className={styles.link}>
           How it’s tested
         </Link>
+      </div>
+    </>
+  );
+}
+
+function NoTrackedLink({ path }: Extract<NotFoundProps, { kind: 'tracked-link' }>) {
+  return (
+    <>
+      <h1 className={styles.title}>No tracked link at this address</h1>
+      <Path path={path} />
+      <p className={styles.body}>
+        The link may have been deleted, or the address may be mistyped. Every tracked link is listed
+        on the admin page.
+      </p>
+      <div className={styles.actions}>
+        <Button href="/admin#tracked-links" variant="primary">
+          Go to tracked links
+        </Button>
       </div>
     </>
   );

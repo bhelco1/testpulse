@@ -17,6 +17,8 @@
 
 .header {
   position: relative;
+  /* Its own width is the page's content width, which sets the phone layout below. */
+  container-type: inline-size;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -104,4 +106,25 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/*
+ * v18: below a content width of 760 px, two rows. The wordmark, ADMIN and the toggle, then View
+ * public site at the left edge and Sign out at the right. "Signed in with magic link" is left out:
+ * Sign out already says so.
+ */
+@container (width < 760px) {
+  .nav {
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+
+  .link {
+    padding: 0;
+  }
+
+  .method,
+  .spacer {
+    display: none;
+  }
 }

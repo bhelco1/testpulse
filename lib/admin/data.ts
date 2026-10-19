@@ -9,7 +9,7 @@ import { TRACKED_LINK_COLUMNS, type TrackedLinkRow } from '../tracked-links/crea
 import { loadLinkVisitDetail, loadLinkVisitSummaries } from '../visits/load.ts';
 import type { AccessGranted } from './guard.ts';
 import { type AdminProjectRow, projectSync, readDeployedProjectFiles } from './sync.ts';
-import type { AdminPageData, LinkDetailData, OpenAlert, ProjectName } from './types.ts';
+import type { AdminPageData, LatestJob, LinkDetailData, OpenAlert, ProjectName } from './types.ts';
 
 // Admin's reads (spec section 15, "Admin" as built; design/data-map.md, Admin). alerts,
 // tracked_links, visits and heartbeats are closed to anon and authenticated, so admin reads with
@@ -165,17 +165,34 @@ export async function loadLastReports(
   return new Map(latest);
 }
 
-/** The latest daily job's summary; a heartbeat written before the job existed has none. */
-export async function loadLatestJob(client: SupabaseClient): Promise<DailySummary | null> {
+/** One heartbeat's summary, the latest that matches; a heartbeat written before the job has none. */
+async function latestSummary(
+  client: SupabaseClient,
+  finishedOnly: boolean,
+): Promise<DailySummary | null> {
   const { data, error } = await client
     .from('heartbeats')
     .select('summary')
-    .not('summary', 'is', null)
+    .not(finishedOnly ? 'summary->>finished_at' : 'summary', 'is', null)
     .order('created_at', { ascending: false })
     .limit(1);
   if (error) throw failed('heartbeats', error);
   const [row] = data as { summary: unknown }[];
   return row === undefined ? null : DailySummarySchema.parse(row.summary);
+}
+
+/**
+ * The latest daily job's summary, and when that run has no finish, the latest run that has one:
+ * while a run may still be going, admin shows the one before it (design/components.md, "Daily job
+ * tiles", Didn't finish).
+ */
+export async function loadLatestJob(client: SupabaseClient): Promise<LatestJob | null> {
+  const latest = await latestSummary(client, false);
+  if (latest === null) return null;
+  return {
+    latest,
+    lastFinished: latest.finished_at === null ? await latestSummary(client, true) : null,
+  };
 }
 
 export async function loadAdminPage(client: SupabaseClient, now: Date): Promise<AdminPageData> {

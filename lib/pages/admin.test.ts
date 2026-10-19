@@ -9,6 +9,7 @@ import type { LinkVisitDetail, LinkVisitSummary } from '../visits/stats';
 import {
   alertsView,
   dailyJobView,
+  DIDNT_FINISH_AFTER_MS,
   leadOptions,
   linkDetailView,
   linksView,
@@ -393,6 +394,7 @@ describe('pageLabel', () => {
         '/p/routeserve/tests/k',
         '/p/gone',
         '/elsewhere',
+        '/no-such-page',
       ].map((path) => pageLabel(path, names)),
     ).toEqual([
       'Overview',
@@ -402,6 +404,7 @@ describe('pageLabel', () => {
       'Ostomate2 run',
       'RouteServe test history',
       'gone',
+      'Other page',
       'Other page',
     ]);
   });
@@ -476,13 +479,18 @@ describe('linksView', () => {
         company: 'Globex',
         role: 'QA Manager',
         notes: null,
-        sent: '—',
+        // No sent date: the component shows "—" in --ink-3 (v18 item 11).
+        sent: null,
         opened: { text: 'Not yet opened', counted: false },
         last: null,
         pages: [],
         path: '/v/Tb9eJx3mRq6u',
       },
     ]);
+  });
+
+  it('reads no links as None (v18 item 10)', () => {
+    expect(linksView([], figures, NAMES, NOW)).toEqual({ count: 'None', links: [] });
   });
 
   it('counts one session, visitor and link in the singular', () => {
@@ -566,7 +574,7 @@ describe('linkDetailView', () => {
     expect(view).toMatchObject({
       contact: null,
       lead: null,
-      sent: '—',
+      sent: null,
       notes: null,
       opened: false,
       firstSeen: null,
@@ -618,9 +626,26 @@ const ON_TIME: DailySummary = {
 const tiles = (view: ReturnType<typeof dailyJobView>) =>
   view.tiles.map((tile) => [tile.label, plain(tile.value), plain(tile.sub), tile.tone]);
 
+/** A finished run is the latest; the loader reads no other then. */
+const ran = (summary: DailySummary) => ({ latest: summary, lastFinished: null });
+
+/** The row the job writes before its steps run, as a run stopped by the platform leaves it. */
+const STARTED: DailySummary = {
+  ...ON_TIME,
+  finished_at: null,
+  status: 'failed',
+  error: 'The job started and has not finished.',
+  projects_checked: null,
+  stale_opened: null,
+  stale_opened_project_ids: [],
+  pruned: { ...ON_TIME.pruned, rate_limit_buckets: 0 },
+  prune_batches: 0,
+  prune_complete: false,
+};
+
 describe('dailyJobView', () => {
   it('reads a run on time from its summary', () => {
-    const view = dailyJobView(ON_TIME, NAMES, NOW);
+    const view = dailyJobView(ran(ON_TIME), NAMES, NOW);
     expect(view.notice).toBeNull();
     expect(tiles(view)).toEqual([
       ['Last run', '8 Oct, 04:12 UTC', '6 h ago · next around 04:00 UTC', 'normal'],
@@ -637,7 +662,7 @@ describe('dailyJobView', () => {
 
   it('names how many projects were checked when it opened no alert', () => {
     const view = dailyJobView(
-      { ...ON_TIME, stale_opened: 0, stale_opened_project_ids: [] },
+      ran({ ...ON_TIME, stale_opened: 0, stale_opened_project_ids: [] }),
       NAMES,
       NOW,
     );
@@ -645,8 +670,8 @@ describe('dailyJobView', () => {
   });
 
   it('warns once the last run is more than 36 hours old', () => {
-    expect(dailyJobView(ON_TIME, NAMES, new Date('2026-10-09T16:12:00Z')).notice).toBeNull();
-    const view = dailyJobView(ON_TIME, NAMES, new Date('2026-10-10T05:00:00Z'));
+    expect(dailyJobView(ran(ON_TIME), NAMES, new Date('2026-10-09T16:12:00Z')).notice).toBeNull();
+    const view = dailyJobView(ran(ON_TIME), NAMES, new Date('2026-10-10T05:00:00Z'));
     expect(view.notice).toEqual({
       tone: 'attn',
       title: 'The daily job is overdue',
@@ -698,7 +723,7 @@ describe('dailyJobView', () => {
       pruned: { ...ON_TIME.pruned, rate_limit_buckets: 0, ...pruned },
       prune_complete: false,
     });
-    const none = dailyJobView(failed({}), NAMES, NOW);
+    const none = dailyJobView(ran(failed({})), NAMES, NOW);
     expect(none.notice).toEqual({
       tone: 'fail',
       title: 'The last run failed at the prune step',
@@ -714,7 +739,7 @@ describe('dailyJobView', () => {
       ['Prune', '✕ Failed', 'Removed 0 rows before failing', 'fail'],
     ]);
 
-    const some = dailyJobView(failed({ results: 5000 }), NAMES, NOW);
+    const some = dailyJobView(ran(failed({ results: 5000 })), NAMES, NOW);
     expect(some.notice?.body).toBe(
       'Heartbeat and stale check finished. Prune stopped with “57014 canceling statement due to ' +
         'statement timeout” after removing 5,000 results; rows removed before the failure stay ' +
@@ -727,26 +752,38 @@ describe('dailyJobView', () => {
       'fail',
     ]);
 
+    // v18 item 3: the non-zero kinds only, joined with " · " as the Prune sub joins them.
+    const sessions = dailyJobView(ran(failed({ results: 5000, tracked_sessions: 40 })), NAMES, NOW);
+    expect(tiles(sessions)[3]?.[2]).toBe(
+      'Removed 5,000 results · 40 tracked sessions before failing',
+    );
+    expect(sessions.notice?.body).toContain(
+      'after removing 5,000 results · 40 tracked sessions; rows removed before the failure stay ' +
+        'removed.',
+    );
+
     const each = dailyJobView(
-      failed({
-        results: 5000,
-        result_failures: 1,
-        visits: 0,
-        tracked_sessions: 2,
-        rate_limit_buckets: 1,
-      }),
+      ran(
+        failed({
+          results: 5000,
+          result_failures: 1,
+          visits: 0,
+          tracked_sessions: 2,
+          rate_limit_buckets: 1,
+        }),
+      ),
       NAMES,
       NOW,
     );
     expect(tiles(each)[3]?.[2]).toBe(
-      'Removed 5,000 results, 1 failure text, 2 tracked sessions and 1 rate-limit bucket ' +
+      'Removed 5,000 results · 1 failure text · 2 tracked sessions · 1 rate-limit bucket ' +
         'before failing',
     );
   });
 
   it('marks every failed step, naming the first', () => {
     const view = dailyJobView(
-      {
+      ran({
         ...ON_TIME,
         status: 'failed',
         failed_step: 'stale_check',
@@ -757,7 +794,7 @@ describe('dailyJobView', () => {
         stale_opened_project_ids: [],
         pruned: { ...ON_TIME.pruned, rate_limit_buckets: 0 },
         prune_complete: false,
-      },
+      }),
       NAMES,
       NOW,
     );
@@ -772,35 +809,163 @@ describe('dailyJobView', () => {
     ]);
   });
 
-  it('reads a run that recorded no end as not finished', () => {
-    const view = dailyJobView(
-      {
-        ...ON_TIME,
-        finished_at: null,
-        status: 'failed',
-        error: 'The job started and has not finished.',
-        projects_checked: null,
-        stale_opened: null,
-        stale_opened_project_ids: [],
+  // v18 item 6, as the job is built: it runs every step after a failed heartbeat, so the later
+  // tiles read their results and the notice says they finished, never "Not run" (decision row of
+  // 2026-10-14, b).
+  it('reads a failed heartbeat, with the later steps’ results as they ran', () => {
+    const heartbeatFailed: DailySummary = {
+      ...ON_TIME,
+      status: 'failed',
+      failed_step: 'heartbeat',
+      failed_steps: ['heartbeat'],
+      error: 'fetch failed',
+    };
+    const view = dailyJobView(ran(heartbeatFailed), NAMES, NOW);
+    expect(view.notice).toEqual({
+      tone: 'fail',
+      title: 'The last run failed at the heartbeat step',
+      body:
+        'Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep ' +
+        'the database awake. Stale check and prune finished. The next run tries again around ' +
+        '04:00 UTC.',
+    });
+    expect(tiles(view)).toEqual([
+      ['Last run', '✕ Failed at heartbeat', '8 Oct, 04:12 UTC · 6 h ago', 'fail'],
+      ['Heartbeat', '✕ Not written', 'Stopped with an error', 'fail'],
+      ['Stale check', '1 opened', 'Opened: RouteServe', 'normal'],
+      [
+        'Prune',
+        '12 rows removed',
+        'Results 0 · failure text 0 · visits 0 · tracked sessions 0 · rate-limit buckets 12',
+        'normal',
+      ],
+    ]);
+    expect(tiles(view).flat()).not.toContain('Not run');
+
+    // A later step that failed as well is marked, and only the steps that finished are named.
+    const both = dailyJobView(
+      ran({
+        ...heartbeatFailed,
+        failed_steps: ['heartbeat', 'prune'],
         pruned: { ...ON_TIME.pruned, rate_limit_buckets: 0 },
-        prune_batches: 0,
         prune_complete: false,
-      },
+      }),
       NAMES,
       NOW,
     );
+    expect(both.notice?.body).toBe(
+      'Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep ' +
+        'the database awake. Stale check finished. The next run tries again around 04:00 UTC.',
+    );
+    expect(tiles(both)[3]).toEqual(['Prune', '✕ Failed', 'Removed 0 rows before failing', 'fail']);
+
+    const none = dailyJobView(
+      ran({
+        ...heartbeatFailed,
+        failed_steps: ['heartbeat', 'stale_check', 'prune'],
+        projects_checked: null,
+        stale_opened: null,
+        stale_opened_project_ids: [],
+      }),
+      NAMES,
+      NOW,
+    );
+    expect(none.notice?.body).toBe(
+      'Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep ' +
+        'the database awake. The next run tries again around 04:00 UTC.',
+    );
+  });
+
+  it('reads a run that finished without writing its heartbeat row', () => {
+    const view = dailyJobView(ran({ ...ON_TIME, heartbeat_written: false }), NAMES, NOW);
+    expect(view.notice).toEqual({
+      tone: 'fail',
+      title: 'The last run didn’t write a heartbeat',
+      body:
+        'The run finished without an error, but its heartbeat row isn’t in the database, so ' +
+        'this run didn’t keep the database awake. The other steps finished. The next run tries ' +
+        'again around 04:00 UTC.',
+    });
+    expect(tiles(view)).toEqual([
+      ['Last run', '8 Oct, 04:12 UTC', '6 h ago · next around 04:00 UTC', 'normal'],
+      ['Heartbeat', '✕ Not written', 'No heartbeat row from this run', 'fail'],
+      ['Stale check', '1 opened', 'Opened: RouteServe', 'normal'],
+      [
+        'Prune',
+        '12 rows removed',
+        'Results 0 · failure text 0 · visits 0 · tracked sessions 0 · rate-limit buckets 12',
+        'normal',
+      ],
+    ]);
+  });
+
+  // v18 item 7, at 5 minutes rather than the drawn 15 (decision row of 2026-10-14, a): the cron
+  // route's maxDuration, after which the platform has stopped the run.
+  it('reads a run with no finish, started more than 5 minutes ago, as not finished', () => {
+    expect(DIDNT_FINISH_AFTER_MS).toBe(5 * 60_000);
+    const view = dailyJobView({ latest: STARTED, lastFinished: null }, NAMES, NOW);
     expect(view.notice).toEqual({
       tone: 'fail',
       title: 'The last run didn’t finish',
       body:
-        'It started at 8 Oct, 04:12 UTC and recorded no end, so the platform may have stopped ' +
-        'it. The next run tries again around 04:00 UTC.',
+        'It started 8 Oct, 04:12 UTC and never recorded a finish, so it was stopped partway and ' +
+        'its step results weren’t saved. Rows a prune removed before it stopped stay removed. ' +
+        'The next run tries again around 04:00 UTC; if this repeats, check the cron’s logs in ' +
+        'Vercel.',
     });
     expect(tiles(view)).toEqual([
-      ['Last run', '✕ Didn’t finish', '8 Oct, 04:12 UTC · 6 h ago', 'fail'],
-      ['Heartbeat', '✓ Written', 'Database kept awake', 'pass'],
-      ['Stale check', '—', 'Not recorded', 'muted'],
-      ['Prune', '—', 'Not recorded', 'muted'],
+      ['Last run', '✕ Didn’t finish', 'Started 8 Oct, 04:12 UTC · 6 h ago', 'fail'],
+      ['Heartbeat', 'No result', 'Not recorded before the run stopped', 'muted'],
+      ['Stale check', 'No result', 'Not recorded before the run stopped', 'muted'],
+      ['Prune', 'No result', 'Not recorded before the run stopped', 'muted'],
     ]);
+  });
+
+  it('shows the previous finished run while the latest is still within its 5 minutes', () => {
+    const started = Date.parse(STARTED.started_at);
+    const at = (ms: number) => new Date(started + ms);
+    const previous: DailySummary = {
+      ...ON_TIME,
+      started_at: '2026-10-07T04:12:00.000Z',
+      finished_at: '2026-10-07T04:12:03.000Z',
+    };
+    const running = { latest: STARTED, lastFinished: previous };
+
+    const within = dailyJobView(running, NAMES, at(DIDNT_FINISH_AFTER_MS));
+    expect(within.notice).toBeNull();
+    expect(tiles(within)[0]).toEqual([
+      'Last run',
+      '7 Oct, 04:12 UTC',
+      'yesterday · next around 04:00 UTC',
+      'normal',
+    ]);
+    expect(tiles(within)[1]).toEqual(['Heartbeat', '✓ Written', 'Database kept awake', 'pass']);
+
+    const after = dailyJobView(running, NAMES, at(DIDNT_FINISH_AFTER_MS + 1));
+    expect(after.notice?.title).toBe('The last run didn’t finish');
+
+    // A first run still under way: nothing has finished yet.
+    const first = dailyJobView({ latest: STARTED, lastFinished: null }, NAMES, at(60_000));
+    expect(first.notice?.title).toBe('The daily job hasn’t run yet');
+  });
+
+  it('takes the overdue notice’s place, counting from the unfinished run’s start', () => {
+    const view = dailyJobView(
+      { latest: STARTED, lastFinished: null },
+      NAMES,
+      new Date('2026-10-10T05:00:00Z'),
+    );
+    expect(view.notice?.title).toBe('The last run didn’t finish');
+    expect(tiles(view)[0]).toEqual([
+      'Last run',
+      '✕ Didn’t finish',
+      'Started 8 Oct, 04:12 UTC · 2 days ago',
+      'fail',
+    ]);
+    expect(
+      tiles(view)
+        .slice(1)
+        .map((tile) => tile[2]),
+    ).toEqual(Array(3).fill('Not recorded before the run stopped'));
   });
 });

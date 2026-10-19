@@ -34,21 +34,38 @@ describe('every admin page, action and route starts with the guard', () => {
       ['app/admin/actions.ts#rotateKeyAction', 'action'],
       ['app/admin/actions.ts#deleteLinkAction', 'action'],
       ['app/admin/auth/confirm/route.ts#GET', 'route'],
+      ['app/admin/links/[id]/not-found.tsx#default', 'not-found'],
       ['app/admin/links/[id]/page.tsx#default', 'page'],
       ['app/admin/page.tsx#default', 'page'],
     ]);
+  });
+
+  // An address no route answers gets app/not-found.tsx, never one under app/admin, so an admin
+  // not-found shows only when its own segment's page calls notFound(): that page's guard runs
+  // first (design v18 item 14: signed out, sign-in shows before anything says whether an id
+  // exists).
+  it('shows a not-found only from a page of its own segment that starts with the guard', () => {
+    const notFounds = entries.filter(({ kind }) => kind === 'not-found');
+    expect(notFounds).not.toEqual([]);
+    for (const { id } of notFounds) {
+      const page = entries.find(
+        (entry) => entry.id === id.replace(/not-found\.tsx#default$/, 'page.tsx#default'),
+      );
+      expect(page?.guard, id).toBe('getAdminAccess');
+    }
   });
 
   it('keeps every server action of the site under app/admin, where this scan looks', () => {
     expect(serverActionModules(ROOT)).toEqual(['app/admin/actions.ts']);
   });
 
-  it.each(entries.filter(({ id }) => !(id in EXCEPTIONS)).map((entry) => [entry.id, entry]))(
-    '%s calls the guard first',
-    (_id, entry) => {
-      expect(entry.guard).toBe(entry.kind === 'page' ? 'getAdminAccess' : 'requireAdmin');
-    },
-  );
+  it.each(
+    entries
+      .filter(({ id, kind }) => !(id in EXCEPTIONS) && kind !== 'not-found')
+      .map((entry) => [entry.id, entry]),
+  )('%s calls the guard first', (_id, entry) => {
+    expect(entry.guard).toBe(entry.kind === 'page' ? 'getAdminAccess' : 'requireAdmin');
+  });
 
   it('names only exceptions that exist, and none of them calls a guard it could skip', () => {
     for (const id of Object.keys(EXCEPTIONS)) {
@@ -139,6 +156,15 @@ describe('scanAdmin', () => {
     expect(entries.map(({ id, kind, guard }) => [id, kind, guard])).toEqual([
       ['app/admin/page.tsx#default', 'page', null],
       ['app/admin/r/route.ts#POST', 'route', null],
+    ]);
+  });
+
+  it('finds a not-found boundary’s default export', () => {
+    write('app/admin/x/not-found.tsx', 'export default function NotFound() {\n  return null;\n}\n');
+    const { entries, unreadable } = scanAdmin(root);
+    expect(unreadable).toEqual([]);
+    expect(entries.map(({ id, kind, guard }) => [id, kind, guard])).toEqual([
+      ['app/admin/x/not-found.tsx#default', 'not-found', null],
     ]);
   });
 

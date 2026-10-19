@@ -8,12 +8,14 @@ import ts from 'typescript';
 //   - every export of a 'use server' module (a server action),
 //   - every function that starts with its own 'use server' (an inline server action),
 //   - every HTTP method a route.ts exports,
-//   - every page's default export.
+//   - every page's default export,
+//   - every not-found boundary's default export, which Next.js shows only when its own segment's
+//     page calls notFound(); the test holds that page to its guard instead.
 // Each must start with `const … = await requireAdmin();` (actions and routes) or
 // `const … = await getAdminAccess();` (pages), both imported from lib/admin/guard.ts, unless the
 // test names it as an exception. Anything this cannot read is reported rather than passed.
 
-export type EntryKind = 'action' | 'inline-action' | 'route' | 'page';
+export type EntryKind = 'action' | 'inline-action' | 'route' | 'page' | 'not-found';
 
 export interface AdminEntry {
   /** `file#name`, the file relative to the root. */
@@ -137,7 +139,7 @@ export function scanAdmin(root: string): AdminScan {
     const serverModule = startsWithUseServer(source.statements);
     const route = basename(file).replace(/\.tsx?$/, '') === 'route';
     const ui = UI_FILE.exec(basename(file))?.[1];
-    if (ui !== undefined && ui !== 'page') {
+    if (ui !== undefined && ui !== 'page' && ui !== 'not-found') {
       unreadable.push(`${at}: a ${ui} file; decide how it is guarded and teach this scan`);
     }
 
@@ -146,7 +148,7 @@ export function scanAdmin(root: string): AdminScan {
 
     for (const statement of source.statements) {
       if (ts.isExportDeclaration(statement) || ts.isExportAssignment(statement)) {
-        if (serverModule || route || ui === 'page') {
+        if (serverModule || route || ui === 'page' || ui === 'not-found') {
           unreadable.push(`${at}: an export this scan cannot follow; export the function itself`);
         }
         continue;
@@ -169,7 +171,9 @@ export function scanAdmin(root: string): AdminScan {
             ? 'route'
             : ui === 'page' && name === 'default'
               ? 'page'
-              : null;
+              : ui === 'not-found' && name === 'default'
+                ? 'not-found'
+                : null;
         if (kind === null) continue;
         if (!isFunction(node)) {
           unreadable.push(`${at}#${name}: not a function this scan can read`);

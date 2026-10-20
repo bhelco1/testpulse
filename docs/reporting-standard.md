@@ -142,7 +142,7 @@ The project chooses these three values; they are the reporter's first three argu
 |---|---|
 | `module` | Test identity: a test's key is `module`, `suite` and `name` ([spec §5.4](spec.md#54-tests)). Every test in the module starts a new history and the old ones stop reporting. `coverage_floors` is keyed by module too (section 6). |
 | `platform` | Flakiness and cross-platform comparison, which compare results on the same platform ([spec §11](spec.md#11-stats-definitions)); layer rules that match on platform. |
-| `job` | Layer rules that match on job; the `empty_run` alert and the Phase 6 `count_drop` alert, both keyed by `(job, module, platform)` ([spec §12](spec.md#12-integrity-alerts)). |
+| `job` | Layer rules that match on job; the `empty_run` and `count_drop` alerts, both keyed by `(job, module, platform)` ([spec §12](spec.md#12-integrity-alerts)). |
 | a test class, test file or test name | That test's identity, as for `module`. Moving a Jest test file changes its suite. |
 | a Maestro flow's title | That flow's identity (below). |
 
@@ -169,7 +169,7 @@ Result files do not say whether a test is unit, integration or E2E. testpulse re
 - Coverage is optional per report and belongs to the report's `module` ([spec §5.7](spec.md#57-coverage)). A report carries at most one coverage file, so a module's coverage travels in that module's report.
 - A floor is declared in `coverage_floors` as `{module: line_pct}`, keyed by the exact `module` string the reports send. It MUST mirror the floor the project's own CI enforces ([spec §5.1](spec.md#51-projects)). testpulse displays and flags against it; it does not enforce it.
 - A report may omit coverage: Ostomate2's iOS simulator reports do, since JaCoCo runs on the JVM. A module's shown coverage is its latest default-branch coverage from any report that carried it (2026-09-28 decision on latest coverage per module).
-- Line coverage is covered over total lines from the file's counts. The public page marks a module below its floor ([spec §11](spec.md#11-stats-definitions)); the `coverage_below_floor` alert arrives in Phase 6.
+- Line coverage is covered over total lines from the file's counts. The public page marks a module below its floor ([spec §11](spec.md#11-stats-definitions)); the `coverage_below_floor` alert tells testpulse's owner.
 
 ## 7. Failure handling
 
@@ -196,7 +196,7 @@ Every case exits 0, and a job summary that cannot be written is ignored. A missi
 Planned (section 10), with the build still never failed by reporting:
 
 - The reporter warns, with a job-summary line, when a job whose tests passed has no coverage file. It stays silent on a failing job, where a missing coverage file is expected.
-- testpulse alerts on missing reports, on refused reports it received, and on a module whose coverage has not been reported for N runs while its tests keep reporting (Phase 6).
+- testpulse alerts on missing reports, on refused reports it received, and on a module whose coverage has not been reported for N runs while its tests keep reporting (not scheduled: [spec §17](spec.md#17-phases-and-acceptance-criteria), Later candidates).
 
 ## 8. Keys and secrets
 
@@ -270,13 +270,13 @@ None of these is a v1 requirement. A planned item that adds or tightens a rule b
 
 | Item | Status | Effect on projects |
 |---|---|---|
-| Expected reports: `projects/<slug>.yaml` lists the reports each project is expected to send, per trigger, and testpulse alerts on a missing one. The design says how a run that skips a suite reads | Planned, Phase 6 | The project's expected reports are declared in its project file. |
-| Alerts on refused reports testpulse received, and on a module whose coverage has not been reported for N runs while its tests keep reporting | Planned, Phase 6 | None; the alerts are on the testpulse side. |
+| Expected reports: `projects/<slug>.yaml` lists the reports each project is expected to send, per trigger, and testpulse alerts on a missing one. The design says how a run that skips a suite reads | Planned, not scheduled (spec §17, Later candidates) | The project's expected reports are declared in its project file. |
+| Alerts on refused reports testpulse received, and on a module whose coverage has not been reported for N runs while its tests keep reporting | Planned, not scheduled (spec §17, Later candidates) | None; the alerts are on the testpulse side. |
 | Carrying missing reports forward from the previous attempt, so a partial re-run shows the whole suite (section 4) | Planned soon, designed with expected reports | The SHOULD on "Re-run all jobs" is lifted. |
 | Combining runs across workflows, so a suite in another workflow can report (motivating case: routeserve's manual `e2e.yml`) | Planned | Rule 2.7 is relaxed. |
 | The reporter warns, with a job-summary line, when a passing job has no coverage file (section 7). The job-summary line for a report refused or not sent shipped with the shared action on 2026-10-07 | Planned: the reporter cannot yet tell whether the job's tests passed | None with the action; update a copied script when it changes (section 9). |
 | A shared GitHub Action, `bhelco1/testpulse/.github/actions/report@v1`, replacing the copied reporter script | Available from 2026-10-07, once the `v1` tag is created on `main`; testpulse reports through it. Not a rule: a copied script still conforms. The tag is the action's major version, not this standard's | A `uses:` step (section 9) replaces `scripts/testpulse-report.sh`. |
-| The reporter also sends the CI workflow's overall result, so a failure before any results exist (a build break, an emulator that never booted) shows | Under consideration; to be decided with the Phase 6 expected-reports design | None until decided. |
+| The reporter also sends the CI workflow's overall result, so a failure before any results exist (a build break, an emulator that never booted) shows | Under consideration; to be decided with the expected-reports design | None until decided. |
 
 ## 11. Conformance statement
 

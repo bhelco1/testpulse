@@ -428,19 +428,13 @@ test(
       await page.goto(`/admin/links/${ids.acme}`);
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Acme Health');
       await expect(page).toHaveScreenshot(`admin-link-${name}.png`, { fullPage: true });
-      // Dark only: Next.js 16 renders a page's notFound() in the browser (spec 13.2), where the
-      // root layout's theme script never runs, so a light context shows the dark default. That
-      // is true of every page-thrown 404 and is recorded in spec 13.9; a light baseline would
-      // record the defect as correct.
-      if (name.endsWith('-dark')) {
-        await page.goto(`/admin/links/${UNKNOWN_LINK}`);
-        await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-          'No tracked link at this address',
-        );
-        await expect(page).toHaveScreenshot(`admin-link-not-found-${name}.png`, {
-          fullPage: true,
-        });
-      }
+      await page.goto(`/admin/links/${UNKNOWN_LINK}`);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+        'No tracked link at this address',
+      );
+      await expect(page).toHaveScreenshot(`admin-link-not-found-${name}.png`, {
+        fullPage: true,
+      });
     }
   },
 );
@@ -546,6 +540,25 @@ test('shows a link’s detail, opened and not, and 404 for no such link', async 
     await expect(visitor.getByRole('heading', { level: 1 }), id).toHaveText('Sign in to admin');
     await expect(visitor.getByText('No tracked link at this address'), id).toHaveCount(0);
   }
+});
+
+// The browser builds a page's 404 from Next.js's error shell, where the layout's head script never
+// runs (spec section 13.10), so admin's not-found is checked in a light browser as well.
+test('shows admin’s not-found in the light system theme', async ({ browser }) => {
+  const page = await ownerPage(browser, VIEWPORTS['desktop-light']);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const expected = await background();
+
+  await page.goto(`/admin/links/${UNKNOWN_LINK}`);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'No tracked link at this address',
+  );
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  expect(await background()).toBe(expected);
+  await expect(
+    page.getByRole('banner').locator('button[aria-label^="Switch to"]').first(),
+  ).toHaveAttribute('aria-label', 'Switch to dark theme');
 });
 
 test('copies a link, and offers it to select when the browser refuses', async ({ browser }) => {

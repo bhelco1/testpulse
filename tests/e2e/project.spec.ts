@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { THEME_STORAGE_KEY } from '../../lib/design/theme.ts';
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
 import { expectReadableYAxes, expectValueLabelsClearOfFloor } from './support/charts.ts';
 import { capture, FAILING, formsOf, HIDDEN, leaksIn, ROUTESERVE_RUNS } from './support/leaks.ts';
@@ -587,6 +588,43 @@ test.describe('an unknown project', () => {
     await open(page, '/p/nope');
     await expectNoSeriousAxeViolations(page);
   });
+
+  // The browser builds this page from Next.js's error shell, where the layout's head script never
+  // runs (spec section 13.10), so the theme is checked here as well as on the pages that render.
+  test('follows the system theme', { tag: '@js' }, async ({ page }) => {
+    await open(page, '/p/nope');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('No project at this address');
+    const { colorScheme } = test.info().project.use;
+    expect(colorScheme === 'light' || colorScheme === 'dark', 'project sets a theme').toBe(true);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', String(colorScheme));
+  });
+
+  test(
+    'keeps a stored theme choice and the site not-found page’s colours',
+    { tag: '@js' },
+    async ({ page }) => {
+      const stored = test.info().project.use.colorScheme === 'light' ? 'dark' : 'light';
+      const other = stored === 'light' ? 'dark' : 'light';
+      await page.addInitScript(([key, value]) => localStorage.setItem(key, value), [
+        THEME_STORAGE_KEY,
+        stored,
+      ] as const);
+      const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+      await open(page, '/no-such-page');
+      await expect(page.locator('html')).toHaveAttribute('data-theme', stored);
+      const expected = await background();
+
+      await open(page, '/p/nope');
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+        'No project at this address',
+      );
+      await expect(page.locator('html')).toHaveAttribute('data-theme', stored);
+      expect(await background()).toBe(expected);
+      await expect(
+        page.getByRole('banner').locator('button[aria-label^="Switch to"]').first(),
+      ).toHaveAttribute('aria-label', `Switch to ${other} theme`);
+    },
+  );
 });
 
 // Spec section 17, Phase 5: for a private project, failure text, repository links and full SHAs

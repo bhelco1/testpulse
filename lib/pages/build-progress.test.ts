@@ -62,9 +62,9 @@ describe('buildProgressView', () => {
   it('dates the list by the file, and gives each phase its label and status', () => {
     const view = buildProgressView(new Date('2026-10-05T12:00:00.000Z'));
     expect(view.asOf).toEqual({
-      text: '2 Oct',
-      datetime: '2026-10-02T00:00:00.000Z',
-      title: '2 Oct 2026, 00:00 UTC',
+      text: '19 Oct',
+      datetime: '2026-10-19T00:00:00.000Z',
+      title: '19 Oct 2026, 00:00 UTC',
     });
     expect(view.phases.map(({ n, label, status }) => `${n} ${label} ${status}`)).toEqual([
       'Phase 0 Foundations done',
@@ -73,8 +73,8 @@ describe('buildProgressView', () => {
       'Phase 3 RouteServe reporting live done',
       'Phase 4 Backfill done',
       'Phase 5 Public site done',
-      'Phase 6 Alerts, tracked links, admin in_progress',
-      'Phase 7 Launch planned',
+      'Phase 6 Alerts, tracked links, admin done',
+      'Phase 7 Launch in_progress',
     ]);
   });
 });

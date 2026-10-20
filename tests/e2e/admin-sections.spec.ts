@@ -465,6 +465,9 @@ test('shows a link’s detail, opened and not, and 404 for no such link', async 
   const page = await ownerPage(browser);
   await page.getByRole('link', { name: 'Acme Health' }).click();
   await expect(page).toHaveURL(`/admin/links/${ids.acme}`);
+  // The title comes from generateMetadata's database read, which Next streams after the page's
+  // content on a client navigation, so axe below must not run before it has arrived.
+  await expect(page).toHaveTitle('Admin · testpulse');
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toHaveText(
     'Admin/Tracked links/Acme Health',
   );

@@ -13,10 +13,10 @@ stats, phases, and acceptance criteria.
 
 ## Status
 
-The build runs in phases 0 to 7 (spec section 17). Phases 0 to 5 and the design track are
-complete, so the public site is built. Self-reporting, pulled forward from Phase 7, is built and
-goes live once testpulse's own key is registered; alerts, tracked links and admin (Phase 6) are
-in progress, and launch (Phase 7) follows.
+The build runs in phases 0 to 7 (spec section 17). Phases 0 to 6 and the design track are
+complete, so the public site, alerts, tracked links and admin are built. Self-reporting, pulled
+forward from Phase 7, is live: testpulse reports its own results. Launch (Phase 7) is in
+progress.
 
 ## Reporting projects
 

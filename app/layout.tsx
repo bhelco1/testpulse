@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
 
+import { ThemeRestore } from '../components/ThemeRestore/ThemeRestore';
 import { VisitBeacon } from '../components/VisitBeacon/VisitBeacon';
 import { themeInitScript } from '../lib/design/theme';
 
@@ -53,6 +54,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
+        {/* Sets the theme where the head script could not run: a page's 404 (spec 13.10). */}
+        <ThemeRestore />
         {children}
         {/* Records each page view once the page has loaded (spec section 14). */}
         <VisitBeacon />

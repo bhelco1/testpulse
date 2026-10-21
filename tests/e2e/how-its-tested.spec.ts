@@ -98,7 +98,7 @@ test.describe('the page', () => {
     );
   });
 
-  test('says what runs, layer by layer, with nothing from Phase 6', async ({ page }) => {
+  test('says what runs, layer by layer, with what Phase 6 added', async ({ page }) => {
     const strategy = section(page, 'What runs, and what it covers');
     await expect(strategy).toContainText(
       'Parsers are tested against result files captured from Ostomate2 and RouteServe, not hand-written samples. Integration tests run against a local Supabase, including the row-level security that hides private projects from the public.',
@@ -134,12 +134,27 @@ test.describe('the page', () => {
       'On every pull requestLint, typecheck, unit, integration, E2E',
       'Failure maskingNoneNo || true, no continue-on-error on test steps.',
     ]);
-    for (const phase6 of ['bot classification', 'prune', 'tracked', 'admin', 'alert']) {
-      await expect(strategy).not.toContainText(phase6);
+    // v19 items 10 to 13: a second sentence under the first on the four rows Phase 6 added to.
+    await expect(table.locator('[data-part="phase6"]')).toHaveText([
+      /^The alert detail schemas; .* and the guard every admin page and action calls first\.$/,
+      /^The alert rules \(stale, .* against local Supabase Auth with a real session, each refused without one\.$/,
+      /^The tracked-link flow: .* The run page’s pruned-results notice, after a real prune\.$/,
+      'Also checks that admin without a session shows only the sign-in form and nothing hidden.',
+    ]);
+    for (const [row, name] of [
+      [0, 'Unit'],
+      [3, 'Integration'],
+      [4, 'E2E'],
+      [7, 'Leak sweep'],
+    ] as const) {
+      await expect(table.locator('[data-part="layer"]').nth(row)).toContainText(name);
+      await expect(
+        table.locator('[data-part="layer"]').nth(row).locator('[data-part="phase6"]'),
+      ).toHaveCount(1);
     }
   });
 
-  test('tells the two incidents as the pages show them today', async ({ page }) => {
+  test('tells the two incidents, with what Phase 6 added', async ({ page }) => {
     const silence = section(page, 'Why it watches for silence');
     await expect(silence.getByRole('heading', { level: 3 })).toHaveText([
       'CI was silently dead for 11 days',
@@ -149,11 +164,9 @@ test.describe('the page', () => {
       'Two incidents from Ostomate2’s post-mortems shaped how results are shown.',
     );
     await expect(silence.locator('[data-part="now"]')).toHaveText([
-      'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
-      'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',
+      'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”. A daily check flags it on the admin page.',
+      'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass. A sudden drop in a report’s test count raises an alert too.',
     ]);
-    await expect(silence).not.toContainText('daily check');
-    await expect(silence).not.toContainText('raises an alert');
   });
 
   test('shows testpulse’s latest run from the seed', async ({ page }) => {

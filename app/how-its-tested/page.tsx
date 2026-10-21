@@ -152,7 +152,7 @@ export default async function HowItsTestedPage() {
                     </tr>
                   </thead>
                   <tbody role="rowgroup" className={styles.strategyGroup}>
-                    {STRATEGY.map(({ name, tools, scope, tone }) => (
+                    {STRATEGY.map(({ name, tools, scope, phase6, tone }) => (
                       <tr key={name} role="row" className={styles.strategyRow} data-part="layer">
                         <td role="cell" className={`${styles.cell} ${styles.layerName}`}>
                           <span
@@ -173,7 +173,8 @@ export default async function HowItsTestedPage() {
                           ))}
                         </td>
                         <td role="cell" className={`${styles.cell} ${styles.scope}`}>
-                          {scope}
+                          <span>{scope}</span>
+                          {phase6 !== null && <span data-part="phase6">{phase6}</span>}
                         </td>
                       </tr>
                     ))}

@@ -2,7 +2,11 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { THEME_STORAGE_KEY } from '../../lib/design/theme.ts';
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
-import { expectReadableYAxes, expectValueLabelsClearOfFloor } from './support/charts.ts';
+import {
+  expectChartsDrawn,
+  expectReadableYAxes,
+  expectValueLabelsClearOfFloor,
+} from './support/charts.ts';
 import { capture, FAILING, formsOf, HIDDEN, leaksIn, ROUTESERVE_RUNS } from './support/leaks.ts';
 import { expectLive, open } from './support/open.ts';
 
@@ -558,6 +562,7 @@ for (const slug of ['ostomate2', 'routeserve']) {
   test(`${slug}: matches its visual snapshot`, { tag: '@visual' }, async ({ page }) => {
     await open(page, `/p/${slug}`);
     await expectLive(page);
+    await expectChartsDrawn(page);
     await expect(page).toHaveScreenshot(`${slug}.png`, { fullPage: true });
   });
 }

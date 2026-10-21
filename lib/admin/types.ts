@@ -60,8 +60,14 @@ export type CreateLinkResult =
   | { readonly status: 'created'; readonly id: string; readonly url: string }
   | { readonly status: 'invalid'; readonly fields: readonly ('company' | 'role')[] }
   | Refused;
-/** closed: the alert was already resolved, or gone, so there was nothing left to acknowledge. */
+/**
+ * Nothing left to acknowledge. closed-by-itself: a later report had resolved the count_drop, which
+ * the page says (v19 item 6); closed: it was acknowledged elsewhere, or is gone.
+ */
 export type AcknowledgeResult =
-  { readonly status: 'acknowledged' } | { readonly status: 'closed' } | Refused;
+  | { readonly status: 'acknowledged' }
+  | { readonly status: 'closed-by-itself' }
+  | { readonly status: 'closed' }
+  | Refused;
 export type RotateKeyResult = { readonly status: 'rotated'; readonly key: string } | Refused;
 export type DeleteLinkResult = { readonly status: 'deleted' } | Refused;

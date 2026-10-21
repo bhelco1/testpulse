@@ -126,3 +126,35 @@
   color: var(--pass);
   font-weight: 700;
 }
+
+/* v19 item 6: the pass Notice of "You’re signed out", for an alert that had already closed. */
+.closed {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--pass-tint);
+  border: 1px solid var(--pass);
+}
+
+.closedIcon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--pass);
+}
+
+.closedTitle {
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--ink);
+}
+
+.closedBody {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}

@@ -13,7 +13,7 @@ If a request conflicts with the spec, stop and say so. If a decision changes, up
 
 ## Current phase
 
-Phase 7: Launch. Design v18 is in `design/` (its kiosk is a Later candidate, not built); the domain name is still to be decided (spec section 18, question 1). Update this line when a phase completes.
+Phase 7: Launch. Design v19 is in `design/` (its kiosk is a Later candidate, not built); the domain name is still to be decided (spec section 18, question 1). Update this line when a phase completes.
 
 ## How to work
 

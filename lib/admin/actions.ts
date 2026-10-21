@@ -7,7 +7,7 @@ import { rotateProjectKey } from '../projects/repo.ts';
 import { SlugSchema } from '../projects/schema.ts';
 import { createTrackedLink } from '../tracked-links/create.ts';
 import { TrackedLinkInputSchema } from '../tracked-links/schema.ts';
-import { adminClient, alertIsOpen } from './data.ts';
+import { adminClient, alertStatus } from './data.ts';
 import type { AccessGranted, AdminGate } from './guard.ts';
 import type {
   AcknowledgeResult,
@@ -31,7 +31,7 @@ export interface ActionDeps {
   readonly now: () => Date;
   readonly create: typeof createTrackedLink;
   readonly acknowledgeAlert: typeof acknowledgeAlert;
-  readonly alertOpen: typeof alertIsOpen;
+  readonly alertStatus: typeof alertStatus;
   readonly rotate: typeof rotateProjectKey;
   readonly remove: (client: SupabaseClient, id: string) => Promise<boolean>;
 }
@@ -48,7 +48,7 @@ export const DEFAULT_DEPS: ActionDeps = {
   now: () => now(),
   create: createTrackedLink,
   acknowledgeAlert,
-  alertOpen: alertIsOpen,
+  alertStatus,
   rotate: rotateProjectKey,
   remove: deleteTrackedLink,
 };
@@ -114,11 +114,13 @@ export async function acknowledge(
       await deps.acknowledgeAlert(client, id.data, deps.now());
       return { status: 'acknowledged' };
     } catch (refusal) {
-      // A count_drop can close by itself while the page is open; that is no failure (13.9). The
-      // alert is read again rather than the refusal's text matched, so a reworded exception
-      // cannot turn a real failure into a closed one.
-      if (!(await deps.alertOpen(client, id.data))) return { status: 'closed' };
-      throw refusal;
+      // A count_drop can close by itself while the page is open; that is no failure, and the page
+      // says so (13.9, v19 item 6). One acknowledged elsewhere, or gone, leaves quietly. The alert
+      // is read again rather than the refusal's text matched, so a reworded exception cannot
+      // turn a real failure into a closed one.
+      const status = await deps.alertStatus(client, id.data);
+      if (status === 'open') throw refusal;
+      return { status };
     }
   } catch (error) {
     return logFailure('acknowledge an alert', error);

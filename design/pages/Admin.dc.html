@@ -157,6 +157,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 <!-- ALERTS -->
 <section aria-labelledby="alerts-h">
 <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px"><h2 id="alerts-h" style="margin:0;font:500 26px 'Source Serif 4',serif">Open alerts</h2><span style="font-size:14px;color:var(--ink-3)">{{ alertCount }}</span></div>
+<sc-if value="{{ ackClosed.show }}" hint-placeholder-val="{{ false }}"><div role="status" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;padding:14px 16px;border-radius:12px;background:var(--pass-tint);border:1px solid var(--pass)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink)">That alert had already closed</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ ackClosed.body }}</p></div></div></sc-if>
 <sc-if value="{{ hasAlerts }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;flex-direction:column;gap:10px">
 <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="4">
@@ -289,7 +290,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 </sc-if>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;signed in&quot;,&quot;signed in · loading&quot;,&quot;signed in · error&quot;,&quot;session expired&quot;,&quot;session expired · acknowledge&quot;,&quot;session expired · rotate key&quot;,&quot;sign-in&quot;,&quot;sign-in · sending&quot;,&quot;sign-in · invalid address&quot;,&quot;link sent&quot;,&quot;link expired&quot;,&quot;not allowed&quot;,&quot;signed out&quot;],&quot;default&quot;:&quot;signed in&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;detail&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;Acme Health (opened)&quot;,&quot;Globex (not yet opened)&quot;,&quot;Northwind Software (other pages, no sent date)&quot;,&quot;unknown link (404)&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;states&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;validation&quot;,&quot;busy&quot;,&quot;errors&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Actions&quot;},&quot;alerts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;sync&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all in sync&quot;,&quot;every state&quot;],&quot;default&quot;:&quot;all in sync&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;job&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;on time&quot;,&quot;overdue&quot;,&quot;never run&quot;,&quot;failed partway&quot;,&quot;heartbeat failed&quot;,&quot;heartbeat not written&quot;,&quot;didn’t finish&quot;],&quot;default&quot;:&quot;on time&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;links&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;view&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;signed in&quot;,&quot;signed in · loading&quot;,&quot;signed in · error&quot;,&quot;session expired&quot;,&quot;session expired · acknowledge&quot;,&quot;session expired · rotate key&quot;,&quot;sign-in&quot;,&quot;sign-in · sending&quot;,&quot;sign-in · invalid address&quot;,&quot;link sent&quot;,&quot;link expired&quot;,&quot;not allowed&quot;,&quot;signed out&quot;],&quot;default&quot;:&quot;signed in&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;detail&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;Acme Health (opened)&quot;,&quot;Globex (not yet opened)&quot;,&quot;Northwind Software (other pages, no sent date)&quot;,&quot;unknown link (404)&quot;],&quot;default&quot;:&quot;none&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Page&quot;},&quot;states&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;validation&quot;,&quot;busy&quot;,&quot;errors&quot;,&quot;already closed&quot;,&quot;already closed · only alert&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Actions&quot;},&quot;alerts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;sync&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;all in sync&quot;,&quot;every state&quot;],&quot;default&quot;:&quot;all in sync&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;job&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;on time&quot;,&quot;overdue&quot;,&quot;never run&quot;,&quot;failed partway&quot;,&quot;heartbeat failed&quot;,&quot;didn’t finish&quot;],&quot;default&quot;:&quot;on time&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;links&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Data&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null, w: 1200, dismissed: {}, acking: null, formOpen: false, touched: false, creating: false, f: Component.blank(), added: [], deleted: {}, copied: null, refused: null, rotating: null, rotBusy: null, revealed: null, detail: undefined, delConfirm: false, delBusy: false, email: '', emailTouched: false, sending: false, sent: false, signedOut: false };
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
@@ -320,6 +321,8 @@ class Component extends DCLogic {
     const view = this.state.signedOut ? 'signed out' : (this.props.view ?? 'signed in');
     const st = this.props.states ?? 'live';
     const busyM = st === 'busy', errM = st === 'errors', valM = st === 'validation';
+    /* v19 item 6: Acknowledge pressed on a count_drop that had already closed by itself */
+    const closedM = st.indexOf('already closed') === 0, onlyM = st === 'already closed · only alert';
     const sessionGone = view.indexOf('session expired') === 0;
     const sessionCreate = view === 'session expired';
     /* v18 item 8: the line names the action that got the 401 */
@@ -369,7 +372,7 @@ class Component extends DCLogic {
       { id: 'empty', kind: 'empty_run', title: 'Ostomate2: a report held no tests', body: 'ios-e2e/e2e/ios-sim parsed with 0 tests on main (0e2d0b4).', opened: '7 Oct, 23:32 UTC', closes: 'Closes by itself when that key reports tests' },
       { id: 'cov', kind: 'coverage_below_floor', title: 'RouteServe: coverage under its floor', body: 'packages/shared lines 79.9% under its 80% floor', opened: '26 Sep, 09:16 UTC', closes: 'Closes by itself when the module is back at its floor' },
     ];
-    const A = A0.filter(a => showAlerts && !this.state.dismissed[a.id]).map(a => {
+    const A = A0.filter(a => showAlerts && !this.state.dismissed[a.id] && !(closedM && (onlyM || a.id === 'drop'))).map(a => {
       const k = KINDS[a.kind], canAck = a.kind === 'count_drop';
       const acking = canAck && (busyM || this.state.acking === a.id);
       return Object.assign({}, a, {
@@ -493,7 +496,7 @@ class Component extends DCLogic {
       });
     });
 
-    /* ---------- daily job (v17 item 17; v18 items 1, 3, 4, 6, 7) ---------- */
+    /* ---------- daily job (v17 item 17; v18 items 1, 3, 4, 6, 7; v19 items 1–5) ---------- */
     const okRun = [
       { label: 'Last run', value: '8 Oct, 04:00 UTC', sub: '5 h ago · next around 04:00 UTC', ink: 'var(--ink)', line: 'var(--line)' },
       { label: 'Heartbeat', value: '✓ Written', sub: 'Database kept awake', ink: 'var(--pass)', line: 'var(--line)' },
@@ -501,7 +504,6 @@ class Component extends DCLogic {
       { label: 'Prune', value: '12 rows removed', sub: 'Results 0 · failure text 0 · visits 0 · tracked sessions 0 · rate-limit buckets 12', ink: 'var(--ink)', line: 'var(--line)' },
     ];
     const FAIL = { show: true, role: 'alert', bg: 'var(--fail-tint)', line: 'var(--fail)', ink: 'var(--fail)', titleInk: 'var(--fail)', dash: 'none', d: 'm15 9-6 6M9 9l6 6' };
-    const notRun = label => ({ label, value: 'Not run', sub: 'The run stopped before this step', ink: 'var(--ink-3)', line: 'var(--line)' });
     let job = okRun, jobNotice = { show: false };
     if (jobMode === 'overdue') {
       job = okRun.map((t, i) => i === 0 ? Object.assign({}, t, { value: '◷ 6 Oct, 04:00 UTC', sub: '2 days ago · expected every 24 h', ink: 'var(--attn)', line: 'var(--attn)' }) : Object.assign({}, t, { sub: 'From that run · ' + t.sub }));
@@ -519,25 +521,21 @@ class Component extends DCLogic {
     } else if (jobMode === 'heartbeat failed') {
       job = [
         { label: 'Last run', value: '✕ Failed at heartbeat', sub: '8 Oct, 04:00 UTC · 5 h ago', ink: 'var(--fail)', line: 'var(--fail)' },
-        { label: 'Heartbeat', value: '✕ Not written', sub: 'Stopped with an error', ink: 'var(--fail)', line: 'var(--fail)' },
-        notRun('Stale check'), notRun('Prune'),
-      ];
-      jobNotice = Object.assign({}, FAIL, { title: 'The last run failed at the heartbeat step', body: 'Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep the database awake. Stale check and prune didn’t run. The next run tries again around 04:00 UTC.' });
-    } else if (jobMode === 'heartbeat not written') {
-      job = [
-        okRun[0],
-        { label: 'Heartbeat', value: '✕ Not written', sub: 'No heartbeat row from this run', ink: 'var(--fail)', line: 'var(--fail)' },
+        { label: 'Heartbeat', value: '✕ Failed', sub: 'First write failed; row written at the end of the run', ink: 'var(--fail)', line: 'var(--fail)' },
         okRun[2], okRun[3],
       ];
-      jobNotice = Object.assign({}, FAIL, { title: 'The last run didn’t write a heartbeat', body: 'The run finished without an error, but its heartbeat row isn’t in the database, so this run didn’t keep the database awake. The other steps finished. The next run tries again around 04:00 UTC.' });
+      jobNotice = Object.assign({}, FAIL, { title: 'The last run failed at the heartbeat step', body: 'The heartbeat’s first write failed with “fetch failed”; its row was written at the end of the run instead. Stale check and prune finished. The run is recorded as failed and shows as an error (500) in Vercel’s log. The next run tries again around 04:00 UTC.' });
     } else if (jobMode === 'didn’t finish') {
-      const unknown = label => ({ label, value: 'No result', sub: 'Not recorded before the run stopped', ink: 'var(--ink-3)', line: 'var(--line)' });
+      const unknown = label => ({ label, value: 'No result', sub: 'Not recorded for this run', ink: 'var(--ink-3)', line: 'var(--line)' });
       job = [
         { label: 'Last run', value: '✕ Didn’t finish', sub: 'Started 8 Oct, 04:00 UTC · 5 h ago', ink: 'var(--fail)', line: 'var(--fail)' },
         unknown('Heartbeat'), unknown('Stale check'), unknown('Prune'),
       ];
-      jobNotice = Object.assign({}, FAIL, { title: 'The last run didn’t finish', body: 'It started 8 Oct, 04:00 UTC and never recorded a finish, so it was stopped partway and its step results weren’t saved. Rows a prune removed before it stopped stay removed. The next run tries again around 04:00 UTC; if this repeats, check the cron’s logs in Vercel.' });
+      jobNotice = Object.assign({}, FAIL, { title: 'The last run didn’t finish', body: 'It started 8 Oct, 04:00 UTC and never recorded a finish: either it was stopped partway, or every step ran and only the final save of its results failed. Its step results weren’t saved. Any rows its prune removed stay removed. The next run tries again around 04:00 UTC; if this repeats, check the cron’s logs in Vercel.' });
     }
+
+    const closedAlert = closedM && showAlerts ? A0[0] : null;
+    const ackClosed = closedAlert ? { show: true, body: '“' + closedAlert.title + '” closed by itself when a later report brought the count back, so there was nothing to acknowledge.' } : { show: false };
 
     const signedInViews = ['signed in', 'session expired', 'session expired · acknowledge', 'session expired · rotate key'];
     const isLoading = view === 'signed in · loading', isError = view === 'signed in · error';
@@ -554,7 +552,7 @@ class Component extends DCLogic {
       toSignin: () => this.setState({ signedOut: true }),
       si, setEmail: e => this.setState({ email: e.target.value }), sendLink, resetSignin: () => this.setState({ sent: false, email: '', emailTouched: false }),
       skeleton: [{ h: 'Open alerts', hgt: '84px' }, { h: 'Tracked links', hgt: '220px' }, { h: 'Projects', hgt: '180px' }, { h: 'Daily job', hgt: '110px' }],
-      alerts: A, hasAlerts: A.length > 0, noAlerts: A.length === 0, alertCount: A.length ? A.length + ' open' : 'None',
+      alerts: A, ackClosed, hasAlerts: A.length > 0, noAlerts: A.length === 0, alertCount: A.length ? A.length + ' open' : 'None',
       links, linkCount: links.length ? links.length + (links.length === 1 ? ' link' : ' links') : 'None', hasLinks: links.length > 0, noLinks: links.length === 0, wide, narrow: !wide, d, closeDetail: () => this.setState({ detail: '', delConfirm: false }),
       selectAll: e => e.target.select(),
       formOpen: forcedForm || this.state.formOpen, openForm: () => this.setState({ formOpen: true }), closeForm: () => this.setState({ formOpen: false, touched: false }),

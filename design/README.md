@@ -1,4 +1,4 @@
-# testpulse handoff v18
+# testpulse handoff v19
 
 ## Overview
 testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
@@ -1007,3 +1007,40 @@ Same rules: the Design System page is canonical, components.md matches it, every
 16. Confirmed, no change: Design System line 489 (the banner note) and Run Detail line 226 (the private failed run) both read "…failure messages, stack traces and source links are hidden."
 
 Files changed in v18: Admin.dc.html, Design System.dc.html, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v19
+Same rules: the Design System page is canonical, components.md matches it, every target is 44 px, existing tokens only (no new token). Nothing outside the list was changed. Admin tweak changes: job "heartbeat not written" removed; `states` gains "already closed" and "already closed · only alert". Every state is drawn in Admin.dc.html (desktop and phone by width, dark and light by the theme tweak) and as a specimen in Design System section 15 (both themes through the page toggle).
+
+**Daily job: the heartbeat states**
+1. Heartbeat failed now shows the only case the page can show: the first write failed and the row was written at the end of the run.
+   - Notice (fail, `role=alert`): "The last run failed at the heartbeat step" / "The heartbeat’s first write failed with “fetch failed”; its row was written at the end of the run instead. Stale check and prune finished. The run is recorded as failed and shows as an error (500) in Vercel’s log. The next run tries again around 04:00 UTC."
+   - Heartbeat tile: "✕ Failed", sub "First write failed; row written at the end of the run". Last run tile unchanged ("✕ Failed at heartbeat").
+   - The three false lines ("…before writing its row…", "✕ Not written" / "Stopped with an error", and data-map's "heartbeat not written") are gone. Changed in Admin (job "heartbeat failed"), Design System section 15 (DAILY JOB · v19), components.md "Daily job tiles" and data-map (Daily job row and the v18 heartbeat row).
+   - components.md also says what happens when both writes fail: no row, the previous run stays and turns overdue after 36 hours.
+2. In the same state the stale check and prune tiles show their results as usual, and the notice says "Stale check and prune finished." components.md gives the general rule: a later step that also failed is drawn as in Failed partway, is left out of "{steps} finished", and its Failed partway sentence follows; the title names the first failed step. "Not run" was used nowhere else on Admin, so it is removed from Admin, Design System and components.md. (The "Not run" in TrendChart and the status timeline is a test result, not the job, and stays.)
+3. Heartbeat not written is removed: from the Admin `job` tweak and its code, the Design System tile and notice, components.md "Daily job tiles" and both data-map rows.
+4. Didn’t finish: "15 minutes" is now "5 minutes" in components.md and in both data-map rows, with the reason (the cron function is stopped at 300 s).
+5. Didn’t finish names both causes. Notice: "It started 8 Oct, 04:00 UTC and never recorded a finish: either it was stopped partway, or every step ran and only the final save of its results failed. Its step results weren’t saved. Any rows its prune removed stay removed. The next run tries again around 04:00 UTC; if this repeats, check the cron’s logs in Vercel."
+   - The tiles' sub "Not recorded before the run stopped" was false in the second case too, so it now reads "Not recorded for this run". The value "No result" is unchanged.
+   - Changed in Admin, Design System section 15, components.md and data-map.
+
+**Alerts**
+6. A message is right, and it is drawn. When Acknowledge is pressed on a count_drop that already closed by itself, the row is gone after the refresh and a pass Notice takes its place, first in Open alerts under the heading.
+   - Wording: "That alert had already closed" / "“testpulse: test count fell 23%” closed by itself when a later report brought the count back, so there was nothing to acknowledge."
+   - Tone: the pass Notice already used for "You’re signed out" (check glyph, pass tint, 1px `--pass`). It is `role=status`, not alert, because nothing went wrong.
+   - It stays until the page is next loaded. It has no timer, so nobody loses it while reading, and no close button. If it was the only alert, the "No open alerts" row follows it and the count reads "None".
+   - Drawn in Admin with `states` "already closed" (other alerts still open) and "already closed · only alert", desktop and phone by width, dark and light by the theme tweak. Design System section 15 has a new ALERT ROW · v19 specimen at desktop and 390. components.md "Alert row" has it beside the "Couldn’t acknowledge…" error, and data-map has a v19 row for its source.
+
+**Admin header and sign-in email**
+7. Confirmed: the wordmark goes to `/admin`, and View public site to `/`. Written into components.md "Admin" and the Design System ADMIN HEADER caption. The drawn `href="#"` stays as it is, like every link on the canvas, so clicking in the canvas doesn’t leave the page.
+8. The plain-text rule is removed. components.md "Sign-in" now says there is no plain-text part, because Supabase Auth sends the HTML template alone. (The v18 item 15 note above is history and is left as it was.)
+
+**How it’s tested after Phase 6**
+9. In the "after Phase 6" tweak, Phase 7 "Launch" reads In progress. Phase 6 reads Done. components.md says so too. The `today` state still shows Phase 6 In progress and Phase 7 Planned. The list still mirrors `docs/build-progress.json`.
+10. Unit adds: "…; admin sign-in: the sign-in action’s one neutral answer, the sign-in link’s confirm route, the owner allowlist check, and the guard every admin page and action calls first."
+11. Integration now reads "…pruning results at 180 days and visits and tracked sessions at 365. Visit recording, with bots and previews kept out of every count and no raw IP address stored in visits or tracked sessions. Admin sign-in and its actions (create, acknowledge, rotate, delete) against local Supabase Auth with a real session, each refused without one."
+12. E2E: "The tracked-link flow: open a link, check its cookie and redirect, see the lead project first, and find the visits stored against the link; nothing the visitor sees names the company, role, contact or token. Admin sign-in with the email opened from a local mail catcher, a spent or made-up link and another address. Admin’s sections with seeded links and visits, each action, and every action refused once the session has gone. The run page’s pruned-results notice, after a real prune."
+13. Leak sweep: "Also checks that admin without a session shows only the sign-in form and nothing hidden." The tracked-link claim moved to E2E (item 12).
+   - Items 10–13 are changed in How Its Tested.dc.html and components.md "How it’s tested page". The incident sentences are unchanged. The tweak’s default is still `today`, since the build shows the Phase 6 sentences only once v19 is adopted.
+
+Files changed in v19: Admin.dc.html, Design System.dc.html, How Its Tested.dc.html, design/README.md, design/components.md, design/data-map.md.

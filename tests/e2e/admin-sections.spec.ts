@@ -639,29 +639,9 @@ test('creates a link, marking its fields and the new row', async ({ browser }) =
   await expectNoSeriousAxeViolations(page);
 });
 
-test('acknowledges a count drop, and lets one that closed by itself leave without an error', async ({
-  browser,
-}) => {
-  const page = await ownerPage(browser);
-  await expectHydrated(page, 'button[aria-label="Copy link for Acme Health"]');
-  const alerts = section(page, 'Open alerts');
-  await alerts.getByRole('button', { name: 'Acknowledge' }).click();
-  await expect(alerts.getByText('3 open')).toBeVisible();
-  await expect(alerts.getByRole('group', { name: 'count drop alert' })).toHaveCount(0);
-  const acknowledged = check(
-    await admin()
-      .from('alerts')
-      .select('acknowledged_at, resolved_at')
-      .eq('id', ids.alerts.count_drop as string)
-      .single(),
-    'acknowledged',
-  );
-  expect(acknowledged.acknowledged_at).not.toBeNull();
-  expect(acknowledged.resolved_at).toBe(acknowledged.acknowledged_at);
-
-  // A count drop that closes by itself while the page is open has nothing left to acknowledge:
-  // no error, and the refreshed page drops its row (spec section 13.9).
-  const reopened = check(
+/** A further count drop on Ostomate2, open, for a test to close behind the page's back. */
+async function anotherDrop(key: string): Promise<string> {
+  const row = check(
     await admin()
       .from('alerts')
       .insert({
@@ -669,7 +649,7 @@ test('acknowledges a count drop, and lets one that closed by itself leave withou
         kind: 'count_drop',
         detail: {
           job: 'android',
-          module: 'composeApp',
+          module: key,
           platform: 'jvm',
           baseline: 60,
           current: 40,
@@ -682,28 +662,89 @@ test('acknowledges a count drop, and lets one that closed by itself leave withou
       .single(),
     'another drop',
   );
-  ids.alerts.again = reopened.id as string;
-  await page.reload();
+  ids.alerts[key] = row.id as string;
+  return row.id as string;
+}
+
+/** Closes the alert as a later report would: resolved, never acknowledged. */
+async function closeByReport(id: string): Promise<void> {
+  check(
+    await admin().from('alerts').update({ resolved_at: SEED_NOW }).eq('id', id).select('id'),
+    'closed by a report',
+  );
+}
+
+async function expectStillUnacknowledged(id: string): Promise<void> {
+  const row = check(
+    await admin().from('alerts').select('acknowledged_at, resolved_at').eq('id', id).single(),
+    'closed',
+  );
+  expect(row.acknowledged_at).toBeNull();
+  expect(Date.parse(row.resolved_at as string)).toBe(Date.parse(SEED_NOW));
+}
+
+const ALREADY_CLOSED =
+  'That alert had already closed“Ostomate 2.0: test count fell 33%” closed by itself when a ' +
+  'later report brought the count back, so there was nothing to acknowledge.';
+
+test('acknowledges a count drop, and says when one had already closed by itself', async ({
+  browser,
+}) => {
+  const page = await ownerPage(browser);
   await expectHydrated(page, 'button[aria-label="Copy link for Acme Health"]');
-  await expect(alerts.getByText('4 open')).toBeVisible();
-  await admin()
-    .from('alerts')
-    .update({ resolved_at: SEED_NOW })
-    .eq('id', reopened.id as string);
+  const alerts = section(page, 'Open alerts');
   await alerts.getByRole('button', { name: 'Acknowledge' }).click();
   await expect(alerts.getByText('3 open')).toBeVisible();
   await expect(alerts.getByRole('group', { name: 'count drop alert' })).toHaveCount(0);
-  await expect(alerts.getByRole('alert')).toHaveCount(0);
-  const closed = check(
+  await expect(alerts.getByRole('status')).toHaveCount(0);
+  const acknowledged = check(
     await admin()
       .from('alerts')
       .select('acknowledged_at, resolved_at')
-      .eq('id', reopened.id as string)
+      .eq('id', ids.alerts.count_drop as string)
       .single(),
-    'closed',
+    'acknowledged',
   );
-  expect(closed.acknowledged_at).toBeNull();
-  expect(Date.parse(closed.resolved_at as string)).toBe(Date.parse(SEED_NOW));
+  expect(acknowledged.acknowledged_at).not.toBeNull();
+  expect(acknowledged.resolved_at).toBe(acknowledged.acknowledged_at);
+
+  // v19 item 6: a count drop that a later report closes while the page is open has nothing left
+  // to acknowledge. The refreshed page drops its row, and a pass Notice says so, first under the
+  // heading, with no error (spec section 13.9).
+  const again = await anotherDrop('again');
+  await page.reload();
+  await expectHydrated(page, 'button[aria-label="Copy link for Acme Health"]');
+  await expect(alerts.getByText('4 open')).toBeVisible();
+  await closeByReport(again);
+  await alerts.getByRole('button', { name: 'Acknowledge' }).click();
+  await expect(alerts.getByText('3 open')).toBeVisible();
+  await expect(alerts.getByRole('group', { name: 'count drop alert' })).toHaveCount(0);
+  await expect(alerts.getByRole('status')).toHaveText(ALREADY_CLOSED);
+  await expect(alerts.getByRole('alert')).toHaveCount(0);
+  await expect(alerts.locator(':scope > *').nth(1)).toHaveAttribute('role', 'status');
+  await expectStillUnacknowledged(again);
+  await expectNoSeriousAxeViolations(page);
+
+  // It stays until the page is next loaded.
+  await page.reload();
+  await expect(alerts.getByText('3 open')).toBeVisible();
+  await expect(alerts.getByRole('status')).toHaveCount(0);
+});
+
+test('says a count drop had already closed on a phone too', async ({ browser }) => {
+  const page = await ownerPage(browser, VIEWPORTS['phone-light']);
+  const phone = await anotherDrop('phone');
+  await page.reload();
+  await expectHydrated(page, 'button[aria-label="Copy link for Acme Health"]');
+  const alerts = section(page, 'Open alerts');
+  await expect(alerts.getByText('4 open')).toBeVisible();
+  await closeByReport(phone);
+  await alerts.getByRole('button', { name: 'Acknowledge' }).click();
+  await expect(alerts.getByText('3 open')).toBeVisible();
+  await expect(alerts.getByRole('status')).toHaveText(ALREADY_CLOSED);
+  await expect(alerts.getByRole('group', { name: 'count drop alert' })).toHaveCount(0);
+  await expectStillUnacknowledged(phone);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expectNoSeriousAxeViolations(page);
 });
 

@@ -114,26 +114,28 @@ describe('howItsTestedView', () => {
     );
   });
 
-  it('has each incident’s v9 “Now:” line, with no daily check or alert', () => {
+  // Design v19 (the "after Phase 6" state, drawn since v16 and shown once v19 is adopted): each
+  // incident's "Now:" line adds what Phase 6 built.
+  it('has each incident’s “Now:” line with what Phase 6 added', () => {
     expect(INCIDENTS).toEqual([
       {
         icon: 'clock',
         title: 'CI was silently dead for 11 days',
-        now: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
+        now: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”. A daily check flags it on the admin page.',
       },
       {
         icon: 'slash',
         title: 'E2E reported green without ever passing',
-        now: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',
+        now: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass. A sudden drop in a report’s test count raises an alert too.',
       },
     ]);
-    expect(JSON.stringify(INCIDENTS)).not.toMatch(/daily check|raises an alert/);
   });
 
   // v9 item 4's strategy table, with Bobby's edits: "the design’s token pairs", "walks every page
   // that can show a private project", and the Component layer added; then design v10's contrast
-  // script and v12's Unit, Contract and Component rows (v11 item 3, v12 item 3).
-  it('lists what runs today, the three checks counted with E2E, and nothing from Phase 6', () => {
+  // script and v12's Unit, Contract and Component rows (v11 item 3, v12 item 3); and v19's second
+  // sentences for what Phase 6 added (items 10 to 13), on Unit, Integration, E2E and Leak sweep.
+  it('lists what runs, the three checks counted with E2E, and what Phase 6 added', () => {
     expect(STRATEGY.map(({ name, tools, tone }) => [name, tools.join(' + '), tone])).toEqual([
       ['Unit', 'Vitest', 1],
       ['Contract', 'Vitest', null],
@@ -157,10 +159,28 @@ describe('howItsTestedView', () => {
     expect(scope('Leak sweep')).toBe(
       'Walks every page that can show a private project as a visitor and fails if any private project’s failure text, stack trace or source link appears anywhere. Counted with E2E.',
     );
-    const all = JSON.stringify(STRATEGY);
-    for (const phase6 of ['alert', 'bot classification', 'prune', 'tracked', 'admin', 'sign-in']) {
-      expect(all.toLowerCase()).not.toContain(phase6);
-    }
+    expect(STRATEGY.map(({ name, phase6 }) => [name, phase6])).toEqual([
+      [
+        'Unit',
+        'The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup; admin sign-in: the sign-in action’s one neutral answer, the sign-in link’s confirm route, the owner allowlist check, and the guard every admin page and action calls first.',
+      ],
+      ['Contract', null],
+      ['Component', null],
+      [
+        'Integration',
+        'The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures. The daily job against local Supabase: heartbeat, opening stale alerts, and pruning results at 180 days and visits and tracked sessions at 365. Visit recording, with bots and previews kept out of every count and no raw IP address stored in visits or tracked sessions. Admin sign-in and its actions (create, acknowledge, rotate, delete) against local Supabase Auth with a real session, each refused without one.',
+      ],
+      [
+        'E2E',
+        'The tracked-link flow: open a link, check its cookie and redirect, see the lead project first, and find the visits stored against the link; nothing the visitor sees names the company, role, contact or token. Admin sign-in with the email opened from a local mail catcher, a spent or made-up link and another address. Admin’s sections with seeded links and visits, each action, and every action refused once the session has gone. The run page’s pruned-results notice, after a real prune.',
+      ],
+      ['Accessibility', null],
+      ['Visual', null],
+      [
+        'Leak sweep',
+        'Also checks that admin without a session shows only the sign-in form and nothing hidden.',
+      ],
+    ]);
   });
 
   // Design v12 item 1: no literal figures; each test counts once, in its layer.

@@ -809,10 +809,10 @@ describe('dailyJobView', () => {
     ]);
   });
 
-  // v18 item 6, as the job is built: it runs every step after a failed heartbeat, so the later
-  // tiles read their results and the notice says they finished, never "Not run" (decision row of
-  // 2026-10-14, b).
-  it('reads a failed heartbeat, with the later steps’ results as they ran', () => {
+  // v19 items 1 and 2: the job writes its heartbeat row first and, if that write fails, inserts it
+  // at the end of the run (lib/jobs/daily.ts), so a stored run that failed at the heartbeat has a
+  // row and the later steps' results; they show as usual, never "Not run".
+  it('reads a failed heartbeat as v19 draws it, with the later steps’ results as they ran', () => {
     const heartbeatFailed: DailySummary = {
       ...ON_TIME,
       status: 'failed',
@@ -825,13 +825,13 @@ describe('dailyJobView', () => {
       tone: 'fail',
       title: 'The last run failed at the heartbeat step',
       body:
-        'Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep ' +
-        'the database awake. Stale check and prune finished. The next run tries again around ' +
-        '04:00 UTC.',
+        'The heartbeat’s first write failed with “fetch failed”; its row was written at the end ' +
+        'of the run instead. Stale check and prune finished. The run is recorded as failed and ' +
+        'shows as an error (500) in Vercel’s log. The next run tries again around 04:00 UTC.',
     });
     expect(tiles(view)).toEqual([
       ['Last run', '✕ Failed at heartbeat', '8 Oct, 04:12 UTC · 6 h ago', 'fail'],
-      ['Heartbeat', '✕ Not written', 'Stopped with an error', 'fail'],
+      ['Heartbeat', '✕ Failed', 'First write failed; row written at the end of the run', 'fail'],
       ['Stale check', '1 opened', 'Opened: RouteServe', 'normal'],
       [
         'Prune',
@@ -841,8 +841,10 @@ describe('dailyJobView', () => {
       ],
     ]);
     expect(tiles(view).flat()).not.toContain('Not run');
+    expect(JSON.stringify(view)).not.toMatch(/Not written|before writing its row|didn’t run/);
 
-    // A later step that failed as well is marked, and only the steps that finished are named.
+    // A later step that failed as well is marked and left out of the steps that finished. Its own
+    // error is not in the summary (only the first step's is), so no sentence is made up for it.
     const both = dailyJobView(
       ran({
         ...heartbeatFailed,
@@ -853,9 +855,11 @@ describe('dailyJobView', () => {
       NAMES,
       NOW,
     );
+    expect(both.notice?.title).toBe('The last run failed at the heartbeat step');
     expect(both.notice?.body).toBe(
-      'Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep ' +
-        'the database awake. Stale check finished. The next run tries again around 04:00 UTC.',
+      'The heartbeat’s first write failed with “fetch failed”; its row was written at the end of ' +
+        'the run instead. Stale check finished. The run is recorded as failed and shows as an ' +
+        'error (500) in Vercel’s log. The next run tries again around 04:00 UTC.',
     );
     expect(tiles(both)[3]).toEqual(['Prune', '✕ Failed', 'Removed 0 rows before failing', 'fail']);
 
@@ -871,36 +875,14 @@ describe('dailyJobView', () => {
       NOW,
     );
     expect(none.notice?.body).toBe(
-      'Heartbeat stopped with “fetch failed” before writing its row, so this run didn’t keep ' +
-        'the database awake. The next run tries again around 04:00 UTC.',
+      'The heartbeat’s first write failed with “fetch failed”; its row was written at the end of ' +
+        'the run instead. The run is recorded as failed and shows as an error (500) in Vercel’s ' +
+        'log. The next run tries again around 04:00 UTC.',
     );
   });
 
-  it('reads a run that finished without writing its heartbeat row', () => {
-    const view = dailyJobView(ran({ ...ON_TIME, heartbeat_written: false }), NAMES, NOW);
-    expect(view.notice).toEqual({
-      tone: 'fail',
-      title: 'The last run didn’t write a heartbeat',
-      body:
-        'The run finished without an error, but its heartbeat row isn’t in the database, so ' +
-        'this run didn’t keep the database awake. The other steps finished. The next run tries ' +
-        'again around 04:00 UTC.',
-    });
-    expect(tiles(view)).toEqual([
-      ['Last run', '8 Oct, 04:12 UTC', '6 h ago · next around 04:00 UTC', 'normal'],
-      ['Heartbeat', '✕ Not written', 'No heartbeat row from this run', 'fail'],
-      ['Stale check', '1 opened', 'Opened: RouteServe', 'normal'],
-      [
-        'Prune',
-        '12 rows removed',
-        'Results 0 · failure text 0 · visits 0 · tracked sessions 0 · rate-limit buckets 12',
-        'normal',
-      ],
-    ]);
-  });
-
-  // v18 item 7, at 5 minutes rather than the drawn 15 (decision row of 2026-10-14, a): the cron
-  // route's maxDuration, after which the platform has stopped the run.
+  // v19 items 4 and 5: 5 minutes, the cron route's maxDuration, after which the platform has
+  // stopped the run; the notice names both causes, a stop partway or a failed final save.
   it('reads a run with no finish, started more than 5 minutes ago, as not finished', () => {
     expect(DIDNT_FINISH_AFTER_MS).toBe(5 * 60_000);
     const view = dailyJobView({ latest: STARTED, lastFinished: null }, NAMES, NOW);
@@ -908,16 +890,16 @@ describe('dailyJobView', () => {
       tone: 'fail',
       title: 'The last run didn’t finish',
       body:
-        'It started 8 Oct, 04:12 UTC and never recorded a finish, so it was stopped partway and ' +
-        'its step results weren’t saved. Rows a prune removed before it stopped stay removed. ' +
-        'The next run tries again around 04:00 UTC; if this repeats, check the cron’s logs in ' +
-        'Vercel.',
+        'It started 8 Oct, 04:12 UTC and never recorded a finish: either it was stopped partway, ' +
+        'or every step ran and only the final save of its results failed. Its step results ' +
+        'weren’t saved. Any rows its prune removed stay removed. The next run tries again around ' +
+        '04:00 UTC; if this repeats, check the cron’s logs in Vercel.',
     });
     expect(tiles(view)).toEqual([
       ['Last run', '✕ Didn’t finish', 'Started 8 Oct, 04:12 UTC · 6 h ago', 'fail'],
-      ['Heartbeat', 'No result', 'Not recorded before the run stopped', 'muted'],
-      ['Stale check', 'No result', 'Not recorded before the run stopped', 'muted'],
-      ['Prune', 'No result', 'Not recorded before the run stopped', 'muted'],
+      ['Heartbeat', 'No result', 'Not recorded for this run', 'muted'],
+      ['Stale check', 'No result', 'Not recorded for this run', 'muted'],
+      ['Prune', 'No result', 'Not recorded for this run', 'muted'],
     ]);
   });
 
@@ -966,6 +948,6 @@ describe('dailyJobView', () => {
       tiles(view)
         .slice(1)
         .map((tile) => tile[2]),
-    ).toEqual(Array(3).fill('Not recorded before the run stopped'));
+    ).toEqual(Array(3).fill('Not recorded for this run'));
   });
 });

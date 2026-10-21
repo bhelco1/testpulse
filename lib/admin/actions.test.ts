@@ -21,7 +21,7 @@ let deps: ActionDeps & {
   client: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
   acknowledgeAlert: ReturnType<typeof vi.fn>;
-  alertOpen: ReturnType<typeof vi.fn>;
+  alertStatus: ReturnType<typeof vi.fn>;
   rotate: ReturnType<typeof vi.fn>;
   remove: ReturnType<typeof vi.fn>;
 };
@@ -40,7 +40,7 @@ beforeEach(() => {
       link: { id: ID, token: 'Qm8r2LxT0aZe' },
     })),
     acknowledgeAlert: vi.fn(async () => undefined),
-    alertOpen: vi.fn(async () => true),
+    alertStatus: vi.fn(async () => 'open'),
     rotate: vi.fn(async () => KEY),
     remove: vi.fn(async () => true),
   } as unknown as typeof deps;
@@ -137,29 +137,38 @@ describe('acknowledge', () => {
     expect(deps.acknowledgeAlert).not.toHaveBeenCalled();
     deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: P0001 refused'));
     expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'error' });
-    expect(deps.alertOpen).toHaveBeenCalledWith(expect.anything(), ID);
+    expect(deps.alertStatus).toHaveBeenCalledWith(expect.anything(), ID);
   });
 
-  it('answers closed when the alert closed by itself, or is gone, before it was acknowledged', async () => {
+  // v19 item 6: a count_drop a later report closed has nothing left to acknowledge, and the page
+  // says so; one acknowledged elsewhere, or gone, leaves with no message (spec section 13.9).
+  it('answers closed-by-itself for a count_drop a report closed before it was acknowledged', async () => {
     deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: P0001 refused'));
-    deps.alertOpen.mockResolvedValueOnce(false);
+    deps.alertStatus.mockResolvedValueOnce('closed-by-itself');
+    expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'closed-by-itself' });
+    expect(deps.alertStatus).toHaveBeenCalledWith(expect.anything(), ID);
+  });
+
+  it('answers closed when the alert was acknowledged elsewhere, or is gone', async () => {
+    deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: P0001 refused'));
+    deps.alertStatus.mockResolvedValueOnce('closed');
     expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'closed' });
-    expect(deps.alertOpen).toHaveBeenCalledWith(expect.anything(), ID);
+    expect(deps.alertStatus).toHaveBeenCalledWith(expect.anything(), ID);
   });
 
   it('answers an error when the alert is still open after the refusal, or cannot be read', async () => {
     deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: 08006 gone'));
-    deps.alertOpen.mockResolvedValueOnce(true);
+    deps.alertStatus.mockResolvedValueOnce('open');
     expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'error' });
     deps.acknowledgeAlert.mockRejectedValueOnce(new Error('acknowledge_alert: 08006 gone'));
-    deps.alertOpen.mockRejectedValueOnce(new Error('alert: 08006 still gone'));
+    deps.alertStatus.mockRejectedValueOnce(new Error('alert: 08006 still gone'));
     expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'error' });
     expect(logged.join('\n')).toContain('08006 still gone');
   });
 
   it('does not read the alert when acknowledging succeeds', async () => {
     expect(await acknowledge(ALLOWED, ID, deps)).toEqual({ status: 'acknowledged' });
-    expect(deps.alertOpen).not.toHaveBeenCalled();
+    expect(deps.alertStatus).not.toHaveBeenCalled();
   });
 });
 

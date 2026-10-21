@@ -6,13 +6,22 @@ import type { AcknowledgeResult } from '../../lib/admin/types';
 import type { AlertKind } from '../../lib/alerts/schema';
 import type { AlertRowView, AlertsView } from '../../lib/pages/admin';
 import { useSessionEnded } from '../AdminMain/AdminMain';
-import { ClockIcon, EmptyIcon, FloorIcon, TrendDownIcon, XCircleIcon } from '../icons/icons';
+import {
+  CheckIcon,
+  ClockIcon,
+  EmptyIcon,
+  FloorIcon,
+  TrendDownIcon,
+  XCircleIcon,
+} from '../icons/icons';
 import { RelativeTime } from '../RelativeTime/RelativeTime';
 import styles from './AdminAlerts.module.css';
 
 // Admin's Open alerts (design/components.md, Admin, "Alert row"; Admin.dc.html ALERTS): every open
 // alert in the attn tone with its kind's glyph and word, Acknowledge on count_drop alone (spec
-// section 12), and the drawn row when none is open.
+// section 12), and the drawn row when none is open. An alert a later report closed before
+// Acknowledge leaves a pass Notice in its place, first under the heading, until the page is next
+// loaded (v19 item 6): it lives here, since the refreshed page no longer renders its row.
 
 export interface AdminAlertsProps {
   readonly view: AlertsView;
@@ -31,6 +40,7 @@ const GLYPH: Record<AlertKind, (props: { className?: string }) => React.JSX.Elem
 };
 
 export function AdminAlerts({ view, acknowledge }: AdminAlertsProps) {
+  const [closedTitle, setClosedTitle] = useState<string | null>(null);
   return (
     <section aria-labelledby="alerts-h">
       <div className={styles.head}>
@@ -39,6 +49,18 @@ export function AdminAlerts({ view, acknowledge }: AdminAlertsProps) {
         </h2>
         <span className={styles.count}>{view.count}</span>
       </div>
+      {closedTitle !== null && (
+        <div role="status" className={styles.closed}>
+          <CheckIcon size={18} strokeWidth={3} className={styles.closedIcon} />
+          <div>
+            <div className={styles.closedTitle}>That alert had already closed</div>
+            <p className={styles.closedBody}>
+              “{closedTitle}” closed by itself when a later report brought the count back, so there
+              was nothing to acknowledge.
+            </p>
+          </div>
+        </div>
+      )}
       {view.alerts.length === 0 ? (
         <div className={styles.none}>
           <span className={styles.check} aria-hidden="true">
@@ -49,7 +71,12 @@ export function AdminAlerts({ view, acknowledge }: AdminAlertsProps) {
       ) : (
         <div className={styles.list}>
           {view.alerts.map((alert) => (
-            <AlertRow key={alert.id} alert={alert} acknowledge={acknowledge} />
+            <AlertRow
+              key={alert.id}
+              alert={alert}
+              acknowledge={acknowledge}
+              onClosedByItself={setClosedTitle}
+            />
           ))}
         </div>
       )}
@@ -60,9 +87,11 @@ export function AdminAlerts({ view, acknowledge }: AdminAlertsProps) {
 function AlertRow({
   alert,
   acknowledge,
+  onClosedByItself,
 }: {
   alert: AlertRowView;
   acknowledge: AdminAlertsProps['acknowledge'];
+  onClosedByItself: (title: string) => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [failed, setFailed] = useState(false);
@@ -80,6 +109,8 @@ function AlertRow({
         );
       } else if (result.status === 'error') {
         setFailed(true);
+      } else if (result.status === 'closed-by-itself') {
+        onClosedByItself(alert.title);
       }
     });
   };

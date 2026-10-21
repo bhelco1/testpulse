@@ -177,13 +177,13 @@ class Component extends DCLogic {
       ['No swallowed failures', 'In testpulse’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.'],
     ].map(([title, body], i) => ({ n: String(i + 1).padStart(2, '0'), title, body }));
 
-    /* v16 item 22: after Phase 6 each row gains a second sentence for what Phase 6 added (components.md "How it’s tested page") */
+    /* v16 item 22, v19 items 9–13: after Phase 6 each row gains a second sentence for what Phase 6 added (components.md "How it’s tested page") */
     const p6 = (this.props.phase ?? 'today') === 'after Phase 6';
     const P6 = {
-      Unit: 'The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup.',
-      Integration: 'The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures. The daily job against local Supabase: heartbeat, opening stale alerts, and pruning results at 180 days and visits at 365. Visit recording, with bots and previews kept out of every count.',
-      E2E: 'The tracked-link flow: open a link, see the lead project first, and find the visit on Admin. Admin sign-in by magic link, including an expired link and an address that isn’t the owner’s.',
-      'Leak sweep': 'Also checks that no page shows a tracked link’s company, role or contact.',
+      Unit: 'The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup; admin sign-in: the sign-in action’s one neutral answer, the sign-in link’s confirm route, the owner allowlist check, and the guard every admin page and action calls first.',
+      Integration: 'The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures. The daily job against local Supabase: heartbeat, opening stale alerts, and pruning results at 180 days and visits and tracked sessions at 365. Visit recording, with bots and previews kept out of every count and no raw IP address stored in visits or tracked sessions. Admin sign-in and its actions (create, acknowledge, rotate, delete) against local Supabase Auth with a real session, each refused without one.',
+      E2E: 'The tracked-link flow: open a link, check its cookie and redirect, see the lead project first, and find the visits stored against the link; nothing the visitor sees names the company, role, contact or token. Admin sign-in with the email opened from a local mail catcher, a spent or made-up link and another address. Admin’s sections with seeded links and visits, each action, and every action refused once the session has gone. The run page’s pruned-results notice, after a real prune.',
+      'Leak sweep': 'Also checks that admin without a session shows only the sign-in form and nothing hidden.',
     };
     /* v9 item 4: every row true today (Phases 0–4 done, 5 in progress). Phase 6 adds alert rules, bot classification, tracked links, admin sign-in and the prune job. */
     const layers = [
@@ -202,7 +202,7 @@ class Component extends DCLogic {
     const phases = [
       ['Phase 0', 'Foundations', 'done'], ['Phase 1', 'Schema, parsers, ingestion', 'done'], ['Phase 2', 'Ostomate2 reporting live', 'done'],
       ['Phase 3', 'RouteServe reporting live', 'done'], ['Phase 4', 'Backfill', 'done'], ['Phase 5', 'Public site', 'done'],
-      ['Phase 6', 'Alerts, tracked links, admin', p6 ? 'done' : 'prog'], ['Phase 7', 'Launch', 'plan'],
+      ['Phase 6', 'Alerts, tracked links, admin', p6 ? 'done' : 'prog'], ['Phase 7', 'Launch', p6 ? 'prog' : 'plan'],
     ].map(([n, label, k]) => ({ n, label, status: ST[k][0], ink: ST[k][1], d: ST[k][2], dash: ST[k][3] }));
 
     /* v12 item 1: distinct tests per layer (live production, 7 Oct); each test sits in its layer as received (projects/testpulse.yaml) */

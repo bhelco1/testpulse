@@ -1,6 +1,15 @@
 import { expect, type Page } from '@playwright/test';
 
 /**
+ * Every trend chart has drawn its plot. Until a chart has measured its width it holds the space
+ * with an empty placeholder, so a screenshot taken in that moment shows a blank chart (RouteServe's
+ * Run duration did, in run 39660952145).
+ */
+export async function expectChartsDrawn(page: Page) {
+  await expect(page.locator('[data-part="placeholder"]')).toHaveCount(0);
+}
+
+/**
  * Every drawn chart's y axis reads cleanly: no label runs past the chart's left edge, where the
  * SVG clips it ("92.5%" read "2.5%" at 390), and no two labels on one axis read the same (a
  * 352 ms test read "0.35 s, 0.35 s, 0.34 s, 0.34 s"). Waits for the charts to draw first.

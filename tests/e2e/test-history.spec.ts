@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { testKey } from '../../lib/ingest/normalize.ts';
 import { planSeed, SEED_NOW, type SeedSlug } from '../../lib/seed/plan.ts';
 import { expectNoSeriousAxeViolations } from './support/axe.ts';
-import { expectReadableYAxes } from './support/charts.ts';
+import { expectChartsDrawn, expectReadableYAxes } from './support/charts.ts';
 import { capture, FAILING, formsOf, HIDDEN, leaksIn, ROUTESERVE_RUNS } from './support/leaks.ts';
 import { open } from './support/open.ts';
 
@@ -502,6 +502,7 @@ for (const { id, test: seeded } of PAGES) {
 
   test(`${id}: matches its visual snapshot`, { tag: '@visual' }, async ({ page }) => {
     await open(page, pathOf(seeded));
+    await expectChartsDrawn(page);
     await expect(page).toHaveScreenshot(`${id}.png`, { fullPage: true });
   });
 }

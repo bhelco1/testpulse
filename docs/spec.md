@@ -12,7 +12,7 @@ This document is the source of truth for what testpulse is and how it is built. 
 testpulse is a public website that shows live test results for all of Bobby Helco's software projects. Every project's CI pipeline reports into it after each run. It has two audiences:
 
 1. **Hiring managers** evaluating Bobby for Manager/Director of Quality Engineering roles. They should be able to see, in under a minute, real test suites, real numbers, and the engineering judgment behind them, and then drill into any project as deep as they like.
-2. **Bobby**, as a working cross-project QA dashboard that replaces the per-project Raspberry Pi kiosk pages.
+2. **Bobby**, as a working cross-project QA dashboard. It sits alongside the Projects and Testing results pages of Bobby's Raspberry Pi dashboard (bobby-dashboard) and replaces neither.
 
 The site is itself a portfolio piece. Its own code, tests, and CI will be read by the same audience, so it is built test-first and reports its own results on its own dashboard.
 
@@ -1015,7 +1015,6 @@ Phase 6 complete 2026-10-19.
 
 Self-reporting, once part of this phase, moved ahead of Phase 6 (decision 2026-10-07).
 
-- The Raspberry Pi kiosks point at testpulse. (manual)
 - Custom domain configured. (manual)
 - Launch review: every public page read end to end as a hiring manager would, on desktop and phone. (manual)
 
@@ -1032,6 +1031,7 @@ Self-reporting, once part of this phase, moved ahead of Phase 6 (decision 2026-1
 - Flip rate (was section 11: tests that changed status between consecutive default-branch runs more than twice in 30 days). Define first: how passed-to-skipped and skipped-to-passed count, what a run missing the test does, and the denominator.
 - Project-level cross-platform parity (was section 11: tests executed on more than one platform). Define first: the window. Per-run platform mismatch stays in section 11.
 - Defect tracking integration (requested by Bobby 2026-10-05): connect to defect tracking products (for example GitHub Issues, Jira, Linear) and show defect stats on the project page. Define first: which products, how a project links its tracker, which stats (open and closed counts, age, severity, defects found by tests), what a private project may show, and how credentials are held at $0 recurring cost.
+- A kiosk page (for example `/kiosk`) for a wall screen, built from design v18's `Kiosk.dc.html` (moved here from Phase 7 on 2026-10-21; the landing page serves meanwhile). Define first: its address, and which projects it shows, since the design draws three cards and ATPR is registered as a fourth.
 - Expected reports and the reporting alerts (planned for Phase 6 on 2026-09-30, moved here 2026-10-19): `projects/*.yaml` lists the reports each project is expected to send per trigger, with alerts on a missing report, on a refused report testpulse received, and on a module whose coverage has not been reported for N runs while its tests keep reporting. Define first: the YAML shape, how a run that skips a suite reads (a design round), and where a refused report is recorded, since none is today (reporting standard, section 7).
 
 ## 18. Open questions
@@ -1278,6 +1278,7 @@ Self-reporting, once part of this phase, moved ahead of Phase 6 (decision 2026-1
 | 2026-10-19 | The expected-reports alerts the reporting standard planned for Phase 6 (2026-09-30 row: expected reports per trigger, alerts on missing reports, refused reports and coverage no longer reported) move to section 17's Later candidates, and the standard's section 10 marks them not scheduled; its rules are unchanged, so it stays v1. Decided by Bobby | None was a Phase 6 acceptance criterion and none is built; Phase 7 is launch, and a project that stops reporting altogether is already caught by the `stale` alert |
 | 2026-10-19 | A page-thrown 404 (the project, run and test kinds and admin's unknown link) follows the visitor's theme: `components/ThemeRestore`, rendered by the root layout, applies the head script's rule in a layout effect when `data-theme` is missing, and admin's not-found gains light snapshots. Its blank body without JavaScript stays as accepted on 2026-09-29 and is held for a decision (13.10) | Next.js 16.3.5 answers such a 404 with an empty error shell and builds the page in the browser, where a script React creates never runs, so the head script alone left these pages dark. Applying the same rule from client code is the smallest change and leaves every other page as it was. Serving the 404 as HTML without JavaScript needs a per-request lookup in `proxy` (and the owner's session for admin), a restructuring beyond this fix |
 | 2026-10-21 | A page-thrown 404's blank body without JavaScript stays as it is (2026-09-29); no `proxy` lookup is added (13.10). Decided by Bobby | The lookup would add a database read before every project, run, test and admin-link page and put admin's session and the secret key into `proxy`, for a case only a visitor without JavaScript meets, who still gets the right status and title |
+| 2026-10-21 | testpulse does not replace the Raspberry Pi dashboard's Projects and Testing results pages; it runs alongside them (section 1). Phase 7 drops "The Raspberry Pi kiosks point at testpulse", and the kiosk page moves to section 17's Later candidates. Decided by Bobby | Bobby uses both bobby-dashboard pages and their data and wants to keep them; without a wall screen to fill, the kiosk page is not needed for launch, and the landing page serves for now |
 
 ---
 

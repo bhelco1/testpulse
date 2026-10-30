@@ -213,7 +213,11 @@
   font-size: 13.5px;
 }
 
+/* v19: a row Phase 6 added to gains a second sentence under its first. */
 .scope {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   line-height: 1.6;
   color: var(--ink-2);
   text-wrap: pretty;

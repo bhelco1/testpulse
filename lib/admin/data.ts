@@ -112,17 +112,27 @@ export async function loadOpenAlerts(client: SupabaseClient): Promise<OpenAlert[
 }
 
 /**
- * Whether the alert exists and is not resolved. Asked after acknowledging was refused, to tell an
- * alert that closed by itself from a refusal of one still open (spec section 13.9).
+ * open: not resolved. closed-by-itself: a count_drop a later report resolved, never acknowledged.
+ * closed: acknowledged, any other kind resolved, or gone.
  */
-export async function alertIsOpen(client: SupabaseClient, alertId: string): Promise<boolean> {
+export type AlertStatus = 'open' | 'closed-by-itself' | 'closed';
+
+/**
+ * Where the alert stands, asked after acknowledging was refused, to tell an alert that closed by
+ * itself from one acknowledged elsewhere and from a refusal of one still open (spec section 13.9).
+ */
+export async function alertStatus(client: SupabaseClient, alertId: string): Promise<AlertStatus> {
   const { data, error } = await client
     .from('alerts')
-    .select('resolved_at')
+    .select('kind, resolved_at, acknowledged_at')
     .eq('id', alertId)
-    .maybeSingle<{ resolved_at: string | null }>();
+    .maybeSingle<{ kind: string; resolved_at: string | null; acknowledged_at: string | null }>();
   if (error) throw failed('alert', error);
-  return data !== null && data.resolved_at === null;
+  if (data === null) return 'closed';
+  if (data.resolved_at === null) return 'open';
+  return data.kind === 'count_drop' && data.acknowledged_at === null
+    ? 'closed-by-itself'
+    : 'closed';
 }
 
 /** Every tracked link, newest first. */

@@ -411,9 +411,9 @@ export interface DailyJobView {
 }
 
 /**
- * A run with no finish this long after its start was stopped by the platform: the cron route's
- * time limit, where v18 draws 15 minutes (decision row of 2026-10-14, a). Until then it may still
- * be running.
+ * A run with no finish this long after its start was stopped by the platform, or ran every step
+ * and failed only its final save: the cron route's time limit, 5 minutes, as v19 draws it. Until
+ * then it may still be running.
  */
 export const DIDNT_FINISH_AFTER_MS = DAILY_JOB_MAX_SECONDS * 1000;
 
@@ -464,7 +464,10 @@ const NEVER_RUN: DailyJobView = {
   })),
 };
 
-/** A run that started and never recorded a finish, so none of its step results were saved. */
+/**
+ * A run that started and never recorded a finish, so none of its step results were saved: it was
+ * stopped partway, or only the final save of its summary failed (v19 item 5).
+ */
 function didntFinishView(summary: DailySummary, now: Date): DailyJobView {
   const started = new Date(summary.started_at);
   const at = dateTimeLabel(started, now);
@@ -473,9 +476,10 @@ function didntFinishView(summary: DailySummary, now: Date): DailyJobView {
       tone: 'fail',
       title: 'The last run didn’t finish',
       body:
-        `It started ${at.text} and never recorded a finish, so it was stopped partway and its ` +
-        'step results weren’t saved. Rows a prune removed before it stopped stay removed. ' +
-        `The next run tries again ${NEXT_RUN}; if this repeats, check the cron’s logs in Vercel.`,
+        `It started ${at.text} and never recorded a finish: either it was stopped partway, or ` +
+        'every step ran and only the final save of its results failed. Its step results ' +
+        'weren’t saved. Any rows its prune removed stay removed. The next run tries again ' +
+        `${NEXT_RUN}; if this repeats, check the cron’s logs in Vercel.`,
     },
     tiles: [
       {
@@ -487,7 +491,7 @@ function didntFinishView(summary: DailySummary, now: Date): DailyJobView {
       ...LABELS.slice(1).map((label): JobTileView => ({
         label,
         value: ['No result'],
-        sub: ['Not recorded before the run stopped'],
+        sub: ['Not recorded for this run'],
         tone: 'muted',
       })),
     ],
@@ -560,18 +564,12 @@ function finishedRunView(
     sub: [sub],
     tone: 'fail',
   });
-  const notWritten = (sub: string): JobTileView => ({
-    label: 'Heartbeat',
-    value: ['✕ Not written'],
-    sub: [sub],
-    tone: 'fail',
-  });
 
+  // A stored run always has its heartbeat row: when the first write fails, the job inserts the
+  // row at the end of the run (lib/jobs/daily.ts), and when both fail nothing is stored (v19).
   const heartbeat: JobTileView = failed.has('heartbeat')
-    ? notWritten('Stopped with an error')
-    : summary.heartbeat_written
-      ? { label: 'Heartbeat', value: ['✓ Written'], sub: ['Database kept awake'], tone: 'pass' }
-      : notWritten('No heartbeat row from this run');
+    ? stopped('Heartbeat', 'First write failed; row written at the end of the run')
+    : { label: 'Heartbeat', value: ['✓ Written'], sub: ['Database kept awake'], tone: 'pass' };
 
   const names = new Map(projects.map((project) => [project.id, project.name]));
   const opened = summary.stale_opened;
@@ -627,14 +625,15 @@ function finishedRunView(
         'cron in Vercel.',
     };
   } else if (summary.failed_step === 'heartbeat') {
-    // v18 draws "{later steps} didn't run"; this job runs them, so the notice says which finished
-    // (decision row of 2026-10-14, b).
+    // v19 item 1. A later step that failed too is left out of the steps that finished; the
+    // summary keeps only the first step's error, so no sentence is given for it.
     notice = {
       tone: 'fail',
       title: 'The last run failed at the heartbeat step',
       body:
-        `Heartbeat stopped with “${summary.error ?? ''}” before writing its row, so this run ` +
-        `didn’t keep the database awake. ${finishedSentence(finishedAfter('heartbeat'))}` +
+        `The heartbeat’s first write failed with “${summary.error ?? ''}”; its row was written ` +
+        `at the end of the run instead. ${finishedSentence(finishedAfter('heartbeat'))}` +
+        'The run is recorded as failed and shows as an error (500) in Vercel’s log. ' +
         TRIES_AGAIN,
     };
   } else if (summary.failed_step !== null) {
@@ -650,15 +649,6 @@ function finishedRunView(
       body:
         finishedSentence(finished) +
         `${capital(step)} stopped with “${summary.error ?? ''}”${outcome} ${TRIES_AGAIN}`,
-    };
-  } else if (!summary.heartbeat_written) {
-    notice = {
-      tone: 'fail',
-      title: 'The last run didn’t write a heartbeat',
-      body:
-        'The run finished without an error, but its heartbeat row isn’t in the database, so ' +
-        'this run didn’t keep the database awake. The other steps finished. ' +
-        TRIES_AGAIN,
     };
   }
 

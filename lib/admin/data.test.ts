@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  alertIsOpen,
+  alertStatus,
   loadLastReports,
   loadLatestJob,
   loadLinkDetail,
@@ -144,21 +144,31 @@ describe('loadOpenAlerts', () => {
   });
 });
 
-describe('alertIsOpen', () => {
-  it('answers whether the alert exists with resolved_at null, and fails on a refused read', async () => {
+describe('alertStatus', () => {
+  // v19 item 6: after a refused acknowledge, whether the alert is still open, was closed by a
+  // later report (a count_drop resolved and never acknowledged), or is otherwise closed or gone.
+  it('tells an open alert from one a report closed and one acknowledged or gone', async () => {
+    const at = '2026-10-08T10:00:00+00:00';
     const { client, calls } = fakeClient({
       alerts: [
-        { data: { resolved_at: null }, error: null },
-        { data: { resolved_at: '2026-10-08T10:00:00+00:00' }, error: null },
+        { data: { kind: 'count_drop', resolved_at: null, acknowledged_at: null }, error: null },
+        { data: { kind: 'count_drop', resolved_at: at, acknowledged_at: null }, error: null },
+        { data: { kind: 'count_drop', resolved_at: at, acknowledged_at: at }, error: null },
+        { data: { kind: 'stale', resolved_at: at, acknowledged_at: null }, error: null },
         { data: null, error: null },
         { data: null, error: { code: '08006', message: 'gone' } },
       ],
     });
-    expect(await alertIsOpen(client, EMPTY.id)).toBe(true);
-    expect(await alertIsOpen(client, EMPTY.id)).toBe(false);
-    expect(await alertIsOpen(client, EMPTY.id)).toBe(false);
-    await expect(alertIsOpen(client, EMPTY.id)).rejects.toThrow('alert: 08006 gone');
-    expect(calls[0]?.steps).toEqual(['select("resolved_at")', `eq("id", "${EMPTY.id}")`]);
+    expect(await alertStatus(client, EMPTY.id)).toBe('open');
+    expect(await alertStatus(client, EMPTY.id)).toBe('closed-by-itself');
+    expect(await alertStatus(client, EMPTY.id)).toBe('closed');
+    expect(await alertStatus(client, EMPTY.id)).toBe('closed');
+    expect(await alertStatus(client, EMPTY.id)).toBe('closed');
+    await expect(alertStatus(client, EMPTY.id)).rejects.toThrow('alert: 08006 gone');
+    expect(calls[0]?.steps).toEqual([
+      'select("kind, resolved_at, acknowledged_at")',
+      `eq("id", "${EMPTY.id}")`,
+    ]);
   });
 });
 

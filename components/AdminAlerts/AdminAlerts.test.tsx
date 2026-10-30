@@ -111,14 +111,67 @@ describe('AdminAlerts', () => {
     expect(error.textContent).toBe('Couldn’t acknowledge. The alert is still open. Try again.');
   });
 
-  it('shows no error when the alert had already closed by itself', async () => {
+  it('shows nothing when the alert was acknowledged elsewhere, or is gone', async () => {
     show(vi.fn(async () => ({ status: 'closed' }) as const));
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Acknowledge' }));
     });
     expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.queryByText(/already closed/)).toBeNull();
     expect(screen.getByRole('button', { name: 'Acknowledge' }).hasAttribute('disabled')).toBe(
       false,
+    );
+  });
+
+  // v19 item 6 (design/components.md, "Alert row"; Admin.dc.html `states` "already closed"): the
+  // refreshed page drops the row and a pass Notice takes the first place under the heading, until
+  // the page is next loaded.
+  it('says the alert had already closed when a report closed it before Acknowledge', async () => {
+    const view = show(vi.fn(async () => ({ status: 'closed-by-itself' }) as const));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Acknowledge' }));
+    });
+    const refreshed: AlertsView = { count: '3 open', alerts: VIEW.alerts.slice(1) };
+    view.rerender(
+      <AdminMain variant="main" top={<h1>Admin</h1>}>
+        <AdminAlerts view={refreshed} acknowledge={vi.fn()} />
+      </AdminMain>,
+    );
+    const section = screen.getByRole('region', { name: 'Open alerts' });
+    const notice = within(section).getByRole('status');
+    expect(notice.textContent).toBe(
+      'That alert had already closed“COUNT DROP title” closed by itself when a later report ' +
+        'brought the count back, so there was nothing to acknowledge.',
+    );
+    expect(notice.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(within(section).queryByRole('alert')).toBeNull();
+    // First in the section after its heading, then the remaining alerts.
+    const [head, first, list] = [...section.children] as HTMLElement[];
+    expect(head?.textContent).toBe('Open alerts3 open');
+    expect(first).toBe(notice);
+    expect(list?.querySelectorAll('[role="group"]')).toHaveLength(3);
+  });
+
+  it('keeps the notice above “No open alerts” when it was the only alert', async () => {
+    const only: AlertsView = { count: '1 open', alerts: VIEW.alerts.slice(0, 1) };
+    const view = show(
+      vi.fn(async () => ({ status: 'closed-by-itself' }) as const),
+      only,
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Acknowledge' }));
+    });
+    view.rerender(
+      <AdminMain variant="main" top={<h1>Admin</h1>}>
+        <AdminAlerts view={{ count: 'None', alerts: [] }} acknowledge={vi.fn()} />
+      </AdminMain>,
+    );
+    const section = screen.getByRole('region', { name: 'Open alerts' });
+    expect(section.textContent).toBe(
+      'Open alertsNoneThat alert had already closed“COUNT DROP title” closed by itself when a ' +
+        'later report brought the count back, so there was nothing to acknowledge.✓No open ' +
+        'alerts. Every project is reporting on schedule.',
     );
   });
 
@@ -159,5 +212,27 @@ describe('AdminAlerts', () => {
     expect(ruleFor(CSS, '.meta')).toMatchObject({ 'font-size': '12.5px', color: 'var(--ink-3)' });
     expect(ruleFor(CSS, '.none')).toMatchObject({ border: '1px dashed var(--line-strong)' });
     expect(ruleFor(CSS, '.ack')).toMatchObject({ 'min-height': 'var(--target-min)' });
+  });
+
+  it('draws the already-closed notice as the design does', () => {
+    expect(ruleFor(CSS, '.closed')).toMatchObject({
+      'margin-bottom': '10px',
+      padding: '14px var(--space-4)',
+      'border-radius': 'var(--radius-md)',
+      background: 'var(--pass-tint)',
+      border: '1px solid var(--pass)',
+    });
+    expect(ruleFor(CSS, '.closedIcon')).toMatchObject({ color: 'var(--pass)' });
+    expect(ruleFor(CSS, '.closedTitle')).toMatchObject({
+      'font-weight': '600',
+      'font-size': '14.5px',
+      color: 'var(--ink)',
+    });
+    expect(ruleFor(CSS, '.closedBody')).toMatchObject({
+      margin: '4px 0px 0px',
+      'font-size': '13.5px',
+      'line-height': '1.5',
+      color: 'var(--ink-2)',
+    });
   });
 });

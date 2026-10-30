@@ -70,18 +70,18 @@ export interface Incident {
   readonly now: string;
 }
 
-// v9's "Now:" lines: what the pages show today, derived at render (section 11). The daily check
-// and the count-drop alert join them in Phase 6.
+// v9's "Now:" lines: what the pages show, derived at render (section 11), each with the
+// sentence Phase 6 added, the daily check and the count-drop alert (v19, "after Phase 6").
 export const INCIDENTS: readonly Incident[] = [
   {
     icon: 'clock',
     title: 'CI was silently dead for 11 days',
-    now: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.',
+    now: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”. A daily check flags it on the admin page.',
   },
   {
     icon: 'slash',
     title: 'E2E reported green without ever passing',
-    now: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.',
+    now: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass. A sudden drop in a report’s test count raises an alert too.',
   },
 ];
 
@@ -89,6 +89,8 @@ export interface StrategyRow {
   readonly name: string;
   readonly tools: readonly string[];
   readonly scope: string;
+  /** What Phase 6 added, drawn as a second sentence under the first; null where it added none. */
+  readonly phase6: string | null;
   /** A section 8 layer's fixed tone; null for a row counted under another layer (bordered). */
   readonly tone: LayerTone | null;
 }
@@ -96,8 +98,8 @@ export interface StrategyRow {
 // "What runs, and what it covers" (v9 item 4), with Bobby's edits: "the design’s token pairs",
 // "walks every page that can show a private project", and a Component row, which section 8 has
 // and projects/testpulse.yaml gives the component tests; then design v10's contrast script and
-// v12's Unit and Contract scopes. Phase 6 adds alert rules, bot classification, the prune job,
-// tracked links, tracked-link tokens and admin sign-in.
+// v12's Unit and Contract scopes; then the second sentences of v19's "after Phase 6" state (items
+// 10 to 13): alert rules, the daily job, bot classification, tracked links and admin sign-in.
 export const STRATEGY: readonly StrategyRow[] = [
   {
     name: 'Unit',
@@ -105,6 +107,8 @@ export const STRATEGY: readonly StrategyRow[] = [
     scope:
       'Parsers against real fixtures, layer resolution, stat calculations, API key hashing. 90% line floor.',
     tone: LAYER_TONE.unit,
+    phase6:
+      'The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup; admin sign-in: the sign-in action’s one neutral answer, the sign-in link’s confirm route, the owner allowlist check, and the guard every admin page and action calls first.',
   },
   {
     name: 'Contract',
@@ -112,6 +116,7 @@ export const STRATEGY: readonly StrategyRow[] = [
     scope:
       'The shared GitHub Action every project reports through, run against a local server. Runs in the unit job; counted as Unit.',
     tone: null,
+    phase6: null,
   },
   {
     name: 'Component',
@@ -119,6 +124,7 @@ export const STRATEGY: readonly StrategyRow[] = [
     scope:
       'Each component built from the design, rendered in jsdom: its words, states and links, and its stylesheet against the design’s values.',
     tone: LAYER_TONE.component,
+    phase6: null,
   },
   {
     name: 'Integration',
@@ -126,6 +132,8 @@ export const STRATEGY: readonly StrategyRow[] = [
     scope:
       'The ingestion endpoint end to end against local Supabase: idempotent retries, transactions and rollups, and row-level security checked with the anonymous client, so private projects stay hidden.',
     tone: LAYER_TONE.integration,
+    phase6:
+      'The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures. The daily job against local Supabase: heartbeat, opening stale alerts, and pruning results at 180 days and visits and tracked sessions at 365. Visit recording, with bots and previews kept out of every count and no raw IP address stored in visits or tracked sessions. Admin sign-in and its actions (create, acknowledge, rotate, delete) against local Supabase Auth with a real session, each refused without one.',
   },
   {
     name: 'E2E',
@@ -133,6 +141,8 @@ export const STRATEGY: readonly StrategyRow[] = [
     scope:
       'A seeded database behind the landing, project, run and test-history pages; visibility rules in the rendered UI; every public page again with JavaScript turned off.',
     tone: LAYER_TONE.e2e,
+    phase6:
+      'The tracked-link flow: open a link, check its cookie and redirect, see the lead project first, and find the visits stored against the link; nothing the visitor sees names the company, role, contact or token. Admin sign-in with the email opened from a local mail catcher, a spent or made-up link and another address. Admin’s sections with seeded links and visits, each action, and every action refused once the session has gone. The run page’s pruned-results notice, after a real prune.',
   },
   {
     name: 'Accessibility',
@@ -140,6 +150,7 @@ export const STRATEGY: readonly StrategyRow[] = [
     scope:
       'axe on every public page, counted with E2E. A script in the unit job checks the contrast of the design’s token pairs in both themes.',
     tone: null,
+    phase6: null,
   },
   {
     name: 'Visual',
@@ -147,6 +158,7 @@ export const STRATEGY: readonly StrategyRow[] = [
     scope:
       'Snapshots of each page at desktop and phone widths, light and dark, compared inside a pinned container image so rendering can’t drift. Counted with E2E.',
     tone: null,
+    phase6: null,
   },
   {
     name: 'Leak sweep',
@@ -154,6 +166,8 @@ export const STRATEGY: readonly StrategyRow[] = [
     scope:
       'Walks every page that can show a private project as a visitor and fails if any private project’s failure text, stack trace or source link appears anywhere. Counted with E2E.',
     tone: null,
+    phase6:
+      'Also checks that admin without a session shows only the sign-in form and nothing hidden.',
   },
 ];
 

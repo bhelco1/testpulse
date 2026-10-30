@@ -446,11 +446,12 @@ describe('admin’s actions with the owner’s session', () => {
     expect(acknowledged.acknowledged_at).not.toBeNull();
     expect(acknowledged.resolved_at).toBe(acknowledged.acknowledged_at);
     expect(revalidatePath).toHaveBeenCalledWith('/admin');
-    // Already resolved: refused, and the page is refreshed so the alert leaves it.
+    // Already acknowledged: refused, with no message, and the page is refreshed so it leaves it.
     expect(await acknowledgeAlertAction(alertIds.count_drop)).toEqual({ status: 'closed' });
   });
 
-  it('answers closed for a count_drop that closed by itself, and does not acknowledge it', async () => {
+  // v19 item 6: the page says such an alert had already closed.
+  it('answers closed-by-itself for a count_drop a report closed, and does not acknowledge it', async () => {
     const closed = unwrap(
       await admin
         .from('alerts')
@@ -474,7 +475,7 @@ describe('admin’s actions with the owner’s session', () => {
       'closed drop',
     ).id as string;
     vi.mocked(revalidatePath).mockClear();
-    expect(await acknowledgeAlertAction(closed)).toEqual({ status: 'closed' });
+    expect(await acknowledgeAlertAction(closed)).toEqual({ status: 'closed-by-itself' });
     const row = await alertRow(closed);
     expect(row.acknowledged_at).toBeNull();
     expect(Date.parse(row.resolved_at as string)).toBe(Date.parse('2026-10-08T10:00:00.000Z'));

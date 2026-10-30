@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { PublicClient } from '../supabase/public.ts';
+import {
+  argsOf,
+  fakeClient,
+  rpcArgs,
+  type Answer,
+  type Query,
+} from './fake-client.test-support.ts';
 import { loadLanding } from './landing.ts';
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
@@ -9,47 +15,6 @@ vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 // The query shapes, the coverage walk and the row handling of the landing loader. What the
 // numbers are for real data read as anon is proven against the seeded database in
 // lib/seed/seed.int.test.ts; the stats themselves are tested beside them in lib/stats.
-
-type Call = readonly [method: string, ...args: unknown[]];
-
-interface Query {
-  readonly table: string;
-  readonly calls: readonly Call[];
-}
-
-interface Answer {
-  readonly data?: unknown;
-  readonly error?: { code: string; message: string } | null;
-}
-
-const argsOf = (query: Query, method: string): unknown[][] =>
-  query.calls.filter(([name]) => name === method).map(([, ...args]) => args);
-
-function fakeClient(answer: (query: Query) => Answer): { client: PublicClient; queries: Query[] } {
-  const queries: Query[] = [];
-  const settle = (query: Query) => {
-    queries.push(query);
-    const { data = null, error = null } = answer(query);
-    return { data, error };
-  };
-  const chain = (query: Query): unknown =>
-    new Proxy(
-      {},
-      {
-        get: (_, property) => {
-          if (property === 'then') {
-            return (resolve: (value: unknown) => void) => resolve(settle(query));
-          }
-          return (...args: unknown[]) =>
-            chain({ ...query, calls: [...query.calls, [String(property), ...args]] });
-        },
-      },
-    );
-  const client = {
-    from: (table: string) => chain({ table, calls: [] }),
-  } as unknown as PublicClient;
-  return { client, queries };
-}
 
 const NOW = new Date('2026-10-05T12:00:00Z');
 
@@ -104,12 +69,12 @@ const coverageRow = (
   reports: { run_id: runId },
 });
 
-const result = (id: string, testId: string, status: string, layer: string, runId: string) => ({
-  id,
-  test_id: testId,
+// A row of run_test_tallies: one run's distinct tests of one layer and combined status.
+const tally = (runId: string, layer: string, status: string, tests: number) => ({
+  run_id: runId,
+  layer,
   status,
-  tests: { layer },
-  reports: { run_id: runId },
+  tests,
 });
 
 const isLastReportQuery = (query: Query) =>
@@ -119,12 +84,11 @@ interface Tables {
   readonly projects?: readonly unknown[];
   readonly runs?: readonly unknown[] | ((projectId: string) => readonly unknown[]);
   readonly lastReport?: readonly unknown[];
-  readonly results?: readonly unknown[];
+  readonly tallies?: readonly ReturnType<typeof tally>[];
   readonly coverage?: (runIds: readonly string[]) => readonly unknown[];
   readonly reports?: (runId: string) => readonly unknown[];
   readonly failing?: (runId: string) => readonly unknown[];
-  readonly reportRuns?: readonly unknown[];
-  readonly feedResults?: readonly unknown[];
+  readonly reportCounts?: readonly unknown[];
 }
 
 const report = (job: string, module: string, platform: string, total: number) => ({
@@ -149,14 +113,6 @@ const failingRow = (id: string, suite: string, name: string, platform: string) =
   reports: { run_id: 'r2', platform },
 });
 
-const feedResult = (id: string, testId: string, status: string, runId: string) => ({
-  id,
-  test_id: testId,
-  status,
-  reports: { run_id: runId, platform: 'jvm' },
-});
-
-const selectOf = (query: Query) => String(argsOf(query, 'select')[0]?.[0]);
 const eqValue = (query: Query, column: string) =>
   argsOf(query, 'eq').find(([name]) => name === column)?.[1];
 
@@ -173,22 +129,20 @@ const answering =
           data: typeof runs === 'function' ? runs(String(eqValue(query, 'project_id'))) : runs,
         };
       }
-      case 'results': {
-        const select = selectOf(query);
-        if (select.includes('tests!inner(layer)')) return { data: tables.results ?? [] };
-        if (select.includes('test_key')) {
-          return { data: tables.failing?.(String(eqValue(query, 'reports.run_id'))) ?? [] };
-        }
-        return { data: tables.feedResults ?? [] };
+      case 'results':
+        return { data: tables.failing?.(String(eqValue(query, 'reports.run_id'))) ?? [] };
+      case 'rpc:run_test_tallies': {
+        const ids = rpcArgs(query).p_run_ids as string[];
+        return { data: (tables.tallies ?? []).filter((row) => ids.includes(row.run_id)) };
       }
+      case 'rpc:run_report_counts':
+        return { data: tables.reportCounts ?? [] };
       case 'coverage': {
         const [, ids] = (argsOf(query, 'in')[0] ?? []) as [string, string[]];
         return { data: tables.coverage?.(ids) ?? [] };
       }
       case 'reports':
-        return selectOf(query) === 'run_id'
-          ? { data: tables.reportRuns ?? [] }
-          : { data: tables.reports?.(String(eqValue(query, 'run_id'))) ?? [] };
+        return { data: tables.reports?.(String(eqValue(query, 'run_id'))) ?? [] };
       default:
         return { error: { code: 'X', message: `unexpected table ${query.table}` } };
     }
@@ -223,7 +177,7 @@ describe('loadLanding', () => {
     expect(landing.headline).toMatchObject({ totalTests: 0, passRate: { rate: null } });
   });
 
-  it('reads one project’s runs, last report, latest-run results and coverage through anon views', async () => {
+  it('reads one project’s runs, last report, latest-run test counts and coverage as anon', async () => {
     const { client, queries } = fakeClient(
       answering({
         runs: [
@@ -231,11 +185,9 @@ describe('loadLanding', () => {
           runRow('r2', '2026-10-05T09:26:17.747+00:00', { passed: 192, skipped: 0 }),
         ],
         lastReport: [{ finished_at: '2026-10-05T09:26:17.747+00:00' }],
-        results: [
-          result('x1', 't1', 'passed', 'unit', 'r2'),
-          result('x2', 't1', 'failed', 'unit', 'r2'),
-          result('x3', 't2', 'passed', 'visual', 'r2'),
-        ],
+        // r2's distinct tests as the database counts them: t1 failed on one of its two
+        // platforms, t2 passed.
+        tallies: [tally('r2', 'unit', 'failed', 1), tally('r2', 'visual', 'passed', 1)],
         coverage: (ids) =>
           ids.includes('r2')
             ? [
@@ -248,7 +200,7 @@ describe('loadLanding', () => {
 
     const landing = await loadLanding(client, NOW);
 
-    const [, runs, lastReport, results, coverage, reports, failing, reportRuns, feed, ...rest] =
+    const [, runs, lastReport, tallies, coverage, reports, failing, reportCounts, feed, ...rest] =
       queries;
     expect(rest).toEqual([]);
     expect(runs?.table).toBe('runs_public');
@@ -267,11 +219,9 @@ describe('loadLanding', () => {
     ]);
     expect(argsOf(lastReport as Query, 'order')).toEqual([['finished_at', { ascending: false }]]);
 
-    expect(results?.table).toBe('results');
-    expect(argsOf(results as Query, 'select')).toEqual([
-      ['id, test_id, status, tests!inner(layer), reports!inner(run_id)'],
-    ]);
-    expect(argsOf(results as Query, 'eq')).toEqual([['reports.run_id', 'r2']]);
+    // The latest run's tests are counted in the database, not read row by row.
+    expect(tallies?.table).toBe('rpc:run_test_tallies');
+    expect(rpcArgs(tallies as Query)).toEqual({ p_run_ids: ['r2'] });
 
     // Newest first: r2 holds both floor modules, so the walk stops after one chunk.
     expect(argsOf(coverage as Query, 'in')).toEqual([['reports.run_id', ['r2', 'r1']]]);
@@ -287,7 +237,7 @@ describe('loadLanding', () => {
       // Distinct tests, not r2's 192 executions: t1 failed on one of its two platforms, t2
       // passed. 1 / (1 + 1) = 0.5.
       latestRun: { id: 'r2', passed: 1, failed: 1, skipped: 0, passRate: 0.5 },
-      // t1 twice and t2: 2 tests; the 5 declared flows are not added.
+      // t1 and t2: 2 tests; the 5 declared flows are not added.
       totalTests: 2,
       layers: { unit: 1, visual: 1 },
       greenStreak: { current: 2, longest: 2 },
@@ -309,13 +259,12 @@ describe('loadLanding', () => {
     expect(argsOf(failing as Query, 'eq')).toEqual([['reports.run_id', 'r2']]);
     expect(argsOf(failing as Query, 'in')).toEqual([['status', ['failed', 'error']]]);
 
-    // The recent runs feed counts reports and distinct tests of its runs, newest first.
-    expect(argsOf(reportRuns as Query, 'in')).toEqual([['run_id', ['r2', 'r1']]]);
-    expect(feed?.table).toBe('results');
-    expect(argsOf(feed as Query, 'select')).toEqual([
-      ['id, test_id, status, reports!inner(run_id, platform)'],
-    ]);
-    expect(argsOf(feed as Query, 'in')).toEqual([['reports.run_id', ['r2', 'r1']]]);
+    // The recent runs feed asks the database for its runs' reports and distinct tests, newest
+    // first.
+    expect(reportCounts?.table).toBe('rpc:run_report_counts');
+    expect(rpcArgs(reportCounts as Query)).toEqual({ p_run_ids: ['r2', 'r1'] });
+    expect(feed?.table).toBe('rpc:run_test_tallies');
+    expect(rpcArgs(feed as Query)).toEqual({ p_run_ids: ['r2', 'r1'] });
   });
 
   it('gives each card its latest run’s reports, failing tests and duration', async () => {
@@ -411,17 +360,18 @@ describe('loadLanding', () => {
         projects: [projectRow(), other],
         runs: runsOf,
         lastReport: [{ finished_at: '2026-10-05T10:00:00+00:00' }],
-        reportRuns: [{ run_id: 'o2' }, { run_id: 'o2' }, { run_id: 's1' }],
-        feedResults: [
-          // o2: t1 on two platforms counts once.
-          feedResult('x1', 't1', 'passed', 'o2'),
-          feedResult('x2', 't1', 'passed', 'o2'),
-          feedResult('x3', 't2', 'skipped', 'o2'),
-          // s1: t3 failed on one platform and passed on another is one failed test.
-          feedResult('x4', 't3', 'failed', 's1'),
-          { ...feedResult('x5', 't3', 'passed', 's1'), reports: { run_id: 's1', platform: 'ios' } },
-          feedResult('x6', 't4', 'passed', 's1'),
-          feedResult('x7', 't5', 'passed', 'o1'),
+        reportCounts: [
+          { run_id: 'o2', reports: 2 },
+          { run_id: 's1', reports: 1 },
+        ],
+        // The database's distinct tests: o2 passed t1 (on two platforms) and skipped t2; s1
+        // failed t3 (failed on one platform, passed on another) and passed t4; o1 passed t5.
+        tallies: [
+          tally('o1', 'unit', 'passed', 1),
+          tally('o2', 'unit', 'passed', 1),
+          tally('o2', 'unit', 'skipped', 1),
+          tally('s1', 'unit', 'failed', 1),
+          tally('s1', 'unit', 'passed', 1),
         ],
       }),
     );
@@ -464,15 +414,11 @@ describe('loadLanding', () => {
       },
     ]);
     expect(landing.recentRuns[1]?.commitSha).toBe('1234567');
-    const feed = queries.filter(
-      (query) =>
-        query.table === 'results' &&
-        selectOf(query).includes('platform') &&
-        !selectOf(query).includes('test_key'),
-    );
-    expect(feed.map((query) => argsOf(query, 'in'))).toEqual([
-      [['reports.run_id', ['o2', 's1', 'o1']]],
-    ]);
+    const counted = queries
+      .filter((query) => query.table === 'rpc:run_test_tallies')
+      .map((query) => rpcArgs(query).p_run_ids);
+    // Each project's latest run for its card, then the feed's three.
+    expect(counted).toEqual([['o2'], ['s1'], ['o2', 's1', 'o1']]);
   });
 
   it('keeps a pruned feed run’s executions, with no distinct tests to count', async () => {
@@ -492,12 +438,12 @@ describe('loadLanding', () => {
     expect(landing.recentRuns).toEqual([
       expect.objectContaining({ id: 'r1', total: 11, passed: 10, skipped: 1, tests: null }),
     ]);
-    // Nothing is read to count a pruned run's tests.
+    // The feed asks nothing to count a pruned run's tests; the one count is the card's.
     expect(
-      queries.filter(
-        (query) => query.table === 'results' && !selectOf(query).includes('tests!inner'),
-      ),
-    ).toEqual([]);
+      queries
+        .filter((query) => query.table === 'rpc:run_test_tallies')
+        .map((query) => rpcArgs(query).p_run_ids),
+    ).toEqual([['r1']]);
   });
 
   it('walks back through older runs until every module with a floor has coverage', async () => {

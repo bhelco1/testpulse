@@ -41,9 +41,6 @@ export interface TestOutcomeRow {
   readonly status: TestStatus;
 }
 
-/** A latest-run result as the landing loader reads it: its test, layer and status. */
-export interface LatestRunTest extends TestLayerRow, TestOutcomeRow {}
-
 export interface TestOutcomes {
   readonly passed: number;
   readonly failed: number;

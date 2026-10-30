@@ -20,7 +20,7 @@ test.describe('the landing page', () => {
   });
 
   test('leads with the lede as its h1 and the portfolio’s 1,186 tests', async ({ page }) => {
-    await expect(page).toHaveTitle('testpulse');
+    await expect(page).toHaveTitle('Testament · A testament to every test.');
     const main = page.getByRole('main');
     // The lede is the page's one h1 (design v8 item 7).
     await expect(main.getByRole('heading', { level: 1 })).toHaveText([
@@ -28,6 +28,27 @@ test.describe('the landing page', () => {
     ]);
     // 142 + 1,041 + 3 distinct tests in the three latest runs.
     await expect(main.locator('[data-part="hero-total"]')).toHaveText('1,186');
+  });
+
+  // design v20 item 3: the tagline is the line directly above the h1, at weight 500, and the page shares under the same title it shows in the tab.
+  test('puts the tagline above the h1, and shares as “Testament · A testament to every test.”', async ({
+    page,
+  }) => {
+    const tagline = page.getByRole('main').getByText('A testament to every test.', { exact: true });
+    await expect(tagline).toBeVisible();
+    expect(
+      await tagline.evaluate((el) => ({
+        tag: el.tagName,
+        next: el.nextElementSibling?.tagName,
+        weight: getComputedStyle(el).fontWeight,
+      })),
+    ).toEqual({ tag: 'P', next: 'H1', weight: '500' });
+    for (const meta of ['meta[property="og:title"]', 'meta[name="twitter:title"]']) {
+      await expect(page.locator(meta)).toHaveAttribute(
+        'content',
+        'Testament · A testament to every test.',
+      );
+    }
   });
 
   test('reads the total and its note as one sentence', async ({ page }) => {
@@ -39,7 +60,7 @@ test.describe('the landing page', () => {
       .locator('p', { has: page.locator('[data-part="hero-total"]') });
     await expect(hero).toHaveText(
       '1,186 automated tests across three projects. 2 failing across two projects’ latest ' +
-        'runs, 1 skipped. testpulse hasn’t reported since 22 Sep.',
+        'runs, 1 skipped. Testament hasn’t reported since 22 Sep.',
     );
     const date = hero.locator('time');
     await expect(date).toHaveAttribute('datetime', '2026-09-22T04:37:00.242Z');
@@ -51,10 +72,10 @@ test.describe('the landing page', () => {
       // 1,183 / 1,185 distinct tests, rounded down; testpulse's one skipped test.
       'Pass rate99.8%1,183 of 1,185 · 1 skipped, excluded',
       // testpulse last reported 13 days before SEED_NOW, against a cadence of 8.
-      'Projects reporting2 of 3testpulse silent 13 days',
-      'Runs in last 30 days19Ostomate 2.0 8 · RouteServe 10 · testpulse 1',
+      'Projects reporting2 of 3Testament silent 13 days',
+      'Runs in last 30 days19Ostomate 2.0 8 · RouteServe 10 · Testament 1',
       // testpulse never passed (13 d 7 h), RouteServe red since 08:13:55.
-      'Projects passing1 of 3Red: testpulse 13d 7h · RouteServe 3h 46m',
+      'Projects passing1 of 3Red: Testament 13d 7h · RouteServe 3h 46m',
     ]);
   });
 
@@ -70,7 +91,7 @@ test.describe('the landing page', () => {
     await expect(page.getByRole('heading', { level: 3 })).toHaveText([
       'Ostomate 2.0',
       'RouteServePrivate repository',
-      'testpulse',
+      'Testament',
     ]);
   });
 
@@ -135,8 +156,8 @@ test.describe('the landing page', () => {
     );
   });
 
-  test('gives testpulse a stale failed card with no coverage', async ({ page }) => {
-    const testpulse = card(page, 'testpulse');
+  test('gives Testament a stale failed card with no coverage', async ({ page }) => {
+    const testpulse = card(page, 'Testament');
     await expect(testpulse.getByText('Failed', { exact: true })).toBeVisible();
     // A stale card is dated, not relative (design v8 item 14).
     await expect(testpulse.locator('[data-part="when"]')).toHaveText('22 Sep');
@@ -170,7 +191,7 @@ test.describe('the landing page', () => {
   test('says what the site is and links to how it is tested', async ({ page }) => {
     const about = page.getByRole('region', { name: 'About this site' });
     await expect(about).toContainText('I’m Bobby Helco, a quality engineering leader.');
-    await expect(about.getByRole('link', { name: 'How testpulse is tested →' })).toHaveAttribute(
+    await expect(about.getByRole('link', { name: 'How Testament is tested →' })).toHaveAttribute(
       'href',
       '/how-its-tested',
     );
@@ -208,7 +229,15 @@ test(
         if (!(el instanceof HTMLElement) || el === document.body) return null;
         const style = getComputedStyle(el);
         return {
-          name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim(),
+          // The name a screen reader gets: aria-hidden parts, as the wordmark's drawing, are left out.
+          name: (
+            el.getAttribute('aria-label') ??
+            (() => {
+              const copy = el.cloneNode(true) as HTMLElement;
+              copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+              return copy.textContent ?? '';
+            })()
+          ).trim(),
           inLog: el.closest('[role="log"]') !== null,
           ring: style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) >= 2,
         };
@@ -220,15 +249,15 @@ test(
     }
     const expected: (string | RegExp)[] = [
       'Skip to content',
-      'testpulse',
+      'Testament',
       'Projects',
       'How it’s tested',
       /^Switch to (light|dark) theme$/,
       'Ostomate 2.0',
       'RouteServe',
-      'testpulse',
+      'Testament',
       /assetCreateSchema accepts a minimal valid asset/,
-      'How testpulse is tested →',
+      'How Testament is tested →',
       'Privacy',
       'Source on GitHub',
     ];
@@ -285,10 +314,11 @@ test('renders its static content without running scripts', { tag: '@no-js' }, as
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     'Live test results for every project I build.',
   );
+  await expect(page.getByText('A testament to every test.', { exact: true })).toBeVisible();
   await expect(page.locator('[data-part="hero-total"]')).toHaveText('1,186');
   await expect(page.locator('[data-part="hero-note"]')).toHaveText(
     'automated tests across three projects. 2 failing across two projects’ latest runs, ' +
-      '1 skipped. testpulse hasn’t reported since 22 Sep.',
+      '1 skipped. Testament hasn’t reported since 22 Sep.',
   );
   await expect(page.locator('[data-part="tiles"] > div')).toHaveCount(4);
   await expect(page.getByRole('article')).toHaveCount(3);

@@ -194,7 +194,7 @@ describe('runPageView: a public passing run', () => {
   const view = runPageView(PASSING, NOW);
 
   it('titles the page and its breadcrumbs by the run', () => {
-    expect(view.title).toBe('Push to main · Ostomate 2.0 · testpulse');
+    expect(view.title).toBe('Push to main · Ostomate 2.0 · Testament');
     expect(view.crumbs).toEqual({
       items: [
         { label: 'Overview', href: '/' },
@@ -491,7 +491,7 @@ describe('runPageView: a private failing run', () => {
 
   it('heads the page "Run {id}" with a lock, and titles it the same way', () => {
     expect(view.heading).toEqual({ text: 'Run 36200000011', private: true });
-    expect(view.title).toBe('Run 36200000011 · RouteServe · testpulse');
+    expect(view.title).toBe('Run 36200000011 · RouteServe · Testament');
   });
 
   it('shows the commit cut to 7 characters and unlinked, and no CI link', () => {

@@ -369,7 +369,7 @@ test('shows every section from the database, and records no visit of admin', asy
   await expect(alerts.getByRole('group')).toHaveText([
     /^COUNT DROPOstomate 2\.0: test count fell 26%android\/shared\/jvm: 82 → 60 tests \(−26%\) since the previous default-branch runOpened5 Oct, 09:30 UTC·Closes when the count recovers, or acknowledge it\.Acknowledge$/,
     /^EMPTY REPORTOstomate 2\.0: a report held no testsios\/composeApp\/ios-sim parsed with 0 tests on main \([0-9a-f]{7}\)\.Opened4 Oct, 23:32 UTC·Closes by itself when that key reports tests$/,
-    /^STALEtestpulse: no report in 13 daysNo report in 13 days\. Expected every 8 days; last report 22 Sep\.Opened1 Oct, 04:12 UTC·Closes by itself when testpulse reports$/,
+    /^STALETestament: no report in 13 daysNo report in 13 days\. Expected every 8 days; last report 22 Sep\.Opened1 Oct, 04:12 UTC·Closes by itself when Testament reports$/,
     /^BELOW FLOORRouteServe: coverage under its floorpackages\/shared lines 79\.9% under its 80% floorOpened30 Sep, 09:16 UTC·Closes by itself when the module is back at its floor$/,
   ]);
   await expect(alerts.getByRole('button')).toHaveText(['Acknowledge']);
@@ -397,7 +397,7 @@ test('shows every section from the database, and records no visit of admin', asy
   await expect(projects.getByRole('listitem')).toHaveText([
     'Ostomate 2.0PublicLast report2 h agoYAML sync✓ In syncRotate key',
     'RouteServePrivateLast report3 h agoYAML sync✓ In syncRotate key',
-    'testpulsePublicLast report◷ 1 week agoYAML sync≠ Differsretention_days: YAML 180, database 365Rotate key',
+    'TestamentPublicLast report◷ 1 week agoYAML sync≠ Differsretention_days: YAML 180, database 365Rotate key',
     'routeserve-legacyPrivateLast report—YAML sync? No YAMLA database row with no projects/*.yaml file. The sync leaves it as it is.Rotate key',
     'ATPRPrivateLast report—YAML sync+ Not registeredprojects/atpr.yaml has no database row. Register it with npm run project:add atpr.No row, no key',
   ]);
@@ -409,7 +409,7 @@ test('shows every section from the database, and records no visit of admin', asy
   await expect(job.locator(':scope > div:last-child > div')).toHaveText([
     'Last run5 Oct, 04:12 UTC7 h ago · next around 04:00 UTC',
     'Heartbeat✓ WrittenDatabase kept awake',
-    'Stale check1 openedOpened: testpulse',
+    'Stale check1 openedOpened: Testament',
     'Prune12 rows removedResults 0 · failure text 0 · visits 0 · tracked sessions 0 · rate-limit buckets 12',
   ]);
 
@@ -452,7 +452,7 @@ test('lays the tables out as cards on a phone', async ({ browser }) => {
   await expect(banner.getByText('Signed in with magic link')).toBeHidden();
   const viewSite = await banner.getByRole('link', { name: 'View public site' }).boundingBox();
   const signOut = await banner.getByRole('button', { name: 'Sign out' }).boundingBox();
-  const wordmark = await banner.getByRole('link', { name: 'testpulse' }).boundingBox();
+  const wordmark = await banner.getByRole('link', { name: 'Testament' }).boundingBox();
   expect(viewSite?.x).toBe(wordmark?.x);
   expect(viewSite?.y).toBe(signOut?.y);
   expect(viewSite?.y).toBeGreaterThan((wordmark?.y ?? 0) + (wordmark?.height ?? 0) - 1);
@@ -467,7 +467,7 @@ test('shows a link’s detail, opened and not, and 404 for no such link', async 
   await expect(page).toHaveURL(`/admin/links/${ids.acme}`);
   // The title comes from generateMetadata's database read, which Next streams after the page's
   // content on a client navigation, so axe below must not run before it has arrived.
-  await expect(page).toHaveTitle('Admin · testpulse');
+  await expect(page).toHaveTitle('Admin · Testament admin');
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toHaveText(
     'Admin/Tracked links/Acme Health',
   );
@@ -506,7 +506,7 @@ test('shows a link’s detail, opened and not, and 404 for no such link', async 
   for (const id of [UNKNOWN_LINK, 'not-a-link']) {
     const response = await page.goto(`/admin/links/${id}`);
     expect(response?.status(), id).toBe(404);
-    await expect(page, id).toHaveTitle('Not found · testpulse admin');
+    await expect(page, id).toHaveTitle('Not found · Testament admin');
     await expect(page.getByRole('navigation', { name: 'Breadcrumb' }), id).toHaveText(
       'Admin/Tracked links/Not found',
     );
@@ -600,7 +600,7 @@ test('creates a link, marking its fields and the new row', async ({ browser }) =
     'None, open the overview',
     'Ostomate 2.0',
     'RouteServe (private)',
-    'testpulse',
+    'Testament',
     'routeserve-legacy (private)',
   ]);
   await form.getByRole('button', { name: 'Create link' }).click();

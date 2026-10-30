@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { LiveIndicator } from '../LiveIndicator/LiveIndicator';
 import { ProjectSwitcher, type SwitcherProject } from '../ProjectSwitcher/ProjectSwitcher';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { Wordmark } from '../Wordmark/Wordmark';
 import styles from './SiteHeader.module.css';
 
 export interface SiteHeaderProps {
@@ -25,7 +26,7 @@ export function SiteHeader({ projects, currentProject, connected, current }: Sit
       <header className={styles.header}>
         <Link href="/" className={styles.wordmark} aria-current={currentIf(current === 'home')}>
           <span className={styles.mark} data-part="mark" aria-hidden="true" />
-          testpulse
+          <Wordmark />
         </Link>
         <nav aria-label="Site" className={styles.nav}>
           <ProjectSwitcher projects={projects} currentHref={currentProject} />

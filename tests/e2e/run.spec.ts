@@ -42,7 +42,7 @@ test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => 
   });
 
   test('titles the run and its breadcrumbs', async ({ page }) => {
-    await expect(page).toHaveTitle('Push to main · Ostomate 2.0 · testpulse');
+    await expect(page).toHaveTitle('Push to main · Ostomate 2.0 · Testament');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Push to main');
     const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' });
     await expect(crumbs.getByRole('link')).toHaveText(['Overview', 'Ostomate 2.0']);
@@ -198,7 +198,7 @@ test.describe('testpulse’s run (public, failed, one platform)', () => {
   test('reads failed, a week ago, with 3 tests: 1 passed, 1 failed, 1 skipped', async ({
     page,
   }) => {
-    await expect(page).toHaveTitle('Push to main · testpulse · testpulse');
+    await expect(page).toHaveTitle('Push to main · Testament · Testament');
     await expect(page.locator('[data-part="lead"] [data-status]')).toHaveText('Failed');
     // 2026-09-22, 13 calendar days before SEED_NOW.
     await expect(page.locator('[data-part="lead"] time')).toHaveText('1 week ago');
@@ -290,7 +290,7 @@ test.describe('RouteServe’s latest run (private, failed)', () => {
   test('heads the page “Run {id}” with a lock, the commit short and unlinked, no CI', async ({
     page,
   }) => {
-    await expect(page).toHaveTitle('Run 36200000010 · RouteServe · testpulse');
+    await expect(page).toHaveTitle('Run 36200000010 · RouteServe · Testament');
     const heading = page.getByRole('heading', { level: 1 });
     await expect(heading).toHaveText('Run 36200000010');
     await expect(heading.getByRole('img', { name: 'Private repository' })).toBeVisible();
@@ -420,7 +420,15 @@ for (const slug of RUNS) {
           if (!(el instanceof HTMLElement) || el === document.body) return null;
           const style = getComputedStyle(el);
           return {
-            name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim(),
+            // The name a screen reader gets: aria-hidden parts, as the wordmark's drawing, are left out.
+            name: (
+              el.getAttribute('aria-label') ??
+              (() => {
+                const copy = el.cloneNode(true) as HTMLElement;
+                copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+                return copy.textContent ?? '';
+              })()
+            ).trim(),
             ring: style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) >= 2,
           };
         });
@@ -510,7 +518,7 @@ test.describe('a run that is not there', () => {
     ]) {
       const response = await open(page, path);
       expect(response?.status(), path).toBe(404);
-      await expect(page).toHaveTitle('Not found · testpulse');
+      await expect(page).toHaveTitle('Not found · Testament');
       // No database error reaches the page.
       await expect(page.locator('body')).not.toContainText(/22P02|invalid input syntax|PGRST/);
     }

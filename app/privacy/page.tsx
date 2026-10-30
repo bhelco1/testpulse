@@ -16,7 +16,7 @@ import styles from './page.module.css';
 // always had, from lib/pages/privacy.ts. The design gives the page no live behaviour, so it has no
 // realtime subscription and its header no live indicator.
 
-export const metadata: Metadata = { title: 'Privacy · testpulse' };
+export const metadata: Metadata = { title: 'Privacy · Testament' };
 
 export default async function PrivacyPage() {
   // Rendered per request: the project switcher and the footer move with the data and the clock.

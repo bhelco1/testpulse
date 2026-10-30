@@ -41,7 +41,7 @@ test('the owner is emailed a link that signs in once; another address gets the s
   // The owner's link, asked for second, has arrived, so one to the other address would have too.
   const message = await waitForMessageTo(E2E_ADMIN_EMAIL);
   expect(await messagesTo(other)).toEqual([]);
-  expect(message.subject).toBe('Sign in to testpulse admin');
+  expect(message.subject).toBe('Sign in to Testament admin');
   const link = await confirmLinkIn(message.id);
   expect(`${link.origin}${link.pathname}`).toBe(`${baseURL}/admin/auth/confirm`);
 

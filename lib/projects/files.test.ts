@@ -89,6 +89,15 @@ describe('loadProjectFiles', () => {
     ]);
   });
 
+  // design v20 item 5: the site's own project is shown as Testament; its slug, and so its page
+  // /p/testpulse and its API key, stay as they are.
+  it('names the self-reporting project Testament under the slug testpulse', () => {
+    const self = loadProjectFiles(repoProjectsDir).files.find((file) => file.slug === 'testpulse');
+
+    expect(self?.name).toBe('Testament');
+    expect(self?.description).not.toMatch(/testpulse/);
+  });
+
   it('collects every invalid file instead of stopping at the first, and ignores non-YAML', () => {
     const { files, errors } = loadProjectFiles(dir);
 

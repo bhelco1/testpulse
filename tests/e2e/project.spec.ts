@@ -37,7 +37,7 @@ test.describe('Ostomate2 (public)', () => {
   });
 
   test('names the project, its breadcrumbs, health and repository', async ({ page }) => {
-    await expect(page).toHaveTitle('Ostomate 2.0 · testpulse');
+    await expect(page).toHaveTitle('Ostomate 2.0 · Testament');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ostomate 2.0');
     const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' });
     await expect(crumbs.getByRole('link', { name: 'Overview' })).toHaveAttribute('href', '/');
@@ -226,7 +226,7 @@ test.describe('RouteServe (private)', () => {
   });
 
   test('marks the project private, with no repository link', async ({ page }) => {
-    await expect(page).toHaveTitle('RouteServe · testpulse');
+    await expect(page).toHaveTitle('RouteServe · Testament');
     const heading = page.getByRole('heading', { level: 1 });
     await expect(heading).toHaveText('RouteServe');
     await expect(heading.getByRole('img', { name: 'Private repository' })).toBeVisible();
@@ -383,7 +383,15 @@ for (const slug of ['ostomate2', 'routeserve']) {
           if (!(el instanceof HTMLElement) || el === document.body) return null;
           const style = getComputedStyle(el);
           return {
-            name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim(),
+            // The name a screen reader gets: aria-hidden parts, as the wordmark's drawing, are left out.
+            name: (
+              el.getAttribute('aria-label') ??
+              (() => {
+                const copy = el.cloneNode(true) as HTMLElement;
+                copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+                return copy.textContent ?? '';
+              })()
+            ).trim(),
             inLog: el.closest('[role="log"]') !== null,
             ring: style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) >= 2,
           };
@@ -395,7 +403,7 @@ for (const slug of ['ostomate2', 'routeserve']) {
       }
       const expected: (string | RegExp)[] = [
         'Skip to content',
-        'testpulse',
+        'Testament',
         'Projects',
         'How it’s tested',
         /^Switch to (light|dark) theme$/,
@@ -571,7 +579,7 @@ test.describe('an unknown project', () => {
   test('is served with HTTP 404 and the Not found title', async ({ page }) => {
     const response = await open(page, '/p/nope');
     expect(response?.status()).toBe(404);
-    await expect(page).toHaveTitle('Not found · testpulse');
+    await expect(page).toHaveTitle('Not found · Testament');
   });
 
   // @js: Next.js 16 renders a not-found page for a dynamically rendered route in the browser
@@ -584,7 +592,7 @@ test.describe('an unknown project', () => {
     await expect(projects).toHaveText([
       'Ostomate 2.0Passed',
       'RouteServeFailed',
-      'testpulseFailed',
+      'TestamentFailed',
     ]);
     await expect(page.getByRole('link', { name: 'Go to overview' })).toHaveAttribute('href', '/');
   });

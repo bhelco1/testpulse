@@ -150,7 +150,7 @@ const privateProject = {
 
 describe('projectPageView', () => {
   it('titles the document after the project, as the Not found page is titled', () => {
-    expect(projectPageView(page(), NOW).title).toBe('Ostomate 2.0 · testpulse');
+    expect(projectPageView(page(), NOW).title).toBe('Ostomate 2.0 · Testament');
   });
 
   it('carries the project’s name, tagline and description as plain paragraphs', () => {

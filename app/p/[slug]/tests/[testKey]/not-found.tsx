@@ -10,7 +10,7 @@ import { loadSiteChrome } from '../../../../../lib/queries/site';
 
 // A test key the project does not have, or a test URL naming an unknown project
 // (design/components.md, "NotFound (page)", test and project kinds), served with 404.
-export const metadata: Metadata = { title: 'Not found · testpulse' };
+export const metadata: Metadata = { title: 'Not found · Testament' };
 
 export default async function TestPageNotFound() {
   const at = now();

@@ -12,7 +12,7 @@ import { loadSiteChrome } from '../lib/queries/site';
 
 // Any address no route answers (design/components.md, "NotFound (page)", page kind), served with
 // 404 and the site's header and footer rather than Next.js's default page.
-export const metadata: Metadata = { title: 'Not found · testpulse' };
+export const metadata: Metadata = { title: 'Not found · Testament' };
 
 export default async function SiteNotFound() {
   // Rendered per request, never prerendered: the project switcher and the footer move with the

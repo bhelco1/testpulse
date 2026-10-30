@@ -14,14 +14,14 @@ import { SOURCE_URL } from './site';
 // The copy is design v12's (v11 items 1, 3 and 4), on design v9's true-today copy (item 4) with
 // Bobby's edits of 2026-09-30, each claim checked against the repository (docs/spec.md 13.7).
 
-export const TITLE = 'How it’s tested · testpulse';
+export const TITLE = 'How it’s tested · Testament';
 
 export const SPEC_URL = `${SOURCE_URL}/blob/main/docs/spec.md`;
 export const ACTIONS_URL = `${SOURCE_URL}/actions`;
 
 const LEDE = [
   'A test dashboard that isn’t tested is just a claim.',
-  'testpulse is built test-first.',
+  'Testament is built test-first.',
   'Its own CI runs every suite on every pull request and reports the results here, alongside everything else.',
 ] as const;
 
@@ -44,19 +44,19 @@ export const PRINCIPLES: readonly Principle[] = [
   ],
   [
     'Real fixtures',
-    'Parsers are tested against actual result files captured from Ostomate2, RouteServe and testpulse itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
+    'Parsers are tested against actual result files captured from Ostomate2, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
   ],
   [
     'Normalize on the server',
-    'Projects send the files their tools already produce. testpulse does the parsing, so a project’s CI step stays a few lines long.',
+    'Projects send the files their tools already produce. Testament does the parsing, so a project’s CI step stays a few lines long.',
   ],
   [
     'Never fail the caller’s build',
-    'If testpulse is down, a project’s CI stays green. The reporting step always exits 0 and logs a warning.',
+    'If Testament is down, a project’s CI stays green. The reporting step always exits 0 and logs a warning.',
   ],
   [
     'No swallowed failures',
-    'In testpulse’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.',
+    'In Testament’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.',
   ],
 ].map(([title, body], index) => ({
   n: String(index + 1).padStart(2, '0'),
@@ -174,7 +174,7 @@ export const STRATEGY: readonly StrategyRow[] = [
 // The note under the self-report's pyramid (v9 item 4: contract tests count as Unit; v12 item 1:
 // no literal figures).
 export const PYRAMID_NOTE =
-  'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer testpulse’s layer rules give it, whichever report it arrived in.';
+  'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer Testament’s layer rules give it, whichever report it arrived in.';
 
 export interface SelfRun {
   readonly status: RunStatus;

@@ -16,7 +16,7 @@ test.describe('an address no page answers', () => {
   test('is served with HTTP 404 and the Not found title', async ({ page }) => {
     const response = await open(page, PATH);
     expect(response?.status()).toBe(404);
-    await expect(page).toHaveTitle('Not found · testpulse');
+    await expect(page).toHaveTitle('Not found · Testament');
   });
 
   test('says nothing is here, shows the path and offers a way on', async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe('an address no page answers', () => {
 
   test('has the site’s header, and a footer whose Privacy link opens', async ({ page }) => {
     await open(page, PATH);
-    await expect(page.getByRole('banner').getByRole('link', { name: 'testpulse' })).toHaveAttribute(
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Testament' })).toHaveAttribute(
       'href',
       '/',
     );

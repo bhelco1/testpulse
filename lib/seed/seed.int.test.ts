@@ -565,7 +565,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
           red: [
             {
               slug: 'testpulse',
-              name: 'testpulse',
+              name: 'Testament',
               elapsedMs: 13 * DAY_MS + 7 * 60 * MINUTE + 22 * MINUTE + 59_758,
             },
             { slug: 'routeserve', name: 'RouteServe', elapsedMs: 226 * MINUTE + 4_588 },
@@ -576,7 +576,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       expect(projectsPassingTile(landingHeadline(seeded).projectsPassing)).toEqual({
         label: 'Projects passing',
         value: '1 of 3',
-        sub: 'Red: testpulse 13d 7h · RouteServe 3h 46m',
+        sub: 'Red: Testament 13d 7h · RouteServe 3h 46m',
         fail: true,
       });
     });
@@ -667,7 +667,7 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         view.heroNote.map((part) => (typeof part === 'string' ? part : part.text)).join(''),
       ).toBe(
         'automated tests across three projects. 2 failing across two projects’ latest runs, ' +
-          '1 skipped. testpulse hasn’t reported since 22 Sep.',
+          '1 skipped. Testament hasn’t reported since 22 Sep.',
       );
       expect(view.tiles).toEqual([
         // 1,183 / 1,185 = 99.83%, rounded down.
@@ -675,17 +675,17 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         {
           label: 'Projects reporting',
           value: '2 of 3',
-          attention: { icon: 'stale', text: 'testpulse silent 13 days' },
+          attention: { icon: 'stale', text: 'Testament silent 13 days' },
         },
         {
           label: 'Runs in last 30 days',
           value: '19',
-          sub: 'Ostomate 2.0 8 · RouteServe 10 · testpulse 1',
+          sub: 'Ostomate 2.0 8 · RouteServe 10 · Testament 1',
         },
         {
           label: 'Projects passing',
           value: '1 of 3',
-          sub: 'Red: testpulse 13d 7h · RouteServe 3h 46m',
+          sub: 'Red: Testament 13d 7h · RouteServe 3h 46m',
           fail: true,
         },
       ]);

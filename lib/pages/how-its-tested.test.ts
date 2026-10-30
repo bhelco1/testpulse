@@ -60,8 +60,8 @@ const missing: HowItsTested = { self: null };
 
 describe('howItsTestedView', () => {
   it('titles the page', () => {
-    expect(howItsTestedView(seeded, NOW).title).toBe('How it’s tested · testpulse');
-    expect(howItsTestedView(missing, NOW).title).toBe('How it’s tested · testpulse');
+    expect(howItsTestedView(seeded, NOW).title).toBe('How it’s tested · Testament');
+    expect(howItsTestedView(missing, NOW).title).toBe('How it’s tested · Testament');
   });
 
   it('links to the repository, its specification and its Actions tab', () => {
@@ -75,7 +75,7 @@ describe('howItsTestedView', () => {
   it('says testpulse reports its own results here', () => {
     const lede = [
       'A test dashboard that isn’t tested is just a claim.',
-      'testpulse is built test-first.',
+      'Testament is built test-first.',
       'Its own CI runs every suite on every pull request and reports the results here, alongside everything else.',
     ];
     expect(howItsTestedView(seeded, NOW).lede).toEqual(lede);
@@ -110,8 +110,17 @@ describe('howItsTestedView', () => {
   // Design v12 (v11 item 4): testpulse's own captured files are fixtures too.
   it('names testpulse’s own Vitest and Playwright output among the fixtures', () => {
     expect(PRINCIPLES[1]?.body).toBe(
-      'Parsers are tested against actual result files captured from Ostomate2, RouteServe and testpulse itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
+      'Parsers are tested against actual result files captured from Ostomate2, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
     );
+  });
+
+  // Design v20 (item 4): the principles that name the site call it Testament.
+  it('names the site Testament in principles 03 to 05', () => {
+    expect(PRINCIPLES.slice(2).map(({ body }) => body)).toEqual([
+      'Projects send the files their tools already produce. Testament does the parsing, so a project’s CI step stays a few lines long.',
+      'If Testament is down, a project’s CI stays green. The reporting step always exits 0 and logs a warning.',
+      'In Testament’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.',
+    ]);
   });
 
   // Design v19 (the "after Phase 6" state, drawn since v16 and shown once v19 is adopted): each
@@ -186,7 +195,7 @@ describe('howItsTestedView', () => {
   // Design v12 item 1: no literal figures; each test counts once, in its layer.
   it('notes under the pyramid how the checks are counted', () => {
     expect(PYRAMID_NOTE).toBe(
-      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer testpulse’s layer rules give it, whichever report it arrived in.',
+      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer Testament’s layer rules give it, whichever report it arrived in.',
     );
     // No figure stands alone: the only digits are the section reference and "E2E".
     expect(PYRAMID_NOTE.replace('spec §8', '')).not.toMatch(/\b\d/);

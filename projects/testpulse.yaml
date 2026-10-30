@@ -1,9 +1,9 @@
 slug: testpulse
-name: testpulse
+name: Testament
 tagline: Public dashboard of live test results from every project's CI, including its own.
 description: >-
   Each project's CI posts its JUnit, Jest JSON, JaCoCo and istanbul output after every run, and
-  testpulse turns it into pass rates, trends, test pyramids, coverage against floors, flaky tests
+  Testament turns it into pass rates, trends, test pyramids, coverage against floors, flaky tests
   and time to green. Visibility rules for private projects are enforced by row-level security in
   Postgres, not by the UI. Built test-first; its own Vitest and Playwright results report here
   like any other project's.

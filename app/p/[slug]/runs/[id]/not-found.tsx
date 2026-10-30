@@ -10,7 +10,7 @@ import { loadSiteChrome } from '../../../../../lib/queries/site';
 
 // A run the project does not have, or a run URL naming an unknown project (design/components.md,
 // "NotFound (page)", run and project kinds), served with 404.
-export const metadata: Metadata = { title: 'Not found · testpulse' };
+export const metadata: Metadata = { title: 'Not found · Testament' };
 
 export default async function RunPageNotFound() {
   const at = now();

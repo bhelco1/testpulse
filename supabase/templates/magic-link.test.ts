@@ -10,11 +10,15 @@ import { describe, expect, it } from 'vitest';
 const TEMPLATE = readFileSync('supabase/templates/magic-link.html', 'utf8');
 const CONFIRM_URL = '{{ .SiteURL }}/admin/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email';
 
-/** The words a reader sees, tags dropped and whitespace collapsed, entities as written. */
+/**
+ * The words a reader sees, tags dropped and whitespace collapsed, entities as written. A span is
+ * inline, so it joins the text around it: the wordmark's "Test" and "ament" read as one word.
+ */
 const words = (html: string) =>
   html
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<(style|title)[^>]*>[\s\S]*?<\/\1>/g, ' ')
+    .replace(/<\/?span\b[^>]*>/g, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -31,17 +35,29 @@ describe('the sign-in email template', () => {
     expect(words(TEMPLATE)).toBe(
       [
         'The link works once and expires in 1 hour.',
-        'testpulse ADMIN',
+        'Testament ADMIN',
         'Sign in to admin',
-        'Use this button to sign in to testpulse admin. It works once and expires in 1 hour.',
+        'Use this button to sign in to Testament admin. It works once and expires in 1 hour.',
         'Sign in to admin',
         'If the button doesn’t work, paste this address into your browser:',
         CONFIRM_URL,
         'If you didn’t ask to sign in, ignore this email. Nobody can sign in without the link.',
-        'Sent by testpulse because a sign-in link was asked for with this address.',
+        'Sent by Testament because a sign-in link was asked for with this address.',
       ].join(' '),
     );
-    expect(TEMPLATE).toMatch(/<title>Sign in to testpulse admin<\/title>/);
+    expect(TEMPLATE).toMatch(/<title>Sign in to Testament admin<\/title>/);
+  });
+
+  // design v20: clients strip the CSS that would hide a second copy of the name, so the wordmark
+  // is one image-role span named "Testament", holding "Test" at 600 and "ament" at 400.
+  it('draws the wordmark as one span named “Testament”, “ament” at weight 400', () => {
+    const flat = TEMPLATE.replace(/\s+/g, ' ');
+    const wordmark =
+      /<span role="img" aria-label="Testament" style="([^"]*)" ?>Test<span style="([^"]*)">ament<\/span><\/span ?>/.exec(
+        flat,
+      );
+    expect(wordmark?.[1]).toContain("font: 600 20px/1 'Source Serif 4', Georgia, serif;");
+    expect(wordmark?.[2]).toBe('font-weight: 400');
   });
 
   it('hides the preview text, and uses a fixed light palette, never the site’s variables', () => {
@@ -61,7 +77,7 @@ describe('the sign-in email template', () => {
         `\\[auth\\.email\\.template\\.${name}\\]\\nsubject = "([^"]*)"\\ncontent_path = "([^"]*)"`,
       ).exec(config);
       expect(block?.slice(1), name).toEqual([
-        'Sign in to testpulse admin',
+        'Sign in to Testament admin',
         './supabase/templates/magic-link.html',
       ]);
     }

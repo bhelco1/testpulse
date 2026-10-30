@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { Wordmark } from '../Wordmark/Wordmark';
 import styles from './AdminHeader.module.css';
 
 export interface AdminHeaderProps {
@@ -22,7 +23,7 @@ export function AdminHeader({ signOut }: AdminHeaderProps) {
         <div className={styles.brand}>
           <Link href="/admin" className={styles.wordmark}>
             <span className={styles.mark} aria-hidden="true" />
-            testpulse
+            <Wordmark />
           </Link>
           <span className={styles.tag}>ADMIN</span>
         </div>

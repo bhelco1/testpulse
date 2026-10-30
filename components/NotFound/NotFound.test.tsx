@@ -28,7 +28,7 @@ describe('NotFound (project)', () => {
     expect(getByRole('heading', { level: 1 }).textContent).toBe('No project at this address');
     expect(container.querySelector('[data-part="path"]')?.textContent).toBe('/p/nope');
     expect(main.querySelector('p')?.textContent).toBe(
-      'The link may be mistyped, or the project may have been renamed. These are the projects testpulse reports on.',
+      'The link may be mistyped, or the project may have been renamed. These are the projects Testament reports on.',
     );
     const list = getByRole('list', { name: 'Projects' });
     const links = within(list).getAllByRole('link');

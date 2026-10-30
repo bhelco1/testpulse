@@ -1,0 +1,17 @@
+/* "Test" keeps the header's 600; the pun is weight alone, in the same --ink (design v20 item 1). */
+.light {
+  font-weight: 400;
+}
+
+.spoken {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

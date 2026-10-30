@@ -37,7 +37,7 @@ test.describe('admin signed out', () => {
     async ({ page }) => {
       const response = await page.goto('/admin');
       expect(response?.status()).toBe(200);
-      await expect(page).toHaveTitle('Admin · testpulse');
+      await expect(page).toHaveTitle('Admin · Testament admin');
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
         'content',
         'noindex, nofollow',

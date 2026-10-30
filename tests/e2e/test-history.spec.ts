@@ -55,7 +55,7 @@ const FLAKY: SeededTest = {
 };
 const FAILING_TEST: SeededTest = {
   slug: 'testpulse',
-  project: 'testpulse',
+  project: 'Testament',
   module: 'e2e',
   suite: 'zz-deliberate-failure.spec.ts',
   name: 'deliberately fails to capture a failing JUnit fixture',
@@ -87,7 +87,7 @@ const duration = (page: Page) =>
 const DURATION_SCOPE = 'Default branch · last 30 CI runs (imported history has no durations)';
 
 async function expectIdentity(page: Page, test: SeededTest, short: string, layer: string) {
-  await expect(page).toHaveTitle(`${test.name} · ${test.project} · testpulse`);
+  await expect(page).toHaveTitle(`${test.name} · ${test.project} · Testament`);
   const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' });
   await expect(crumbs.getByRole('link')).toHaveText(['Overview', test.project]);
   await expect(crumbs.getByRole('link', { name: test.project })).toHaveAttribute(
@@ -475,7 +475,15 @@ for (const { id, test: seeded } of PAGES) {
           if (!(el instanceof HTMLElement) || el === document.body) return null;
           const style = getComputedStyle(el);
           return {
-            name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim(),
+            // The name a screen reader gets: aria-hidden parts, as the wordmark's drawing, are left out.
+            name: (
+              el.getAttribute('aria-label') ??
+              (() => {
+                const copy = el.cloneNode(true) as HTMLElement;
+                copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+                return copy.textContent ?? '';
+              })()
+            ).trim(),
             ring: style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) >= 2,
           };
         });
@@ -611,7 +619,7 @@ test.describe('a test that is not there', () => {
     ]) {
       const response = await open(page, path);
       expect(response?.status(), path).toBe(404);
-      await expect(page).toHaveTitle('Not found · testpulse');
+      await expect(page).toHaveTitle('Not found · Testament');
       await expect(page.locator('body')).not.toContainText(/22P02|invalid input syntax|PGRST/);
     }
   });

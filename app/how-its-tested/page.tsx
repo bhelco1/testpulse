@@ -240,7 +240,7 @@ export default async function HowItsTestedPage() {
 
         <Section
           number={4}
-          title="testpulse’s own results"
+          title="Testament’s own results"
           className={`${styles.section} ${styles.last}`}
         >
           {(heading) => (
@@ -248,7 +248,7 @@ export default async function HowItsTestedPage() {
               <div className={styles.selfHead}>
                 {heading}
                 <p className={styles.intro}>
-                  Since <RelativeTime when={view.since} />, testpulse’s CI posts its results to this
+                  Since <RelativeTime when={view.since} />, Testament’s CI posts its results to this
                   site as the project <code className={styles.selfCode}>testpulse</code>, through
                   the same shared GitHub Action Ostomate2 and RouteServe use.
                 </p>

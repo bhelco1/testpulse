@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
   const { slug, testKey } = await params;
   const head = await loadTestHead(slug, testKey);
   return {
-    title: head === null ? 'Not found · testpulse' : testHistoryTitle(head.project, head.test),
+    title: head === null ? 'Not found · Testament' : testHistoryTitle(head.project, head.test),
   };
 }
 

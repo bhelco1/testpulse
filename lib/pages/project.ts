@@ -393,7 +393,7 @@ function stripNote(runs: ProjectPage['recentRuns']): string | null {
 
 /** The page's title, which its head reads without the rest of the page (lib/queries/heads). */
 export const projectPageTitle = (project: { readonly name: string }) =>
-  `${project.name} · testpulse`;
+  `${project.name} · Testament`;
 
 export function projectPageView(page: ProjectPage, now: Date): ProjectPageView {
   const { project, summary } = page;

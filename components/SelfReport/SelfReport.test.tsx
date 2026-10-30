@@ -190,7 +190,7 @@ describe('SelfReport', () => {
         <SelfReport view={SEEDED} actionsHref={ACTIONS} progress={PROGRESS} />,
       );
       expect(container.querySelector('[data-part="pyramid-note"]')?.textContent).toBe(
-        'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer testpulse’s layer rules give it, whichever report it arrived in.',
+        'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer Testament’s layer rules give it, whichever report it arrived in.',
       );
       expect(container.textContent).not.toContain('SAMPLE');
       expect(container.textContent).not.toContain('Not reporting yet');

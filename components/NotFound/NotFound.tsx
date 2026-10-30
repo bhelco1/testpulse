@@ -80,7 +80,7 @@ function NoProject({ path, projects }: Extract<NotFoundProps, { kind: 'project' 
       <Path path={path} />
       <p className={styles.body}>
         The link may be mistyped, or the project may have been renamed. These are the projects
-        testpulse reports on.
+        Testament reports on.
       </p>
       <ul aria-label="Projects" className={styles.projects}>
         {projects.map((project) => (

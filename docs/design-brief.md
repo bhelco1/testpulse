@@ -14,7 +14,7 @@ Working order after that: pick a direction → design system (tokens and compone
 
 ## 1. What this is
 
-testpulse is a public dashboard showing live automated-test results for one person's software projects. Each project's CI pipeline reports in after every run. It is a working QA tool and, at the same time, a portfolio piece for a quality engineering leader with 30+ years of experience who is applying for Manager and Director of Quality Engineering roles.
+testpulse (public name Testament since design v20, 2026-10-29) is a public dashboard showing live automated-test results for one person's software projects. Each project's CI pipeline reports in after every run. It is a working QA tool and, at the same time, a portfolio piece for a quality engineering leader with 30+ years of experience who is applying for Manager and Director of Quality Engineering roles.
 
 ## 2. Audience
 

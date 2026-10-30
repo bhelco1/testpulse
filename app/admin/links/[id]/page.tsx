@@ -33,7 +33,7 @@ const linkFor = cache(async (id: string) => {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const detail = await linkFor((await params).id);
   return {
-    title: detail === null ? 'Not found · testpulse admin' : 'Admin · testpulse',
+    title: detail === null ? 'Not found · Testament admin' : 'Admin · Testament admin',
     robots: { index: false, follow: false },
   };
 }

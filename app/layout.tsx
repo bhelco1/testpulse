@@ -40,7 +40,7 @@ const jetBrainsMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'testpulse',
+  title: 'Testament',
   description:
     "Live test results for Bobby Helco's software projects, reported by each project's CI.",
 };

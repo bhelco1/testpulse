@@ -10,7 +10,7 @@ import { SOURCE_URL, siteChromeView } from '../../../lib/pages/site';
 import { loadSiteChrome } from '../../../lib/queries/site';
 
 // An unknown project (design/components.md, "NotFound (page)", project kind), served with 404.
-export const metadata: Metadata = { title: 'Not found · testpulse' };
+export const metadata: Metadata = { title: 'Not found · Testament' };
 
 export default async function ProjectNotFound() {
   const at = now();

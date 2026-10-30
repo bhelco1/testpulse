@@ -225,7 +225,7 @@ function runHeading(
 export const runPageTitle = (
   project: { readonly name: string; readonly visibility: Visibility },
   run: { readonly ciRunId: string; readonly title: string },
-) => `${runHeading(project, run)} · ${project.name} · testpulse`;
+) => `${runHeading(project, run)} · ${project.name} · Testament`;
 
 export function runPageView(detail: RunDetail, now: Date): RunPageView {
   const { project, run } = detail;

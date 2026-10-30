@@ -164,7 +164,7 @@ describe('testHistoryView', () => {
   const view = testHistoryView(page(OSTOMATE2, {}, TWO_PLATFORMS), NOW);
 
   it('titles the page and its breadcrumbs by the test, its suite shortened', () => {
-    expect(view.title).toBe('addEventForDateLogsAtNoon · Ostomate 2.0 · testpulse');
+    expect(view.title).toBe('addEventForDateLogsAtNoon · Ostomate 2.0 · Testament');
     expect(view.crumbs).toEqual({
       items: [
         { label: 'Overview', href: '/' },

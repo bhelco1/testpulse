@@ -106,7 +106,7 @@ describe('page heads read only what their titles need', () => {
       searchParams,
     });
 
-    expect(head).toEqual({ title: 'Ostomate 2.0 · testpulse' });
+    expect(head).toEqual({ title: 'Ostomate 2.0 · Testament' });
     expect(tables()).toEqual(['projects_public']);
   });
 
@@ -115,7 +115,7 @@ describe('page heads read only what their titles need', () => {
 
     const head = await runHead({ params: Promise.resolve({ slug: 'ostomate2', id: RUN_ID }) });
 
-    expect(head).toEqual({ title: 'Push to main · Ostomate 2.0 · testpulse' });
+    expect(head).toEqual({ title: 'Push to main · Ostomate 2.0 · Testament' });
     expect(tables()).toEqual(['projects_public', 'runs_public']);
   });
 
@@ -124,7 +124,7 @@ describe('page heads read only what their titles need', () => {
 
     const head = await runHead({ params: Promise.resolve({ slug: 'ostomate2', id: RUN_ID }) });
 
-    expect(head).toEqual({ title: 'Run 36100000009 · Ostomate 2.0 · testpulse' });
+    expect(head).toEqual({ title: 'Run 36100000009 · Ostomate 2.0 · Testament' });
   });
 
   it('the test history page reads the project and the test, and no results', async () => {
@@ -132,7 +132,7 @@ describe('page heads read only what their titles need', () => {
 
     const head = await testHead({ params: Promise.resolve({ slug: 'ostomate2', testKey: KEY }) });
 
-    expect(head).toEqual({ title: 'rendersToday · Ostomate 2.0 · testpulse' });
+    expect(head).toEqual({ title: 'rendersToday · Ostomate 2.0 · Testament' });
     expect(tables()).toEqual(['projects_public', 'tests']);
   });
 
@@ -140,10 +140,10 @@ describe('page heads read only what their titles need', () => {
     serve('public', false);
 
     expect(await runHead({ params: Promise.resolve({ slug: 'ostomate2', id: RUN_ID }) })).toEqual({
-      title: 'Not found · testpulse',
+      title: 'Not found · Testament',
     });
     expect(
       await testHead({ params: Promise.resolve({ slug: 'ostomate2', testKey: KEY }) }),
-    ).toEqual({ title: 'Not found · testpulse' });
+    ).toEqual({ title: 'Not found · Testament' });
   });
 });

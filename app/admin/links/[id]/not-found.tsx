@@ -7,7 +7,7 @@ import { signOutAction } from '../../actions';
 // An id that names no tracked link (design/components.md, Admin, "Page states", Unknown link),
 // served with 404 inside the admin frame. The page calls notFound() only once the guard has let
 // the owner in; anyone else is sent to sign in first, so nothing says whether an id exists. Its
-// title, "Not found · testpulse admin", is the page's generateMetadata.
+// title, "Not found · Testament admin", is the page's generateMetadata.
 
 export default function TrackedLinkNotFound() {
   return (

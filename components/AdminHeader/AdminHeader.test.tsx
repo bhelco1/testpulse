@@ -25,9 +25,12 @@ describe('AdminHeader', () => {
     const { getByRole } = render(<AdminHeader signOut={undefined} />);
     const banner = getByRole('banner');
 
-    expect(within(banner).getByRole('link', { name: 'testpulse' }).getAttribute('href')).toBe(
-      '/admin',
-    );
+    const wordmark = within(banner).getByRole('link', { name: 'Testament' });
+    expect(wordmark.getAttribute('href')).toBe('/admin');
+    const shown = wordmark.querySelector('[data-part="wordmark-shown"]');
+    expect(shown?.getAttribute('aria-hidden')).toBe('true');
+    expect(shown?.firstChild?.textContent).toBe('Test');
+    expect(shown?.querySelector('[data-part="wordmark-light"]')?.textContent).toBe('ament');
     expect(within(banner).getByText('ADMIN')).toBeTruthy();
     const nav = within(banner).getByRole('navigation', { name: 'Admin' });
     expect(within(nav).getByRole('link', { name: 'View public site' }).getAttribute('href')).toBe(

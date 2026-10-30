@@ -16,6 +16,13 @@ const CSS = join(import.meta.dirname, 'SiteHeader.module.css');
 const LIVE_CSS = join(import.meta.dirname, '../LiveIndicator/LiveIndicator.module.css');
 const PHONE = '(max-width: 559px)';
 
+// An element's text as a screen reader gets it: what aria-hidden covers is left out.
+function spokenText(element: Element): string | undefined {
+  const copy = element.cloneNode(true) as Element;
+  copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+  return copy.textContent?.trim();
+}
+
 const PROJECTS: SwitcherProject[] = [
   { name: 'Ostomate2', href: '/p/ostomate2', status: 'passed' },
   { name: 'RouteServe', href: '/p/routeserve', status: 'passed' },
@@ -33,9 +40,14 @@ describe('SiteHeader', () => {
     const { getByRole } = render(<SiteHeader projects={PROJECTS} connected />);
     const banner = getByRole('banner');
 
-    const wordmark = within(banner).getByRole('link', { name: 'testpulse' });
+    // v20: the link is named "Testament" once, while it shows "Test" and "ament" by weight.
+    const wordmark = within(banner).getByRole('link', { name: 'Testament' });
     expect(wordmark.getAttribute('href')).toBe('/');
     expect(wordmark.querySelector('[data-part="mark"]')?.getAttribute('aria-hidden')).toBe('true');
+    const shown = wordmark.querySelector('[data-part="wordmark-shown"]');
+    expect(shown?.getAttribute('aria-hidden')).toBe('true');
+    expect(shown?.firstChild?.textContent).toBe('Test');
+    expect(shown?.querySelector('[data-part="wordmark-light"]')?.textContent).toBe('ament');
 
     const nav = within(banner).getByRole('navigation', { name: 'Site' });
     expect(within(nav).getByRole('button', { name: 'Projects' })).toBeTruthy();
@@ -57,9 +69,9 @@ describe('SiteHeader', () => {
     // The closed project list is hidden, so its links are not in the tab order.
     const focusable = [...getByRole('banner').querySelectorAll('a, button')]
       .filter((element) => !element.closest('[hidden]'))
-      .map((element) => element.textContent?.trim() || element.getAttribute('aria-label'));
+      .map((element) => element.getAttribute('aria-label') ?? spokenText(element));
     expect(focusable).toEqual([
-      'testpulse',
+      'Testament',
       'Projects',
       'How it’s tested',
       'Switch to light theme',
@@ -107,11 +119,11 @@ describe('SiteHeader', () => {
     const { getByRole, rerender } = render(
       <SiteHeader projects={PROJECTS} connected current="home" />,
     );
-    expect(getByRole('link', { name: 'testpulse' }).getAttribute('aria-current')).toBe('page');
+    expect(getByRole('link', { name: 'Testament' }).getAttribute('aria-current')).toBe('page');
     expect(getByRole('link', { name: 'How it’s tested' }).hasAttribute('aria-current')).toBe(false);
 
     rerender(<SiteHeader projects={PROJECTS} connected current="how-its-tested" />);
-    expect(getByRole('link', { name: 'testpulse' }).hasAttribute('aria-current')).toBe(false);
+    expect(getByRole('link', { name: 'Testament' }).hasAttribute('aria-current')).toBe(false);
     expect(getByRole('link', { name: 'How it’s tested' }).getAttribute('aria-current')).toBe(
       'page',
     );

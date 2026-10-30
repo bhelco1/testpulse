@@ -209,7 +209,7 @@ function tiles(page: TestHistoryPage, now: Date): HistoryTile[] | null {
 export const testHistoryTitle = (
   project: { readonly name: string },
   test: { readonly name: string },
-) => `${test.name} · ${project.name} · testpulse`;
+) => `${test.name} · ${project.name} · Testament`;
 
 export function testHistoryView(page: TestHistoryPage, now: Date): TestHistoryView {
   const { project, test, history } = page;

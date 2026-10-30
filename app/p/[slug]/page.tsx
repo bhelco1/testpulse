@@ -40,7 +40,7 @@ interface RouteProps {
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { slug } = await params;
   const project = await loadProjectHead(slug);
-  return { title: project === null ? 'Not found · testpulse' : projectPageTitle(project) };
+  return { title: project === null ? 'Not found · Testament' : projectPageTitle(project) };
 }
 
 export default async function ProjectPage({ params, searchParams }: RouteProps) {

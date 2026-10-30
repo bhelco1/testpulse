@@ -32,7 +32,7 @@ test.describe('the privacy page', () => {
   test('answers 200 with its title, eyebrow and heading', async ({ page }) => {
     const response = await open(page, '/privacy');
     expect(response?.status()).toBe(200);
-    await expect(page).toHaveTitle('Privacy · testpulse');
+    await expect(page).toHaveTitle('Privacy · Testament');
     const main = page.getByRole('main');
     await expect(main.locator('[data-part="eyebrow"]')).toHaveText('Privacy');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
@@ -198,7 +198,15 @@ test.describe('the privacy page', () => {
           if (!(el instanceof HTMLElement) || el === document.body) return null;
           const style = getComputedStyle(el);
           return {
-            name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim(),
+            // The name a screen reader gets: aria-hidden parts, as the wordmark's drawing, are left out.
+            name: (
+              el.getAttribute('aria-label') ??
+              (() => {
+                const copy = el.cloneNode(true) as HTMLElement;
+                copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+                return copy.textContent ?? '';
+              })()
+            ).trim(),
             ring: style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) >= 2,
           };
         });
@@ -208,7 +216,7 @@ test.describe('the privacy page', () => {
       }
       expect(reached).toEqual([
         'Skip to content',
-        'testpulse',
+        'Testament',
         'Projects',
         'How it’s tested',
         expect.stringMatching(/^Switch to (light|dark) theme$/),

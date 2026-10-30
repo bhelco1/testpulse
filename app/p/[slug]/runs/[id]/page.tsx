@@ -31,7 +31,7 @@ interface RouteProps {
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { slug, id } = await params;
   const head = await loadRunHead(slug, id);
-  return { title: head === null ? 'Not found · testpulse' : runPageTitle(head.project, head.run) };
+  return { title: head === null ? 'Not found · Testament' : runPageTitle(head.project, head.run) };
 }
 
 export default async function RunPage({ params }: RouteProps) {

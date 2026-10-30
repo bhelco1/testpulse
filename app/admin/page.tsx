@@ -22,7 +22,7 @@ import { AdminSections } from './sections';
 // page links here.
 
 export const metadata: Metadata = {
-  title: 'Admin · testpulse',
+  title: 'Admin · Testament admin',
   robots: { index: false, follow: false },
 };
 

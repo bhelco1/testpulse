@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="./tp-kit.js"></script>
+<title>Testament · A testament to every test.</title>
 <style>
 body{margin:0;background:#121110}
 a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
@@ -26,7 +27,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
 
 <header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:4px 16px;padding:18px 0;flex-wrap:wrap">
-<a href="#" aria-current="page" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<a href="#" aria-current="page" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span><span aria-hidden="true">Test<span style="font-weight:400">ament</span></span><span style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap">Testament</span></a>
 <nav style="display:flex;align-items:center;gap:0 8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
@@ -54,11 +55,13 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </sc-if>
 
 <sc-if value="{{ isNoProjects }}" hint-placeholder-val="{{ false }}">
+<p style="margin:0;font:500 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink)">A testament to every test.</p>
 <h1 style="margin:0 0 24px;font:400 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</h1>
-<section style="max-width:640px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:28px 24px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card)"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">No projects yet</h2><p style="margin:0;font-size:15px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">Projects appear here once they’re registered and send their first report.</p><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:6px;font-size:15px">How testpulse is tested</a></section>
+<section style="max-width:640px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:28px 24px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card)"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">No projects yet</h2><p style="margin:0;font-size:15px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">Projects appear here once they’re registered and send their first report.</p><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:6px;font-size:15px">How Testament is tested</a></section>
 </sc-if>
 
 <sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
+<p style="margin:0;font:500 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink)">A testament to every test.</p>
 <h1 style="margin:0 0 4px;font:400 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</h1>
 <p style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 36px;margin:0 0 32px">
 <span style="font:500 clamp(88px,11vw,152px)/.92 'Source Serif 4',serif;letter-spacing:-.04em">{{ heroTotal }}</span>
@@ -130,7 +133,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px clamp(20px,2.4vw,30px)">
 <h2 style="margin:0 0 14px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">About this site</h2>
 <p style="margin:0 0 20px;font:400 19px/1.5 'Source Serif 4',serif;text-wrap:pretty">I’m Bobby Helco, a quality engineering leader. Every project here reports its test results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard is tested the same way, and reports on itself.</p>
-<a href="#" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;background:var(--ink);color:var(--on-ink);font-size:15px;font-weight:600;text-decoration:none">How testpulse is tested →</a>
+<a href="#" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;background:var(--ink);color:var(--on-ink);font-size:15px;font-weight:600;text-decoration:none">How Testament is tested →</a>
 </section>
 </div>
 </sc-if>
@@ -166,7 +169,7 @@ class Component extends DCLogic {
       reports: [['test/apps/backend/node', 501], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], 
       declared: [{ name: 'Maestro E2E (iOS)', layer: 'e2e', count: 13, status: 'authored_not_executed' }] };
     /* v12: testpulse self-reports since 7 Oct. Distinct tests per layer from live production; the eight e2e report counts are a SAMPLE split of their 882 executions */
-    const tp = { name: 'testpulse', tagline: 'This dashboard, reporting on itself.',
+    const tp = { name: 'Testament', tagline: 'This dashboard, reporting on itself.',
       run: { status: 'passed', when: '12 min ago', branch: 'main', sha: '8d3e1a2', total: 2598, failed: 0, skipped: 0, dur: '17m 53s' },
       layers: { unit: 1528, component: 655, integration: 180, e2e: 235 }, cov: [['unit', 3125 / 3141 * 100, 90]],
       reports: [['checks/unit/node', 2183], ['integration/integration/node', 180]].concat(['desktop-dark', 'desktop-light', 'phone-dark', 'phone-light', 'no-js', 'harness', 'leak-sweep', 'live'].map((p, i) => ['e2e/e2e/' + p, i === 0 ? 112 : 110])),
@@ -180,10 +183,10 @@ class Component extends DCLogic {
     const tiles = [
       tile('Pass rate', '100%', 'Latest runs · 0 skipped, excluded'),
       tile('Projects reporting', '3 of 3', 'All within their expected cadence'),
-      tile('Runs in last 30 days', '26', 'Ostomate2 18 · RouteServe 6 · testpulse 2'),
+      tile('Runs in last 30 days', '26', 'Ostomate2 18 · RouteServe 6 · Testament 2'),
       tile('Projects passing', '3 of 3', 'Latest default-branch runs'),
     ];
-    const tpSample = 'testpulse card: the eight e2e report counts (an even split of their 882 executions), its duration, time and commit are illustrative.'; /* verifier fix: brief gives no per-report e2e counts */
+    const tpSample = 'Testament card: the eight e2e report counts (an even split of their 882 executions), its duration, time and commit are illustrative.'; /* verifier fix: brief gives no per-report e2e counts */
     let sampleNote = '', feedNote = 'Updates as reports arrive', feedNoteInk = 'var(--ink-3)', footerNote = 'Last report received 4 min ago';
 
     if (sc === 'failed run') {
@@ -199,7 +202,7 @@ class Component extends DCLogic {
       osto.run = Object.assign({}, osto.run, { status: 'empty' });
       heroTotal = '3,642';
       heroNote = 'automated tests across two projects. Ostomate2’s latest run had no tests, so it isn’t counted.';
-      tiles[0] = tile('Pass rate', '100%', 'RouteServe and testpulse only · 0 skipped, excluded');
+      tiles[0] = tile('Pass rate', '100%', 'RouteServe and Testament only · 0 skipped, excluded');
       tiles[3] = tile('Projects passing', '2 of 3', 'Ostomate2 last run empty');
       rows[0] = { status: 'empty', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', reports: 6, when: '4 min ago' };
     } else if (sc === 'stale project') {

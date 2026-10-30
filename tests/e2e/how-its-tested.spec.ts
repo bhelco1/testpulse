@@ -28,7 +28,7 @@ const [TESTPULSE_SHA] = PLAN.runs
   .map((run) => run.commitSha.slice(0, 7));
 
 const section = (page: Page, name: string) => page.getByRole('region', { name });
-const selfResults = (page: Page) => section(page, 'testpulse’s own results');
+const selfResults = (page: Page) => section(page, 'Testament’s own results');
 
 test.describe('the page', () => {
   test.beforeEach(async ({ page }) => {
@@ -36,7 +36,7 @@ test.describe('the page', () => {
   });
 
   test('is titled and marked current in the header', async ({ page }) => {
-    await expect(page).toHaveTitle('How it’s tested · testpulse');
+    await expect(page).toHaveTitle('How it’s tested · Testament');
     const nav = page.getByRole('navigation', { name: 'Site' });
     const link = nav.getByRole('link', { name: 'How it’s tested' });
     await expect(link).toHaveAttribute('aria-current', 'page');
@@ -60,7 +60,7 @@ test.describe('the page', () => {
     );
     // Design v12's reporting-state lede (v11 item 1).
     await expect(page.locator('[data-part="lede"]')).toHaveText(
-      'A test dashboard that isn’t tested is just a claim. testpulse is built test-first. Its own CI runs every suite on every pull request and reports the results here, alongside everything else.',
+      'A test dashboard that isn’t tested is just a claim. Testament is built test-first. Its own CI runs every suite on every pull request and reports the results here, alongside everything else.',
     );
     const main = page.getByRole('main');
     await expect(main.getByRole('link', { name: 'Source on GitHub' })).toHaveAttribute(
@@ -94,7 +94,7 @@ test.describe('the page', () => {
       'Every phase starts with failing tests written from its acceptance criteria. A phase is done when each criterion has a passing automated test or a recorded manual check.',
     );
     await expect(principles.getByRole('listitem').nth(1)).toContainText(
-      'Parsers are tested against actual result files captured from Ostomate2, RouteServe and testpulse itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
+      'Parsers are tested against actual result files captured from Ostomate2, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
     );
   });
 
@@ -173,7 +173,7 @@ test.describe('the page', () => {
     const self = selfResults(page);
     const intro = self.locator('p').filter({ hasText: 'CI posts its results' });
     await expect(intro).toHaveText(
-      'Since 7 Oct, testpulse’s CI posts its results to this site as the project testpulse, through the same shared GitHub Action Ostomate2 and RouteServe use.',
+      'Since 7 Oct, Testament’s CI posts its results to this site as the project testpulse, through the same shared GitHub Action Ostomate2 and RouteServe use.',
     );
     await expect(intro.locator('time')).toHaveAttribute('datetime', '2026-10-07T00:00:00.000Z');
     await expect(self).not.toContainText(/From Phase 7|starts in Phase 7/);
@@ -193,7 +193,7 @@ test.describe('the page', () => {
       '/p/testpulse',
     );
     await expect(run.locator('[data-part="pyramid-note"]')).toHaveText(
-      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer testpulse’s layer rules give it, whichever report it arrived in.',
+      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer Testament’s layer rules give it, whichever report it arrived in.',
     );
     // Only the designed reporting state: no sample tags, and no coverage card, since the seeded
     // run sent no coverage (spec 13.7).
@@ -276,7 +276,15 @@ test(
         if (!(el instanceof HTMLElement) || el === document.body) return null;
         const style = getComputedStyle(el);
         return {
-          name: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim(),
+          // The name a screen reader gets: aria-hidden parts, as the wordmark's drawing, are left out.
+          name: (
+            el.getAttribute('aria-label') ??
+            (() => {
+              const copy = el.cloneNode(true) as HTMLElement;
+              copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+              return copy.textContent ?? '';
+            })()
+          ).trim(),
           ring: style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) >= 2,
         };
       });
@@ -315,7 +323,7 @@ test.describe('links to the page resolve', () => {
     await open(page, '/');
     await page
       .getByRole('region', { name: 'About this site' })
-      .getByRole('link', { name: 'How testpulse is tested →' })
+      .getByRole('link', { name: 'How Testament is tested →' })
       .click();
     await expect(page).toHaveURL(PATH);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
@@ -325,7 +333,7 @@ test.describe('links to the page resolve', () => {
 
   test('without scripts too', { tag: '@no-js' }, async ({ page }) => {
     await open(page, '/');
-    await page.getByRole('link', { name: 'How testpulse is tested →' }).click();
+    await page.getByRole('link', { name: 'How Testament is tested →' }).click();
     await expect(page).toHaveURL(PATH);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });

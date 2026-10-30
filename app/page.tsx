@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { unstable_rethrow } from 'next/navigation';
@@ -28,6 +29,15 @@ import styles from './page.module.css';
 // lead is all the page learns, through lead_project_for_session as anon.
 
 const LEDE = 'Live test results for every project I build.';
+const TAGLINE = 'A testament to every test.';
+const TITLE = `Testament · ${TAGLINE}`;
+
+// design v20 item 3: the name and the tagline, for the tab and for a shared link alike.
+export const metadata: Metadata = {
+  title: TITLE,
+  openGraph: { title: TITLE },
+  twitter: { title: TITLE },
+};
 
 export default async function LandingPage() {
   // Rendered per request: the numbers are live data and the relative times move with the clock.
@@ -74,6 +84,7 @@ function Portfolio({
 }) {
   return (
     <>
+      <p className={styles.tagline}>{TAGLINE}</p>
       <h1 className={styles.lede}>{LEDE}</h1>
       {/* One paragraph, the figure then the note, so it is read as one sentence (v8 item 7). */}
       <p className={styles.hero}>
@@ -113,18 +124,19 @@ function Portfolio({
             results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard
             is tested the same way, and reports on itself.
           </p>
-          <Button href="/how-its-tested">How testpulse is tested →</Button>
+          <Button href="/how-its-tested">How Testament is tested →</Button>
         </section>
       </div>
     </>
   );
 }
 
-// Landing scenario "no projects" (design v8 item 10): the h1 stays and one card replaces the
-// rest, About this site included, as the drawing has it.
+// Landing scenario "no projects" (design v8 item 10): the tagline and the h1 stay and one card
+// replaces the rest, About this site included, as the drawing has it.
 function NoProjects() {
   return (
     <>
+      <p className={styles.tagline}>{TAGLINE}</p>
       <h1 className={`${styles.lede} ${styles.ledeAlone}`}>{LEDE}</h1>
       <section className={styles.none} aria-labelledby="none-title">
         <h2 id="none-title" className={styles.noneTitle}>
@@ -134,7 +146,7 @@ function NoProjects() {
           Projects appear here once they’re registered and send their first report.
         </p>
         <Link href="/how-its-tested" className={styles.noneLink}>
-          How testpulse is tested
+          How Testament is tested
         </Link>
       </section>
     </>

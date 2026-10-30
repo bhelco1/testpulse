@@ -101,7 +101,7 @@ describe('the emailed sign-in link', () => {
     await remember(owner);
 
     const message = await waitForMessageTo(owner);
-    expect(message.subject).toBe('Sign in to testpulse admin');
+    expect(message.subject).toBe('Sign in to Testament admin');
     const link = await confirmLinkIn(message.id);
     expect(`${link.origin}${link.pathname}`).toBe('http://127.0.0.1:3000/admin/auth/confirm');
     expect(link.searchParams.get('type')).toBe('email');

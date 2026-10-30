@@ -205,7 +205,7 @@ test('a tracked link sets the cookie, redirects to /, puts the lead first and at
   await expect(page.getByRole('main').getByRole('heading', { level: 3 })).toHaveText([
     'RouteServePrivate repository',
     'Ostomate 2.0',
-    'testpulse',
+    'Testament',
   ]);
 
   const firstVisit = (await (await first).json()) as Record<string, unknown>;
@@ -267,7 +267,7 @@ test('a visit that did not come by a link is logged with no link, in the usual o
   await expect(page.getByRole('main').getByRole('heading', { level: 3 })).toHaveText([
     'Ostomate 2.0',
     'RouteServePrivate repository',
-    'testpulse',
+    'Testament',
   ]);
   const cookie = await sessionCookie(page);
   expect(await visitsOf(cookie.value)).toEqual([

@@ -247,11 +247,11 @@ otp_expiry = 3600
 # confirmation template, not the magic-link one, to an address it has not seen before, so both
 # carry the same link. Production's templates are set by hand to the same file (spec section 15).
 [auth.email.template.magic_link]
-subject = "Sign in to testpulse admin"
+subject = "Sign in to Testament admin"
 content_path = "./supabase/templates/magic-link.html"
 
 [auth.email.template.confirmation]
-subject = "Sign in to testpulse admin"
+subject = "Sign in to Testament admin"
 content_path = "./supabase/templates/magic-link.html"
 
 # Uncomment to customize email template

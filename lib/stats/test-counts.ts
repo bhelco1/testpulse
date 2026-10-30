@@ -87,6 +87,57 @@ export function testOutcomesByRun(
   );
 }
 
+// Decision 2026-10-29 (section 19): the pages read these counts from the database rather than
+// every result row. run_test_tallies (supabase/migrations/20261029120000_page_aggregates.sql)
+// counts each run's distinct tests by layer and by the status combinedStatus gives them, and the
+// functions below turn those tallies into what testCounts, testOutcomes and testOutcomesByRun
+// return for the same results; the integration tests prove they agree.
+
+/** A run's distinct tests of one layer and one combined status, as run_test_tallies counts them. */
+export interface TestTally {
+  readonly runId: string;
+  readonly layer: Layer;
+  readonly status: TestStatus;
+  readonly tests: number;
+}
+
+/** testCounts from one run's tallies. */
+export function talliedCounts(tallies: readonly TestTally[]): TestCounts {
+  const layers: Partial<Record<Layer, number>> = {};
+  let totalTests = 0;
+  for (const { layer, tests } of tallies) {
+    layers[layer] = (layers[layer] ?? 0) + tests;
+    totalTests += tests;
+  }
+  return { totalTests, layers };
+}
+
+/** testOutcomes from one run's tallies: failed and error are both failing. */
+export function talliedOutcomes(tallies: readonly TestTally[]): TestOutcomes {
+  const outcomes = { passed: 0, failed: 0, skipped: 0 };
+  for (const { status, tests } of tallies) {
+    if (status === 'passed') outcomes.passed += tests;
+    else if (status === 'skipped') outcomes.skipped += tests;
+    else outcomes.failed += tests;
+  }
+  return outcomes;
+}
+
+/** testOutcomesByRun from the tallies of several runs; a run with none has no tests. */
+export function talliedTestsByRun(
+  runIds: readonly string[],
+  tallies: readonly TestTally[],
+): Map<string, RunTests> {
+  const talliesOf = new Map<string, TestTally[]>(runIds.map((id) => [id, []]));
+  for (const tally of tallies) talliesOf.get(tally.runId)?.push(tally);
+  return new Map(
+    [...talliesOf].map(([runId, ofRun]) => {
+      const outcomes = talliedOutcomes(ofRun);
+      return [runId, { total: outcomes.passed + outcomes.failed + outcomes.skipped, ...outcomes }];
+    }),
+  );
+}
+
 // Spec section 11: "Test count per run: The "Total tests" measure for each default-branch run
 // with source = ci, trended per run. Imported history is left out: it has no per-test rows. Not
 // runs.total, which counts executions." Read as follows, and pinned by the tests:
@@ -112,18 +163,39 @@ export function testCountTrend(
   results: readonly Pick<StatsResult, 'runId' | 'testId'>[],
   options: TrendOptions,
 ): TestCountPoint[] {
+  const testsOf = new Map<string, Set<string>>();
+  for (const { runId, testId } of results) {
+    testsOf.set(runId, (testsOf.get(runId) ?? new Set()).add(testId));
+  }
+  return countTrend(runs, (runId) => testsOf.get(runId)?.size ?? 0, options);
+}
+
+/** testCountTrend from the database's tallies of each run's distinct tests. */
+export function talliedCountTrend(
+  runs: readonly TestCountRun[],
+  tallies: readonly TestTally[],
+  options: TrendOptions,
+): TestCountPoint[] {
+  const totals = new Map<string, number>();
+  for (const { runId, tests } of tallies) totals.set(runId, (totals.get(runId) ?? 0) + tests);
+  return countTrend(runs, (runId) => totals.get(runId) ?? 0, options);
+}
+
+function countTrend(
+  runs: readonly TestCountRun[],
+  testsIn: (runId: string) => number,
+  options: TrendOptions,
+): TestCountPoint[] {
   const included = lastRuns(
     runs,
     TREND_RUNS,
     (run) => countsTowardCiOnlyStats(run, options.defaultBranch),
     options.now,
   );
-  const testsOf = new Map<string, Set<string>>(included.map((run) => [run.id, new Set()]));
-  for (const { runId, testId } of results) testsOf.get(runId)?.add(testId);
   return included.map((run) => ({
     runId: run.id,
     finishedAt: run.finishedAt,
     status: run.status,
-    totalTests: run.resultsPrunedAt === null ? (testsOf.get(run.id)?.size ?? 0) : null,
+    totalTests: run.resultsPrunedAt === null ? testsIn(run.id) : null,
   }));
 }

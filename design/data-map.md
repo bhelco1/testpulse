@@ -6,7 +6,7 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 
 | UI element | Source |
 |---|---|
-| Hero total ("3,802" = Ostomate2 160 + RouteServe 1,044 + testpulse 2,598) | Σ projects: distinct `tests` in latest run (§11 Total tests). Empty runs contribute 0 and are called out in the note. |
+| Hero total ("3,802" = Ostomate2 160 + RouteServe 1,044 + Testament 2,598) | Σ projects: distinct `tests` in latest run (§11 Total tests). Empty runs contribute 0 and are called out in the note. |
 | Hero note | n = projects whose latest default-branch run has tests; failing = distinct failed/error tests per project; skipped from the same runs; empty = latest run total 0; stale = no report within `expected_cadence_days` (date = latest `finished_at`); never reported = project with no run. Templates in components.md Landing hero. Nothing stores disabled tests, so it isn't mentioned |
 | Hero note | pass rate, skipped count, projects count from the same runs. Skipped is excluded from pass rate and always shown separately |
 | Tile · Pass rate | passed / (passed + failed + error) over latest runs. Sub-line: Σ `runs.skipped` of latest runs, "N skipped, excluded" |
@@ -153,3 +153,12 @@ Same queries as landing (via `runs_public`). Tiles: Pass rate, Projects reportin
 | UI element | Source |
 |---|---|
 | Alerts, already closed | Acknowledge on a count_drop whose `alerts` row was already resolved by a report (not acknowledged) → "That alert had already closed" Notice; the alert is no longer open, so its row is not listed |
+
+## v20
+| UI element | Source |
+|---|---|
+| Wordmark "Testament" (every header, admin header, NotFound, kiosk, sign-in email) | Static. Not from data. Drawn as "Test" 600 + "ament" 400 in one `--ink`; screen readers get one word, "Testament" (visually hidden text beside an `aria-hidden` drawing; `role="img"` `aria-label="Testament"` in the email). components.md › Site name, wordmark and page titles |
+| Landing tagline "A testament to every test." | Static. Not from data |
+| Document titles and social share title | Static pattern: Landing "Testament · A testament to every test." (`<title>`, `og:title`, `twitter:title`); other pages "{page title} · Testament"; admin "{page title} · Testament admin". `{page title}` uses the data the page already shows (project `display_name`, run id) |
+| Self-reporting project's name on cards, run rows, switcher, hero, admin and alerts ("Testament") | `projects.display_name` of slug `testpulse`, set in `projects/testpulse.yaml` (`display_name: Testament`) and applied by `projects:sync`. Slug, URL `/p/testpulse` and API key unchanged. Alert titles use the display name ("Testament: test count fell 23%") |
+| How it’s tested · section 04 "as the project `testpulse`" | the project's slug, shown in mono; unchanged |

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="./tp-kit.js"></script>
-<title>Not found · testpulse</title>
+<title>Not found · Testament</title>
 <style>
 body{margin:0;background:#121110}
 a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
@@ -24,7 +24,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,56px);font-family:'Public Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;min-height:100vh;box-sizing:border-box">
 
 <header style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:4px 16px;padding:18px 0;flex-wrap:wrap">
-<a href="#" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span>testpulse</a>
+<a href="#" style="display:flex;align-items:center;gap:10px;min-height:44px;font:600 24px/1 'Source Serif 4',serif;text-decoration:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--attn)"></span><span aria-hidden="true">Test<span style="font-weight:400">ament</span></span><span style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap">Testament</span></a>
 <nav style="display:flex;align-items:center;gap:0 8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
@@ -45,7 +45,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ isProject }}" hint-placeholder-val="{{ true }}">
 <h1 style="margin:14px 0 0;font:500 clamp(34px,4.5vw,48px)/1.1 'Source Serif 4',serif;letter-spacing:-.02em;text-wrap:balance">No project at this address</h1>
 <div style="margin-top:16px;display:inline-flex;max-width:100%;padding:6px 10px;border-radius:6px;background:var(--inset);border:1px solid var(--line);font:13.5px/1.5 'JetBrains Mono',monospace;color:var(--ink-2);overflow-wrap:anywhere">/p/nope</div>
-<p style="margin:16px 0 0;font:400 19px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">The link may be mistyped, or the project may have been renamed. These are the projects testpulse reports on.</p>
+<p style="margin:16px 0 0;font:400 19px/1.5 'Source Serif 4',serif;color:var(--ink-2);text-wrap:pretty">The link may be mistyped, or the project may have been renamed. These are the projects Testament reports on.</p>
 <ul aria-label="Projects" style="list-style:none;margin:20px 0 0;padding:6px;max-width:440px;display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:12px">
 <sc-for list="{{ projects }}" as="m" hint-placeholder-count="3"><li><a href="#" style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:0 12px;border-radius:6px;text-decoration:none" style-hover="background:var(--raised)"><span style="font-weight:600;font-size:15px">{{ m.name }}</span><span style="display:flex;align-items:center;gap:6px;color:{{ m.st.ink }};font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ m.st.r }}" stroke-dasharray="{{ m.st.dash }}"></circle><path d="{{ m.st.d }}"></path></svg><span>{{ m.st.w }}</span></span></a></li></sc-for>
 </ul>
@@ -93,7 +93,7 @@ class Component extends DCLogic {
     if (!K) return base;
     return Object.assign(base, {
       themeVars: K.themeVars(dark),
-      projects: [{ name: 'Ostomate2', st: K.S.passed }, { name: 'RouteServe', st: K.S.passed }, { name: 'testpulse', st: K.S.not_reporting }],
+      projects: [{ name: 'Ostomate2', st: K.S.passed }, { name: 'RouteServe', st: K.S.passed }, { name: 'Testament', st: K.S.not_reporting }],
     });
   }
 }

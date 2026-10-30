@@ -23,7 +23,7 @@ a{color:inherit}a:hover{color:inherit}
 
 <header style="display:flex;align-items:center;justify-content:space-between;gap:32px;height:64px">
 <div style="display:flex;align-items:center;gap:32px">
-<span style="display:flex;align-items:center;gap:14px;font:600 40px/1 'Source Serif 4',serif"><span style="width:14px;height:14px;border-radius:50%;background:var(--attn)"></span>testpulse</span>
+<span style="display:flex;align-items:center;gap:14px;font:600 40px/1 'Source Serif 4',serif"><span style="width:14px;height:14px;border-radius:50%;background:var(--attn)"></span><span aria-hidden="true">Test<span style="font-weight:400">ament</span></span><span style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap">Testament</span></span>
 <span style="display:flex;align-items:center;gap:10px;padding:10px 20px;border-radius:99px;background:{{ overall.tint }};color:{{ overall.ink }};font-size:26px;font-weight:600"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="{{ overall.d }}"></path></svg><span>{{ overall.label }}</span></span>
 </div>
 <div style="display:flex;align-items:center;gap:36px;font-size:26px;color:var(--ink-3)">
@@ -135,14 +135,14 @@ class Component extends DCLogic {
       cov: [cov('apps/backend', 96.1, 80), cov('apps/mobile', 96.1, 80), cov('packages/shared', 100, 80)], health: healthy };
 
     /* v13 item 1: testpulse is the third card (live layer counts; time, commit and duration SAMPLE, as on Landing) */
-    const tp = { name: 'testpulse', private: false, st: ST.pass, frame: 'var(--line)', when: '12 min ago', whenInk: 'var(--ink-3)', sha: '8d3e1a2', total: '2,598',
+    const tp = { name: 'Testament', private: false, st: ST.pass, frame: 'var(--line)', when: '12 min ago', whenInk: 'var(--ink-3)', sha: '8d3e1a2', total: '2,598',
       subParts: [part('0 failed ·'), part('0 skipped ·'), part('17m 53s')], failLine: '', failSub: '', showLayers: true,
       layers: L([['Unit', 1528, 'var(--layer-1)'], ['Component', 655, 'var(--layer-2)'], ['Integration', 180, 'var(--layer-3)'], ['E2E', 235, 'var(--layer-3)']]),
       cov: [cov('unit', 3125 / 3141 * 100, 90)], health: healthy };
     const row = (st, project, branch, count, when, x = {}) => ({ st, project, branch, count, when, countInk: 'var(--ink-2)', countW: x.countInk ? 600 : 400, bg: 'var(--surface)', ...x });
     let feed = [
       row(ST.pass, 'Ostomate2', 'main', '160 tests', '4 min ago'),
-      row(ST.pass, 'testpulse', 'main', '2,598 tests', '12 min ago'),
+      row(ST.pass, 'Testament', 'main', '2,598 tests', '12 min ago'),
       row(ST.pass, 'RouteServe', 'main', '1,044 tests', '2 h ago'),
     ];
     let overall = { label: 'All projects passing', ink: 'var(--pass)', tint: 'var(--pass-tint)', d: 'm8 12 3 3 5-6' };

@@ -1,7 +1,7 @@
-# testpulse handoff v19
+# testpulse handoff v20
 
 ## Overview
-testpulse is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
+Testament (the public name since v20; "testpulse" is the internal name of the repository, code and files) is a public dashboard of live automated-test results for Bobby Helco's projects (spec §1). This bundle is the design for every page in spec §13 plus the Raspberry Pi kiosk view, in dark and light themes, at desktop and phone widths, including the unhappy states from the design brief §6.
 
 ## About the design files
 The files in `pages/` are **design references built in HTML**. They show the intended look and behaviour; they are not production code. Recreate them in the testpulse Next.js app (spec §4) using its patterns: server components for static content, a client component for the realtime feed, Recharts for charts, CSS variables from `tokens.css`.
@@ -43,13 +43,13 @@ To view a page, open it in a browser from inside `pages/` (it needs `support.js`
 ## Screens
 The HTML is the source of truth for exact measurements; below is the structure.
 
-**Landing `/`** Lede (serif 24) → hero total (`--text-hero`) with a one-line note to its right → 4 stat tiles (Pass rate with skipped count in its sub-line, Projects reporting, Runs in last 30 days, Projects passing) → "Projects" h2 + two project cards → row of Recent runs (feed) and About this site. Squint test: the first thing seen is the hero number, the second a project name.
+**Landing `/`** Tagline "A testament to every test." then the lede (serif 24) → hero total (`--text-hero`) with a one-line note to its right → 4 stat tiles (Pass rate with skipped count in its sub-line, Projects reporting, Runs in last 30 days, Projects passing) → "Projects" h2 + two project cards → row of Recent runs (feed) and About this site. Squint test: the first thing seen is the hero number, the second a project name.
 
 *Project card*: see components.md › ProjectCard (canonical, v3).
 
 **Project, Run detail, Test history, How it's tested, Admin, Privacy** — see the pages; each is annotated with its tweaks. Private projects: no repo link, no `run_url`, and failure text replaced by the private-details notice.
 
-**Kiosk** Fixed 1920×1080 artboard scaled with `transform: scale(min(vw/1920, vh/1080))`, letterboxed on `#0b0a09`. Minimum text 22px. Header: wordmark, overall status pill (All projects passing / N failing / N silent), Live, last report, clock (HH:MM). Below the header, a hero band: total 116px, then "Tests on the latest runs" + the note, then 3 stacked tiles in a row (Pass rate, Projects reporting, Projects passing). Below it, three equal card columns (578 px), one card per project: Ostomate2, RouteServe, testpulse (name 52, total 88, layer bar, coverage, health). Card border becomes 3px `--fail` or `--attn` when that project needs attention. Bottom strip: 3 most recent runs. No interactive controls; dark only.
+**Kiosk** Fixed 1920×1080 artboard scaled with `transform: scale(min(vw/1920, vh/1080))`, letterboxed on `#0b0a09`. Minimum text 22px. Header: wordmark, overall status pill (All projects passing / N failing / N silent), Live, last report, clock (HH:MM). Below the header, a hero band: total 116px, then "Tests on the latest runs" + the note, then 3 stacked tiles in a row (Pass rate, Projects reporting, Projects passing). Below it, three equal card columns (578 px), one card per project: Ostomate2, RouteServe, Testament (name 52, total 88, layer bar, coverage, health). Card border becomes 3px `--fail` or `--attn` when that project needs attention. Bottom strip: 3 most recent runs. No interactive controls; dark only.
 
 ## Interactions and behaviour
 - Theme toggle: dark default; stores choice in localStorage; `prefers-color-scheme` used when none stored. Only `background-color, border-color, color, fill, stroke` transition, over `--motion-base`, while `html[data-theme-switching]` is set.
@@ -1044,3 +1044,38 @@ Same rules: the Design System page is canonical, components.md matches it, every
    - Items 10–13 are changed in How Its Tested.dc.html and components.md "How it’s tested page". The incident sentences are unchanged. The tweak’s default is still `today`, since the build shows the Phase 6 sentences only once v19 is adopted.
 
 Files changed in v19: Admin.dc.html, Design System.dc.html, How Its Tested.dc.html, design/README.md, design/components.md, design/data-map.md.
+
+## Changes in v20
+The public name is **Testament** (Bobby, 2026-10-29). Same rules: the Design System page is canonical, components.md matches it, every target is 44 px, existing tokens only (no new token, no new contrast pair). Nothing outside the list was changed. "testpulse" stays wherever it is internal: the repository, code, file names (`tp-kit.js`, `tp-charts.js`), code comments, the GitHub URL and action path, the project slug `testpulse` and its page `/p/testpulse`, the `option value` in Admin, and the Landing `visitor` tweak label "tracked link · lead testpulse" (a canvas control keyed on the slug). The site's future address `testament.helcolabs.com` is noted in components.md; nothing drawn shows an address that changes.
+
+**The wordmark**
+1. "testpulse" is now "Testament", with the pun shown by **weight**: "Test" 600, "ament" 400, both `--ink`. No hyphen, divider, space or second colour. Weight was chosen over the accent colour because `--attn` means "needs attention" everywhere else on the site; using it in the name would weaken that signal. Both parts are `--ink` on `--bg` (15.60:1 dark, 15.81:1 light), a pair contrast.md already lists, so contrast.md is unchanged.
+   - Screen readers hear "Testament" as one word: the two visual parts sit in one `aria-hidden="true"` span, followed by a visually hidden "Testament" (absolute, 1×1, clipped). In the header the link's name is therefore "Testament". In the sign-in email, where clients strip the hiding CSS, the wordmark is one `<span role="img" aria-label="Testament">` holding the two parts.
+   - Drawn in: SiteHeader on Landing, Project Page, Run Detail, Test History, How Its Tested, Privacy and NotFound (desktop and the two-row phone header by width; dark and light by the theme tweak; Phone Views shows all of them at 390 in both themes); Design System section 04 (header specimen, PHONE HEADER, and a new WORDMARK · v20 specimen); the Admin header with ADMIN (Admin.dc.html and the Design System section 15 admin header, phone header and admin not-found specimens); NotFound; the Kiosk header (40 px); the sign-in email specimen (Design System section 15, at 600 and 360).
+2. The mark stays. It is a still 10 px `--attn` dot (14 px on the kiosk), not a pulse drawing, so it doesn't depend on the old name and fits "Testament" as it is. (The pulsing dot on the site is the LiveIndicator, which is unrelated and unchanged.)
+
+**The tagline**
+3. "A testament to every test." appears in two places:
+   - Landing hero: a new line directly above the `h1` lede, in the lede's type (Source Serif 4, clamp(20px, 2.2vw, 24px)/1.3) at weight 500 in `--ink`; the lede below keeps 400 `--ink-2`. It joins the lede; it doesn't replace it, and the lede stays the page's `h1`. Shown in the ready and "no projects" states; not in the error state. Drawn on Landing (desktop and phone by width, dark and light by the theme tweak; Phone Views D1 and L1).
+   - Page title: Landing's document title is "Testament · A testament to every test." (written into Landing's `<title>`), and the same string is the social share title (`og:title`, `twitter:title`).
+   - Not in the footer: the footer stays Privacy · Source on GitHub · last report, and the tagline already leads the home page.
+
+**Copy that names the site**
+4. Every visible "testpulse" naming the site now says "Testament":
+   - Page titles: NotFound `<title>` "Not found · Testament"; admin not-found title "Not found · Testament admin" (Design System caption and components.md). The pattern is written down in components.md › Site name, wordmark and page titles: Landing "Testament · A testament to every test.", other pages "{page title} · Testament", admin "{page title} · Testament admin". (The canvas had no general title pattern before; only the two not-found titles were written.)
+   - Landing: "How Testament is tested" (no-projects card link and the About this site button). The About text ("The dashboard is tested the same way…") doesn't use the name and is unchanged.
+   - How It's Tested: the eyebrow ("How it’s tested") and the heading ("This dashboard is tested the same way as the projects it reports on.") don't contain the name, so they are unchanged. Lede: "A test dashboard that isn’t tested is just a claim. Testament is built test-first. …". Section 04 heading "Testament’s own results"; intro "Since 7 Oct, Testament’s CI posts its results to this site as the project `testpulse`, …" (the mono `testpulse` is the slug, so it stays). Pyramid note: "…in the layer Testament’s layer rules give it…". Principle 02: "…captured from Ostomate2, RouteServe and Testament itself…". The other principles: "Testament does the parsing…", "If Testament is down…", "In Testament’s own pipeline…".
+   - Privacy: the wordmark only; its body says "this site" throughout and is unchanged.
+   - NotFound: wordmark, title, and "These are the projects Testament reports on."
+   - Review: heading "Testament: full review".
+   - Admin: wordmark (with ADMIN). Sign-in email: subject "Sign in to Testament admin", body "Use this button to sign in to Testament admin. …", footer "Sent by Testament because a sign-in link was asked for with this address." The preview text ("The link works once and expires in 1 hour.") doesn't contain the name and is unchanged. The sign-in page heading is "Sign in to admin" and is unchanged.
+   - Kiosk (the Later candidate): wordmark, the third card and its feed row.
+   - Left alone: "Source on GitHub" (its URL `github.com/bhelco1/testpulse`), the tracked-link origin in components.md (a URL), code identifiers, comments and the slug. Landing Directions is a record of the direction exploration, not a spec, so it keeps the name it was drawn with. The Design System page's own eyebrow "testpulse · design system v3 · canonical" names the design system, not the site to a visitor, and is left as it is (say if it should change).
+5. The self-reporting project's display name is drawn as "Testament", its tagline unchanged ("This dashboard, reporting on itself."): Landing card and runs tile sub ("Ostomate2 18 · RouteServe 6 · Testament 2"), the empty-run Pass rate sub, the SAMPLE note; Project Page switcher entry; NotFound project list; Kiosk card and feed row; Admin projects table row, lead-project `<option>` text and the count-drop alert title ("Testament: test count fell 23%"); Design System switcher, tile sub, card, kiosk card, pyramid, duration specimen, the two chart titles, the alert row and the "already closed" notice. The project's page stays `/p/testpulse`.
+   - No "This site" label is added: the tagline "This dashboard, reporting on itself." already says the card is this site, and a label would repeat it.
+   - For the build: `display_name` in `projects/testpulse.yaml` becomes "Testament" (then `projects:sync`); the slug and API key don't change.
+
+**Docs**
+6. components.md has a new section "Site name, wordmark and page titles" (the name and what stays internal, the wordmark rule with the screen-reader rule, the dot, the tagline, document titles, the project's display name), referenced from SiteHeader; Landing hero, NotFound, How it’s tested, sign-in email and admin not-found entries are updated. data-map.md has a v20 table (wordmark, tagline, titles, the project's display name and slug) and the Landing hero total row says Testament. This README has the new title, the Overview names Testament, Screens adds the tagline to Landing and Testament to the Kiosk cards.
+
+Files changed in v20: Landing.dc.html, Project Page.dc.html, Run Detail.dc.html, Test History.dc.html, How Its Tested.dc.html, Privacy.dc.html, NotFound.dc.html, Admin.dc.html, Kiosk.dc.html, Review.dc.html, Design System.dc.html, design/README.md, design/components.md, design/data-map.md.

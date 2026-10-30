@@ -10,21 +10,20 @@ import {
   type LandingHeadline,
   type ProjectSummary,
 } from '../stats/summary.ts';
-import { testOutcomesByRun, type RunTests } from '../stats/test-counts.ts';
+import { talliedTestsByRun, type RunTests } from '../stats/test-counts.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
+import { loadReportCounts, loadTestTallies } from './aggregates.ts';
 import { loadSummaryInput, PROJECT_COLUMNS, ProjectRowSchema } from './project-summary.ts';
 import {
   loadLatestRunDetail,
-  loadReportCounts,
-  loadResults,
   toListedRun,
   type LatestRunDetail,
   type ListedRun,
 } from './run-rows.ts';
 
 // The landing page's headline tiles, project cards and recent runs (spec sections 11 and 13),
-// read as anon through projects_public, runs_public and the reports, results, tests and coverage
-// tables, which is all section 9 opens. A private project's rows arrive already redacted by the
+// read as anon through projects_public, runs_public, the reports, results and coverage tables
+// and the database's test counts (lib/queries/aggregates.ts), which is all section 9 opens. A private project's rows arrive already redacted by the
 // views; nothing here hides or reveals anything. Time is read once, here, and passed to lib/stats.
 
 export interface LandingProject extends ProjectSummary {
@@ -63,9 +62,12 @@ async function loadRecentRuns(
   // Default-branch CI runs only (decision 2026-09-26): imported history is not a report.
   const shown = [...candidates].sort((a, b) => byFinish(b.run, a.run)).slice(0, RECENT_RUNS);
   const ids = shown.map(({ run }) => run.id);
-  const counts = await loadReportCounts(client, ids);
   const counted = shown.filter(({ run }) => run.resultsPrunedAt === null).map(({ run }) => run.id);
-  const tests = testOutcomesByRun(counted, await loadResults(client, counted));
+  const [counts, tallies] = await Promise.all([
+    loadReportCounts(client, ids),
+    loadTestTallies(client, counted),
+  ]);
+  const tests = talliedTestsByRun(counted, tallies);
   return shown.map(({ run, project }) => ({
     ...toListedRun(run, counts.get(run.id) ?? 0),
     project,
@@ -86,23 +88,25 @@ export async function loadLanding(
   const parsed = z.array(ProjectRowSchema).safeParse(data);
   if (!parsed.success) throw new Error('list projects returned an unexpected row');
 
-  const projects: LandingProject[] = [];
-  const candidates: FeedCandidate[] = [];
-  for (const project of parsed.data) {
-    const input = await loadSummaryInput(client, project, at);
-    const latest = latestRun(input.runs, project.defaultBranch, at);
-    projects.push({
-      ...projectSummary(input, at),
-      lastReportAt: input.lastReportAt,
-      latestRunDetail: latest === null ? null : await loadLatestRunDetail(client, latest),
-    });
-    const { slug, name, visibility } = project;
-    for (const run of input.runs) {
-      if (countsTowardCiOnlyStats(run, project.defaultBranch)) {
-        candidates.push({ run, project: { slug, name, visibility } });
-      }
-    }
-  }
+  // Each project's reads wait only on its own earlier ones, so the projects load side by side.
+  const loaded = await Promise.all(
+    parsed.data.map(async (project) => {
+      const input = await loadSummaryInput(client, project, at);
+      const latest = latestRun(input.runs, project.defaultBranch, at);
+      const card: LandingProject = {
+        ...projectSummary(input, at),
+        lastReportAt: input.lastReportAt,
+        latestRunDetail: latest === null ? null : await loadLatestRunDetail(client, latest),
+      };
+      const { slug, name, visibility } = project;
+      const candidates: FeedCandidate[] = input.runs
+        .filter((run) => countsTowardCiOnlyStats(run, project.defaultBranch))
+        .map((run) => ({ run, project: { slug, name, visibility } }));
+      return { card, candidates };
+    }),
+  );
+  const projects = loaded.map(({ card }) => card);
+  const candidates = loaded.flatMap((entry) => entry.candidates);
   return {
     projects,
     headline: landingHeadline(projects),

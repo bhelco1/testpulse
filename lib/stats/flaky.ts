@@ -1,5 +1,6 @@
 import type { StatsResult, StatsRun } from './input.ts';
 import { byFinish, countsTowardCiOnlyStats, inWindow } from './rules.ts';
+import { talliedCounts, type TestTally } from './test-counts.ts';
 
 // Spec section 11: "A test with both a passing and a failing result on the same commit_sha
 // (across attempts or re-runs) within 30 days. Flake rate = flaky tests / total tests." CI runs
@@ -44,15 +45,7 @@ function outcomes(
   results: readonly StatsResult[],
   options: FlakyOptions,
 ): { counted: Map<string, StatsRun>; groups: Outcome[] } {
-  const counted = new Map(
-    runs
-      .filter(
-        (run) =>
-          countsTowardCiOnlyStats(run, options.defaultBranch) &&
-          inWindow(run.finishedAt, options.now, FLAKY_DAYS),
-      )
-      .map((run) => [run.id, run]),
-  );
+  const counted = new Map(windowRuns(runs, options).map((run) => [run.id, run]));
   const groups = new Map<string, Outcome>();
   for (const result of results) {
     const run = counted.get(result.runId);
@@ -77,15 +70,35 @@ function outcomes(
 
 const flipped = (group: Outcome): boolean => group.seen[0] && group.seen[1];
 
+/** The runs the rule reads: default-branch CI runs finished in the 30 days up to now. */
+function windowRuns<R extends StatsRun>(runs: readonly R[], options: FlakyOptions): R[] {
+  return runs.filter(
+    (run) =>
+      countsTowardCiOnlyStats(run, options.defaultBranch) &&
+      inWindow(run.finishedAt, options.now, FLAKY_DAYS),
+  );
+}
+
+/** The run whose distinct tests are the flake rate's denominator, or undefined with none. */
+export function flakeRateRun<R extends StatsRun>(
+  runs: readonly R[],
+  options: FlakyOptions,
+): R | undefined {
+  return windowRuns(runs, options).sort(byFinish).at(-1);
+}
+
+const flakeRate = (flaky: number, totalTests: number): number | null =>
+  totalTests === 0 ? null : flaky / totalTests;
+
 export function flakyTests(
   runs: readonly StatsRun[],
   results: readonly StatsResult[],
   options: FlakyOptions,
 ): FlakyTests {
-  const { counted, groups } = outcomes(runs, results, options);
+  const { groups } = outcomes(runs, results, options);
   const flaky = new Set(groups.filter(flipped).map((group) => group.testId));
 
-  const latest = [...counted.values()].sort(byFinish).at(-1);
+  const latest = flakeRateRun(runs, options);
   const totalTests =
     latest === undefined
       ? 0
@@ -94,7 +107,31 @@ export function flakyTests(
   return {
     flakyTestIds: [...flaky].sort(),
     totalTests,
-    flakeRate: totalTests === 0 ? null : flaky.size / totalTests,
+    flakeRate: flakeRate(flaky.size, totalTests),
+  };
+}
+
+/**
+ * flakyTests from what the database answers (decision 2026-10-29): the flaky tests flaky_tests
+ * found over the same window, and the tallies of flakeRateRun's run, which run_test_tallies
+ * counts as Total tests counts them.
+ */
+export function talliedFlakyTests(
+  runs: readonly StatsRun[],
+  flakyTestIds: readonly string[],
+  tallies: readonly TestTally[],
+  options: FlakyOptions,
+): FlakyTests {
+  const flaky = new Set(flakyTestIds);
+  const latest = flakeRateRun(runs, options);
+  const totalTests =
+    latest === undefined
+      ? 0
+      : talliedCounts(tallies.filter((tally) => tally.runId === latest.id)).totalTests;
+  return {
+    flakyTestIds: [...flaky].sort(),
+    totalTests,
+    flakeRate: flakeRate(flaky.size, totalTests),
   };
 }
 

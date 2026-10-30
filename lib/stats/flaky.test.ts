@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   FLAKY_RATE_RUNS,
+  flakeRateRun,
   flakyFailures,
   flakyPlatforms,
   flakyResultIds,
   flakyTests,
+  talliedFlakyTests,
   type FlakyOptions,
 } from './flaky.ts';
 import { at, result, run } from './records.test-support.ts';
@@ -455,5 +457,51 @@ describe('flakyFailures', () => {
       { testId: 't2', failed: 1, runs: 1 },
       { testId: 't1', failed: 0, runs: 1 },
     ]);
+  });
+});
+
+// Decision 2026-10-29: the pages take the flaky tests from flaky_tests and Total tests from the
+// tallies of the flake rate's run; talliedFlakyTests gives flakyTests' answer from those.
+describe('flakeRateRun and talliedFlakyTests', () => {
+  const runs = [
+    run('older', '2026-09-20T00:00:00Z'),
+    run('latest', '2026-09-21T00:00:00Z'),
+    run('later-bf', '2026-09-22T00:00:00Z', { source: 'backfill' }),
+    run('later-pr', '2026-09-23T00:00:00Z', { branch: 'feature/x' }),
+    run('before-window', '2026-09-01T00:00:00Z'),
+    run('after-now', '2026-10-02T00:00:00Z'),
+  ];
+  const tally = (runId: string, tests: number) => ({
+    runId,
+    layer: 'unit' as const,
+    status: 'passed' as const,
+    tests,
+  });
+
+  it('takes the latest default-branch CI run of the 30 days', () => {
+    expect(flakeRateRun(runs, options)?.id).toBe('latest');
+    expect(flakeRateRun([run('old', '2026-08-01T00:00:00Z')], options)).toBeUndefined();
+  });
+
+  it('rates the flaky tests against that run’s distinct tests', () => {
+    const tallies = [tally('older', 3), tally('latest', 3), tally('latest', 1), tally('pr', 9)];
+    expect(talliedFlakyTests(runs, ['t-b', 't-a', 't-b'], tallies, options)).toEqual({
+      flakyTestIds: ['t-a', 't-b'],
+      totalTests: 4,
+      flakeRate: 0.5,
+    });
+  });
+
+  it('has no flake rate without a run in the 30 days or with no tests in it', () => {
+    expect(talliedFlakyTests([], [], [], options)).toEqual({
+      flakyTestIds: [],
+      totalTests: 0,
+      flakeRate: null,
+    });
+    expect(talliedFlakyTests(runs, [], [], options)).toEqual({
+      flakyTestIds: [],
+      totalTests: 0,
+      flakeRate: null,
+    });
   });
 });

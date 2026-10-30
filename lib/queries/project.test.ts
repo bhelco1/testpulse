@@ -5,6 +5,7 @@ import {
   argsOf,
   fakeClient,
   firstArgs,
+  rpcArgs,
   type Answer,
   type Query,
 } from './fake-client.test-support.ts';
@@ -13,8 +14,10 @@ import { loadProjectPage, runListLimit } from './project.ts';
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 
 // The project page loader's queries and how it assembles their rows (spec section 13,
-// /p/[slug]). The stats are tested beside them in lib/stats; what the page holds for the real
-// seed, read as anon, is proven in lib/seed/seed.int.test.ts.
+// /p/[slug]). The stats are tested beside them in lib/stats. Distinct-test counts and flakiness
+// are the database's answers (decision 2026-10-29), given here as the functions would return
+// them; that the functions agree with lib/stats is proven in lib/queries/aggregates.int.test.ts
+// and lib/seed/seed.int.test.ts, which also holds what the page shows for the real seed.
 
 const NOW = new Date('2026-10-05T12:00:00Z');
 
@@ -75,21 +78,30 @@ const PR_RUN = runRow('pr', '2026-10-04T10:00:00+00:00', {
   event: 'pull_request',
 });
 
-const statsResult = (id: string, runId: string, testId: string, status: string) => ({
-  id,
-  test_id: testId,
+// A row of run_test_tallies: one run's distinct tests of one layer and combined status.
+const tally = (runId: string, layer: string, status: string, tests: number) => ({
+  run_id: runId,
+  layer,
   status,
-  reports: { run_id: runId, platform: 'jvm' },
+  tests,
 });
 
-// ci-1: t1 failed, t2 passed. ci-2: t1, t2 and t3 passed.
-const RESULTS = [
-  statsResult('x1', 'ci-1', 't1', 'failed'),
-  statsResult('x2', 'ci-1', 't2', 'passed'),
-  statsResult('x3', 'ci-2', 't1', 'passed'),
-  statsResult('x4', 'ci-2', 't2', 'passed'),
-  statsResult('x5', 'ci-2', 't3', 'passed'),
+// ci-1: t1 failed, t2 passed. ci-2: t1 and t2 passed, unit; t3 skipped, integration.
+const TALLIES = [
+  tally('ci-1', 'unit', 'failed', 1),
+  tally('ci-1', 'unit', 'passed', 1),
+  tally('ci-2', 'integration', 'skipped', 1),
+  tally('ci-2', 'unit', 'passed', 2),
 ];
+
+const FLAKY_TEST = {
+  id: 't1',
+  test_key: 'key-t1',
+  module: 'shared',
+  suite: 'ChangeEventDaoTest',
+  name: 'insertsAndQueriesByDay',
+  layer: 'integration',
+};
 
 const REPORT = {
   id: 'rep-1',
@@ -112,7 +124,10 @@ interface Tables {
   readonly projects?: readonly unknown[];
   readonly runs?: readonly unknown[];
   readonly feed?: readonly unknown[];
-  readonly results?: readonly unknown[];
+  readonly tallies?: readonly ReturnType<typeof tally>[];
+  readonly reportCounts?: readonly unknown[];
+  readonly flaky?: readonly unknown[];
+  readonly flakyFailures?: readonly unknown[];
   readonly failing?: readonly unknown[];
   readonly tests?: readonly unknown[];
 }
@@ -121,9 +136,10 @@ const isFeed = (query: Query) =>
   query.table === 'runs_public' &&
   argsOf(query, 'order').some(([column]) => column === 'finished_at') &&
   argsOf(query, 'limit').length === 0;
-const isStatsResults = (query: Query) =>
-  query.table === 'results' &&
-  firstArgs(query, 'select')[0] === 'id, test_id, status, reports!inner(run_id, platform)';
+const tallied = (queries: readonly Query[]) =>
+  queries
+    .filter((query) => query.table === 'rpc:run_test_tallies')
+    .map((query) => rpcArgs(query).p_run_ids as string[]);
 const isLastReport = (query: Query) =>
   query.table === 'runs_public' && argsOf(query, 'limit').length > 0;
 
@@ -136,38 +152,18 @@ const answering =
       case 'runs_public':
         if (isLastReport(query)) return { data: [{ finished_at: '2026-10-05T09:00:00+00:00' }] };
         return { data: isFeed(query) ? (tables.feed ?? []) : (tables.runs ?? RUNS) };
-      case 'results': {
-        const select = String(firstArgs(query, 'select')[0]);
-        if (select.includes('tests!inner(layer)')) {
-          return {
-            data: [
-              {
-                id: 'x3',
-                test_id: 't1',
-                status: 'passed',
-                tests: { layer: 'unit' },
-                reports: { run_id: 'ci-2' },
-              },
-              {
-                id: 'x4',
-                test_id: 't2',
-                status: 'passed',
-                tests: { layer: 'unit' },
-                reports: { run_id: 'ci-2' },
-              },
-              {
-                id: 'x5',
-                test_id: 't3',
-                status: 'skipped',
-                tests: { layer: 'integration' },
-                reports: { run_id: 'ci-2' },
-              },
-            ],
-          };
-        }
-        if (select.includes('test_key')) return { data: tables.failing ?? [] };
-        return { data: tables.results ?? RESULTS };
+      case 'results':
+        return { data: tables.failing ?? [] };
+      case 'rpc:run_test_tallies': {
+        const ids = rpcArgs(query).p_run_ids as string[];
+        return { data: (tables.tallies ?? TALLIES).filter((row) => ids.includes(row.run_id)) };
       }
+      case 'rpc:run_report_counts':
+        return { data: tables.reportCounts ?? [{ run_id: 'ci-2', reports: 1 }] };
+      case 'rpc:flaky_tests':
+        return { data: tables.flaky ?? [] };
+      case 'rpc:flaky_failures':
+        return { data: tables.flakyFailures ?? [] };
       case 'coverage':
         return {
           data: [
@@ -181,10 +177,8 @@ const answering =
             },
           ],
         };
-      case 'reports': {
-        const select = String(firstArgs(query, 'select')[0]);
-        return { data: select === 'run_id' ? [{ run_id: 'ci-2' }, { run_id: 'pr' }] : [REPORT] };
-      }
+      case 'reports':
+        return { data: [REPORT] };
       case 'tests':
         return { data: tables.tests ?? [] };
       default:
@@ -392,35 +386,36 @@ describe('loadProjectPage', () => {
     ]);
   });
 
-  it('reads results of the last 30 CI runs on main however old, and of the 30 days', async () => {
+  it('counts the tests of the last 30 CI runs on main however old, and of the flake rate’s run', async () => {
     // 32 CI runs a day apart ending 2025-12-31, all long before the 30 or 90 days, and one more
     // 2 days before NOW. The last 30 CI runs are c3 to c31 and recent; c0 to c2 are neither
-    // among them nor in the 30 days.
+    // among them nor in the 30 days. recent is also the 30 days' latest, the flake rate's run.
     const old = Array.from({ length: 32 }, (_, i) =>
       runRow(`c${i}`, new Date(Date.UTC(2025, 11, 31) - (31 - i) * 86_400_000).toISOString()),
     );
     const recent = runRow('recent', '2026-10-03T10:00:00+00:00');
     const imported = runRow('bf', '2026-10-04T10:00:00+00:00', { source: 'backfill' });
     const { client, queries } = fakeClient(
-      answering({ runs: [...old, recent, imported], results: [] }),
+      answering({ runs: [...old, recent, imported], tallies: [] }),
     );
 
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
-    const read = queries
-      .filter(isStatsResults)
-      .flatMap((query) => argsOf(query, 'in'))
-      .filter(([column]) => column === 'reports.run_id')
-      .flatMap(([, ids]) => ids as string[]);
-    expect(new Set(read)).toEqual(new Set([...old.slice(3).map((run) => run.id), 'recent']));
+    // The summary's call for the latest run, then the page's one call for everything else.
+    expect(tallied(queries)).toEqual([
+      ['recent'],
+      [...old.slice(3).map((run) => run.id), 'recent'],
+    ]);
     expect(page?.trends.testCount).toHaveLength(30);
     expect(page?.trends.duration.map((point) => point.runId)).toEqual([
       ...old.slice(3).map((run) => run.id),
       'recent',
     ]);
+    // Nothing is read row by row to count them.
+    expect(queries.filter((query) => query.table === 'results')).toHaveLength(1);
   });
 
-  it('does not read the results of a pruned run among the 30, which has no count', async () => {
+  it('does not count the tests of a pruned run among the 30, which has no count', async () => {
     const pruned = runRow('pruned', '2026-10-04T10:00:00+00:00', {
       results_pruned_at: '2026-10-04T12:00:00+00:00',
     });
@@ -428,9 +423,7 @@ describe('loadProjectPage', () => {
 
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
-    expect(queries.filter(isStatsResults).map((query) => argsOf(query, 'in'))).toEqual([
-      [['reports.run_id', ['ci-1', 'ci-2']]],
-    ]);
+    expect(tallied(queries)).toEqual([['ci-2'], ['ci-1', 'ci-2']]);
     expect(page?.trends.testCount.map((point) => [point.runId, point.totalTests])).toEqual([
       ['ci-1', 2],
       ['pruned', null],
@@ -443,14 +436,14 @@ describe('loadProjectPage', () => {
       runRow(`s${i}`, new Date(Date.UTC(2026, 8, 1) + i * 3_600_000).toISOString()),
     );
     const imported = runRow('bf', '2026-09-30T10:00:00+00:00', { source: 'backfill' });
-    const { client } = fakeClient(answering({ runs: [imported, ...many], results: [] }));
+    const { client } = fakeClient(answering({ runs: [imported, ...many], tallies: [] }));
 
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
     expect(page?.recentRuns.map((run) => run.id)).toEqual(many.slice(2).map((run) => run.id));
   });
 
-  it('lists flaky tests with their names and the platforms they flipped on', async () => {
+  it('lists the flaky tests flaky_tests finds, with their names, platforms and failures', async () => {
     const runs = [
       runRow('a1', '2026-10-04T10:00:00+00:00', { commit_sha: 'c1', status: 'failed', failed: 1 }),
       runRow('a2', '2026-10-04T11:00:00+00:00', { commit_sha: 'c1', run_attempt: 2 }),
@@ -458,17 +451,11 @@ describe('loadProjectPage', () => {
     const { client, queries } = fakeClient(
       answering({
         runs,
-        results: [statsResult('y1', 'a1', 't1', 'failed'), statsResult('y2', 'a2', 't1', 'passed')],
-        tests: [
-          {
-            id: 't1',
-            test_key: 'key-t1',
-            module: 'shared',
-            suite: 'ChangeEventDaoTest',
-            name: 'insertsAndQueriesByDay',
-            layer: 'integration',
-          },
-        ],
+        tallies: [tally('a2', 'integration', 'passed', 1)],
+        flaky: [{ test_id: 't1', platforms: ['jvm'], commits: 1 }],
+        // a1's failure is one side of the flip: Flaky, never Failed (decision 2026-10-07).
+        flakyFailures: [{ test_id: 't1', failed: 0, runs: 2 }],
+        tests: [FLAKY_TEST],
       }),
     );
 
@@ -483,153 +470,64 @@ describe('loadProjectPage', () => {
           name: 'insertsAndQueriesByDay',
           layer: 'integration',
           platforms: ['jvm'],
-          // a1's failure is one side of the flip: Flaky, never Failed (decision 2026-10-07).
           failures: { failed: 0, runs: 2 },
-          // a1 and a2 are one commit.
           commits: 1,
         },
       ],
-      // One test in the latest CI run (a2): 1 / 1.
+      // One test in the latest CI run of the 30 days (a2): 1 / 1.
       totalTests: 1,
       flakeRate: 1,
     });
-    const tests = queries.find((query) => query.table === 'tests');
-    expect(argsOf(tests as Query, 'in')).toEqual([['id', ['t1']]]);
-  });
-
-  it('counts a flaky test’s failures over its last 40 CI runs on main, reading back past the 30 days', async () => {
-    // 45 CI runs on main an hour apart, newest last: h44 and h43 are the flip on one commit,
-    // inside the 30 days; h0 to h42 finished in 2025. The test failed in h5 and h43, and has
-    // no result in h40.
-    const runs = Array.from({ length: 45 }, (_, i) =>
-      runRow(`h${i}`, new Date(Date.UTC(2025, 5, 1) + i * 3_600_000).toISOString(), {
-        commit_sha: i >= 43 ? 'flip' : `c${i}`,
-      }),
-    );
-    runs[43] = runRow('h43', '2026-10-04T10:00:00+00:00', {
-      commit_sha: 'flip',
-      status: 'failed',
-      failed: 1,
-    });
-    runs[44] = runRow('h44', '2026-10-04T11:00:00+00:00', { commit_sha: 'flip', run_attempt: 2 });
-    const results = runs
-      .filter((run) => run.id !== 'h40')
-      .map((run) =>
-        statsResult(
-          `y-${run.id}`,
-          run.id,
-          't1',
-          ['h5', 'h43'].includes(run.id) ? 'failed' : 'passed',
-        ),
-      );
-    const history = (query: Query) =>
-      isStatsResults(query) && argsOf(query, 'in').some(([column]) => column === 'test_id');
-    const answer = answering({
-      runs,
-      tests: [
-        {
-          id: 't1',
-          test_key: 'key-t1',
-          module: 'shared',
-          suite: 'ChangeEventDaoTest',
-          name: 'insertsAndQueriesByDay',
-          layer: 'integration',
-        },
-      ],
-    });
-    const { client, queries } = fakeClient((query) => {
-      if (!isStatsResults(query)) return answer(query);
-      const ids = new Set(
-        argsOf(query, 'in').find(([column]) => column === 'reports.run_id')?.[1] as string[],
-      );
-      return { data: results.filter((row) => ids.has(row.reports.run_id)) };
-    });
-
-    const page = await loadProjectPage('ostomate2', {}, client, NOW);
-
-    // Its last 40 runs with a result are h4 to h44 less h40; it failed in h5 and h43, and h43's
-    // failure is one side of the flip, so only h5 counts (decision 2026-10-07).
-    expect(page?.flaky.tests.map((test) => test.failures)).toEqual([{ failed: 1, runs: 40 }]);
-    // Newest first, 40 runs a read, until the test has 40 runs with a result: h44 to h5, then
-    // h4 to h0.
-    const reads = queries.filter(history);
-    expect(reads.map((query) => argsOf(query, 'in'))).toEqual([
-      [
-        ['test_id', ['t1']],
-        [
-          'reports.run_id',
-          runs
-            .slice(5)
-            .reverse()
-            .map((run) => run.id),
-        ],
-      ],
-      [
-        ['test_id', ['t1']],
-        [
-          'reports.run_id',
-          runs
-            .slice(0, 5)
-            .reverse()
-            .map((run) => run.id),
-        ],
-      ],
-    ]);
-    expect(firstArgs(reads[0] as Query, 'select')).toEqual([
-      'id, test_id, status, reports!inner(run_id, platform)',
+    // The 30 days up to now: 2026-10-05 minus 29 days is 2026-09-06, the window's first day.
+    const window = {
+      p_project_id: 'project-1',
+      p_since: '2026-09-06T00:00:00.000Z',
+      p_until: '2026-10-05T12:00:00.000Z',
+    };
+    const call = (name: string) => rpcArgs(queries.find((query) => query.table === name) as Query);
+    expect(call('rpc:flaky_tests')).toEqual(window);
+    expect(call('rpc:flaky_failures')).toEqual({ ...window, p_test_ids: ['t1'] });
+    expect(argsOf(queries.find((query) => query.table === 'tests') as Query, 'in')).toEqual([
+      ['id', ['t1']],
     ]);
   });
 
-  // The strip draws a flip's failing side Flaky however many runs the history read reached, so
-  // the list counts it the same way when the other side is older than the 40 runs it read.
-  it('does not count a flip side whose other side is behind the last 40 runs', async () => {
-    // 42 CI runs on main an hour apart within the 30 days, each on its own commit but f1 and f2:
-    // f1 passed and f2 failed there. The test's last 40 runs are f2 to f41, so f2 is in them and
-    // f1, the other side of its flip, is not.
-    const runs = Array.from({ length: 42 }, (_, i) =>
-      runRow(`f${i}`, new Date(Date.UTC(2026, 9, 2) + i * 3_600_000).toISOString(), {
-        commit_sha: i === 1 || i === 2 ? 'flip' : `c${i}`,
+  // flaky_failures counts each test's last 40 runs however old, and leaves out a flip's failing
+  // side even when the other side is behind those 40; generated history in
+  // lib/queries/aggregates.int.test.ts proves both against flakyFailures in lib/stats.
+  it('lists a flaky test in flaky_tests’ order, leaving out one with no name or count', async () => {
+    const { client } = fakeClient(
+      answering({
+        flaky: [
+          { test_id: 't0', platforms: ['ios-sim'], commits: 2 },
+          { test_id: 't1', platforms: ['ios-sim', 'jvm'], commits: 3 },
+          { test_id: 't2', platforms: ['jvm'], commits: 1 },
+        ],
+        flakyFailures: [
+          { test_id: 't0', failed: 1, runs: 40 },
+          { test_id: 't1', failed: 4, runs: 40 },
+        ],
+        tests: [FLAKY_TEST, { ...FLAKY_TEST, id: 't2', test_key: 'key-t2' }],
       }),
     );
-    const results = runs.map((run, i) =>
-      statsResult(`y-${run.id}`, run.id, 't1', i === 2 ? 'failed' : 'passed'),
-    );
-    const answer = answering({
-      runs,
-      tests: [
-        {
-          id: 't1',
-          test_key: 'key-t1',
-          module: 'shared',
-          suite: 'ChangeEventDaoTest',
-          name: 'insertsAndQueriesByDay',
-          layer: 'integration',
-        },
-      ],
-    });
-    const { client } = fakeClient((query) => {
-      if (!isStatsResults(query)) return answer(query);
-      const ids = new Set(
-        argsOf(query, 'in').find(([column]) => column === 'reports.run_id')?.[1] as string[],
-      );
-      return { data: results.filter((row) => ids.has(row.reports.run_id)) };
-    });
 
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
-    expect(page?.flaky.tests.map((test) => test.failures)).toEqual([{ failed: 0, runs: 40 }]);
+    // t0 has no tests row, t2 no count: neither is shown half-filled.
+    expect(page?.flaky.tests.map((test) => [test.testKey, test.platforms, test.failures])).toEqual([
+      ['key-t1', ['ios-sim', 'jvm'], { failed: 4, runs: 40 }],
+    ]);
   });
 
-  it('reads no tests when nothing is flaky', async () => {
+  it('asks nothing more when nothing is flaky', async () => {
     const { client, queries } = fakeClient(answering({}));
 
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
+    // ci-2, the latest run of the 30 days, has 3 tests.
     expect(page?.flaky).toEqual({ tests: [], totalTests: 3, flakeRate: 0 });
     expect(queries.some((query) => query.table === 'tests')).toBe(false);
-    expect(
-      queries.some((query) => argsOf(query, 'in').some(([column]) => column === 'test_id')),
-    ).toBe(false);
+    expect(queries.some((query) => query.table === 'rpc:flaky_failures')).toBe(false);
   });
 
   it('lists the newest default-branch CI runs first, titled, with their report counts', async () => {
@@ -668,46 +566,36 @@ describe('loadProjectPage', () => {
         expect.objectContaining({ id: 'ci-1', status: 'failed', failed: 1, passed: 2, reports: 0 }),
       ],
     });
+    const counts = queries.find((query) => query.table === 'rpc:run_report_counts') as Query;
+    expect(rpcArgs(counts)).toEqual({ p_run_ids: ['ci-2', 'ci-1'] });
   });
 
-  it('counts each listed run’s distinct tests from the results already read', async () => {
+  it('counts each listed run’s distinct tests in the database, with the trend’s runs', async () => {
     const { client, queries } = fakeClient(answering({ feed: [RUNS[2], RUNS[1]] }));
 
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
-    // ci-2: t1, t2 and t3 passed. ci-1: t1 failed and t2 passed, against the run row's 3.
+    // ci-2: t1 and t2 passed, t3 skipped. ci-1: t1 failed and t2 passed, against the run row's 3.
     expect(page?.runs.items.map((run) => [run.id, run.tests])).toEqual([
-      ['ci-2', { total: 3, passed: 3, failed: 0, skipped: 0 }],
+      ['ci-2', { total: 3, passed: 2, failed: 0, skipped: 1 }],
       ['ci-1', { total: 2, passed: 1, failed: 1, skipped: 0 }],
     ]);
-    // Both runs are default-branch CI runs in the 90 days, whose results are already read.
-    expect(queries.filter(isStatsResults)).toHaveLength(1);
+    // The summary's call for the latest run, and one call for the trend and the list together.
+    expect(tallied(queries)).toEqual([['ci-2'], ['ci-1', 'ci-2']]);
   });
 
-  it('reads the results of listed runs outside the 90-day default-branch set', async () => {
-    const answer = answering({ feed: [RUNS[2], PR_RUN] });
-    const { client, queries } = fakeClient((query) =>
-      isStatsResults(query) && argsOf(query, 'in')[0]?.[1]?.toString() === 'pr'
-        ? {
-            data: [
-              {
-                ...statsResult('p1', 'pr', 't1', 'passed'),
-                reports: { run_id: 'pr', platform: 'jvm' },
-              },
-              {
-                ...statsResult('p2', 'pr', 't1', 'failed'),
-                reports: { run_id: 'pr', platform: 'ios-sim' },
-              },
-            ],
-          }
-        : answer(query),
+  it('counts the tests of listed runs on other branches', async () => {
+    const { client, queries } = fakeClient(
+      answering({
+        feed: [RUNS[2], PR_RUN],
+        tallies: [...TALLIES, tally('pr', 'unit', 'failed', 1)],
+      }),
     );
 
     const page = await loadProjectPage('ostomate2', { branches: 'all' }, client, NOW);
 
-    const reads = queries.filter(isStatsResults).map((query) => argsOf(query, 'in'));
-    expect(reads).toEqual([[['reports.run_id', ['ci-1', 'ci-2']]], [['reports.run_id', ['pr']]]]);
-    // One test, failing on ios-sim: 1 failed of 1.
+    expect(tallied(queries).at(-1)).toContain('pr');
+    // One test, failing on one of its platforms: 1 failed of 1.
     expect(page?.runs.items.find((run) => run.id === 'pr')?.tests).toEqual({
       total: 1,
       passed: 0,
@@ -716,7 +604,7 @@ describe('loadProjectPage', () => {
     });
   });
 
-  it('has no distinct count for a run whose results were pruned, and does not read them', async () => {
+  it('has no distinct count for a run whose results were pruned, and does not count them', async () => {
     const pruned = runRow('old', '2026-05-01T10:00:00+00:00', {
       results_pruned_at: '2026-10-01T00:00:00+00:00',
     });
@@ -725,14 +613,22 @@ describe('loadProjectPage', () => {
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
     expect(page?.runs.items.map((run) => [run.id, run.tests])).toEqual([
-      ['ci-2', { total: 3, passed: 3, failed: 0, skipped: 0 }],
+      ['ci-2', { total: 3, passed: 2, failed: 0, skipped: 1 }],
       ['old', null],
     ]);
-    expect(queries.filter(isStatsResults)).toHaveLength(1);
+    expect(tallied(queries).flat()).not.toContain('old');
   });
 
   it('adds every branch when asked, and says when there are more runs than the limit', async () => {
-    const { client, queries } = fakeClient(answering({ feed: [RUNS[2], PR_RUN, RUNS[1]] }));
+    const { client, queries } = fakeClient(
+      answering({
+        feed: [RUNS[2], PR_RUN, RUNS[1]],
+        reportCounts: [
+          { run_id: 'ci-2', reports: 1 },
+          { run_id: 'pr', reports: 1 },
+        ],
+      }),
+    );
 
     const page = await loadProjectPage('ostomate2', { branches: 'all', runLimit: 2 }, client, NOW);
 
@@ -751,7 +647,7 @@ describe('loadProjectPage', () => {
   });
 
   it('has no latest run, trends or runs for a project that has not reported', async () => {
-    const { client, queries } = fakeClient(answering({ runs: [], results: [] }));
+    const { client, queries } = fakeClient(answering({ runs: [], tallies: [] }));
 
     const page = await loadProjectPage('ostomate2', {}, client, NOW);
 
@@ -761,6 +657,7 @@ describe('loadProjectPage', () => {
     expect(page?.recentRuns).toEqual([]);
     expect(page?.runs).toEqual({ branches: 'default', items: [], hasMore: false });
     expect(queries.filter((query) => query.table === 'reports')).toEqual([]);
+    expect(tallied(queries)).toEqual([]);
   });
 
   it('reports a database error with its code', async () => {

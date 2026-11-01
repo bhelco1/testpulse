@@ -177,6 +177,21 @@ describe('ProjectCard (web)', () => {
     );
   });
 
+  // Design v21 item 8: the block wraps, never truncates: the suite after "." and "/", the name
+  // also at camelCase humps, by soft breaks only.
+  it('failed: lets the failing name wrap at its break points', () => {
+    const { container } = render(<ProjectCard {...FAILED} />);
+    expect(part(cardOf(container), 'failing-name')?.innerHTML).toBe(
+      'HomeViewModelTest › renders<wbr>Today',
+    );
+  });
+
+  it('wraps a report key after "/", its count beside the key’s first line', () => {
+    const { container } = render(<ProjectCard {...OSTOMATE2} />);
+    const report = cardOf(container).querySelector('[data-part="report"]');
+    expect(report?.firstElementChild?.innerHTML).toMatch(/^[^<]+\/<wbr>[^<]+\/<wbr>[^<]+$/);
+  });
+
   it('failed with several failing tests says how many more', () => {
     const { container } = render(
       <ProjectCard
@@ -380,7 +395,7 @@ describe('ProjectCard (web)', () => {
     cleanup();
     const { container: route } = render(<ProjectCard {...ROUTESERVE} />);
     expect(part(cardOf(route), 'declared')?.textContent).toBe(
-      'Not counted: Maestro E2E · iOS (13 flows), authored, not yet executed',
+      'Not counted: 13 flows in Maestro E2E · iOS, authored, not yet executed',
     );
   });
 
@@ -565,10 +580,12 @@ describe('ProjectCard (web)', () => {
       'margin-top': '2px',
       color: 'var(--attn)',
     });
+    // v21 item 10: the row list is the container its CoverageBar rows narrow to.
     expect(ruleFor(CSS, '.coverage')).toEqual({
       display: 'flex',
       'flex-direction': 'column',
       gap: '14px',
+      'container-type': 'inline-size',
     });
     expect(ruleFor(CSS, '.noCoverage')).toEqual({ 'font-size': '14px', color: 'var(--ink-3)' });
     expect(ruleFor(CSS, '.notReporting')).toEqual({
@@ -606,17 +623,19 @@ describe('ProjectCard (web)', () => {
       padding: '0px',
       'list-style': 'none',
     });
+    // v21 item 8: a key wraps and is never cut; its count stays on the key's first line.
     expect(ruleFor(CSS, '.report')).toEqual({
       display: 'flex',
       'justify-content': 'space-between',
+      'align-items': 'baseline',
       gap: 'var(--space-3)',
       'min-width': '0px',
     });
     expect(ruleFor(CSS, '.reportKey')).toEqual({
-      overflow: 'hidden',
-      'text-overflow': 'ellipsis',
+      'min-width': '0px',
+      'overflow-wrap': 'anywhere',
     });
-    expect(ruleFor(CSS, '.reportCount')).toEqual({ color: 'var(--ink)' });
+    expect(ruleFor(CSS, '.reportCount')).toEqual({ flex: '0 0 auto', color: 'var(--ink)' });
     expect(ruleFor(CSS, '.reportEmpty')).toEqual({ color: 'var(--attn)' });
   });
 

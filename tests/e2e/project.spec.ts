@@ -197,6 +197,27 @@ test.describe('Ostomate2 (public)', () => {
     await expect(runStrip(page).locator('[data-part="note"]')).toHaveText('All 8 passed.');
   });
 
+  // Design v21 item 6: with 8 runs the strip still spans its card; the slots not filled are one
+  // baseline labelled "No earlier runs", and the oldest label sits under the oldest cell.
+  test(
+    'spans the card with 8 runs, the unfilled slots a baseline',
+    { tag: '@js' },
+    async ({ page }) => {
+      const strip = runStrip(page);
+      const slots = strip.locator('[data-part="strip"] > div').first();
+      const card = await strip.boundingBox();
+      const area = await slots.boundingBox();
+      // The card's padding is 24 a side, inside its 1 px border.
+      expect(Math.abs((area?.width ?? 0) - ((card?.width ?? 0) - 50))).toBeLessThanOrEqual(1);
+      await expect(strip.locator('[data-part="unfilled"]')).toBeVisible();
+      await expect(strip.locator('[data-part="no-earlier"]')).toHaveText('No earlier runs');
+      await expect(strip.locator('[data-part="oldest"]')).toHaveText('7 runs ago');
+      const firstCell = await strip.locator('[data-part="cell"]').first().boundingBox();
+      const oldest = await strip.locator('[data-part="oldest"]').boundingBox();
+      expect(Math.abs((oldest?.x ?? 0) - (firstCell?.x ?? 0))).toBeLessThanOrEqual(1);
+    },
+  );
+
   test('lists the 8 CI runs on main, newest first, and no flaky tests', async ({ page }) => {
     const rows = runsLog(page).getByRole('link');
     await expect(rows).toHaveCount(8);
@@ -358,13 +379,29 @@ test.describe('RouteServe (private)', () => {
     await expect(page.getByRole('button', { name: 'Load 20 more' })).toHaveCount(0);
   });
 
+  // Design v21 item 14: busy while the longer list loads (held here until the busy state is
+  // checked), the rows already shown kept, then focus on the first new row.
   test('loads 20 more across all branches', { tag: '@js' }, async ({ page }) => {
     await page.getByRole('radio', { name: 'All branches' }).click();
     await expect(runsLog(page).getByRole('link')).toHaveCount(10);
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route(/\/p\/routeserve\?branches=all&runs=30/, async (route) => {
+      await held;
+      await route.continue();
+    });
     await page.getByRole('button', { name: 'Load 20 more' }).click();
+    const busy = page.getByRole('button', { name: 'Loading…' });
+    await expect(busy).toHaveAttribute('aria-busy', 'true');
+    await expect(runsLog(page)).toHaveAttribute('aria-busy', 'true');
+    await expect(runsLog(page).locator('[data-part="more-skeleton"]')).toHaveCount(3);
+    await expect(runsLog(page).getByRole('link')).toHaveCount(10);
+    release();
     await expect(page).toHaveURL('/p/routeserve?branches=all&runs=30');
     await expect(runsLog(page).getByRole('link')).toHaveCount(11);
-    await expect(page.getByRole('button', { name: 'Load 20 more' })).toHaveCount(0);
+    await expect(runsLog(page).getByRole('link').nth(10)).toBeFocused();
+    await expect(runsLog(page)).not.toHaveAttribute('aria-busy');
+    await expect(page.getByRole('button', { name: /Load 20 more|Loading…/ })).toHaveCount(0);
   });
 });
 

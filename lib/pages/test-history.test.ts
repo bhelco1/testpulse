@@ -171,6 +171,9 @@ describe('testHistoryView', () => {
         { label: 'Ostomate 2.0', href: '/p/ostomate2' },
       ],
       current: 'CalendarViewModelTest › addEventForDateLogsAtNoon',
+      // Its two parts, so the page can let the name wrap at its break points (design v21 item 8).
+      suite: 'CalendarViewModelTest',
+      name: 'addEventForDateLogsAtNoon',
     });
   });
 
@@ -216,7 +219,7 @@ describe('testHistoryView', () => {
       { label: 'Failed', value: '2', sub: ['2 runs · jvm, ios-sim'], tone: 'fail' },
       { label: 'Flaky', value: '0', sub: ['none in 30 days'], tone: 'ink' },
       // The JVM's median, 30 ms, as a test's time reads; the simulator's 3 ms beside it.
-      { label: 'Median time', value: '0.03 s', sub: ['jvm · ios-sim 3 ms'], tone: 'ink' },
+      { label: 'Median time', value: '0.03 s', sub: ['jvm (ios-sim 3 ms)'], tone: 'ink' },
     ]);
   });
 
@@ -617,6 +620,25 @@ describe('testHistoryView, undrawn states held back', () => {
     expect(none.duration).toBeNull();
     expect(none.tiles).toBeNull();
     expect(none.stripNote).toBeNull();
+  });
+
+  // Design v21 item 15: the other platforms' medians go in brackets, each with its own figure,
+  // so "jvm · ios-sim 0.63 s" no longer reads as if 0.63 s belonged to both.
+  it('brackets every other platform’s median after the first platform', () => {
+    const history: TestHistory = {
+      ...TWO_PLATFORMS,
+      duration: {
+        ...TWO_PLATFORMS.duration,
+        platforms: ['jvm', 'ios-sim', 'android-emulator'],
+        medianMs: [410, 630, 1_200],
+      },
+    };
+    expect(testHistoryView(page(OSTOMATE2, {}, history), NOW).tiles?.at(-1)).toEqual({
+      label: 'Median time',
+      value: '0.41 s',
+      sub: ['jvm (ios-sim 0.63 s · android-emulator 1.20 s)'],
+      tone: 'ink',
+    });
   });
 
   it('keeps a platform with a value somewhere, and drops one left with none', () => {

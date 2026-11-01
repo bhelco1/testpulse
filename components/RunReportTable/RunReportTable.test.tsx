@@ -234,3 +234,12 @@ describe('RunReportTable', () => {
     expect(ruleFor(CSS, '.time')).toEqual({ 'text-align': 'right', color: 'var(--ink-2)' });
   });
 });
+
+// Design v21 item 8: a report key wraps after "/", by soft breaks only.
+describe('RunReportTable keys', () => {
+  it('breaks each key after "/"', () => {
+    const { container } = render(<RunReportTable reports={REPORTS} />);
+    const key = container.querySelector('[data-part="report"] td:nth-child(2)');
+    expect(key?.innerHTML).toBe('android/<wbr>shared/<wbr>jvm');
+  });
+});

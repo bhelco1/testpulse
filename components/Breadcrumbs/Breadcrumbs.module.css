@@ -26,6 +26,12 @@
   color: var(--ink);
 }
 
+/* A test name breaks at its soft breaks (design v21 item 8), and anywhere only as a last resort. */
+.currentText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .mono {
   font-family: var(--font-mono);
   font-size: 13.5px;

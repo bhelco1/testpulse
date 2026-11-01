@@ -1,12 +1,24 @@
 .row {
   display: grid;
   grid-template-columns: 128px minmax(40px, 1fr) auto;
+  grid-template-areas: 'key bar value';
   align-items: center;
   column-gap: 14px;
+  row-gap: 8px;
   font-size: 14px;
 }
 
+/* Design v21 item 10: in a row list under 400 px wide (the list is the container), the key and
+   value share line 1 and the bar takes line 2 at the full width. */
+@container (max-width: 399px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'key value' 'bar bar';
+  }
+}
+
 .module {
+  grid-area: key;
   min-width: 0;
   font: 13px var(--font-mono);
   color: var(--ink-2);
@@ -16,6 +28,7 @@
 }
 
 .track {
+  grid-area: bar;
   position: relative;
   height: 6px;
   border-radius: var(--radius-pill);
@@ -37,6 +50,8 @@
 }
 
 .value {
+  grid-area: value;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 6px;

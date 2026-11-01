@@ -8,6 +8,7 @@ import type { TimeLabel } from '../../lib/copy/time';
 import { LAYER_LABEL } from '../../lib/design/layers';
 import type { TestStatus } from '../../lib/parsers/types';
 import type { Visibility } from '../../lib/projects/schema';
+import { Breaks } from '../Breaks/Breaks';
 import {
   filterResults,
   isFailing,
@@ -27,6 +28,7 @@ import {
   ChevronRightIcon,
   ClockIcon,
   FlakyIcon,
+  MessageIcon,
   XCircleIcon,
 } from '../icons/icons';
 import { PrivateDetailsNotice } from '../PrivateDetailsNotice/PrivateDetailsNotice';
@@ -367,7 +369,7 @@ function TestRows({
                 onClick={onToggle}
                 data-part="name"
               >
-                {result.name}
+                <Breaks text={result.name} rule="name" />
               </button>
             ) : (
               <Link
@@ -375,11 +377,11 @@ function TestRows({
                 className={cx(styles.name, styles.rowLink)}
                 data-part="name"
               >
-                {result.name}
+                <Breaks text={result.name} rule="name" />
               </Link>
             )}
             <span className={styles.suite} data-part="suite">
-              {result.suite}
+              <Breaks text={result.suite} rule="suite" />
             </span>
           </span>
           {result.flaky && (
@@ -461,11 +463,14 @@ function Failures({
                 </span>
               </div>
             )}
-            {withText && failure.message !== null && (
-              <div className={styles.message} data-part="message">
-                {failure.message}
-              </div>
-            )}
+            {withText &&
+              (hasText(failure.message) ? (
+                <div className={styles.message} data-part="message">
+                  {failure.message}
+                </div>
+              ) : (
+                <NoMessage status={failure.status} trace={failure.detail !== null} />
+              ))}
             {/* Scrolls sideways in its own box, so it takes focus for the keyboard. */}
             {withText && failure.detail !== null && (
               <pre className={styles.trace} tabIndex={0}>
@@ -475,6 +480,29 @@ function Failures({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+const hasText = (text: string | null): text is string => text !== null && text.trim() !== '';
+
+const VERB = { failed: 'failed', error: 'errored' } as const;
+
+// Design v21 item 13: the report marked the test as failing but sent no message. Said plainly,
+// never a placeholder; a stack trace, if there is one, still follows.
+function NoMessage({ status, trace }: { status: FailureDetail['status']; trace: boolean }) {
+  const lead = `The report marked this test as ${VERB[status]} but included no message`;
+  return (
+    <div className={styles.noMessage} data-part="no-message">
+      <MessageIcon size={16} strokeWidth={2.2} className={styles.noMessageIcon} />
+      <div className={styles.noMessageBody}>
+        <div className={styles.noMessageTitle}>No failure message</div>
+        <div className={styles.noMessageText}>
+          {trace
+            ? `${lead}; its stack trace is below.`
+            : `${lead} or stack trace. The CI run’s log may say more.`}
+        </div>
+      </div>
     </div>
   );
 }

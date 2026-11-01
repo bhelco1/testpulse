@@ -70,7 +70,7 @@ test('a new report appears in the landing feed without reload, marked New', asyn
 
   const rows = feedRows(page);
   await expect(rows.first()).toContainText(sha7(PUBLIC_LANDING), ARRIVAL);
-  await expect(rows.first()).toContainText('Live public·main·');
+  await expect(rows.first()).toContainText('Live public · main · ');
   await expect(rows.first().locator(newChip)).toHaveText('New');
   // The rows that were there stay, below it and not new; the feed keeps three.
   await expect(rows).toHaveCount(3);

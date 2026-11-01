@@ -563,6 +563,94 @@ describe('StatusTimeline, runs kind', () => {
   });
 });
 
+// Design v21 item 6 (components.md StatusTimeline, "Sizing"): the strip always spans its card.
+// Its slots are the runs that fit (40 here); the runs fill from the right, and the slots not yet
+// filled are one dashed baseline labelled "No earlier runs", the oldest label under the oldest
+// real cell. Both groups share the width by their slot counts.
+describe('StatusTimeline with fewer runs than slots', () => {
+  const runs = (n: number) =>
+    Array.from({ length: n }, (_, k) => ({ ...base(40 - n + k), status: 'passed' as const }));
+  const runsStrip = (n: number) => (
+    <StatusTimeline kind="runs" defaultBranch="main" runs={runs(n)} />
+  );
+  const grow = (element: Element | null | undefined) =>
+    element instanceof HTMLElement ? element.style.flexGrow : undefined;
+
+  it('fills from the right and draws the rest as one baseline, "No earlier runs"', () => {
+    const { container } = render(runsStrip(12));
+    const strip = stripsOf(container)[0] as HTMLElement;
+    expect(cellsOf(strip)).toHaveLength(12);
+    const unfilled = part(strip, 'unfilled');
+    expect(unfilled?.getAttribute('aria-hidden')).toBe('true');
+    expect(grow(unfilled)).toBe('28');
+    expect(grow(strip.querySelector('[role="img"]'))).toBe('12');
+    expect(text(container, 'no-earlier')).toBe('No earlier runs');
+    expect(grow(part(container, 'no-earlier'))).toBe('28');
+    expect(grow(part(container, 'ends-runs'))).toBe('12');
+    expect(text(container, 'oldest')).toBe('11 runs ago');
+    expect(text(container, 'latest')).toBe('Latest');
+  });
+
+  it('with one run has the baseline, "No earlier runs" and "Latest", and no oldest label', () => {
+    const { container } = render(runsStrip(1));
+    expect(grow(part(container, 'unfilled'))).toBe('39');
+    expect(text(container, 'no-earlier')).toBe('No earlier runs');
+    expect(text(container, 'oldest')).toBe('');
+  });
+
+  it('with every slot filled has no baseline and no "No earlier runs"', () => {
+    const { container } = render(runsStrip(40));
+    expect(part(container, 'unfilled')).toBeNull();
+    expect(part(container, 'no-earlier')).toBeNull();
+    expect(text(container, 'oldest')).toBe('39 runs ago');
+  });
+
+  it('counts the slots that fit: 12 runs in a strip that fits 20 leave 8 unfilled', () => {
+    stripWidth = 177;
+    const { container } = render(runsStrip(12));
+    expect(grow(part(container, 'unfilled'))).toBe('8');
+  });
+
+  it('gives each platform strip of a test its own baseline, beside its label', () => {
+    const { container } = render(results(history({ jvm, 'ios-sim': ios }, 12, 28)));
+    for (const strip of stripsOf(container)) {
+      expect(text(strip, 'platform')).toBeTruthy();
+      expect(grow(part(strip, 'unfilled'))).toBe('28');
+    }
+    expect(text(container, 'no-earlier')).toBe('No earlier runs');
+  });
+
+  it('draws the baseline 1.5px dashed --line-strong at the foot of the strip', () => {
+    expect(ruleFor(CSS, '.slots')).toEqual({
+      flex: '1 1 0%',
+      'min-width': '0px',
+      display: 'flex',
+      'align-items': 'flex-end',
+      gap: '3px',
+      height: '48px',
+    });
+    expect(ruleFor(CSS, '.unfilled')).toEqual({
+      'flex-basis': '0px',
+      'min-width': '0px',
+      height: '0px',
+      'border-top': '1.5px dashed var(--line-strong)',
+    });
+    expect(ruleFor(CSS, '.noEarlier')).toEqual({
+      'flex-basis': '0px',
+      'min-width': '0px',
+      'white-space': 'nowrap',
+    });
+    expect(ruleFor(CSS, '.endsRuns')).toEqual({
+      'flex-basis': '0px',
+      'min-width': '0px',
+      display: 'flex',
+      'justify-content': 'space-between',
+      gap: 'var(--space-3)',
+      'white-space': 'nowrap',
+    });
+  });
+});
+
 describe('StatusTimeline styles', () => {
   it('holds each result cell type to its height, fill and outline', () => {
     expect(ruleFor(CSS, '.passed')).toEqual({ height: '14px', background: 'var(--pass)' });
@@ -575,9 +663,9 @@ describe('StatusTimeline styles', () => {
     expect(ruleFor(CSS, '.notRun')).toEqual({ height: '4px', background: 'var(--line-strong)' });
   });
 
-  it('bottom-aligns 6 to 16px cells, 3px apart, latest on the right, in a 48px strip', () => {
+  it('bottom-aligns cells of 6px or more, 3px apart, latest on the right, in a 48px strip', () => {
     expect(ruleFor(CSS, '.cells')).toEqual({
-      flex: '1 1 0%',
+      'flex-basis': '0px',
       'min-width': '0px',
       display: 'flex',
       'justify-content': 'flex-end',
@@ -588,8 +676,9 @@ describe('StatusTimeline styles', () => {
       'touch-action': 'pan-y',
       'border-radius': '4px',
     });
+    // v21 item 6: the cells share the width (≈25 px at 1440), 6 px at the least.
     expect(ruleFor(CSS, '.cell')).toEqual({
-      flex: '0 1 16px',
+      flex: '1 1 0px',
       'min-width': '6px',
       'box-sizing': 'border-box',
       'border-radius': '2px',
@@ -641,10 +730,10 @@ describe('StatusTimeline styles', () => {
       color: 'var(--ink-2)',
       'padding-bottom': '2px',
     });
+    // Two groups, as the strip has: the unfilled slots and the runs.
     expect(ruleFor(CSS, '.ends')).toEqual({
       display: 'flex',
-      'justify-content': 'space-between',
-      gap: 'var(--space-3)',
+      gap: '3px',
       'margin-top': 'var(--space-2)',
       'font-size': '12.5px',
       color: 'var(--ink-3)',

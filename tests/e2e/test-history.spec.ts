@@ -208,7 +208,7 @@ test.describe('an Ostomate2 test on two platforms (public)', () => {
       ['Runs', '9', 'since 24 Sep'],
       ['Failed', '0', 'on any platform'],
       ['Flaky', '0', 'none in 30 days'],
-      ['Median time', '0.03 s', 'jvm · ios-sim 3 ms'],
+      ['Median time', '0.03 s', 'jvm (ios-sim 3 ms)'],
     ]);
   });
 

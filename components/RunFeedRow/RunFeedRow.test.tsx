@@ -109,7 +109,7 @@ describe('RunFeedRow (web)', () => {
     expect(badge?.dataset.variant).toBe('inline');
     expect(badge?.textContent).toBe('Passed');
     expect(part(row, 'title')?.textContent).toBe('Push to main');
-    expect(part(row, 'meta')?.textContent).toBe('Ostomate2·main·0e2d0b4');
+    expect(part(row, 'meta')?.textContent).toBe('Ostomate2 · main · 0e2d0b4');
     expect(part(row, 'sha')?.textContent).toBe('0e2d0b4');
     expect(part(row, 'count-lead')?.textContent).toBe('142 tests');
     expect(part(row, 'count-rest')?.textContent).toBe('· 27 s');
@@ -119,7 +119,7 @@ describe('RunFeedRow (web)', () => {
 
   it('keeps the design order: status, title, meta, count, time', () => {
     expect(renderRow(PASSED).textContent).toBe(
-      'PassedPush to mainOstomate2·main·0e2d0b4142 tests· 27 s4 min ago',
+      'PassedPush to mainOstomate2 · main · 0e2d0b4142 tests· 27 s4 min ago',
     );
   });
 
@@ -140,7 +140,7 @@ describe('RunFeedRow (web)', () => {
 
   it('pull request: the branch slot is runs.branch, as for every event (v4 item 28)', () => {
     const row = renderRow(FAILED);
-    expect(part(row, 'meta')?.textContent).toBe('Ostomate2·fix-today-count·a41f9c2');
+    expect(part(row, 'meta')?.textContent).toBe('Ostomate2 · fix-today-count · a41f9c2');
     expect(part(row, 'title')?.textContent).toBe('Pull request from fix-today-count');
   });
 
@@ -189,12 +189,12 @@ describe('RunFeedRow (web)', () => {
     expect(lock?.getAttribute('aria-hidden')).toBe('true');
     // The run page exists for private projects too, so the row still links to it.
     expect(row.getAttribute('href')).toBe('/p/routeserve/runs/1');
-    expect(part(row, 'meta')?.textContent).toBe('RouteServe·main·c238574');
+    expect(part(row, 'meta')?.textContent).toBe('RouteServe · main · c238574');
   });
 
   it('showProject false leaves the project out of the meta line (project page)', () => {
     const row = renderRow(PASSED, { showProject: false });
-    expect(part(row, 'meta')?.textContent).toBe('main·0e2d0b4');
+    expect(part(row, 'meta')?.textContent).toBe('main · 0e2d0b4');
   });
 
   it('is not new by default: no chip and no arrival background', () => {
@@ -244,12 +244,16 @@ describe('RunFeedRow (web)', () => {
     ).toMatchObject({ animation: 'none !important' });
   });
 
-  it('lays the row out as the design: flex-wrap, gap 6 16, padding 14 16, min 44, radius 12', () => {
+  // Design v21 item 7: one shape for every row, a grid, so the time never drops to a line of its
+  // own on some rows and not others, and every row is the same height whatever its text.
+  it('lays the row out as one grid: status | title, count over meta, time; padding 14 16', () => {
     expect(ruleFor(CSS, '.row')).toEqual({
-      display: 'flex',
-      'flex-wrap': 'wrap',
+      display: 'grid',
+      'grid-template-columns': '104px minmax(0, 1fr) auto',
+      'grid-template-areas': "'status title count' 'status meta when'",
+      'column-gap': '16px',
+      'row-gap': '2px',
       'align-items': 'center',
-      gap: '6px 16px',
       padding: '14px 16px',
       'min-height': 'var(--target-min)',
       'box-sizing': 'border-box',
@@ -259,31 +263,49 @@ describe('RunFeedRow (web)', () => {
     expect(ruleFor(CSS, '.row:hover, .row:focus-visible')).toEqual({
       background: 'var(--raised)',
     });
-  });
-
-  // No breakpoint: at 390 the content's 220px basis pushes the count onto a second line, where the
-  // time's auto margin puts it on the right.
-  it('wraps to two lines on a phone: status 104, content flex 1 1 220, time pushed right', () => {
-    expect(ruleFor(CSS, '.status')).toEqual({ display: 'flex', width: '104px', flex: '0 0 auto' });
-    expect(ruleFor(CSS, '.content')).toEqual({ flex: '1 1 220px', 'min-width': '0px' });
+    expect(ruleFor(CSS, '.status')).toEqual({
+      'grid-area': 'status',
+      'align-self': 'start',
+      display: 'flex',
+      'align-items': 'center',
+      height: '22px',
+    });
+    expect(ruleFor(CSS, '.count')).toMatchObject({ 'grid-area': 'count', 'justify-self': 'end' });
     expect(ruleFor(CSS, '.when')).toEqual({
-      'margin-left': 'auto',
+      'grid-area': 'when',
+      'justify-self': 'end',
       'font-size': '13px',
+      'line-height': '19px',
       color: 'var(--ink-3)',
       'white-space': 'nowrap',
     });
   });
 
-  it('sets the title 15/500 with ellipsis, and the meta 13 --ink-3 with a mono SHA', () => {
+  it('takes three lines in a list under 400 px: status and title, meta, then count and time', () => {
+    const narrow = '(max-width: 399px)';
+    expect(ruleFor(CSS, '.row', narrow)).toEqual({
+      'grid-template-areas': "'status title title' 'status meta meta' 'count count when'",
+    });
+    expect(ruleFor(CSS, '.count', narrow)).toEqual({
+      'justify-self': 'start',
+      'padding-top': '6px',
+    });
+    expect(ruleFor(CSS, '.when', narrow)).toEqual({ 'padding-top': '6px' });
+  });
+
+  it('sets the title 15/22 500 with ellipsis, and the meta 13/19 --ink-3 on one line', () => {
     expect(ruleFor(CSS, '.titleLine')).toEqual({
+      'grid-area': 'title',
       display: 'flex',
       'align-items': 'center',
       gap: '8px',
       'font-size': '15px',
+      'line-height': '22px',
       'font-weight': '500',
       'min-width': '0px',
     });
     expect(ruleFor(CSS, '.title')).toEqual({
+      'min-width': '0px',
       'white-space': 'nowrap',
       overflow: 'hidden',
       'text-overflow': 'ellipsis',
@@ -292,16 +314,21 @@ describe('RunFeedRow (web)', () => {
       display: 'flex',
       'align-items': 'center',
       gap: '6px',
+      'min-width': '0px',
       color: 'var(--ink-3)',
       'font-weight': '400',
+      'white-space': 'nowrap',
     });
     expect(ruleFor(CSS, '.meta')).toEqual({
-      display: 'flex',
-      'flex-wrap': 'wrap',
-      gap: '0 6px',
+      'grid-area': 'meta',
+      display: 'block',
+      'min-width': '0px',
       'font-size': '13px',
+      'line-height': '19px',
       color: 'var(--ink-3)',
-      'margin-top': '2px',
+      'white-space': 'nowrap',
+      overflow: 'hidden',
+      'text-overflow': 'ellipsis',
     });
     expect(ruleFor(CSS, '.sha')).toEqual({ 'font-family': 'var(--font-mono)' });
   });
@@ -309,7 +336,7 @@ describe('RunFeedRow (web)', () => {
   it('sets the New chip: 11px/600 sans, pill, --ink on --on-ink, padding 2 by 7', () => {
     expect(ruleFor(CSS, '.chip')).toEqual({
       flex: '0 0 auto',
-      font: '600 11px var(--font-sans)',
+      font: '600 11px/1.5 var(--font-sans)',
       padding: '2px 7px',
       'border-radius': 'var(--radius-pill)',
       background: 'var(--ink)',
@@ -319,9 +346,12 @@ describe('RunFeedRow (web)', () => {
 
   it('sets the count: 14px nowrap; passed --ink 400, failed --fail 600, empty --attn 600', () => {
     expect(ruleFor(CSS, '.count')).toEqual({
+      'grid-area': 'count',
+      'justify-self': 'end',
       display: 'flex',
       gap: '6px',
       'font-size': '14px',
+      'line-height': '22px',
       'white-space': 'nowrap',
     });
     expect(ruleFor(CSS, '.countPassed')).toEqual({ color: 'var(--ink)', 'font-weight': '400' });

@@ -52,3 +52,18 @@ export function adminView(
   }
   return { kind: 'sign-in', notice: null };
 }
+
+// Document titles (design v21 item 16): they never repeat "admin". The home, in every state a
+// session reaches (signed in, loading, error, not allowed), is "Testament admin" alone.
+const ADMIN_TITLE = 'Testament admin';
+
+export function adminTitle(view: AdminView): string {
+  return view.kind === 'sign-in' ? `Sign in · ${ADMIN_TITLE}` : ADMIN_TITLE;
+}
+
+/** A tracked link's page: its company; null for no such link; anything else, the home's title. */
+export function linkTitle(link: { readonly company: string } | null | 'refused' | 'error'): string {
+  if (link === null) return `Not found · ${ADMIN_TITLE}`;
+  if (typeof link === 'string') return ADMIN_TITLE;
+  return `${link.company} · ${ADMIN_TITLE}`;
+}

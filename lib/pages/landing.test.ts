@@ -301,7 +301,7 @@ describe('landingView at the seed', () => {
     expect(tile(view, 'Pass rate')).toEqual({
       label: 'Pass rate',
       value: '99.8%',
-      sub: '1,183 of 1,185 · 1 skipped, excluded',
+      sub: '1,183 of 1,185 passed · 1 skipped, not counted',
     });
   });
 
@@ -514,11 +514,12 @@ const allSkipped: LandingProject = {
 describe('landingView tiles in other states', () => {
   const allPassing = landingOf([OSTOMATE2, ROUTESERVE_GREEN]);
 
-  it('reads “Latest runs” when nothing failed, as the design’s healthy state does', () => {
+  // Design v21 item 15: plain words, and the skipped count only when there is one.
+  it('reads “Each project’s latest run” when nothing failed or was skipped', () => {
     expect(tile(readyView(allPassing), 'Pass rate')).toEqual({
       label: 'Pass rate',
       value: '100%',
-      sub: 'Latest runs · 0 skipped, excluded',
+      sub: 'Each project’s latest run',
     });
   });
 
@@ -536,13 +537,22 @@ describe('landingView tiles in other states', () => {
     });
   });
 
+  it('adds the skipped count, not counted, when a latest run skipped tests', () => {
+    const skipping = landingOf([
+      { ...ROUTESERVE_GREEN, latestRun: latest({ passed: 1_041, skipped: 3, passRate: 1 }) },
+    ]);
+    expect(tile(readyView(skipping), 'Pass rate')).toMatchObject({
+      sub: 'Each project’s latest run · 3 skipped, not counted',
+    });
+  });
+
   it('never rounds a failing pass rate up to 100%', () => {
     const nearly = landingOf([
       { ...ROUTESERVE, latestRun: latest({ passed: 9_999, failed: 1, passRate: 0.9999 }) },
     ]);
     expect(tile(readyView(nearly), 'Pass rate')).toMatchObject({
       value: '99.9%',
-      sub: '9,999 of 10,000 · 0 skipped, excluded',
+      sub: '9,999 of 10,000 passed',
     });
   });
 
@@ -559,7 +569,7 @@ describe('landingView tiles in other states', () => {
     expect(tile(readyView(empty), 'Pass rate')).toEqual({
       label: 'Pass rate',
       value: '100%',
-      sub: 'RouteServe only · 0 skipped, excluded',
+      sub: 'RouteServe only',
     });
   });
 
@@ -623,7 +633,7 @@ describe('landingView tiles in other states', () => {
     ).toEqual({
       label: 'Pass rate',
       value: '99.9%',
-      sub: 'Ostomate 2.0 and RouteServe only · 0 skipped, excluded',
+      sub: 'Ostomate 2.0 and RouteServe only',
     });
   });
 
@@ -632,7 +642,7 @@ describe('landingView tiles in other states', () => {
     expect(tile(readyView(landingOf([emptied(OSTOMATE2), ROUTESERVE])), 'Pass rate')).toEqual({
       label: 'Pass rate',
       value: '99.9%',
-      sub: 'RouteServe only · 0 skipped, excluded',
+      sub: 'RouteServe only',
     });
   });
 

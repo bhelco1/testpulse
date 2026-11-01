@@ -272,3 +272,19 @@ describe('NotFound (tracked link)', () => {
     expect(ruleFor(CSS, '.admin')).toEqual({ 'padding-top': 'var(--space-7)' });
   });
 });
+
+// Design v21 item 8: the path chip is a flex box, so its text sits in one span, where a path given
+// as text gets its soft breaks after "/" and ".".
+describe('NotFound path chip', () => {
+  it('breaks a path given as text after "/" and ".", in one span', () => {
+    const { container } = render(
+      <NotFound kind="page" path="/p/ostomate2/tests/com.ostomate.Home" />,
+    );
+    const chip = container.querySelector('[data-part="path"]') as HTMLElement;
+    expect(chip.children).toHaveLength(1);
+    expect(chip.firstElementChild?.innerHTML).toBe(
+      '/<wbr>p/<wbr>ostomate2/<wbr>tests/<wbr>com.<wbr>ostomate.<wbr>Home',
+    );
+    expect(ruleFor(CSS, '.pathText')).toEqual({ 'min-width': '0px' });
+  });
+});

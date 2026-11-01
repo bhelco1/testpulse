@@ -7,7 +7,8 @@ import { Wordmark } from '../Wordmark/Wordmark';
 import styles from './SiteHeader.module.css';
 
 export interface SiteHeaderProps {
-  projects: readonly SwitcherProject[];
+  // 'unavailable' while the page's data failed to load: the menu says so (design v21 item 1).
+  projects: readonly SwitcherProject[] | 'unavailable';
   // The href of the project page being shown, if any.
   currentProject?: string;
   // The realtime connection. Left out on a page that has none yet, which then shows no indicator.

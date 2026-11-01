@@ -19,6 +19,17 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 @keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
 @keyframes tpShimmer{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* v21 items 5, 7, 10: layouts keyed to the component's own width (container queries), so they hold at any viewport and inside Phone Views */
+.tp-cq{container-type:inline-size}
+.tp-run{display:grid;grid-template-columns:104px minmax(0,1fr) auto;grid-template-areas:"s t c" "s m w";column-gap:16px;row-gap:2px;align-items:center}
+.tp-run-s{grid-area:s;align-self:start;height:22px}.tp-run-t{grid-area:t;min-width:0}.tp-run-m{grid-area:m;min-width:0}.tp-run-c{grid-area:c;justify-self:end}.tp-run-w{grid-area:w;justify-self:end}
+@container (max-width:399px){.tp-run{grid-template-areas:"s t t" "s m m" "c c w"}.tp-run-c{justify-self:start;padding-top:6px}.tp-run-w{padding-top:6px}}
+.tp-cov{display:grid;grid-template-columns:128px minmax(40px,1fr) auto;grid-template-areas:"k b v";align-items:center;column-gap:14px;row-gap:8px;font-size:14px}
+.tp-cov-k{grid-area:k;min-width:0}.tp-cov-b{grid-area:b}.tp-cov-v{grid-area:v;justify-self:end}
+@container (max-width:399px){.tp-cov{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "b b"}}
+.tp-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
+.tp-tile{padding:18px 20px}.tp-tile-v{font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px}.tp-hero-note{font-size:18px}
+@container (max-width:479px){.tp-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tp-tile{padding:14px 16px}.tp-tile-v{font-size:32px;margin-top:4px}.tp-tile-plain{display:none}.tp-hero-note{font-size:15px}}
 </style>
 </helmet>
 <div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;background:var(--bg);color:var(--ink);min-height:100vh">
@@ -31,15 +42,15 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <nav style="display:flex;align-items:center;gap:0 8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
-<span aria-hidden="true" style="flex:none;width:200px;height:0"></span>
+<span aria-hidden="true" style="flex:none;width:{{ toolsW }};height:0"></span>
 </nav>
 <div style="position:absolute;top:18px;right:0;display:flex;align-items:center;gap:4px">
-<span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}<span>{{ liveLabel }}</span></span>
+<sc-if value="{{ showLive }}" hint-placeholder-val="{{ true }}"><span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}<span>{{ liveLabel }}</span></span></sc-if>
 <button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
 </div>
 </header>
 
-<main id="main" style="padding:28px 0 56px">
+<main id="main" class="tp-cq" style="padding:28px 0 56px">
 
 <sc-if value="{{ sampleNote }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:20px;font-size:13.5px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span><span>{{ sampleNote }}</span></div>
@@ -56,25 +67,27 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <sc-if value="{{ isNoProjects }}" hint-placeholder-val="{{ false }}">
 <p style="margin:0;font:500 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink)">A testament to every test.</p>
-<h1 style="margin:0 0 24px;font:400 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</h1>
+<h1 style="margin:0;font:400 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</h1>
+<p style="margin:8px 0 24px;font-size:15px;line-height:1.5;color:var(--ink-2)"><span style="font-weight:600;color:var(--ink)">Bobby Helco</span>, quality engineering leader</p>
 <section style="max-width:640px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:28px 24px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card)"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">No projects yet</h2><p style="margin:0;font-size:15px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">Projects appear here once they’re registered and send their first report.</p><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:6px;font-size:15px">How Testament is tested</a></section>
 </sc-if>
 
 <sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
 <p style="margin:0;font:500 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink)">A testament to every test.</p>
-<h1 style="margin:0 0 4px;font:400 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</h1>
+<h1 style="margin:0;font:400 clamp(20px,2.2vw,24px)/1.3 'Source Serif 4',serif;color:var(--ink-2)">Live test results for every project I build.</h1>
+<p style="margin:8px 0 4px;font-size:15px;line-height:1.5;color:var(--ink-2)"><span style="font-weight:600;color:var(--ink)">Bobby Helco</span>, quality engineering leader</p>
 <p style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 36px;margin:0 0 32px">
 <span style="font:500 clamp(88px,11vw,152px)/.92 'Source Serif 4',serif;letter-spacing:-.04em">{{ heroTotal }}</span>
-<span style="display:block;margin:0 0 14px;max-width:420px;font-size:18px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ heroNote }}</span>
+<span class="tp-hero-note" style="display:block;margin:0 0 14px;max-width:420px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ heroNote }}</span>
 </p>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
+<div class="tp-tiles">
 <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4">
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card)">
-<div style="font-size:14px;color:var(--ink-3)">{{ t.label }}</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px">{{ t.value }}</div>
+<div class="tp-tile" style="min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-card)">
+<div style="font-size:14px;color:var(--ink-3)">{{ t.label }}</div><div class="tp-tile-v">{{ t.value }}</div>
 <sc-if value="{{ t.attn }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--attn);margin-top:2px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><span>{{ t.sub }}</span></div></sc-if>
 <sc-if value="{{ t.fail }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--fail);margin-top:2px"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>{{ t.sub }}</span></div></sc-if>
-<sc-if value="{{ t.plain }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ t.sub }}</div></sc-if>
+<sc-if value="{{ t.plain }}" hint-placeholder-val="{{ true }}"><div class="tp-tile-plain" style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ t.sub }}</div></sc-if>
 </div>
 </sc-for>
 </div>
@@ -94,19 +107,19 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ c.hasFailing }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 12px;min-height:44px;box-sizing:border-box;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span title="{{ c.failFull }}" style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ c.failName }}</span><span style="display:flex;gap:10px;font-size:13px;color:var(--ink-3)"><span>{{ c.failPlat }}</span><sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}"><span>{{ c.more }}</span></sc-if></span></a></sc-if>
 <sc-if value="{{ c.hasLayers }}" hint-placeholder-val="{{ true }}"><div style="display:flex;height:8px;gap:3px;border-radius:99px;overflow:hidden;margin-bottom:8px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:3px;background:{{ l.bg }}"></div></sc-for></div><div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--ink-2);margin-bottom:22px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><span style="display:flex;gap:5px"><span>{{ l.label }}</span><span>{{ l.countText }}</span></span></sc-for></div></sc-if>
 <sc-if value="{{ c.emptyNote }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin-bottom:22px;border-radius:12px;background:var(--attn-tint);font-size:14.5px;line-height:1.55;color:var(--ink)"><svg style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle><path d="M8 12h8"></path></svg><span>{{ c.emptyNote }}</span></div></sc-if>
-<sc-if value="{{ c.hasCov }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:14px">
+<sc-if value="{{ c.hasCov }}" hint-placeholder-val="{{ true }}"><div class="tp-cq" style="display:flex;flex-direction:column;gap:14px">
 <sc-for list="{{ c.cov }}" as="v" hint-placeholder-count="2">
-<div style="display:grid;grid-template-columns:128px minmax(40px,1fr) auto;align-items:center;column-gap:14px;font-size:14px">
-<span title="{{ v.m }}" style="min-width:0;font:13px 'JetBrains Mono',monospace;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
-<div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};display:{{ v.flDisp }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
-<span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
+<div class="tp-cov">
+<span class="tp-cov-k" title="{{ v.m }}" style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
+<div class="tp-cov-b" style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};display:{{ v.flDisp }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
+<span class="tp-cov-v" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
 </div>
 </sc-for>
 </div></sc-if>
 <sc-if value="{{ c.noCov }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:var(--ink-3)">No coverage reported</div></sc-if>
 <sc-if value="{{ c.hasReports }}" hint-placeholder-val="{{ true }}"><div style="margin-top:22px;padding:14px 16px;border-radius:12px;background:var(--inset);font:13px/1.8 'JetBrains Mono',monospace;color:var(--ink-2)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-family:'Public Sans',sans-serif;font-size:13px;color:var(--ink-3);margin-bottom:4px"><span>{{ c.repHead }}</span><span>{{ c.repSide }}</span></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));column-gap:24px"><sc-for list="{{ c.reports }}" as="r" hint-placeholder-count="3"><span style="display:flex;justify-content:space-between;gap:12px;min-width:0"><span style="overflow:hidden;text-overflow:ellipsis">{{ r.k }}</span><span style="color:{{ r.ink }}">{{ r.n }}</span></span></sc-for></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));column-gap:24px"><sc-for list="{{ c.reports }}" as="r" hint-placeholder-count="3"><span style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;min-width:0"><span style="min-width:0;overflow-wrap:anywhere">{{ r.k }}</span><span style="flex:none;color:{{ r.ink }}">{{ r.n }}</span></span></sc-for></div>
 </div></sc-if>
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin-top:auto;padding:16px 0 18px;margin-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-3)"><span>{{ c.declared }}</span><span style="display:flex;align-items:center;gap:6px;margin-left:auto;color:{{ c.health.ink }};font-weight:600;font-size:14px;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ c.health.r }}" stroke-dasharray="{{ c.health.dash }}"></circle><path d="{{ c.health.d }}"></path></svg><span>{{ c.health.label }}</span></span></div>
 </article>
@@ -116,23 +129,21 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-top:16px;align-items:start">
 <section style="grid-column:span 1;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:8px;min-width:0;box-shadow:var(--shadow-card)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;padding:16px 16px 10px"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">Recent runs</h2><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:{{ feedNoteInk }}">{{ liveDot }}<span>{{ feedNote }}</span></span></div>
-<div role="log" aria-live="polite" style="display:flex;flex-direction:column">
+<div role="log" aria-live="polite" class="tp-cq" style="display:flex;flex-direction:column">
 <sc-for list="{{ feed }}" as="r" hint-placeholder-count="3">
-<a href="#" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:14px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:{{ r.bg }};text-decoration:none" style-hover="background:var(--raised)">
-<span style="display:flex;align-items:center;gap:6px;width:104px;flex:none;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ r.st.r }}" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.w }}</span></span>
-<div style="flex:1 1 220px;min-width:0">
-<div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;min-width:0"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3);font-weight:400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><sc-if value="{{ r.hasTitle }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></sc-if></div>
-<div style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:13px;color:var(--ink-3);margin-top:2px"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }}</span><span>·</span></sc-if><span>{{ r.branch }}</span><span>·</span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></div>
-</div>
-<span style="display:flex;gap:6px;font-size:14px;white-space:nowrap"><span style="color:{{ r.countInk }};font-weight:{{ r.countW }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
-<span style="margin-left:auto;font-size:13px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span>
+<a href="#" class="tp-run" style="padding:14px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:{{ r.bg }};text-decoration:none" style-hover="background:var(--raised)">
+<span class="tp-run-s" style="display:flex;align-items:center;gap:6px;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg style="flex:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ r.st.r }}" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.w }}</span></span>
+<span class="tp-run-t" style="display:flex;align-items:center;gap:8px;font-size:15px;line-height:22px;font-weight:500"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px/1.5 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink-3);font-weight:400;white-space:nowrap"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><sc-if value="{{ r.hasTitle }}" hint-placeholder-val="{{ true }}"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></sc-if></span>
+<span class="tp-run-m" style="display:block;font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }} · </span></sc-if><span>{{ r.branch }} · </span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></span>
+<span class="tp-run-c" style="display:flex;gap:6px;font-size:14px;line-height:22px;white-space:nowrap"><span style="color:{{ r.countInk }};font-weight:{{ r.countW }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
+<span class="tp-run-w" style="font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span>
 </a>
 </sc-for>
 </div>
 </section>
 <section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px clamp(20px,2.4vw,30px)">
 <h2 style="margin:0 0 14px;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">About this site</h2>
-<p style="margin:0 0 20px;font:400 19px/1.5 'Source Serif 4',serif;text-wrap:pretty">I’m Bobby Helco, a quality engineering leader. Every project here reports its test results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard is tested the same way, and reports on itself.</p>
+<p style="margin:0 0 20px;font:400 19px/1.5 'Source Serif 4',serif;text-wrap:pretty">Every project here reports its test results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard is tested the same way, and reports on itself.</p>
 <a href="#" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;background:var(--ink);color:var(--on-ink);font-size:15px;font-weight:600;text-decoration:none">How Testament is tested →</a>
 </section>
 </div>
@@ -142,7 +153,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>{{ footerNote }}</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;visitor&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;direct&quot;,&quot;tracked link · lead RouteServe&quot;,&quot;tracked link · lead testpulse&quot;],&quot;default&quot;:&quot;direct&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;failed run&quot;,&quot;empty run&quot;,&quot;stale project&quot;,&quot;coverage below floor&quot;,&quot;live update&quot;,&quot;realtime disconnected&quot;,&quot;no projects&quot;,&quot;error&quot;],&quot;default&quot;:&quot;healthy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;visitor&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;direct&quot;,&quot;tracked link · lead RouteServe&quot;,&quot;tracked link · lead testpulse&quot;],&quot;default&quot;:&quot;tracked link · lead RouteServe&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;failed run&quot;,&quot;empty run&quot;,&quot;stale project&quot;,&quot;coverage below floor&quot;,&quot;live update&quot;,&quot;realtime disconnected&quot;,&quot;no projects&quot;,&quot;error&quot;],&quot;default&quot;:&quot;healthy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null };
   componentDidMount() { if (!window.TPKit) this.wait = setInterval(() => { if (window.TPKit) { clearInterval(this.wait); this.forceUpdate(); } }, 30); }
@@ -154,7 +165,7 @@ class Component extends DCLogic {
     const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
     const sc = this.props.scenario ?? 'healthy';
     const live = sc !== 'realtime disconnected';
-    const base = { isError: sc === 'error', isReady: sc !== 'error' && sc !== 'no projects', /* v11 item 14: server-rendered; no loading page */ isNoProjects: sc === 'no projects', six: [1, 2, 3], three: [1, 2, 3],
+    const base = { showLive: sc !== 'error', toolsW: sc === 'error' ? '52px' : '200px', /* v21 item 2: no Live while the page's data failed to load */ isError: sc === 'error', isReady: sc !== 'error' && sc !== 'no projects', /* v11 item 14: server-rendered; no loading page */ isNoProjects: sc === 'no projects', six: [1, 2, 3], three: [1, 2, 3],
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }), themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme' };
     if (!K) return base;
 
@@ -181,7 +192,7 @@ class Component extends DCLogic {
     let heroTotal = '3,802', heroNote = 'automated tests across three projects. 100% passing on the latest runs, 0 skipped.'; /* v8 item 6 template in components.md HeroNote */
     const tile = (label, value, sub, attn) => ({ label, value, sub, attn: attn === true, fail: attn === 'fail', plain: !attn });
     const tiles = [
-      tile('Pass rate', '100%', 'Latest runs · 0 skipped, excluded'),
+      tile('Pass rate', '100%', 'Each project’s latest run'), /* v21 item 15: plain words; the skipped clause only when skipped > 0 */
       tile('Projects reporting', '3 of 3', 'All within their expected cadence'),
       tile('Runs in last 30 days', '26', 'Ostomate2 18 · RouteServe 6 · Testament 2'),
       tile('Projects passing', '3 of 3', 'Latest default-branch runs'),
@@ -194,7 +205,7 @@ class Component extends DCLogic {
       osto.run = Object.assign({}, osto.run, { status: 'failed', sha: 'a41f9c2', failed: 1 });
       osto.failing = [{ suite: 'com.ostomate.app.ui.home.HomeViewModelTest', name: 'rendersToday', platform: 'ios-sim' }];
       heroNote = 'automated tests across three projects. 1 failing on Ostomate2’s latest run, 0 skipped.';
-      tiles[0] = tile('Pass rate', '99.9%', '3,801 of 3,802 · 0 skipped, excluded');
+      tiles[0] = tile('Pass rate', '99.9%', '3,801 of 3,802 passed');
       tiles[3] = tile('Projects passing', '2 of 3', 'Ostomate2 red for 4m', 'fail');
       rows[0] = { status: 'failed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: 'a41f9c2', total: 160, passed: 159, failed: 1, when: '4 min ago' };
     } else if (sc === 'empty run') {
@@ -202,7 +213,7 @@ class Component extends DCLogic {
       osto.run = Object.assign({}, osto.run, { status: 'empty' });
       heroTotal = '3,642';
       heroNote = 'automated tests across two projects. Ostomate2’s latest run had no tests, so it isn’t counted.';
-      tiles[0] = tile('Pass rate', '100%', 'RouteServe and Testament only · 0 skipped, excluded');
+      tiles[0] = tile('Pass rate', '100%', 'RouteServe and Testament only');
       tiles[3] = tile('Projects passing', '2 of 3', 'Ostomate2 last run empty');
       rows[0] = { status: 'empty', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', reports: 6, when: '4 min ago' };
     } else if (sc === 'stale project') {
@@ -222,12 +233,14 @@ class Component extends DCLogic {
     } else if (!live) {
       feedNote = 'Offline. Showing runs as of 10:42 UTC; reconnecting'; feedNoteInk = 'var(--ink-2)';
     }
+    if (sc === 'error') footerNote = ''; /* v21 item 1: nothing read from the database shows while the read failed, the footer's last report included */
+    const brk = (t, camel) => React.createElement(React.Fragment, null, ...K.breakPieces(t, camel).flatMap((x, i) => i ? [React.createElement('wbr'), x] : [x])); /* v21 item 8 */
 
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', boxSizing: 'border-box', background: live ? 'var(--pass)' : 'transparent', border: live ? 'none' : '1.5px solid var(--ink-3)', color: 'var(--pass)', animation: live ? 'tpPulse 2.4s ease-out infinite' : 'none' } });
 
     return Object.assign(base, {
       themeVars: K.themeVars(dark), liveDot, liveLabel: live ? 'Live' : 'Offline · reconnecting',
-      sampleNote: sampleNote ? sampleNote + ' ' + tpSample : tpSample, heroTotal, heroNote, tiles, cards: (() => { /* v16 item 20: a tracked visitor's lead project (tracked_links.lead_project_slug) moves to the front; nothing else changes and nothing says why */ const v = this.props.visitor ?? 'direct', lead = v.includes('RouteServe') ? route : v.includes('testpulse') ? tp : null; const order = [osto, route, tp]; return (lead ? [lead].concat(order.filter(c => c !== lead)) : order).map(c => K.card(c)); })(), feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
+      sampleNote: sampleNote ? sampleNote + ' ' + tpSample : tpSample, heroTotal, heroNote, tiles, cards: (() => { /* v16 item 20: a tracked visitor's lead project (tracked_links.lead_project_slug) moves to the front; nothing else changes and nothing says why */ const v = this.props.visitor ?? 'direct', lead = v.includes('RouteServe') ? route : v.includes('testpulse') ? tp : null; const order = [osto, route, tp]; return (lead ? [lead].concat(order.filter(c => c !== lead)) : order).map(c => K.card(c)).map(v => Object.assign(v, { failName: brk(v.failName, true), reports: v.reports.map(r => Object.assign({}, r, { k: brk(r.k) })) })); })(), feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
     });
   }
 }

@@ -110,7 +110,7 @@ describe('howItsTestedView', () => {
   // Design v12 (v11 item 4): testpulse's own captured files are fixtures too.
   it('names testpulse’s own Vitest and Playwright output among the fixtures', () => {
     expect(PRINCIPLES[1]?.body).toBe(
-      'Parsers are tested against actual result files captured from Ostomate2, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
+      'Parsers are tested against actual result files captured from Ostomate 2.0, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
     );
   });
 
@@ -119,7 +119,7 @@ describe('howItsTestedView', () => {
     expect(PRINCIPLES.slice(2).map(({ body }) => body)).toEqual([
       'Projects send the files their tools already produce. Testament does the parsing, so a project’s CI step stays a few lines long.',
       'If Testament is down, a project’s CI stays green. The reporting step always exits 0 and logs a warning.',
-      'In Testament’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.',
+      'In Testament’s own pipeline, nothing is allowed to fail quietly: no test step uses “|| true” or “continue-on-error” to turn a failure into a pass.',
     ]);
   });
 
@@ -171,23 +171,23 @@ describe('howItsTestedView', () => {
     expect(STRATEGY.map(({ name, phase6 }) => [name, phase6])).toEqual([
       [
         'Unit',
-        'The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup; admin sign-in: the sign-in action’s one neutral answer, the sign-in link’s confirm route, the owner allowlist check, and the guard every admin page and action calls first.',
+        'The details each alert carries. The daily maintenance job: its order of steps, what happens when one fails, and the check that only the scheduler can start it. Telling bots and link previews apart from people. The codes in personal links. Admin sign-in: it answers every email address the same way, so it never reveals who can sign in; the link it emails; the owner-only check; and the guard in front of every admin page and action.',
       ],
       ['Contract', null],
       ['Component', null],
       [
         'Integration',
-        'The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures. The daily job against local Supabase: heartbeat, opening stale alerts, and pruning results at 180 days and visits and tracked sessions at 365. Visit recording, with bots and previews kept out of every count and no raw IP address stored in visits or tracked sessions. Admin sign-in and its actions (create, acknowledge, rotate, delete) against local Supabase Auth with a real session, each refused without one.',
+        'The alert rules (a project gone quiet, a sudden drop in test count, a report with no tests, coverage under its floor), which are database queries, run against a local database with real captured results. The daily job against that database: its heartbeat, flagging quiet projects, and deleting per-test results after 180 days and visit records after 365. Visit recording that leaves bots and link previews out of every count and never stores a visitor’s IP address, only a salted hash of it. Admin sign-in and each admin action (create, acknowledge, rotate, delete) with a real signed-in session, and each one refused without it.',
       ],
       [
         'E2E',
-        'The tracked-link flow: open a link, check its cookie and redirect, see the lead project first, and find the visits stored against the link; nothing the visitor sees names the company, role, contact or token. Admin sign-in with the email opened from a local mail catcher, a spent or made-up link and another address. Admin’s sections with seeded links and visits, each action, and every action refused once the session has gone. The run page’s pruned-results notice, after a real prune.',
+        'Personal links (a link made for one recipient, so visits can be counted per link): open one, check its cookie, its redirect and the project it shows first, and find the visits recorded against it; nothing the visitor sees says who the link was made for or shows its code. Admin sign-in with the email caught by a local mail server, including a used or made-up link and a different address. Every admin section and action with seeded data, and every action refused once the session has ended. The notice a run shows once its per-test results have been pruned, after a real prune.',
       ],
       ['Accessibility', null],
       ['Visual', null],
       [
         'Leak sweep',
-        'Also checks that admin without a session shows only the sign-in form and nothing hidden.',
+        'Also checks that the admin page, opened without signing in, shows only the sign-in form and nothing else.',
       ],
     ]);
   });
@@ -195,7 +195,7 @@ describe('howItsTestedView', () => {
   // Design v12 item 1: no literal figures; each test counts once, in its layer.
   it('notes under the pyramid how the checks are counted', () => {
     expect(PYRAMID_NOTE).toBe(
-      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer Testament’s layer rules give it, whichever report it arrived in.',
+      'Every test counts in one of six layers: unit, component, integration, API, visual or E2E. The accessibility, screenshot and leak-sweep checks run inside the Playwright suite, so they count as E2E; the reporting Action’s contract tests run with the unit tests, so they count as Unit. Each test counts once, in the layer Testament’s settings give it, whichever report it arrived in.',
     );
     // No figure stands alone: the only digits are the section reference and "E2E".
     expect(PYRAMID_NOTE.replace('spec §8', '')).not.toMatch(/\b\d/);
@@ -251,7 +251,7 @@ describe('howItsTestedView', () => {
           failed: 1,
           skipped: 1,
           // 242 ms rounds to whole seconds, as the landing card prints it.
-          duration: '0 s',
+          duration: '<1 s',
         },
         layers: [{ label: 'E2E', count: 3, tone: 3 }],
         total: 3,

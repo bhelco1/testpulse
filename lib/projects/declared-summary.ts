@@ -30,9 +30,10 @@ export function declaredSummary(suites: readonly DeclaredSuite[]): string {
   const [only] = suites;
   if (only === undefined) return '';
   if (suites.length === 1) {
-    // Design v5 item 12 (tp-kit.js): without a count the brackets go.
-    const count = only.count > 0 ? ` (${counts(suites)})` : '';
-    return `Not counted: ${only.name}${count}, ${PHRASE[only.status]}`;
+    // Design v21 item 15: the count leads, so a name with brackets of its own never doubles
+    // them; without a count (v5 item 12) the suite is named alone.
+    const count = only.count > 0 ? `${counts(suites)} in ` : '';
+    return `Not counted: ${count}${only.name}, ${PHRASE[only.status]}`;
   }
   const groups = STATUS_ORDER.map(
     (status) => [status, suites.filter((suite) => suite.status === status)] as const,

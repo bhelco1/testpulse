@@ -16,9 +16,14 @@ describe('declaredSummary', () => {
     expect(declaredSummary([])).toBe('');
   });
 
+  // Design v21 item 15: the count leads, so a suite name with brackets of its own ("Maestro E2E
+  // (iOS)") never reads "(iOS) (13 flows)".
   it('names one suite with its count and status', () => {
     expect(declaredSummary([iosFlows])).toBe(
-      'Not counted: Maestro E2E · iOS (13 flows), authored, not yet executed',
+      'Not counted: 13 flows in Maestro E2E · iOS, authored, not yet executed',
+    );
+    expect(declaredSummary([{ ...iosFlows, name: 'Maestro E2E (iOS)' }])).toBe(
+      'Not counted: 13 flows in Maestro E2E (iOS), authored, not yet executed',
     );
   });
 
@@ -27,18 +32,18 @@ describe('declaredSummary', () => {
       declaredSummary([
         { name: 'Contract', layer: 'integration', count: 6, status: 'runs_in_ci_not_reported' },
       ]),
-    ).toBe('Not counted: Contract (6 tests), run in CI, not yet reported');
+    ).toBe('Not counted: 6 tests in Contract, run in CI, not yet reported');
   });
 
   it('is singular at one', () => {
     expect(declaredSummary([{ ...iosFlows, count: 1 }])).toBe(
-      'Not counted: Maestro E2E · iOS (1 flow), authored, not yet executed',
+      'Not counted: 1 flow in Maestro E2E · iOS, authored, not yet executed',
     );
   });
 
   // Design v5 item 12: projects:sync rejects a count below 1, so this only guards a row written
-  // before that rule; the brackets go rather than print "(0 flows)".
-  it('drops the brackets for one suite without a count', () => {
+  // before that rule; the count goes rather than print "0 flows".
+  it('drops the count for one suite without one', () => {
     expect(declaredSummary([{ ...iosFlows, count: 0 }])).toBe(
       'Not counted: Maestro E2E · iOS, authored, not yet executed',
     );

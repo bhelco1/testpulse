@@ -94,14 +94,14 @@ test.describe('the page', () => {
       'Every phase starts with failing tests written from its acceptance criteria. A phase is done when each criterion has a passing automated test or a recorded manual check.',
     );
     await expect(principles.getByRole('listitem').nth(1)).toContainText(
-      'Parsers are tested against actual result files captured from Ostomate2, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
+      'Parsers are tested against actual result files captured from Ostomate 2.0, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
     );
   });
 
   test('says what runs, layer by layer, with what Phase 6 added', async ({ page }) => {
     const strategy = section(page, 'What runs, and what it covers');
     await expect(strategy).toContainText(
-      'Parsers are tested against result files captured from Ostomate2 and RouteServe, not hand-written samples. Integration tests run against a local Supabase, including the row-level security that hides private projects from the public.',
+      'Parsers are tested against result files captured from Ostomate 2.0 and RouteServe, not hand-written samples. Integration tests run against a local Supabase, including the row-level security that hides private projects from the public.',
     );
     const table = strategy.getByRole('table', { name: 'What runs, by layer' });
     await expect(table.getByRole('columnheader')).toHaveText(['Layer', 'Tool', 'Scope']);
@@ -132,14 +132,14 @@ test.describe('the page', () => {
     await expect(strategy.locator('[data-part="fact"]')).toHaveText([
       'Coverage floor90% linesEnforced by Vitest thresholds in the unit job. Below it, CI fails.',
       'On every pull requestLint, typecheck, unit, integration, E2E',
-      'Failure maskingNoneNo || true, no continue-on-error on test steps.',
+      'Failure maskingNoneNo test step is allowed to fail quietly: none uses || true or continue-on-error.',
     ]);
     // v19 items 10 to 13: a second sentence under the first on the four rows Phase 6 added to.
     await expect(table.locator('[data-part="phase6"]')).toHaveText([
-      /^The alert detail schemas; .* and the guard every admin page and action calls first\.$/,
-      /^The alert rules \(stale, .* against local Supabase Auth with a real session, each refused without one\.$/,
-      /^The tracked-link flow: .* The run page’s pruned-results notice, after a real prune\.$/,
-      'Also checks that admin without a session shows only the sign-in form and nothing hidden.',
+      /^The details each alert carries\. .* and the guard in front of every admin page and action\.$/,
+      /^The alert rules \(a project gone quiet, .* with a real signed-in session, and each one refused without it\.$/,
+      /^Personal links \(a link made for one recipient, .* nothing the visitor sees says who the link was made for or shows its code\. .* after a real prune\.$/,
+      'Also checks that the admin page, opened without signing in, shows only the sign-in form and nothing else.',
     ]);
     for (const [row, name] of [
       [0, 'Unit'],
@@ -161,7 +161,7 @@ test.describe('the page', () => {
       'E2E reported green without ever passing',
     ]);
     await expect(silence).toContainText(
-      'Two incidents from Ostomate2’s post-mortems shaped how results are shown.',
+      'Two incidents from Ostomate 2.0’s post-mortems shaped how results are shown.',
     );
     await expect(silence.locator('[data-part="now"]')).toHaveText([
       'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”. A daily check flags it on the admin page.',
@@ -173,7 +173,7 @@ test.describe('the page', () => {
     const self = selfResults(page);
     const intro = self.locator('p').filter({ hasText: 'CI posts its results' });
     await expect(intro).toHaveText(
-      'Since 7 Oct, Testament’s CI posts its results to this site as the project testpulse, through the same shared GitHub Action Ostomate2 and RouteServe use.',
+      'Since 7 Oct, Testament’s CI posts its results to this site as the project testpulse, through the same shared GitHub Action that Ostomate 2.0, RouteServe and ATPR report through.',
     );
     await expect(intro.locator('time')).toHaveAttribute('datetime', '2026-10-07T00:00:00.000Z');
     await expect(self).not.toContainText(/From Phase 7|starts in Phase 7/);
@@ -185,15 +185,15 @@ test.describe('the page', () => {
       `1 week ago·main·${String(TESTPULSE_SHA)}`,
     );
     await expect(run.locator('[data-part="total"]')).toHaveText('3');
-    // 238 + 4 ms, the fixture's two testsuite times, rounds to 0 s.
-    await expect(run.locator('[data-part="sub"]')).toHaveText('tests ·1 failed·1 skipped ·0 s');
+    // 238 + 4 ms, the fixture's two testsuite times, reads "<1 s" (design v21 item 12).
+    await expect(run.locator('[data-part="sub"]')).toHaveText('tests ·1 failed·1 skipped ·<1 s');
     await expect(run.locator('[data-part="row"]')).toHaveText(['E2E3100%']);
     await expect(run.getByRole('link', { name: 'Full project page →' })).toHaveAttribute(
       'href',
       '/p/testpulse',
     );
     await expect(run.locator('[data-part="pyramid-note"]')).toHaveText(
-      'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer Testament’s layer rules give it, whichever report it arrived in.',
+      'Every test counts in one of six layers: unit, component, integration, API, visual or E2E. The accessibility, screenshot and leak-sweep checks run inside the Playwright suite, so they count as E2E; the reporting Action’s contract tests run with the unit tests, so they count as Unit. Each test counts once, in the layer Testament’s settings give it, whichever report it arrived in.',
     );
     // Only the designed reporting state: no sample tags, and no coverage card, since the seeded
     // run sent no coverage (spec 13.7).

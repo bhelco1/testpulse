@@ -261,11 +261,17 @@
 .factSub {
   margin-top: 4px;
   font-size: 13.5px;
+  line-height: 1.5;
   color: var(--ink-2);
 }
 
+/* Inline in the sentence (design v21 item 15): no padding, background or extra space, and never
+   broken inside a flag. */
 .code {
-  font: 12.5px var(--font-mono);
+  font: 12.5px/1.5 var(--font-mono);
+  white-space: nowrap;
+  padding: 0;
+  background: none;
 }
 
 /* 03 Why it watches for silence */

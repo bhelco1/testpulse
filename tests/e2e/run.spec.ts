@@ -117,8 +117,9 @@ test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => 
       '50 passed',
     ]);
     await expect(rows.locator('td:nth-child(4)')).toHaveText(['60', '82', '50']);
-    // 17,746 ms, 17,747 ms and 111 ms, in whole seconds rounded down as the run durations read.
-    await expect(rows.locator('td:nth-child(6)')).toHaveText(['17 s', '17 s', '0 s']);
+    // 17,746 ms, 17,747 ms and 111 ms, in whole seconds rounded down as the run durations read;
+    // under a second reads "<1 s" (design v21 item 12).
+    await expect(rows.locator('td:nth-child(6)')).toHaveText(['17 s', '17 s', '<1 s']);
     await expect(rows.locator('td:nth-child(5) time')).toHaveText([
       /^\d\d:\d\d:\d\d$/,
       /^\d\d:\d\d:\d\d$/,

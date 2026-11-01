@@ -169,11 +169,14 @@ describe('formatTestTime', () => {
 });
 
 // Design v13 item 6 (components.md "Run duration", tp-kit.js runDur): whole seconds rounded down;
-// "{s} s" under a minute, "{m}m {ss}s" under an hour, then "{h}h {mm}m".
+// "{s} s" under a minute, "{m}m {ss}s" under an hour, then "{h}h {mm}m". Design v21 item 12: under
+// a second reads "<1 s", never "0 s", which read as broken.
 describe('formatRunDuration', () => {
   it.each([
-    [0, '0 s'],
-    [999, '0 s'],
+    [0, '<1 s'],
+    [1, '<1 s'],
+    [999, '<1 s'],
+    [1_000, '1 s'],
     [27_400, '27 s'],
     [35_604, '35 s'],
     [59_999, '59 s'],
@@ -192,9 +195,9 @@ describe('formatRunDuration', () => {
 
   // Ingest stores durations as non-negative integers, so neither reaches a page; the guard keeps
   // a bad value from printing "NaNh NaNm" or "-1 s".
-  it('reads a negative or missing duration as 0 s', () => {
-    expect(formatRunDuration(-1)).toBe('0 s');
-    expect(formatRunDuration(Number.NaN)).toBe('0 s');
+  it('reads a negative or missing duration as under a second', () => {
+    expect(formatRunDuration(-1)).toBe('<1 s');
+    expect(formatRunDuration(Number.NaN)).toBe('<1 s');
   });
 });
 

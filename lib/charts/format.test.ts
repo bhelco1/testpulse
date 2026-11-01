@@ -58,11 +58,19 @@ describe('formatTrendValue', () => {
     expect(formatTrendValue(3, 'ms', true)).toBe('3 ms');
   });
 
-  // Design v14 item 3 (tp-charts.js dur): the axis ticks stay in whole seconds; a value read as a
-  // figure takes the run-duration format, rounded down.
-  it('ticks run durations in whole seconds', () => {
+  // Design v21 item 11 (tp-charts.js tickDur): ticks read in the labels' units and drop a zero
+  // part: seconds under a minute, whole minutes, then hours; 0 reads "0"; never "1500 s".
+  it('ticks run durations in the units the labels use', () => {
+    expect(formatTrendValue(0, 'dur')).toBe('0');
+    expect(formatTrendValue(20, 'dur')).toBe('20 s');
     expect(formatTrendValue(26.6, 'dur')).toBe('27 s');
-    expect(formatTrendValue(660, 'dur')).toBe('660 s');
+    expect(formatTrendValue(90, 'dur')).toBe('1m 30s');
+    expect(formatTrendValue(600, 'dur')).toBe('10m');
+    expect(formatTrendValue(660, 'dur')).toBe('11m');
+    expect(formatTrendValue(1500, 'dur')).toBe('25m');
+    expect(formatTrendValue(3600, 'dur')).toBe('1h');
+    expect(formatTrendValue(5400, 'dur')).toBe('1h 30m');
+    expect(formatTrendValue(7200, 'dur')).toBe('2h');
   });
 
   it('reads a run duration as a figure in the run-duration format', () => {
@@ -73,6 +81,13 @@ describe('formatTrendValue', () => {
     expect(formatTrendValue(3599.9, 'dur', true)).toBe('59m 59s');
     expect(formatTrendValue(3600, 'dur', true)).toBe('1h 00m');
     expect(formatTrendValue(3912, 'dur', true)).toBe('1h 05m');
+  });
+
+  // Design v21 item 12: the tooltip, table, end label and caption read under a second as "<1 s".
+  it('reads a run duration under a second as "<1 s"', () => {
+    expect(formatTrendValue(0, 'dur', true)).toBe('<1 s');
+    expect(formatTrendValue(0.6, 'dur', true)).toBe('<1 s');
+    expect(formatTrendValue(1, 'dur', true)).toBe('1 s');
   });
 
   it('rounds counts and groups thousands', () => {

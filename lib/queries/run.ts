@@ -3,20 +3,13 @@ import { z } from 'zod';
 import { now } from '../clock.ts';
 import { LayerSchema } from '../ingest/layer-rules.ts';
 import { runTestRows, type RunResultInput, type RunTestRow } from '../results/run-results.ts';
-import { flakyTests } from '../stats/flaky.ts';
 import { PUBLIC_RUN_COLUMNS, PublicRunRowSchema, type PublicRun } from '../stats/input.ts';
 import { readAll, readByRunIds } from '../stats/load.ts';
-import { windowStart } from '../stats/rules.ts';
 import { testOutcomes, type RunTests } from '../stats/test-counts.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
+import { loadFlakyTests } from './aggregates.ts';
 import { loadProject, type ProjectDetail } from './project-summary.ts';
-import {
-  loadResults,
-  loadRunReports,
-  toListedRun,
-  type ListedRun,
-  type RunReport,
-} from './run-rows.ts';
+import { loadRunReports, toListedRun, type ListedRun, type RunReport } from './run-rows.ts';
 
 // The run page, /p/[slug]/runs/[id] (spec section 13; design/data-map.md, Run detail): the
 // run's metadata, its reports by job, module and platform, and one results-table row per test
@@ -90,49 +83,25 @@ const FailureRowSchema = z.object({
   detail: z.string(),
 });
 
-const FLAKY_DAYS = 30;
-
-/** The test IDs section 11 calls flaky: default-branch CI runs of the 30 days up to now. */
-async function loadFlakyTestIds(
-  client: PublicClient,
-  project: ProjectDetail,
-  at: Date,
-): Promise<Set<string>> {
-  const runs = await readAll('load the flaky window runs', PublicRunRowSchema, (from, to) =>
-    client
-      .from('runs_public')
-      .select(PUBLIC_RUN_COLUMNS)
-      .eq('project_id', project.id)
-      .eq('branch', project.defaultBranch)
-      .eq('source', 'ci')
-      .gte('finished_at', windowStart(at, FLAKY_DAYS).toISOString())
-      .lte('finished_at', at.toISOString())
-      .order('id')
-      .range(from, to),
-  );
-  const results = await loadResults(
-    client,
-    runs.map((run) => run.id),
-  );
-  return new Set(
-    flakyTests(runs, results, { defaultBranch: project.defaultBranch, now: at }).flakyTestIds,
-  );
-}
-
 async function loadResultRows(
   client: PublicClient,
   project: ProjectDetail,
   run: PublicRun,
   at: Date,
 ): Promise<RunTestRow[]> {
-  const results = await readAll('load the run results', RunResultRowSchema, (from, to) =>
-    client
-      .from('results')
-      .select(RUN_RESULT_COLUMNS)
-      .eq('reports.run_id', run.id)
-      .order('id')
-      .range(from, to),
-  );
+  // Flaky is section 11's flag as of now, over the 30 days before it, which the database answers
+  // (flaky_tests) while the run's own rows are read.
+  const [results, flaky] = await Promise.all([
+    readAll('load the run results', RunResultRowSchema, (from, to) =>
+      client
+        .from('results')
+        .select(RUN_RESULT_COLUMNS)
+        .eq('reports.run_id', run.id)
+        .order('id')
+        .range(from, to),
+    ),
+    loadFlakyTests(client, project.id, at),
+  ]);
   const failingIds = results
     .filter((result) => result.status === 'failed' || result.status === 'error')
     .map((result) => result.resultId);
@@ -153,7 +122,7 @@ async function loadResultRows(
   return runTestRows(
     results,
     new Map(failures.map((row) => [row.result_id, { message: row.message, detail: row.detail }])),
-    await loadFlakyTestIds(client, project, at),
+    new Set(flaky.map((test) => test.testId)),
   );
 }
 
@@ -193,9 +162,10 @@ export async function loadRunDetail(
   const run = await findRun(client, project, runId);
   if (run === null) return null;
 
-  const reports = await loadRunReports(client, run.id);
-  const results =
-    run.resultsPrunedAt === null ? await loadResultRows(client, project, run, at) : null;
+  const [reports, results] = await Promise.all([
+    loadRunReports(client, run.id),
+    run.resultsPrunedAt === null ? loadResultRows(client, project, run, at) : null,
+  ]);
   return {
     project,
     run: {

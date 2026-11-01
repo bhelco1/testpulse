@@ -3,28 +3,14 @@ import { z } from 'zod';
 import { now } from '../clock.ts';
 import { LayerSchema } from '../ingest/layer-rules.ts';
 import { durationTrend, type DurationPoint } from '../stats/duration.ts';
-import { FLAKY_RATE_RUNS, flakyFailures, flakyPlatforms, flakyTests } from '../stats/flaky.ts';
-import {
-  PUBLIC_RUN_COLUMNS,
-  PublicRunRowSchema,
-  RESULT_COLUMNS,
-  ResultRowSchema,
-  type PublicRun,
-  type StatsResult,
-} from '../stats/input.ts';
+import { flakeRateRun, talliedFlakyTests } from '../stats/flaky.ts';
+import { PUBLIC_RUN_COLUMNS, PublicRunRowSchema, type PublicRun } from '../stats/input.ts';
 import { readByRunIds } from '../stats/load.ts';
-import {
-  byFinish,
-  countsTowardCiOnlyStats,
-  inWindow,
-  lastRuns,
-  latestRun,
-  TREND_RUNS,
-} from '../stats/rules.ts';
+import { countsTowardCiOnlyStats, lastRuns, latestRun, TREND_RUNS } from '../stats/rules.ts';
 import { projectSummary, type ProjectSummary } from '../stats/summary.ts';
 import {
-  testCountTrend,
-  testOutcomesByRun,
+  talliedCountTrend,
+  talliedTestsByRun,
   type RunTests,
   type TestCountPoint,
 } from '../stats/test-counts.ts';
@@ -37,11 +23,15 @@ import {
   type WindowPassRate,
 } from '../stats/trends.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
+import {
+  loadFlakyFailures,
+  loadFlakyTests,
+  loadReportCounts,
+  loadTestTallies,
+} from './aggregates.ts';
 import { loadProject, loadSummaryInput, type ProjectDetail } from './project-summary.ts';
 import {
   loadLatestRunDetail,
-  loadReportCounts,
-  loadResults,
   toListedRun,
   type LatestRunDetail,
   type ListedRun,
@@ -53,7 +43,9 @@ export type { FailingTest } from './run-rows.ts';
 // the pyramid and coverage against floors, the section 11 trends, time to green and green
 // streak, the flaky list, its runs and the reporting-health marker. Read as anon, like the
 // landing page (lib/queries/project-summary.ts), so a private project's rows arrive redacted by
-// the views and its failure text is never read here at all. Time is read once, here.
+// the views and its failure text is never read here at all. Distinct-test counts and flakiness
+// are the database's answers (lib/queries/aggregates.ts), not computed here from result rows,
+// and reads that do not wait on each other run together. Time is read once, here.
 
 export type BranchScope = 'default' | 'all';
 
@@ -128,7 +120,6 @@ export function runListLimit(requested: number | undefined): number {
   return Math.min(MAX_RUN_LIMIT, Math.max(1, Math.trunc(requested)));
 }
 const RUN_STRIP_RUNS = 40;
-const FLAKY_DAYS = 30;
 
 const TEST_COLUMNS = 'id, test_key, module, suite, name, layer';
 
@@ -150,16 +141,16 @@ const TestRowSchema = z
     layer: row.layer,
   }));
 
-async function loadRunList(
+/** The run list's runs: newest first, one past the limit to tell whether more exist. */
+async function loadListedRuns(
   client: PublicClient,
   project: ProjectDetail,
   branches: BranchScope,
   limit: number,
   at: Date,
-  read: { readonly runIds: ReadonlySet<string>; readonly results: readonly StatsResult[] },
-): Promise<ProjectPage['runs']> {
+): Promise<PublicRun[]> {
   // The run list shows what CI reported: imported history is not a report (section 11,
-  // "Which runs"). Newest first in byFinish order, one row past the limit to tell if more exist.
+  // "Which runs"). Newest first in byFinish order.
   const scoped = client
     .from('runs_public')
     .select(PUBLIC_RUN_COLUMNS)
@@ -176,66 +167,54 @@ async function loadRunList(
   if (error) throw new Error(`load the run list: ${error.code} ${error.message}`);
   const parsed = z.array(PublicRunRowSchema).safeParse(data);
   if (!parsed.success) throw new Error('load the run list returned an unexpected row');
-  const rows = parsed.data;
-  const shown = rows.slice(0, limit);
-  const counts = await loadReportCounts(
-    client,
-    shown.map((run) => run.id),
-  );
-  // Each row counts distinct tests (decision 2026-09-29), from the results the page has already
-  // read where it can. A pruned run has no per-test rows left to count.
-  const counted = shown.filter((run) => run.resultsPrunedAt === null).map((run) => run.id);
-  const unread = counted.filter((id) => !read.runIds.has(id));
-  const results =
-    unread.length === 0 ? read.results : [...read.results, ...(await loadResults(client, unread))];
-  const tests = testOutcomesByRun(counted, results);
-  return {
-    branches,
-    items: shown.map((run) => ({
-      ...toListedRun(run, counts.get(run.id) ?? 0),
-      tests: tests.get(run.id) ?? null,
-    })),
-    hasMore: rows.length > limit,
-  };
+  return parsed.data;
 }
 
 /**
- * The flaky tests' results in default-branch CI runs, read newest runs first, 40 runs at a time,
- * until each test has results in 40 runs or the runs run out: its last 40 runs with a result
- * (flakyFailures) can reach past the 30 days and past runs it has no result in.
+ * The flaky list: the tests flaky_tests finds with the platforms and commits each flipped on,
+ * each test's "Failed {n} of last {m} runs" from flaky_failures, and its names from tests.
  */
-async function loadFlakyHistory(
+async function loadFlakyList(
   client: PublicClient,
-  testIds: readonly string[],
-  ciRuns: readonly PublicRun[],
-): Promise<StatsResult[]> {
-  if (testIds.length === 0) return [];
-  const newestFirst = ciRuns
-    .filter((run) => run.resultsPrunedAt === null)
-    .sort((a, b) => byFinish(b, a))
-    .map((run) => run.id);
-  const rows: StatsResult[] = [];
-  const runsOf = new Map<string, Set<string>>(testIds.map((id) => [id, new Set()]));
-  for (let start = 0; start < newestFirst.length; start += FLAKY_RATE_RUNS) {
-    const chunk = newestFirst.slice(start, start + FLAKY_RATE_RUNS);
-    const read = await readByRunIds(
-      'load the flaky tests’ runs',
-      ResultRowSchema,
-      chunk,
-      (ids, from, to) =>
-        client
-          .from('results')
-          .select(RESULT_COLUMNS)
-          .in('test_id', [...testIds])
-          .in('reports.run_id', [...ids])
-          .order('id')
-          .range(from, to),
-    );
-    rows.push(...read);
-    for (const row of read) runsOf.get(row.testId)?.add(row.runId);
-    if ([...runsOf.values()].every((seen) => seen.size >= FLAKY_RATE_RUNS)) break;
-  }
-  return rows;
+  project: ProjectDetail,
+  at: Date,
+): Promise<{ readonly testIds: readonly string[]; readonly tests: readonly FlakyListTest[] }> {
+  const flaky = await loadFlakyTests(client, project.id, at);
+  const testIds = flaky.map((test) => test.testId);
+  const [failures, tests] = await Promise.all([
+    loadFlakyFailures(client, project.id, at, testIds),
+    readByRunIds('load the flaky tests', TestRowSchema, testIds, (ids, from, to) =>
+      client
+        .from('tests')
+        .select(TEST_COLUMNS)
+        .in('id', [...ids])
+        .order('id')
+        .range(from, to),
+    ),
+  ]);
+  const testById = new Map(tests.map((test) => [test.id, test]));
+  const failuresOf = new Map(failures.map((counted) => [counted.testId, counted]));
+  return {
+    testIds,
+    tests: flaky.flatMap(({ testId, platforms, commits }) => {
+      const test = testById.get(testId);
+      const counted = failuresOf.get(testId);
+      return test === undefined || counted === undefined
+        ? []
+        : [
+            {
+              testKey: test.testKey,
+              module: test.module,
+              suite: test.suite,
+              name: test.name,
+              layer: test.layer,
+              platforms,
+              failures: { failed: counted.failed, runs: counted.runs },
+              commits,
+            },
+          ];
+    }),
+  };
 }
 
 export async function loadProjectPage(
@@ -248,64 +227,49 @@ export async function loadProjectPage(
   if (project === null) return null;
   const branches = options.branches ?? 'default';
   const runLimit = runListLimit(options.runLimit);
-
-  const input = await loadSummaryInput(client, project, at);
-  const summary = projectSummary(input, at);
-  const { runs } = input;
   const stats = { defaultBranch: project.defaultBranch, now: at };
   const ci = (run: PublicRun) => countsTowardCiOnlyStats(run, project.defaultBranch);
+  const notPruned = (run: PublicRun) => run.resultsPrunedAt === null;
 
-  // Test count per run reads the last 30 CI runs, however old; flakiness the CI runs of the 30
-  // days. A pruned run has no results left to read.
-  const resultRunIds = [
-    ...new Set([
-      ...lastRuns(runs, TREND_RUNS, ci, at),
-      ...runs.filter((run) => ci(run) && inWindow(run.finishedAt, at, FLAKY_DAYS)),
-    ]),
-  ]
-    .filter((run) => run.resultsPrunedAt === null)
-    .map((run) => run.id);
-  const results = await loadResults(client, resultRunIds);
-
-  const flaky = flakyTests(runs, results, stats);
-  const flakyByTest = flakyPlatforms(runs, results, stats);
-  const flakyIds = flakyByTest.map((test) => test.testId);
-  // The history read can stop before the other side of a flip among its runs; the results of the
-  // 30 days hold every flip, so together they find each side the strip draws as Flaky.
-  const history = await loadFlakyHistory(client, flakyIds, runs.filter(ci));
-  const historyIds = new Set(history.map((result) => result.id));
-  const flakyIdSet = new Set(flakyIds);
-  const failures = new Map(
-    flakyFailures(
-      runs,
-      [...history, ...results.filter((r) => flakyIdSet.has(r.testId) && !historyIds.has(r.id))],
-      flakyIds,
-      stats,
-    ).map((counted) => [counted.testId, counted]),
-  );
-  const tests = await readByRunIds(
-    'load the flaky tests',
-    TestRowSchema,
-    flakyIds,
-    (ids, from, to) =>
-      client
-        .from('tests')
-        .select(TEST_COLUMNS)
-        .in('id', [...ids])
-        .order('id')
-        .range(from, to),
-  );
-  const testById = new Map(tests.map((test) => [test.id, test]));
-
+  const [input, listed, flaky] = await Promise.all([
+    loadSummaryInput(client, project, at),
+    loadListedRuns(client, project, branches, runLimit, at),
+    loadFlakyList(client, project, at),
+  ]);
+  const summary = projectSummary(input, at);
+  const { runs } = input;
+  const shown = listed.slice(0, runLimit);
   const latest = latestRun(runs, project.defaultBranch, at);
+
+  // Distinct tests are counted in the database for the test count trend's last 30 CI runs,
+  // however old, the flake rate's run, and each listed run (decision 2026-09-29). A pruned run
+  // has no per-test rows left to count.
+  const trendRuns = lastRuns(runs, TREND_RUNS, ci, at);
+  const counted = [...trendRuns, flakeRateRun(runs, stats), ...shown]
+    .filter((run): run is PublicRun => run !== undefined && notPruned(run))
+    .map((run) => run.id);
+  const [tallies, reportCounts, latestRunDetail] = await Promise.all([
+    loadTestTallies(client, counted),
+    loadReportCounts(
+      client,
+      shown.map((run) => run.id),
+    ),
+    latest === null ? null : loadLatestRunDetail(client, latest),
+  ]);
+  const listedTests = talliedTestsByRun(
+    shown.filter(notPruned).map((run) => run.id),
+    tallies,
+  );
+  const flakeRate = talliedFlakyTests(runs, flaky.testIds, tallies, stats);
+
   return {
     project,
     summary,
     lastReportAt: input.lastReportAt,
-    latestRun: latest === null ? null : await loadLatestRunDetail(client, latest),
+    latestRun: latestRunDetail,
     trends: {
       passRate: passRateTrend(runs, stats),
-      testCount: testCountTrend(runs, results, stats),
+      testCount: talliedCountTrend(runs, tallies, stats),
       // The summary's coverage walk reads the newest 50 trend runs first, so the last 30 are in it.
       coverage: coverageTrend(runs, input.coverage, stats),
       duration: durationTrend(runs, stats),
@@ -313,30 +277,17 @@ export async function loadProjectPage(
     windowPassRate: windowPassRate(runs, stats),
     recentRuns: lastRuns(runs, RUN_STRIP_RUNS, ci, at),
     flaky: {
-      tests: flakyByTest.flatMap(({ testId, platforms, commits }) => {
-        const test = testById.get(testId);
-        const counted = failures.get(testId);
-        return test === undefined || counted === undefined
-          ? []
-          : [
-              {
-                testKey: test.testKey,
-                module: test.module,
-                suite: test.suite,
-                name: test.name,
-                layer: test.layer,
-                platforms,
-                failures: { failed: counted.failed, runs: counted.runs },
-                commits,
-              },
-            ];
-      }),
-      totalTests: flaky.totalTests,
-      flakeRate: flaky.flakeRate,
+      tests: flaky.tests,
+      totalTests: flakeRate.totalTests,
+      flakeRate: flakeRate.flakeRate,
     },
-    runs: await loadRunList(client, project, branches, runLimit, at, {
-      runIds: new Set(resultRunIds),
-      results,
-    }),
+    runs: {
+      branches,
+      items: shown.map((run) => ({
+        ...toListedRun(run, reportCounts.get(run.id) ?? 0),
+        tests: listedTests.get(run.id) ?? null,
+      })),
+      hasMore: listed.length > runLimit,
+    },
   };
 }

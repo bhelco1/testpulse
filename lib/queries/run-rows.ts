@@ -1,17 +1,13 @@
 import { z } from 'zod';
 
 import { runTitle } from '../runs/title.ts';
-import {
-  RESULT_COLUMNS,
-  ResultRowSchema,
-  type PublicRun,
-  type StatsResult,
-} from '../stats/input.ts';
-import { readAll, readByRunIds } from '../stats/load.ts';
+import type { PublicRun } from '../stats/input.ts';
+import { readAll } from '../stats/load.ts';
 import type { PublicClient } from '../supabase/public.ts';
 
 // Rows the project, run and test pages share: a run as a list row, a run's reports (spec
-// section 5.3), which anon may read in full, and results of a set of runs.
+// section 5.3), which anon may read in full, and a run's failing tests. Counts over several runs
+// come from the database (lib/queries/aggregates.ts), never from their result rows.
 
 export interface ListedRun {
   readonly id: string;
@@ -50,21 +46,6 @@ export const toListedRun = (run: PublicRun, reports: number): ListedRun => ({
   durationMs: run.durationMs,
   reports,
 });
-
-/** Results of the given runs, with each result's run and platform (lib/stats/input.ts). */
-export function loadResults(
-  client: PublicClient,
-  runIds: readonly string[],
-): Promise<StatsResult[]> {
-  return readByRunIds('load results', ResultRowSchema, runIds, (ids, from, to) =>
-    client
-      .from('results')
-      .select(RESULT_COLUMNS)
-      .in('reports.run_id', [...ids])
-      .order('id')
-      .range(from, to),
-  );
-}
 
 export const REPORT_COLUMNS =
   'job, module, platform, format, total, passed, failed, skipped, duration_ms, ' +
@@ -117,26 +98,6 @@ export function loadRunReports(client: PublicClient, runId: string): Promise<Run
       .order('platform')
       .range(from, to),
   );
-}
-
-const ReportRunSchema = z.object({ run_id: z.string().min(1) });
-
-/** How many reports each run has, for the run list's empty rows ("0 tests · 3 reports"). */
-export async function loadReportCounts(
-  client: PublicClient,
-  runIds: readonly string[],
-): Promise<Map<string, number>> {
-  const rows = await readByRunIds('count reports', ReportRunSchema, runIds, (ids, from, to) =>
-    client
-      .from('reports')
-      .select('run_id')
-      .in('run_id', [...ids])
-      .order('id')
-      .range(from, to),
-  );
-  const counts = new Map<string, number>();
-  for (const { run_id: runId } of rows) counts.set(runId, (counts.get(runId) ?? 0) + 1);
-  return counts;
 }
 
 export interface FailingTest {
@@ -194,9 +155,9 @@ export async function loadLatestRunDetail(
   client: PublicClient,
   run: Pick<PublicRun, 'id' | 'durationMs'>,
 ): Promise<LatestRunDetail> {
-  return {
-    reports: await loadRunReports(client, run.id),
-    failing: await loadFailing(client, run.id),
-    durationMs: run.durationMs,
-  };
+  const [reports, failing] = await Promise.all([
+    loadRunReports(client, run.id),
+    loadFailing(client, run.id),
+  ]);
+  return { reports, failing, durationMs: run.durationMs };
 }

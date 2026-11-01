@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { Layer } from '../ingest/layer-rules.ts';
+import type { TestStatus } from '../parsers/types.ts';
 import { at, countsCoverage, pctCoverage, run } from './records.test-support.ts';
 import {
   landingHeadline,
@@ -9,6 +11,7 @@ import {
   type ProjectSummaryInput,
   type SummaryProject,
 } from './summary.ts';
+import type { TestTally } from './test-counts.ts';
 
 // Spec section 11 headline tiles and section 13 project cards. The headline carries only numbers
 // about the whole portfolio: total tests, pass rate, projects reporting and runs in last 30 days
@@ -36,6 +39,13 @@ const project = (overrides: Partial<SummaryProject> = {}): SummaryProject => ({
   coverageFloors: { shared: 91 },
   expectedCadenceDays: 8,
   ...overrides,
+});
+
+const tally = (runId: string, layer: Layer, status: TestStatus, tests: number): TestTally => ({
+  runId,
+  layer,
+  status,
+  tests,
 });
 
 describe('runsInLast30Days', () => {
@@ -75,12 +85,12 @@ describe('projectSummary', () => {
       run('c4', '2026-10-05T09:00:00Z', { passed: 190, failed: 0, skipped: 2 }),
     ],
     lastReportAt: at('2026-10-05T09:00:00Z'),
-    // t1 ran on two platforms; t3 was skipped.
+    // The database's tallies of c4's distinct tests (run_test_tallies): t1, which ran on two
+    // platforms, and t2 passed; t3 was skipped.
     latestRunTests: [
-      { testId: 't1', layer: 'unit', status: 'passed' },
-      { testId: 't1', layer: 'unit', status: 'passed' },
-      { testId: 't2', layer: 'integration', status: 'passed' },
-      { testId: 't3', layer: 'unit', status: 'skipped' },
+      tally('c4', 'integration', 'passed', 1),
+      tally('c4', 'unit', 'passed', 1),
+      tally('c4', 'unit', 'skipped', 1),
     ],
     coverage: [
       pctCoverage('cv0', 'bf1', 'shared', 93.3),
@@ -187,10 +197,8 @@ describe('projectSummary', () => {
       {
         ...input,
         runs: [allSkipped],
-        latestRunTests: [
-          { testId: 't1', layer: 'unit', status: 'skipped' },
-          { testId: 't1', layer: 'unit', status: 'skipped' },
-        ],
+        // t1, skipped on both platforms, is one skipped test.
+        latestRunTests: [tally('s', 'unit', 'skipped', 1)],
         coverage: [],
       },
       now,
@@ -200,23 +208,21 @@ describe('projectSummary', () => {
     expect(summary.totalTests).toBe(1);
   });
 
-  it('counts a test that failed or errored on any platform as one failing test', () => {
+  it('counts tests that failed and tests that errored as failing', () => {
     const red = run('r', '2026-10-05T09:00:00Z', { status: 'failed', passed: 5, failed: 2 });
     const summary = projectSummary(
       {
         ...input,
         runs: [red],
         // 7 executions of 4 tests: t1 passed on both platforms, t2 failed on ios-sim only, t3
-        // errored on jvm only, t4 passed. Passed t1, t4; failing t2, t3. 2 / (2 + 2) = 0.5,
-        // where the executions would give 5 / 7.
+        // errored on jvm only, t4 passed. The database combines each test's platforms
+        // (run_test_tallies; its agreement with testOutcomes is proven against the seed), so
+        // the tallies are passed t1, t4; failed t2; error t3. 2 / (2 + 2) = 0.5, where the
+        // executions would give 5 / 7.
         latestRunTests: [
-          { testId: 't1', layer: 'unit', status: 'passed' },
-          { testId: 't1', layer: 'unit', status: 'passed' },
-          { testId: 't2', layer: 'unit', status: 'passed' },
-          { testId: 't2', layer: 'unit', status: 'failed' },
-          { testId: 't3', layer: 'unit', status: 'error' },
-          { testId: 't3', layer: 'unit', status: 'passed' },
-          { testId: 't4', layer: 'unit', status: 'passed' },
+          tally('r', 'unit', 'error', 1),
+          tally('r', 'unit', 'failed', 1),
+          tally('r', 'unit', 'passed', 2),
         ],
         coverage: [],
       },

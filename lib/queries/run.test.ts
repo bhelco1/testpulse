@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   argsOf,
   fakeClient,
-  firstArgs,
+  rpcArgs,
   type Answer,
   type Query,
 } from './fake-client.test-support.ts';
@@ -106,8 +106,7 @@ const REPORT = {
 interface Tables {
   readonly projects?: readonly unknown[];
   readonly run?: readonly unknown[];
-  readonly windowRuns?: readonly unknown[];
-  readonly windowResults?: readonly unknown[];
+  readonly flaky?: readonly unknown[];
   readonly failures?: readonly unknown[];
 }
 
@@ -120,15 +119,15 @@ const answering =
       case 'projects_public':
         return { data: tables.projects ?? [projectRow] };
       case 'runs_public':
-        return { data: isTheRun(query) ? (tables.run ?? [THE_RUN]) : (tables.windowRuns ?? []) };
+        return isTheRun(query)
+          ? { data: tables.run ?? [THE_RUN] }
+          : { error: { code: 'X', message: 'the run page reads no other runs' } };
       case 'reports':
         return { data: [REPORT] };
-      case 'results': {
-        const select = String(firstArgs(query, 'select')[0]);
-        return {
-          data: select.includes('tests!inner') ? RESULTS : (tables.windowResults ?? []),
-        };
-      }
+      case 'results':
+        return { data: RESULTS };
+      case 'rpc:flaky_tests':
+        return { data: tables.flaky ?? [] };
       case 'result_failures':
         return { data: tables.failures ?? [] };
       default:
@@ -266,16 +265,12 @@ describe('loadRunDetail', () => {
     expect(failures).toEqual([{ status: 'failed', durationMs: 400, message: null, detail: null }]);
   });
 
-  it('flags tests flaky over the 30 days before now, from default-branch CI runs', async () => {
-    const windowRuns = [
-      runRow('w1', '2026-10-01T10:00:00+00:00', { commit_sha: 'c0' }),
-      runRow('w2', '2026-10-01T11:00:00+00:00', { commit_sha: 'c0', run_attempt: 2 }),
-    ];
-    const windowResults = [
-      { id: 'y1', test_id: 't-pass', status: 'failed', reports: { run_id: 'w1', platform: 'jvm' } },
-      { id: 'y2', test_id: 't-pass', status: 'passed', reports: { run_id: 'w2', platform: 'jvm' } },
-    ];
-    const { client, queries } = fakeClient(answering({ windowRuns, windowResults }));
+  // Section 11's flaky flag comes from the database (flaky_tests, decision 2026-10-29), which
+  // finds the flips among default-branch CI runs; its agreement with flakyTests in lib/stats is
+  // proven against the seed and generated history in the integration tests.
+  it('flags the tests flaky_tests finds over the 30 days before now', async () => {
+    const flaky = [{ test_id: 't-pass', platforms: ['jvm'], commits: 1 }];
+    const { client, queries } = fakeClient(answering({ flaky }));
 
     const detail = await loadRunDetail('ostomate2', RUN_ID, client, NOW);
 
@@ -284,17 +279,18 @@ describe('loadRunDetail', () => {
       ['key-t-pass', true],
       ['key-t-skip', false],
     ]);
-    const window = queries.find(
-      (query) => query.table === 'runs_public' && !isTheRun(query),
-    ) as Query;
-    expect(argsOf(window, 'eq')).toEqual([
-      ['project_id', 'project-1'],
-      ['branch', 'main'],
-      ['source', 'ci'],
-    ]);
+    const call = queries.find((query) => query.table === 'rpc:flaky_tests') as Query;
     // 2026-10-05 minus 29 days is 2026-09-06, the window's first day.
-    expect(argsOf(window, 'gte')).toEqual([['finished_at', '2026-09-06T00:00:00.000Z']]);
-    expect(argsOf(window, 'lte')).toEqual([['finished_at', '2026-10-05T12:00:00.000Z']]);
+    expect(rpcArgs(call)).toEqual({
+      p_project_id: 'project-1',
+      p_since: '2026-09-06T00:00:00.000Z',
+      p_until: '2026-10-05T12:00:00.000Z',
+    });
+    // Only the run's own results are read as rows.
+    expect(queries.filter((query) => query.table === 'results')).toHaveLength(1);
+    expect(argsOf(queries.find((query) => query.table === 'results') as Query, 'eq')).toEqual([
+      ['reports.run_id', RUN_ID],
+    ]);
   });
 
   it('shows the pruned notice’s totals in place of results, and reads no results', async () => {
@@ -312,6 +308,7 @@ describe('loadRunDetail', () => {
     expect(detail?.run).toMatchObject({ total: 4, passed: 2, failed: 1 });
     expect(queries.some((query) => query.table === 'results')).toBe(false);
     expect(queries.some((query) => query.table === 'result_failures')).toBe(false);
+    expect(queries.some((query) => query.table === 'rpc:flaky_tests')).toBe(false);
   });
 
   it('reads no failure text for a run with nothing failing', async () => {
@@ -321,9 +318,7 @@ describe('loadRunDetail', () => {
     const passing = RESULTS.filter((row) => row.status !== 'failed');
     const answer = answering({});
     const { client: passingClient, queries: passingQueries } = fakeClient((query) =>
-      query.table === 'results' && String(firstArgs(query, 'select')[0]).includes('tests!inner')
-        ? { data: passing }
-        : answer(query),
+      query.table === 'results' ? { data: passing } : answer(query),
     );
 
     await loadRunDetail('ostomate2', RUN_ID, client, NOW);
@@ -366,9 +361,7 @@ describe('loadRunDetail', () => {
     await loadRunDetail('ostomate2', RUN_ID);
 
     expect(vi.mocked(createClient).mock.calls[0]?.[1]).toBe('sb_publishable_unit_test_placeholder');
-    const window = queries.find(
-      (query) => query.table === 'runs_public' && !isTheRun(query),
-    ) as Query;
-    expect(argsOf(window, 'lte')).toEqual([['finished_at', '2026-10-05T12:00:00.000Z']]);
+    const call = queries.find((query) => query.table === 'rpc:flaky_tests') as Query;
+    expect(rpcArgs(call)).toMatchObject({ p_until: '2026-10-05T12:00:00.000Z' });
   });
 });

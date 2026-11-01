@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { argsOf, fakeClient, type Answer, type Query } from './fake-client.test-support.ts';
+import {
+  argsOf,
+  fakeClient,
+  rpcArgs,
+  type Answer,
+  type Query,
+} from './fake-client.test-support.ts';
 import { loadHowItsTested, SELF_SLUG } from './how-its-tested.ts';
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
@@ -49,12 +55,12 @@ const runRow = (id: string, finishedAt: string, overrides: Record<string, unknow
   ...overrides,
 });
 
-const result = (id: string, testId: string, status: string, runId: string, layer = 'e2e') => ({
-  id,
-  test_id: testId,
+// A row of run_test_tallies: one run's distinct tests of one layer and combined status.
+const tally = (runId: string, status: string, tests: number, layer = 'e2e') => ({
+  run_id: runId,
+  layer,
   status,
-  tests: { layer },
-  reports: { run_id: runId },
+  tests,
 });
 
 const coverageRow = (
@@ -75,7 +81,7 @@ const coverageRow = (
 interface Tables {
   readonly projects?: readonly unknown[];
   readonly runs?: readonly unknown[];
-  readonly results?: readonly unknown[];
+  readonly tallies?: readonly unknown[];
   readonly coverage?: readonly unknown[];
 }
 
@@ -94,8 +100,8 @@ const answering =
           return { data: runs.slice(-1).map(({ finished_at }) => ({ finished_at })) };
         }
         return { data: tables.runs ?? [] };
-      case 'results':
-        return { data: tables.results ?? [] };
+      case 'rpc:run_test_tallies':
+        return { data: tables.tallies ?? [] };
       case 'coverage':
         return { data: tables.coverage ?? [] };
       default:
@@ -119,20 +125,19 @@ describe('loadHowItsTested', () => {
   });
 
   it('reads the latest default-branch CI run, its tests and its duration', async () => {
-    const { client } = fakeClient(
+    const { client, queries } = fakeClient(
       answering({
         projects: [projectRow],
         runs: [runRow('r1', '2026-09-22T04:37:33.884+00:00')],
-        results: [
-          result('x1', 't1', 'passed', 'r1'),
-          result('x2', 't2', 'failed', 'r1'),
-          result('x3', 't3', 'skipped', 'r1'),
-        ],
+        tallies: [tally('r1', 'failed', 1), tally('r1', 'passed', 1), tally('r1', 'skipped', 1)],
       }),
     );
 
     const { self } = await loadHowItsTested(client, NOW);
 
+    // The latest run's tests are counted in the database (run_test_tallies).
+    const counted = queries.filter((query) => query.table === 'rpc:run_test_tallies');
+    expect(counted.map(rpcArgs)).toEqual([{ p_run_ids: ['r1'] }]);
     expect(self?.latestDurationMs).toBe(242);
     expect(self?.summary.latestRun).toMatchObject({
       id: 'r1',
@@ -148,17 +153,17 @@ describe('loadHowItsTested', () => {
   });
 
   // Design v12 item 1 (decided by Bobby, 2026-10-07): the results card counts distinct tests per
-  // layer, Unit and Component apart. A test reported twice (two platforms) counts once.
+  // layer, Unit and Component apart. A test reported twice (two platforms) counts once, which the
+  // database's tallies already hold: t-e2e on two platforms is one e2e test.
   it('counts distinct tests per layer, unit and component apart', async () => {
     const { client } = fakeClient(
       answering({
         projects: [projectRow],
         runs: [runRow('r1', '2026-10-05T10:00:00+00:00', { status: 'passed', failed: 0 })],
-        results: [
-          result('x1', 't-unit', 'passed', 'r1', 'unit'),
-          result('x2', 't-component', 'passed', 'r1', 'component'),
-          result('x3', 't-e2e', 'passed', 'r1', 'e2e'),
-          result('x4', 't-e2e', 'passed', 'r1', 'e2e'),
+        tallies: [
+          tally('r1', 'passed', 1, 'component'),
+          tally('r1', 'passed', 1, 'e2e'),
+          tally('r1', 'passed', 1, 'unit'),
         ],
       }),
     );

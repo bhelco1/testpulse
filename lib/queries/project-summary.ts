@@ -6,8 +6,6 @@ import {
   CoverageRowSchema,
   PUBLIC_RUN_COLUMNS,
   PublicRunRowSchema,
-  TEST_LAYER_COLUMNS,
-  TestLayerRowSchema,
   type PublicRun,
   type StatsCoverage,
 } from '../stats/input.ts';
@@ -15,11 +13,14 @@ import { readAll, readByRunIds } from '../stats/load.ts';
 import { byFinish, countsTowardTrends, latestRun, TREND_SOURCES } from '../stats/rules.ts';
 import type { ProjectSummaryInput, SummaryProject } from '../stats/summary.ts';
 import type { PublicClient } from '../supabase/public.ts';
+import { loadTestTallies } from './aggregates.ts';
 
 // What the landing page's project cards and the project page both read for one project (spec
-// sections 11 and 13), as anon: projects_public, runs_public, and the reports, results, tests
-// and coverage tables, which is all section 9 opens. A private project's rows arrive already
-// redacted by the views; nothing here hides or reveals anything.
+// sections 11 and 13), as anon: projects_public, runs_public, the coverage table, and the latest
+// run's test counts from run_test_tallies (lib/queries/aggregates.ts), which reads the reports,
+// results and tests tables as its caller. That is all section 9 opens. A private project's rows
+// arrive already redacted by the views; nothing here hides or reveals anything. Reads that do
+// not wait on each other run together.
 
 export const PROJECT_COLUMNS =
   'id, slug, name, tagline, visibility, default_branch, declared_suites, ' +
@@ -145,7 +146,7 @@ export async function loadSummaryInput(
 ): Promise<SummaryInput> {
   // Every default-branch run, both sources: the green streak's longest has no window, and the
   // stats pick their own sources through lib/stats/rules.ts.
-  const runs = await readAll('load runs', PublicRunRowSchema, (from, to) =>
+  const loadRuns = readAll('load runs', PublicRunRowSchema, (from, to) =>
     client
       .from('runs_public')
       .select(PUBLIC_RUN_COLUMNS)
@@ -158,7 +159,7 @@ export async function loadSummaryInput(
   );
 
   // A report on any branch keeps a project from going stale; imported history is not a report.
-  const [lastReportAt = null] = await readAll('load the last report', LastReportRowSchema, () =>
+  const loadLastReport = readAll('load the last report', LastReportRowSchema, () =>
     client
       .from('runs_public')
       .select('finished_at')
@@ -169,24 +170,13 @@ export async function loadSummaryInput(
       .limit(1),
   );
 
+  const [runs, [lastReportAt = null]] = await Promise.all([loadRuns, loadLastReport]);
   const latest = latestRun(runs, project.defaultBranch, at);
-  const latestRunTests =
-    latest === null
-      ? []
-      : await readAll('load the latest run tests', TestLayerRowSchema, (from, to) =>
-          client
-            .from('results')
-            .select(TEST_LAYER_COLUMNS)
-            .eq('reports.run_id', latest.id)
-            .order('id')
-            .range(from, to),
-        );
+  // The latest run's distinct tests by layer and status, counted in the database.
+  const [latestRunTests, coverage] = await Promise.all([
+    latest === null ? [] : loadTestTallies(client, [latest.id]),
+    loadCoverage(client, project, runs),
+  ]);
 
-  return {
-    project,
-    runs,
-    lastReportAt,
-    latestRunTests,
-    coverage: await loadCoverage(client, project, runs),
-  };
+  return { project, runs, lastReportAt, latestRunTests, coverage };
 }

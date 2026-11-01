@@ -1,8 +1,9 @@
 import type { PublicClient } from '../supabase/public.ts';
 
 // A stand-in for the publishable-key client in loader unit tests: it records every query
-// builder call and, when the chain is awaited, answers from the test. What the rows mean for
-// real data read as anon is proven against the seeded database in lib/seed/seed.int.test.ts.
+// builder call, database function calls among them, and, when the chain is awaited, answers
+// from the test. What the rows mean for real data read as anon is proven against the seeded
+// database in lib/seed/seed.int.test.ts.
 
 export type Call = readonly [method: string, ...args: unknown[]];
 
@@ -22,6 +23,10 @@ export const argsOf = (query: Query, method: string): unknown[][] =>
 /** The first argument pair of the query's first call to `method`, such as an `in` filter. */
 export const firstArgs = (query: Query, method: string): unknown[] =>
   argsOf(query, method)[0] ?? [];
+
+/** The arguments a database function was called with. */
+export const rpcArgs = (query: Query): Record<string, unknown> =>
+  (firstArgs(query, 'rpc')[0] ?? {}) as Record<string, unknown>;
 
 export function fakeClient(answer: (query: Query) => Answer): {
   client: PublicClient;
@@ -48,6 +53,8 @@ export function fakeClient(answer: (query: Query) => Answer): {
     );
   const client = {
     from: (table: string) => chain({ table, calls: [] }),
+    // A database function's call is recorded as `rpc:<name>`, its arguments as the first call.
+    rpc: (name: string, args: unknown) => chain({ table: `rpc:${name}`, calls: [['rpc', args]] }),
   } as unknown as PublicClient;
   return { client, queries };
 }

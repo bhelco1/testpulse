@@ -5,8 +5,8 @@ import { createPublicClient, type PublicClient } from '../supabase/public.ts';
 import { loadProject, loadSummaryInput } from './project-summary.ts';
 
 // /how-its-tested (spec section 13; design/data-map.md, How it's tested): the live section reads
-// project `testpulse` like any other, as anon through projects_public, runs_public and the
-// results, tests and coverage tables. Production had no testpulse row until self-reporting went
+// project `testpulse` like any other, as anon through projects_public, runs_public, the coverage
+// table and the database's test counts (lib/queries/aggregates.ts). Production had no testpulse row until self-reporting went
 // live on 2026-10-07, so a missing project is an ordinary answer, never an error. Time is read once, here.
 
 /** testpulse's own slug, as projects/testpulse.yaml registers it. */

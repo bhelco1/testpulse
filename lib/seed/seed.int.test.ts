@@ -2,8 +2,9 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { aggregateParity } from '../../tests/int/aggregates.ts';
 import { testKey } from '../ingest/normalize.ts';
 import { loadLanding, type Landing, type LandingProject } from '../queries/landing.ts';
 import { landingView } from '../pages/landing.ts';
@@ -38,6 +39,14 @@ const NOW = new Date(SEED_NOW);
 const DAY_MS = 86_400_000;
 const SLUGS = [...SEED_SLUGS];
 const PAGE = 1000;
+// PostgREST requests per page load on the seed, the most each loader may make (decision
+// 2026-10-29). The landing page lists the projects, makes 6 requests for each that has reported
+// (runs, last report, its latest run's test counts, coverage, reports and failing tests) and 2
+// for the feed; the budget is per project, as other integration files may leave projects of their
+// own. The run page reads its own run's 1,045 results in two pages of 1,000 rows.
+const LANDING_REQUESTS_PER_PROJECT = 6;
+const PROJECT_REQUESTS = 13;
+const RUN_REQUESTS = 7;
 
 type Row = Record<string, unknown>;
 
@@ -1142,6 +1151,103 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
         expect(page?.history.runs).toHaveLength(11);
         expectNoneOf(page);
       });
+    });
+  });
+
+  describe('database aggregates give the TypeScript stats’ answers on the seed (decision 2026-10-29)', () => {
+    it.each(SLUGS)('for %s, read as anon', async (slug) => {
+      const { data, error } = await anon
+        .from('projects_public')
+        .select('id, default_branch')
+        .eq('slug', slug)
+        .single();
+      if (error) throw failed(`project ${slug}`, error);
+      const parity = await aggregateParity(
+        anon,
+        { id: String(data.id), defaultBranch: String(data.default_branch) },
+        NOW,
+      );
+      expect(parity.actual).toEqual(parity.expected);
+      expect(parity.seen.results).toBeGreaterThan(0);
+    });
+
+    it('reaches routeserve’s flaky test and failing results', async () => {
+      const { data, error } = await anon
+        .from('projects_public')
+        .select('id, default_branch')
+        .eq('slug', 'routeserve')
+        .single();
+      if (error) throw failed('project routeserve', error);
+      const parity = await aggregateParity(
+        anon,
+        { id: String(data.id), defaultBranch: String(data.default_branch) },
+        NOW,
+      );
+      expect(parity.seen).toMatchObject({ runs: 11, flaky: 1 });
+      expect(parity.seen.failing).toBeGreaterThan(0);
+    });
+  });
+
+  describe('page loads ask the database for answers, not rows (decision 2026-10-29)', () => {
+    // Every PostgREST request a loader makes, read off fetch while it runs. Production pages took
+    // 6 to 75 seconds when loaders paged every result of the 30 days through PostgREST, 1,000
+    // rows a request; these budgets fail if a loader goes back to that. They count requests and
+    // the shape of each results read, so they do not depend on the machine's speed.
+    const requestsOf = async (load: () => Promise<unknown>): Promise<URL[]> => {
+      const spy = vi.spyOn(globalThis, 'fetch');
+      try {
+        await load();
+        return spy.mock.calls.map(([input]) =>
+          input instanceof Request ? new URL(input.url) : new URL(String(input)),
+        );
+      } finally {
+        spy.mockRestore();
+      }
+    };
+
+    // Result rows are read for one run's failing tests (a latest-run card) and, on the run page,
+    // for that run's own rows, which it shows one by one. Every count over results is the
+    // database's answer instead; any other read of results is a page counting rows itself.
+    const otherResultReads = (requests: readonly URL[], ownRun?: string): string[] =>
+      requests
+        .filter((url) => url.pathname === '/rest/v1/results')
+        .filter((url) => {
+          const run = url.searchParams.get('reports.run_id') ?? '';
+          const failing = url.searchParams.get('status') === 'in.(failed,error)';
+          return !(/^eq\./.test(run) && (failing || run === `eq.${ownRun}`));
+        })
+        .map((url) => decodeURIComponent(url.search));
+
+    const latestRunOf = async (slug: string): Promise<string> => {
+      const page = await loadProjectPage(slug, {}, createPublicClient(), NOW);
+      const id = page?.summary.latestRun?.id;
+      if (id === undefined) throw new Error(`no latest run for ${slug}`);
+      return id;
+    };
+
+    it('the landing page', async () => {
+      let projects = 0;
+      const requests = await requestsOf(async () => {
+        projects = (await loadLanding(createPublicClient(), NOW)).projects.length;
+      });
+      expect(projects).toBeGreaterThanOrEqual(SLUGS.length);
+      expect(otherResultReads(requests)).toEqual([]);
+      expect(requests.length).toBeLessThanOrEqual(1 + LANDING_REQUESTS_PER_PROJECT * projects + 2);
+    });
+
+    it.each(SLUGS)('the project page of %s', async (slug) => {
+      const requests = await requestsOf(() => loadProjectPage(slug, {}, createPublicClient(), NOW));
+      expect(otherResultReads(requests)).toEqual([]);
+      expect(requests.length).toBeLessThanOrEqual(PROJECT_REQUESTS);
+    });
+
+    it.each(['testpulse', 'routeserve'])('the run page of %s’s latest run', async (slug) => {
+      const runId = await latestRunOf(slug);
+      const requests = await requestsOf(() =>
+        loadRunDetail(slug, runId, createPublicClient(), NOW),
+      );
+      expect(otherResultReads(requests, runId)).toEqual([]);
+      expect(requests.length).toBeLessThanOrEqual(RUN_REQUESTS);
     });
   });
 });

@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest';
 
 import { at, run } from './records.test-support.ts';
 import {
+  talliedCounts,
+  talliedCountTrend,
+  talliedOutcomes,
+  talliedTestsByRun,
   testCounts,
   testCountTrend,
   testOutcomes,
   testOutcomesByRun,
   type TestCountRun,
   type TestLayerRow,
+  type TestTally,
 } from './test-counts.ts';
 import type { TrendOptions } from './trends.ts';
 
@@ -243,5 +248,68 @@ describe('testCountTrend', () => {
     expect(trend).toHaveLength(30);
     expect(trend[0]?.runId).toBe('r1');
     expect(trend.at(-1)).toMatchObject({ runId: 'r30', totalTests: null });
+  });
+});
+
+// Decision 2026-10-29: the pages read each run's distinct tests from run_test_tallies, by layer
+// and the status each test's results combine to, and these turn the tallies into the same
+// answers. That the database's tallies are those of testOutcomes and testCounts for the same
+// results is proven in the integration tests (tests/int/aggregates.ts).
+describe('the tallied forms of the counts', () => {
+  const tally = (
+    runId: string,
+    layer: TestTally['layer'],
+    status: TestTally['status'],
+    tests: number,
+  ): TestTally => ({ runId, layer, status, tests });
+  // r1's 6 tests: 3 unit passed, 1 unit failed, 1 integration errored, 1 e2e skipped.
+  const r1 = [
+    tally('r1', 'e2e', 'skipped', 1),
+    tally('r1', 'integration', 'error', 1),
+    tally('r1', 'unit', 'failed', 1),
+    tally('r1', 'unit', 'passed', 3),
+  ];
+
+  it('counts a run’s tests per layer, adding up to its total', () => {
+    expect(talliedCounts(r1)).toEqual({
+      totalTests: 6,
+      layers: { e2e: 1, integration: 1, unit: 4 },
+    });
+    expect(talliedCounts([])).toEqual({ totalTests: 0, layers: {} });
+  });
+
+  it('counts failed and errored tests as failing, and skipped apart', () => {
+    expect(talliedOutcomes(r1)).toEqual({ passed: 3, failed: 2, skipped: 1 });
+    expect(talliedOutcomes([])).toEqual({ passed: 0, failed: 0, skipped: 0 });
+  });
+
+  it('counts each run asked about on its own, a run with no tallies as no tests', () => {
+    const tests = talliedTestsByRun(['r1', 'r2'], [...r1, tally('r3', 'unit', 'passed', 9)]);
+    expect([...tests]).toEqual([
+      ['r1', { total: 6, passed: 3, failed: 2, skipped: 1 }],
+      ['r2', { total: 0, passed: 0, failed: 0, skipped: 0 }],
+    ]);
+  });
+
+  it('trends the same runs as testCountTrend, from the tallies’ totals', () => {
+    const now = at('2026-10-01T15:30:00Z');
+    const options: TrendOptions = { defaultBranch: 'main', now };
+    const runs: TestCountRun[] = [
+      { ...run('r1', '2026-09-29T10:00:00Z'), resultsPrunedAt: null },
+      { ...run('r2', '2026-09-30T10:00:00Z'), resultsPrunedAt: null },
+      { ...run('pruned', '2026-09-30T11:00:00Z'), resultsPrunedAt: at('2026-10-01T00:00:00Z') },
+      { ...run('pr', '2026-09-30T12:00:00Z', { branch: 'feature/x' }), resultsPrunedAt: null },
+    ];
+    expect(
+      talliedCountTrend(runs, [...r1, tally('pr', 'unit', 'passed', 2)], options).map((point) => [
+        point.runId,
+        point.totalTests,
+      ]),
+    ).toEqual([
+      ['r1', 6],
+      // No tallies: an empty run, 0 tests.
+      ['r2', 0],
+      ['pruned', null],
+    ]);
   });
 });

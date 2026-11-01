@@ -6,7 +6,7 @@ import type { StatsCoverage, StatsRun } from './input.ts';
 import { projectsPassing, type ProjectsPassing } from './projects-passing.ts';
 import { countsTowardCiOnlyStats, inWindow, latestRun } from './rules.ts';
 import { greenStreak, type GreenStreak } from './streak.ts';
-import { testCounts, testOutcomes, type LatestRunTest } from './test-counts.ts';
+import { talliedCounts, talliedOutcomes, type TestTally } from './test-counts.ts';
 import { timeToGreen, type TimeToGreen } from './time-to-green.ts';
 import { passRate } from './trends.ts';
 
@@ -42,7 +42,8 @@ export interface ProjectSummaryInput {
   readonly project: SummaryProject;
   readonly runs: readonly StatsRun[];
   readonly lastReportAt: Date | null;
-  readonly latestRunTests: readonly LatestRunTest[];
+  /** The latest run's distinct tests by layer and combined status (run_test_tallies). */
+  readonly latestRunTests: readonly TestTally[];
   readonly coverage: readonly StatsCoverage[];
 }
 
@@ -109,8 +110,8 @@ export function projectSummary(input: ProjectSummaryInput, now: Date): ProjectSu
   const options = { defaultBranch: project.defaultBranch, now };
   const latest = latestRun(runs, project.defaultBranch, now);
   const { totalTests, layers } =
-    latest === null ? { totalTests: 0, layers: {} } : testCounts(input.latestRunTests);
-  const outcomes = testOutcomes(latest === null ? [] : input.latestRunTests);
+    latest === null ? { totalTests: 0, layers: {} } : talliedCounts(input.latestRunTests);
+  const outcomes = talliedOutcomes(latest === null ? [] : input.latestRunTests);
   const coverage = latestCoverage(runs, input.coverage, {
     defaultBranch: project.defaultBranch,
     floors: project.coverageFloors,

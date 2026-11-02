@@ -214,7 +214,17 @@ test.describe('Ostomate2 (public)', () => {
       await expect(strip.locator('[data-part="oldest"]')).toHaveText('7 runs ago');
       const firstCell = await strip.locator('[data-part="cell"]').first().boundingBox();
       const oldest = await strip.locator('[data-part="oldest"]').boundingBox();
-      expect(Math.abs((oldest?.x ?? 0) - (firstCell?.x ?? 0))).toBeLessThanOrEqual(1);
+      const latest = await strip.locator('[data-part="latest"]').boundingBox();
+      if ((page.viewportSize()?.width ?? 0) >= 480) {
+        expect(Math.abs((oldest?.x ?? 0) - (firstCell?.x ?? 0))).toBeLessThanOrEqual(1);
+      } else {
+        // At 390 eight cells are narrower than "7 runs ago  Latest": the labels keep their width,
+        // starting left of the oldest cell, and stay inside the card.
+        expect(oldest?.x ?? 0).toBeLessThanOrEqual(firstCell?.x ?? 0);
+      }
+      expect((latest?.x ?? 0) + (latest?.width ?? 0)).toBeLessThanOrEqual(
+        (area?.x ?? 0) + (area?.width ?? 0) + 0.5,
+      );
     },
   );
 

@@ -639,10 +639,13 @@ describe('StatusTimeline with fewer runs than slots', () => {
       'flex-basis': '0px',
       'min-width': '0px',
       'white-space': 'nowrap',
+      overflow: 'hidden',
+      'text-overflow': 'ellipsis',
     });
+    // Its labels never leave the card, however few runs share a narrow strip.
     expect(ruleFor(CSS, '.endsRuns')).toEqual({
       'flex-basis': '0px',
-      'min-width': '0px',
+      'min-width': 'max-content',
       display: 'flex',
       'justify-content': 'space-between',
       gap: 'var(--space-3)',

@@ -206,7 +206,7 @@ test('a new run appears in the project page’s run list without reload', async 
   await ingestLiveRun('live-public', PUBLIC_PROJECT);
 
   await expect(rows).toHaveCount(3, ARRIVAL);
-  await expect(rows.first()).toContainText(`main·${sha7(PUBLIC_PROJECT)}`);
+  await expect(rows.first()).toContainText(`main · ${sha7(PUBLIC_PROJECT)}`);
   await expect(rows.first().locator(newChip)).toHaveText('New');
   await expect(rows.nth(1)).toContainText(sha7(PUBLIC_LANDING));
   await expect(rows.nth(1).locator(newChip)).toHaveCount(0);

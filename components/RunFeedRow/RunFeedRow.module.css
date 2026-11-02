@@ -12,23 +12,6 @@
   text-decoration: none;
 }
 
-/* Design v21 item 7: in a list under 400 px (the list is the container) the count and time take a
-   third line, count left and time right; every row keeps the same shape. */
-@container (max-width: 399px) {
-  .row {
-    grid-template-areas: 'status title title' 'status meta meta' 'count count when';
-  }
-
-  .count {
-    justify-self: start;
-    padding-top: 6px;
-  }
-
-  .when {
-    padding-top: 6px;
-  }
-}
-
 .row:hover,
 .row:focus-visible {
   background: var(--raised);
@@ -143,6 +126,24 @@
   line-height: 19px;
   color: var(--ink-3);
   white-space: nowrap;
+}
+
+/* Design v21 item 7: in a list under 400 px (the list is the container) the count and time take a
+   third line, count left and time right; every row keeps the same shape. After the
+   rules it overrides, which have the same specificity. */
+@container (max-width: 399px) {
+  .row {
+    grid-template-areas: 'status title title' 'status meta meta' 'count count when';
+  }
+
+  .count {
+    justify-self: start;
+    padding-top: 6px;
+  }
+
+  .when {
+    padding-top: 6px;
+  }
 }
 
 /* The loading row (design v21 item 14): each bar centred in its cell, the cells at the row's line

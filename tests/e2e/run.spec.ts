@@ -208,7 +208,8 @@ test.describe('testpulse’s run (public, failed, one platform)', () => {
       'Passed1',
       'Failed1',
       'Skipped1',
-      /^Duration\d+ s$/,
+      // 242 ms of reports reads "<1 s" (design v21 item 12).
+      'Duration<1 s',
     ]);
     await expect(tiles(page).nth(2)).toHaveAttribute('data-tone', 'fail');
     await expect(reportRows(page)).toHaveCount(1);

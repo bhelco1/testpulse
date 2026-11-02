@@ -84,11 +84,11 @@ test.describe('the landing page', () => {
   test('lays the tiles out for the viewport', async ({ page }) => {
     const tiles = page.locator('[data-part="tiles"]');
     const phone = (page.viewportSize()?.width ?? 0) < 480;
-    const columns = await tiles.evaluate(
-      (el) => getComputedStyle(el).gridTemplateColumns.split(' ').length,
-    );
-    expect(columns).toBe(phone ? 2 : 4);
     const tile = tiles.locator(':scope > div');
+    // An auto-fit grid lists its collapsed tracks too, so the columns are counted from the tiles
+    // that share the first one's row.
+    const tops = await tile.evaluateAll((all) => all.map((el) => el.getBoundingClientRect().top));
+    expect(tops.filter((top) => top === tops[0])).toHaveLength(phone ? 2 : 4);
     await expect(tile.nth(0).locator('[data-part="sub"]')).toBeVisible({ visible: !phone });
     await expect(tile.nth(2).locator('[data-part="sub"]')).toBeVisible({ visible: !phone });
     await expect(tile.nth(1).locator('[data-part="attention"]')).toBeVisible();
@@ -201,8 +201,9 @@ test.describe('the landing page', () => {
     // A stale card is dated, not relative (design v8 item 14).
     await expect(testpulse.locator('[data-part="when"]')).toHaveText('22 Sep');
     await expect(testpulse.locator('[data-part="total"]')).toHaveText('3');
+    // 238 + 4 ms of reports: under a second reads "<1 s" (design v21 item 12).
     await expect(testpulse.locator('[data-part="sub"]')).toHaveText(
-      /^tests ·1 failed·1 skipped ·\d+ s$/,
+      'tests ·1 failed·1 skipped ·<1 s',
     );
     await expect(testpulse.locator('[data-part="no-coverage"]')).toHaveText('No coverage reported');
     await expect(testpulse.getByText('No report in 13 days')).toBeVisible();
@@ -227,15 +228,22 @@ test.describe('the landing page', () => {
     await expect(rows.nth(0)).toHaveAttribute('href', /^\/p\/ostomate2\/runs\/[0-9a-f-]{36}$/);
   });
 
-  // Design v21 item 7: one row shape whatever the text, 71 px tall in a wide list and 97 in a list
-  // under 400 px (a phone), with the time always on the right.
+  // Design v21 item 7: one row shape whatever the text, 71 px tall in a wide list and, under 400 px
+  // (a phone), 101: the drawn grid's three lines (22, 19, then 6 + 22) and two 2 px gaps inside
+  // 14 px padding, where the README rounds it to 97. The time is always on the right.
   test('gives every run row the same shape', async ({ page }) => {
     const rows = feed(page).getByRole('link');
     await expect(rows).toHaveCount(3);
     const phone = (page.viewportSize()?.width ?? 0) < 480;
     for (const row of await rows.all()) {
       const box = await row.boundingBox();
-      expect(Math.round(box?.height ?? 0)).toBe(phone ? 97 : 71);
+      expect(Math.round(box?.height ?? 0)).toBe(phone ? 101 : 71);
+      if (phone) {
+        // The third line: the count starts under the status, at the row's left.
+        const status = await row.locator('[data-part="status"]').boundingBox();
+        const count = await row.locator('[data-part="count-lead"]').boundingBox();
+        expect(Math.abs((count?.x ?? 0) - (status?.x ?? 0))).toBeLessThanOrEqual(1);
+      }
       const when = await row.locator('[data-part="when"]').boundingBox();
       expect(Math.round((when?.x ?? 0) + (when?.width ?? 0))).toBe(
         Math.round((box?.x ?? 0) + (box?.width ?? 0) - 16),

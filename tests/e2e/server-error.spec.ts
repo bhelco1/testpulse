@@ -182,6 +182,8 @@ test.describe('a project, run or test page whose read fails', () => {
   });
 
   test('matches its visual snapshots', { tag: '@visual' }, async ({ browser }) => {
+    // Four pages, each answered only once the server's failed reads have given up.
+    test.setTimeout(120_000);
     for (const [name, options] of Object.entries(VIEWPORTS)) {
       const page = await newPage(browser, options);
       await page.goto(PREFIX);

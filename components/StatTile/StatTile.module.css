@@ -57,9 +57,20 @@
   margin-top: var(--space-3);
 }
 
-@media (max-width: 640px) {
-  .value {
+/* Design v21 item 5: the landing's tiles at 2 × 2, keyed to the page column's width. A plain
+   sub-line goes; an attention or fail line is a different element and stays. */
+@container (max-width: 479px) {
+  .web {
+    padding: 14px 16px;
+  }
+
+  .web .value {
     font-size: 32px;
+    margin-top: 4px;
+  }
+
+  .web .sub {
+    display: none;
   }
 }
 

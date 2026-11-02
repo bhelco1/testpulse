@@ -146,4 +146,27 @@ describe('page heads read only what their titles need', () => {
       await testHead({ params: Promise.resolve({ slug: 'ostomate2', testKey: KEY }) }),
     ).toEqual({ title: 'Not found · Testament' });
   });
+
+  // Design v21 item 1: a head whose read fails is titled as the server-error page, so the failure
+  // reaches the page's own error boundary rather than the framework's bare error document.
+  it('each reads “Couldn’t load · Testament” when the database does not answer', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const fake = fakeClient(() => ({ error: { code: 'PGRST002', message: 'Could not query' } }));
+    vi.mocked(createClient).mockReturnValue(
+      fake.client as unknown as ReturnType<typeof createClient>,
+    );
+    const failed = { title: 'Couldn’t load · Testament' };
+
+    expect(
+      await projectHead({ params: Promise.resolve({ slug: 'ostomate2' }), searchParams }),
+    ).toEqual(failed);
+    expect(await runHead({ params: Promise.resolve({ slug: 'ostomate2', id: RUN_ID }) })).toEqual(
+      failed,
+    );
+    expect(
+      await testHead({ params: Promise.resolve({ slug: 'ostomate2', testKey: KEY }) }),
+    ).toEqual(failed);
+    expect(logged).toHaveBeenCalledWith(expect.stringMatching(/PGRST002/));
+    logged.mockRestore();
+  });
 });

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useId } from 'react';
 
 import type { FlakyView } from '../../lib/pages/project';
+import { Breaks } from '../Breaks/Breaks';
 import { CheckIcon, FlakyIcon } from '../icons/icons';
 import styles from './FlakyList.module.css';
 
@@ -40,7 +41,7 @@ export function FlakyList({ tests }: FlakyListProps) {
               <Link href={test.href} className={styles.row}>
                 <span className={styles.top}>
                   <span className={styles.name} data-part="name">
-                    {test.name}
+                    <Breaks text={test.name} rule="name" />
                   </span>
                   <span className={styles.pill} data-part="flaky">
                     <FlakyIcon size={12} strokeWidth={2.6} />
@@ -48,7 +49,7 @@ export function FlakyList({ tests }: FlakyListProps) {
                   </span>
                 </span>
                 <span className={styles.suite} data-part="suite">
-                  {test.suite}
+                  <Breaks text={test.suite} rule="suite" />
                 </span>
                 <span className={styles.meta} data-part="meta">
                   <span>{test.rate}</span>

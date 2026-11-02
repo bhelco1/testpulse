@@ -49,6 +49,18 @@ test.describe('the landing page', () => {
         'Testament · A testament to every test.',
       );
     }
+    // Design v21 item 3: one description for the page and its shared link, as a website.
+    for (const meta of [
+      'meta[name="description"]',
+      'meta[property="og:description"]',
+      'meta[name="twitter:description"]',
+    ]) {
+      await expect(page.locator(meta)).toHaveAttribute(
+        'content',
+        'Live results from every CI run of Bobby Helco’s projects, posted automatically: pass rates, test layers, coverage and history. Nothing is entered by hand.',
+      );
+    }
+    await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');
   });
 
   test('reads the total and its note as one sentence', async ({ page }) => {
@@ -67,10 +79,37 @@ test.describe('the landing page', () => {
     await expect(date).toHaveAttribute('title', '22 Sep 2026, 04:37 UTC');
   });
 
+  // Design v21 item 5: below a 480 px column the tiles go 2 × 2 and plain sub-lines hide;
+  // attention and fail sub-lines stay. Above it, every sub-line shows.
+  test('lays the tiles out for the viewport', async ({ page }) => {
+    const tiles = page.locator('[data-part="tiles"]');
+    const phone = (page.viewportSize()?.width ?? 0) < 480;
+    const tile = tiles.locator(':scope > div');
+    // An auto-fit grid lists its collapsed tracks too, so the columns are counted from the tiles
+    // that share the first one's row.
+    const tops = await tile.evaluateAll((all) => all.map((el) => el.getBoundingClientRect().top));
+    expect(tops.filter((top) => top === tops[0])).toHaveLength(phone ? 2 : 4);
+    await expect(tile.nth(0).locator('[data-part="sub"]')).toBeVisible({ visible: !phone });
+    await expect(tile.nth(2).locator('[data-part="sub"]')).toBeVisible({ visible: !phone });
+    await expect(tile.nth(1).locator('[data-part="attention"]')).toBeVisible();
+    await expect(tile.nth(3).locator('[data-part="fail"]')).toBeVisible();
+    expect(
+      await tile.nth(0).evaluate((el) => ({
+        padding: getComputedStyle(el).padding,
+        value: getComputedStyle(el.querySelector('[data-part="value"]') as Element).fontSize,
+      })),
+    ).toEqual(
+      phone ? { padding: '14px 16px', value: '32px' } : { padding: '18px 20px', value: '40px' },
+    );
+    expect(
+      await page.locator('[data-part="hero-note"]').evaluate((el) => getComputedStyle(el).fontSize),
+    ).toBe(phone ? '15px' : '18px');
+  });
+
   test('shows the four portfolio tiles', async ({ page }) => {
     await expect(page.locator('[data-part="tiles"] > div')).toHaveText([
       // 1,183 / 1,185 distinct tests, rounded down; testpulse's one skipped test.
-      'Pass rate99.8%1,183 of 1,185 · 1 skipped, excluded',
+      'Pass rate99.8%1,183 of 1,185 passed · 1 skipped, not counted',
       // testpulse last reported 13 days before SEED_NOW, against a cadence of 8.
       'Projects reporting2 of 3Testament silent 13 days',
       'Runs in last 30 days19Ostomate 2.0 8 · RouteServe 10 · Testament 1',
@@ -152,7 +191,7 @@ test.describe('the landing page', () => {
     ]);
     await expect(routeserve.locator('[data-part="reports-side"]')).toHaveText('node 1,045');
     await expect(routeserve.locator('[data-part="declared"]')).toHaveText(
-      'Not counted: Maestro E2E (iOS) (13 flows), authored, not yet executed',
+      'Not counted: 13 flows in Maestro E2E (iOS), authored, not yet executed',
     );
   });
 
@@ -162,8 +201,9 @@ test.describe('the landing page', () => {
     // A stale card is dated, not relative (design v8 item 14).
     await expect(testpulse.locator('[data-part="when"]')).toHaveText('22 Sep');
     await expect(testpulse.locator('[data-part="total"]')).toHaveText('3');
+    // 238 + 4 ms of reports: under a second reads "<1 s" (design v21 item 12).
     await expect(testpulse.locator('[data-part="sub"]')).toHaveText(
-      /^tests ·1 failed·1 skipped ·\d+ s$/,
+      'tests ·1 failed·1 skipped ·<1 s',
     );
     await expect(testpulse.locator('[data-part="no-coverage"]')).toHaveText('No coverage reported');
     await expect(testpulse.getByText('No report in 13 days')).toBeVisible();
@@ -175,7 +215,7 @@ test.describe('the landing page', () => {
     await expect(rows).toHaveCount(3);
     // Distinct tests, as the cards count them, not the runs' executions.
     await expect(rows.nth(0)).toContainText('Push to main');
-    await expect(rows.nth(0)).toContainText('Ostomate 2.0·main·');
+    await expect(rows.nth(0)).toContainText('Ostomate 2.0 · main · ');
     await expect(rows.nth(0)).toContainText('142 tests· 35 s');
     await expect(rows.nth(0)).toContainText('2 h ago');
     await expect(rows.nth(1)).toContainText('Private repository');
@@ -188,9 +228,49 @@ test.describe('the landing page', () => {
     await expect(rows.nth(0)).toHaveAttribute('href', /^\/p\/ostomate2\/runs\/[0-9a-f-]{36}$/);
   });
 
+  // Design v21 item 7: one row shape whatever the text, 71 px tall in a wide list and, under 400 px
+  // (a phone), 101: the drawn grid's three lines (22, 19, then 6 + 22) and two 2 px gaps inside
+  // 14 px padding, where the README rounds it to 97. The time is always on the right.
+  test('gives every run row the same shape', async ({ page }) => {
+    const rows = feed(page).getByRole('link');
+    await expect(rows).toHaveCount(3);
+    const phone = (page.viewportSize()?.width ?? 0) < 480;
+    for (const row of await rows.all()) {
+      const box = await row.boundingBox();
+      expect(Math.round(box?.height ?? 0)).toBe(phone ? 101 : 71);
+      if (phone) {
+        // The third line: the count starts under the status, at the row's left.
+        const status = await row.locator('[data-part="status"]').boundingBox();
+        const count = await row.locator('[data-part="count-lead"]').boundingBox();
+        expect(Math.abs((count?.x ?? 0) - (status?.x ?? 0))).toBeLessThanOrEqual(1);
+      }
+      const when = await row.locator('[data-part="when"]').boundingBox();
+      expect(Math.round((when?.x ?? 0) + (when?.width ?? 0))).toBe(
+        Math.round((box?.x ?? 0) + (box?.width ?? 0) - 16),
+      );
+    }
+  });
+
+  // Design v21 item 4: the byline under the h1 says who built this, so About drops its first
+  // sentence.
+  test('names who built it under the h1', async ({ page }) => {
+    const h1 = page.getByRole('main').getByRole('heading', { level: 1 });
+    const byline = h1.locator('xpath=following-sibling::*[1]');
+    await expect(byline).toHaveText('Bobby Helco, quality engineering leader');
+    expect(
+      await byline.evaluate((el) => ({
+        tag: el.tagName,
+        size: getComputedStyle(el).fontSize,
+        name: getComputedStyle(el.querySelector('span') as Element).fontWeight,
+      })),
+    ).toEqual({ tag: 'P', size: '15px', name: '600' });
+  });
+
   test('says what the site is and links to how it is tested', async ({ page }) => {
     const about = page.getByRole('region', { name: 'About this site' });
-    await expect(about).toContainText('I’m Bobby Helco, a quality engineering leader.');
+    await expect(about.locator('p')).toHaveText(
+      'Every project here reports its test results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard is tested the same way, and reports on itself.',
+    );
     await expect(about.getByRole('link', { name: 'How Testament is tested →' })).toHaveAttribute(
       'href',
       '/how-its-tested',

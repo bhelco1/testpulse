@@ -80,3 +80,14 @@ describe('RunReports', () => {
     });
   });
 });
+
+// Design v21 item 8: a report key wraps after "/", by soft breaks only.
+describe('RunReports keys', () => {
+  it('breaks each key after "/"', () => {
+    const { container } = render(
+      <RunReports reports={[{ key: 'android/shared/jvm', total: '82' }]} />,
+    );
+    const key = container.querySelector('[role="cell"]');
+    expect(key?.innerHTML).toBe('android/<wbr>shared/<wbr>jvm');
+  });
+});

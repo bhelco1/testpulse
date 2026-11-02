@@ -149,7 +149,14 @@ describe('CoverageBar', () => {
       'column-gap': '14px',
       'font-size': '14px',
     });
+    expect(ruleFor(CSS, '.row')).toMatchObject({
+      'grid-template-areas': '"key bar value"',
+      'row-gap': '8px',
+    });
+    expect(ruleFor(CSS, '.track')).toMatchObject({ 'grid-area': 'bar' });
+    expect(ruleFor(CSS, '.value')).toMatchObject({ 'grid-area': 'value', 'justify-self': 'end' });
     expect(ruleFor(CSS, '.module')).toEqual({
+      'grid-area': 'key',
       'min-width': '0px',
       font: '13px var(--font-mono)',
       color: 'var(--ink-2)',
@@ -223,6 +230,17 @@ describe('CoverageBar', () => {
         'justify-content': 'flex-end',
         gap: 'var(--space-2)',
       });
+    });
+  });
+});
+
+// Design v21 item 10: when the row list is under 400 px wide (a project card on a phone), a row
+// is two lines, the key and value, then the bar at the full width, rather than a 40 px bar.
+describe('CoverageBar in a narrow list', () => {
+  it('stacks the bar under the key and value', () => {
+    expect(ruleFor(CSS, '.row', '(max-width: 399px)')).toEqual({
+      'grid-template-columns': 'minmax(0, 1fr) auto',
+      'grid-template-areas': "'key value' 'bar bar'",
     });
   });
 });

@@ -18,12 +18,18 @@ export interface TrendScaleInput {
   // The finest step the labels print, such as 0.01 for seconds at two decimals: a finer step
   // would repeat its neighbour's label, as a fractional step does for whole numbers.
   precision?: number;
+  // A run duration in seconds, whose ticks print in minutes and hours from two minutes up.
+  duration?: boolean;
 }
 
 const MULTIPLES = [1, 2, 2.5, 5, 10];
 // Values printed as whole numbers never step by 2.5 × 10ⁿ (design v5 item 5).
 const WHOLE_MULTIPLES = [1, 2, 5, 10];
 const MAX_TICKS = 20;
+// Run-duration steps in seconds (design v21 item 11, tp-charts.js nice durMode): whole minutes
+// from 2 minutes (1, 2, 5, 10, 15, 30 min, 1 h), half hours and up from 2 hours.
+const MINUTE_STEPS = [60, 120, 300, 600, 900, 1800, 3600];
+const HOUR_STEPS = [1800, 3600, 7200, 10800, 21600];
 // Tick arithmetic in tenths or hundredths drifts (0.1 * 3 is 0.30000000000000004).
 const tidy = (n: number) => Number(n.toFixed(6));
 const printable = (step: number, precision: number) =>
@@ -38,7 +44,14 @@ export function niceScale(
     integer,
     zero = false,
     precision,
-  }: { percent: boolean; integer: boolean; zero?: boolean; precision?: number },
+    duration = false,
+  }: {
+    percent: boolean;
+    integer: boolean;
+    zero?: boolean;
+    precision?: number;
+    duration?: boolean;
+  },
 ): YScale {
   if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
     lo = 0;
@@ -61,13 +74,16 @@ export function niceScale(
     .filter((step) => precision === undefined || printable(step, precision))
     .find((step) => step >= raw);
   const found = fits ?? 10 * magnitude;
-  const step = integer ? Math.max(1, Math.round(found)) : Math.max(precision ?? 0, found);
-  let min = tidy(Math.floor(lo / step) * step);
-  let max = tidy(Math.ceil(hi / step) * step);
-  if (percent) {
-    min = Math.max(0, min);
-    max = Math.min(100, max);
+  let step = integer ? Math.max(1, Math.round(found)) : Math.max(precision ?? 0, found);
+  if (duration && hi >= 120) {
+    const steps = hi >= 7200 ? HOUR_STEPS : MINUTE_STEPS;
+    step = steps.find((candidate) => candidate >= raw) ?? (steps[steps.length - 1] as number);
   }
+  // Every value charted (percentages, counts, durations) is zero or more, so padding never takes
+  // the axis below zero: the live Ostomate 2.0 run-duration chart read "-500 s" (design v21).
+  const min = Math.max(0, tidy(Math.floor(lo / step) * step));
+  let max = tidy(Math.ceil(hi / step) * step);
+  if (percent) max = Math.min(100, max);
   const ticks: number[] = [];
   for (let v = min; v <= max + 1e-9 && ticks.length < MAX_TICKS; v += step) ticks.push(tidy(v));
   return { min, max, ticks };
@@ -83,6 +99,7 @@ export function trendYScale({
   integer,
   steps,
   precision,
+  duration,
 }: TrendScaleInput): YScale {
   const all = floor === undefined ? values : [...values, floor];
   let lo = zero ? 0 : Math.min(...all);
@@ -92,5 +109,5 @@ export function trendYScale({
     lo -= pad;
     hi += pad;
   }
-  return niceScale(lo, hi, steps, { percent, integer, zero, precision });
+  return niceScale(lo, hi, steps, { percent, integer, zero, precision, duration });
 }

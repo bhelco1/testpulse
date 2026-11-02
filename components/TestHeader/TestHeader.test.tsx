@@ -65,7 +65,9 @@ describe('TestHeader', () => {
   });
 
   // components.md: "Mismatch headline (--fail 600, x-circle)" and "New pill" (design v9 item 10).
-  it('heads a mismatch in --fail with its latest run, and pills a new test, in order', () => {
+  // Design v21 item 9: the headline left the tag row; it is its own line under the suite, one
+  // sentence that wraps as text, so at 390 its second half is no longer a ragged column.
+  it('heads a mismatch under the suite in --fail with its latest run, and pills a new test', () => {
     const { container } = render(
       <TestHeader
         {...BASE}
@@ -83,29 +85,38 @@ describe('TestHeader', () => {
       'module',
       'layer',
       'flaky',
-      'mismatch',
       'new',
     ]);
     const mismatch = part(container, 'mismatch') as HTMLElement;
+    expect(mismatch.tagName).toBe('P');
+    expect(part(container, 'suite')?.nextElementSibling).toBe(mismatch);
     expect(mismatch.textContent).toBe(
-      'Platform mismatch in 1 run· Pull request from fix-today-count, yesterday',
+      'Platform mismatch in 1 run · Pull request from fix-today-count, yesterday',
     );
     expect(mismatch.querySelector('svg')?.getAttribute('width')).toBe('14');
     expect(mismatch.querySelector('time')?.textContent).toBe('yesterday');
     expect(part(container, 'mismatch-run')?.textContent).toBe(
-      '· Pull request from fix-today-count, yesterday',
+      ' · Pull request from fix-today-count, yesterday',
     );
     const pill = part(container, 'new') as HTMLElement;
     expect(pill.textContent).toBe('New · first seen 4 min ago');
     expect(pill.querySelector('time')?.textContent).toBe('4 min ago');
     expect(ruleFor(CSS, '.mismatch')).toEqual({
-      display: 'inline-flex',
-      'align-items': 'center',
-      gap: '6px',
-      color: 'var(--fail)',
-      'font-weight': '600',
+      display: 'flex',
+      gap: '8px',
+      'align-items': 'flex-start',
+      margin: '14px 0px 0px',
+      'font-size': '14px',
+      'line-height': '1.5',
     });
-    expect(ruleFor(CSS, '.mismatchRun')).toEqual({ 'font-weight': '400', color: 'var(--ink-3)' });
+    expect(ruleFor(CSS, '.mismatchIcon')).toEqual({
+      flex: '0 0 auto',
+      'margin-top': '3px',
+      color: 'var(--fail)',
+    });
+    expect(ruleFor(CSS, '.mismatchText')).toEqual({ 'min-width': '0px', 'text-wrap': 'pretty' });
+    expect(ruleFor(CSS, '.mismatchLead')).toEqual({ 'font-weight': '600', color: 'var(--fail)' });
+    expect(ruleFor(CSS, '.mismatchRun')).toEqual({ color: 'var(--ink-3)' });
     expect(ruleFor(CSS, '.new')).toEqual({
       display: 'inline-flex',
       'align-items': 'center',
@@ -115,6 +126,31 @@ describe('TestHeader', () => {
       background: 'var(--neutral-tint)',
       color: 'var(--neutral)',
       'font-weight': '600',
+    });
+  });
+
+  // Design v21 item 8: the name breaks at camelCase humps, "." and "/", the suite at "." and "/",
+  // with soft breaks only.
+  it('lets the name and suite wrap at their break points', () => {
+    const { container } = render(
+      <TestHeader
+        {...BASE}
+        name="fromTagsReturnsUserTags"
+        suite="com.ostomate.app.ui.home.HomeViewModelTest"
+      />,
+    );
+    const h1 = container.querySelector('h1') as HTMLElement;
+    expect(h1.innerHTML).toBe('from<wbr>Tags<wbr>Returns<wbr>User<wbr>Tags');
+    expect(part(container, 'suite')?.innerHTML).toBe(
+      'com.<wbr>ostomate.<wbr>app.<wbr>ui.<wbr>home.<wbr>HomeViewModelTest',
+    );
+  });
+
+  // Design v21 item 9: the header is the container its tiles go 2 × 2 under.
+  it('is the container the tiles narrow to', () => {
+    expect(ruleFor(CSS, '.header')).toEqual({
+      padding: '36px 0px 40px',
+      'container-type': 'inline-size',
     });
   });
 
@@ -142,7 +178,7 @@ describe('TestHeader', () => {
   });
 
   it('sets the tag row, tag, pill, heading and suite as the mock draws them', () => {
-    expect(ruleFor(CSS, '.header')).toEqual({ padding: '36px 0px 40px' });
+    expect(ruleFor(CSS, '.header')).toMatchObject({ padding: '36px 0px 40px' });
     expect(ruleFor(CSS, '.tags')).toEqual({
       display: 'flex',
       'flex-wrap': 'wrap',

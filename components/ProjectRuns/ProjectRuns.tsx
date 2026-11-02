@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState, useTransition } from 'react';
 
 import type { TimeLabel } from '../../lib/copy/time';
 import { feedConnection } from '../../lib/live/reports';
@@ -32,6 +33,20 @@ export function ProjectRuns({ project, runs, asOf }: ProjectRunsProps) {
     runs.items.map((run) => run.id),
     runs.branches,
   );
+  // "Load 20 more" (design v21 item 14): busy from the click until the longer list arrives, which
+  // changes the next page's address; then focus moves to the first of the new rows.
+  const [pending, startTransition] = useTransition();
+  const [asked, setAsked] = useState<{ href: string; shown: number } | null>(null);
+  const [focusHref, setFocusHref] = useState<string | null>(null);
+  const loading = asked !== null && asked.href === runs.loadMoreHref;
+  if (asked !== null && !loading) {
+    // The longer list has arrived: its first new row takes focus once it is drawn.
+    setFocusHref(runs.items[asked.shown]?.href ?? null);
+    setAsked(null);
+  }
+  useEffect(() => {
+    if (focusHref !== null) document.querySelector<HTMLElement>(`a[href="${focusHref}"]`)?.focus();
+  }, [focusHref]);
   const go = (href: string) => router.push(href, { scroll: false });
   const list = {
     list: 'project',
@@ -42,12 +57,17 @@ export function ProjectRuns({ project, runs, asOf }: ProjectRunsProps) {
   } as const;
   if (runs.items.length === 0) return <RunFeed state="empty" {...list} />;
   const { loadMoreHref } = runs;
+  const loadMore = (href: string) => {
+    setAsked({ href, shown: runs.items.length });
+    startTransition(() => go(href));
+  };
   return (
     <RunFeed
       state="ready"
       runs={runs.items.map((run) => ({ ...run, isNew: arrived.has(run.id) }))}
       {...list}
-      onLoadMore={loadMoreHref === null ? undefined : () => go(loadMoreHref)}
+      onLoadMore={loadMoreHref === null ? undefined : () => loadMore(loadMoreHref)}
+      loadingMore={loading && pending}
     />
   );
 }

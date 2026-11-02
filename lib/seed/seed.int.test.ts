@@ -680,7 +680,11 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       );
       expect(view.tiles).toEqual([
         // 1,183 / 1,185 = 99.83%, rounded down.
-        { label: 'Pass rate', value: '99.8%', sub: '1,183 of 1,185 · 1 skipped, excluded' },
+        {
+          label: 'Pass rate',
+          value: '99.8%',
+          sub: '1,183 of 1,185 passed · 1 skipped, not counted',
+        },
         {
           label: 'Projects reporting',
           value: '2 of 3',

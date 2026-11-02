@@ -23,7 +23,7 @@ const ICON_PATH: Record<StatTileAttention['icon'], string> = {
 describe('StatTile', () => {
   it('shows the label, the figure and its line of context', () => {
     const { container } = render(
-      <StatTile label="Pass rate" value="100%" sub="Latest runs · 0 skipped, excluded" />,
+      <StatTile label="Pass rate" value="100%" sub="Each project’s latest run" />,
     );
     const tile = container.firstElementChild as HTMLElement;
 
@@ -31,7 +31,7 @@ describe('StatTile', () => {
     expect(tile.hasAttribute('aria-busy')).toBe(false);
     expect(part(tile, 'label')?.textContent).toBe('Pass rate');
     expect(part(tile, 'value')?.textContent).toBe('100%');
-    expect(part(tile, 'sub')?.textContent).toBe('Latest runs · 0 skipped, excluded');
+    expect(part(tile, 'sub')?.textContent).toBe('Each project’s latest run');
     expect(part(tile, 'attention')).toBeNull();
   });
 
@@ -136,7 +136,7 @@ describe('StatTile', () => {
     expect(tile.textContent).toBe('');
   });
 
-  it('sets the web tile at 18 by 20 on the surface, 32px figures on a phone', () => {
+  it('sets the web tile at 18 by 20 on the surface', () => {
     expect(ruleFor(CSS, '.tile')).toEqual({
       background: 'var(--surface)',
       border: '1px solid var(--line)',
@@ -145,7 +145,21 @@ describe('StatTile', () => {
     });
     expect(ruleFor(CSS, '.web')).toEqual({ padding: '18px 20px' });
     expect(ruleFor(CSS, '.value')).toMatchObject({ font: 'var(--text-stat)' });
-    expect(ruleFor(CSS, '.value', '(max-width: 640px)')).toEqual({ 'font-size': '32px' });
+  });
+
+  // Design v21 item 5: below a 480 px grid (a phone) the tiles go 2 × 2, so they are tighter,
+  // the figure is the --text-stat phone size, and plain sub-lines are hidden; attention and fail
+  // sub-lines are not plain, so they stay.
+  it('tightens below a 480 px grid and hides only the plain sub-line', () => {
+    const narrow = '(max-width: 479px)';
+    expect(ruleFor(CSS, '.web', narrow)).toEqual({ padding: '14px 16px' });
+    expect(ruleFor(CSS, '.web .value', narrow)).toEqual({
+      'font-size': '32px',
+      'margin-top': '4px',
+    });
+    expect(ruleFor(CSS, '.web .sub', narrow)).toEqual({ display: 'none' });
+    expect(() => ruleFor(CSS, '.web .attention', narrow)).toThrow();
+    expect(() => ruleFor(CSS, '.web .fail', narrow)).toThrow();
   });
 
   describe('kiosk variant', () => {

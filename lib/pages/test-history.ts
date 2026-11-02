@@ -30,6 +30,9 @@ export interface TestHistoryView {
     readonly items: readonly { readonly label: string; readonly href: string }[];
     /** "{short suite} › {name}", as the mock's breadcrumb draws it. */
     readonly current: string;
+    /** Its two parts, so the page can let the name wrap (design v21 item 8). */
+    readonly suite: string;
+    readonly name: string;
   };
   readonly header: {
     readonly name: string;
@@ -193,11 +196,10 @@ function tiles(page: TestHistoryPage, now: Date): HistoryTile[] | null {
       label: 'Median time',
       value: formatTestTime(first.ms),
       sub: [
+        // Design v21 item 15: the others in brackets, each with its own figure.
         others.length === 0
           ? 'last 30 CI runs'
-          : [first.platform, ...others.map((o) => `${o.platform} ${formatTestTime(o.ms)}`)].join(
-              ' · ',
-            ),
+          : `${first.platform} (${others.map((o) => `${o.platform} ${formatTestTime(o.ms)}`).join(' · ')})`,
       ],
       tone: 'ink',
     });
@@ -226,6 +228,8 @@ export function testHistoryView(page: TestHistoryPage, now: Date): TestHistoryVi
         { label: project.name, href: projectHref(slug) },
       ],
       current: `${shortSuite(test.suite)} › ${test.name}`,
+      suite: shortSuite(test.suite),
+      name: test.name,
     },
     header: {
       name: test.name,

@@ -11,10 +11,12 @@ import { PageFrame } from '../components/PageFrame/PageFrame';
 import { ProjectCard } from '../components/ProjectCard/ProjectCard';
 import { TimedText } from '../components/RelativeTime/RelativeTime';
 import { SiteFooter } from '../components/SiteFooter/SiteFooter';
+import { SiteHeader } from '../components/SiteHeader/SiteHeader';
 import { StatTile } from '../components/StatTile/StatTile';
 import { now } from '../lib/clock';
 import { LANDING_ERROR, landingView, type ReadyLandingView } from '../lib/pages/landing';
 import { SOURCE_URL, siteChromeView } from '../lib/pages/site';
+import { SITE_TITLE } from '../lib/pages/site-meta';
 import { loadLanding } from '../lib/queries/landing';
 import { loadLeadProject } from '../lib/queries/lead';
 import { loadSiteChrome } from '../lib/queries/site';
@@ -30,14 +32,10 @@ import styles from './page.module.css';
 
 const LEDE = 'Live test results for every project I build.';
 const TAGLINE = 'A testament to every test.';
-const TITLE = `Testament · ${TAGLINE}`;
 
-// design v20 item 3: the name and the tagline, for the tab and for a shared link alike.
-export const metadata: Metadata = {
-  title: TITLE,
-  openGraph: { title: TITLE },
-  twitter: { title: TITLE },
-};
+// design v20 item 3: the name and the tagline, for the tab and for a shared link alike; the
+// shared link's title and description come from the layout (lib/pages/site-meta.ts).
+export const metadata: Metadata = { title: SITE_TITLE };
 
 export default async function LandingPage() {
   // Rendered per request: the numbers are live data and the relative times move with the clock.
@@ -86,6 +84,7 @@ function Portfolio({
     <>
       <p className={styles.tagline}>{TAGLINE}</p>
       <h1 className={styles.lede}>{LEDE}</h1>
+      <Byline />
       {/* One paragraph, the figure then the note, so it is read as one sentence (v8 item 7). */}
       <p className={styles.hero}>
         <span className={styles.total} data-part="hero-total">
@@ -119,15 +118,24 @@ function Portfolio({
           <h2 id="about-title" className={styles.aboutTitle}>
             About this site
           </h2>
+          {/* v21 item 4: the byline now says who built this, so the card no longer does. */}
           <p className={styles.aboutText}>
-            I’m Bobby Helco, a quality engineering leader. Every project here reports its test
-            results after each CI run. Nothing on this page is mocked or hand-entered. The dashboard
-            is tested the same way, and reports on itself.
+            Every project here reports its test results after each CI run. Nothing on this page is
+            mocked or hand-entered. The dashboard is tested the same way, and reports on itself.
           </p>
           <Button href="/how-its-tested">How Testament is tested →</Button>
         </section>
       </div>
     </>
+  );
+}
+
+// Design v21 item 4: who built this, under the h1 wherever the tagline shows.
+function Byline({ alone = false }: { alone?: boolean }) {
+  return (
+    <p className={alone ? `${styles.byline} ${styles.bylineAlone}` : styles.byline}>
+      <span className={styles.bylineName}>Bobby Helco</span>, quality engineering leader
+    </p>
   );
 }
 
@@ -137,7 +145,8 @@ function NoProjects() {
   return (
     <>
       <p className={styles.tagline}>{TAGLINE}</p>
-      <h1 className={`${styles.lede} ${styles.ledeAlone}`}>{LEDE}</h1>
+      <h1 className={styles.lede}>{LEDE}</h1>
+      <Byline alone />
       <section className={styles.none} aria-labelledby="none-title">
         <h2 id="none-title" className={styles.noneTitle}>
           No projects yet
@@ -153,20 +162,19 @@ function NoProjects() {
   );
 }
 
-// Landing scenario "error" (design v9 item 7): nothing from the database is shown, so the header
-// lists no projects and the footer no last report. "Try again" is a link to this URL, so it
-// works without JavaScript. Next.js gives a page no way to set its status, so this is served
-// with 200 rather than the design's 503 (section 13.3).
+// Landing scenario "error" (design v9 item 7): nothing from the database is shown, so the
+// Projects menu says they couldn't be loaded and the footer gives no last report. Nothing
+// subscribes either, so the header has no Live or Offline (v21 item 2). "Try again" is a link to
+// this URL, so it works without JavaScript. Next.js gives a page no way to set its status, so this
+// is served with 200 rather than the design's 503 (section 13.3).
 function Unavailable() {
   return (
     <PageFrame>
-      <LiveUpdates>
-        <LiveSiteHeader projects={[]} current="home" />
-        <main id="main" className={styles.main}>
-          <ErrorState variant="page" retryHref="/" {...LANDING_ERROR} />
-        </main>
-        <SiteFooter sourceHref={SOURCE_URL} />
-      </LiveUpdates>
+      <SiteHeader projects="unavailable" current="home" />
+      <main id="main" className={styles.main}>
+        <ErrorState variant="page" retryHref="/" {...LANDING_ERROR} />
+      </main>
+      <SiteFooter sourceHref={SOURCE_URL} />
     </PageFrame>
   );
 }

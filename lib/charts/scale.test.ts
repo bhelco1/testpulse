@@ -113,6 +113,52 @@ describe('trendYScale', () => {
     });
   });
 
+  // Design v21 item 11: run-duration ticks step in whole minutes from 2 minutes (1, 2, 5, 10, 15,
+  // 30 min) and in half hours from 2 hours, so they print "10m", "11m", "12m".
+  it('steps a run duration of two minutes or more in whole minutes', () => {
+    expect(
+      trendYScale({ ...line, values: OSTOMATE2_RUN_SECONDS, integer: true, duration: true }),
+    ).toEqual({
+      min: 600,
+      max: 780,
+      ticks: [600, 660, 720, 780],
+    });
+    expect(
+      trendYScale({
+        ...line,
+        values: [960, 1200, 1440],
+        integer: true,
+        duration: true,
+      }).ticks.every((tick) => tick % 60 === 0),
+    ).toBe(true);
+  });
+
+  it('steps a run duration of two hours or more in half hours', () => {
+    const { ticks } = trendYScale({ ...line, values: [7000, 9000], integer: true, duration: true });
+    expect(ticks.every((tick) => tick % 1800 === 0)).toBe(true);
+  });
+
+  it('keeps whole-second steps for a run duration under two minutes', () => {
+    expect(
+      trendYScale({ ...line, values: [24, 25, 26, 27, 28, 29, 31], integer: true, duration: true }),
+    ).toEqual({ min: 20, max: 35, ticks: [20, 25, 30, 35] });
+  });
+
+  // The live Ostomate 2.0 chart read "-500 s": a run of a few seconds beside runs of minutes
+  // padded the axis below zero. Nothing the charts plot can be negative.
+  it('never starts an axis below zero', () => {
+    const scale = trendYScale({
+      ...line,
+      values: [3, 700, 720, 690],
+      integer: true,
+      duration: true,
+    });
+    expect(scale.min).toBe(0);
+    expect(scale.ticks[0]).toBe(0);
+    expect(trendYScale({ ...line, values: [0.01, 4, 4.2] }).min).toBe(0);
+    expect(trendYScale({ ...line, values: [1, 120, 130], integer: true }).min).toBe(0);
+  });
+
   it('gives a flat line room above and below', () => {
     expect(trendYScale({ ...line, values: [5, 5, 5], integer: true })).toEqual({
       min: 4,

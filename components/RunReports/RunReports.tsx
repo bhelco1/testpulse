@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { Breaks } from '../Breaks/Breaks';
 
 import styles from './RunReports.module.css';
 
@@ -34,7 +35,7 @@ export function RunReports({ reports }: RunReportsProps) {
           {reports.map((report) => (
             <tr key={report.key} role="row" className={`${styles.row} ${styles.body}`}>
               <td role="cell" className={styles.key}>
-                {report.key}
+                <Breaks text={report.key} rule="key" />
               </td>
               <td role="cell">{report.total}</td>
             </tr>

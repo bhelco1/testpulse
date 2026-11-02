@@ -840,18 +840,48 @@ describe('TrendChart tooltip', () => {
 
 // Design v7 item 9 (components.md TrendChart, "Missing values"; tp-charts.js): a null is a run
 // where the series has no value, such as a platform that did not run.
-// Design v14 item 3 (tp-charts.js dur): the y axis keeps whole-second ticks; the end labels,
-// tooltip, table and caption read as run durations do.
+// Design v14 item 3 (tp-charts.js dur): the end labels, tooltip, table and caption read as run
+// durations do. Design v21 item 11: the y axis ticks in the same units, at whole minutes.
 describe('TrendChart run duration', () => {
-  it('ticks the y axis in whole seconds', () => {
+  it('ticks the y axis in whole minutes, as the labels read', () => {
     const { container } = render(<TrendChart {...RUN_DURATION} />);
     expect(parts(container, 'y-label').map((tick) => tick.textContent)).toEqual([
-      '600 s',
-      '650 s',
-      '700 s',
-      '750 s',
-      '800 s',
+      '10m',
+      '11m',
+      '12m',
+      '13m',
     ]);
+  });
+
+  it('starts the y axis at 0 when one run took seconds beside runs of minutes', () => {
+    const values = [...OSTOMATE2_RUN_SECONDS.slice(0, 29), 3];
+    const { container } = render(
+      <TrendChart {...RUN_DURATION} series={[{ name: 'Duration', values }]} />,
+    );
+    const ticks = parts(container, 'y-label').map((tick) => tick.textContent);
+    expect(ticks[0]).toBe('0');
+    expect(ticks.some((tick) => tick?.startsWith('-'))).toBe(false);
+  });
+
+  it('reads a run under a second as "<1 s" at its end label', () => {
+    const values = [...OSTOMATE2_RUN_SECONDS.slice(0, 29), 0];
+    const { container } = render(
+      <TrendChart {...RUN_DURATION} series={[{ name: 'Duration', values }]} />,
+    );
+    expect(parts(container, 'value-label').at(-1)?.textContent).toBe('<1 s');
+  });
+
+  // The end label sits in the right margin, 8 px right of the last point and centred on it
+  // (baseline 4 px below), never above the point or on the line.
+  it('puts the end label in the right margin beside the last point', () => {
+    const { container } = render(<TrendChart {...RUN_DURATION} />);
+    const dot = parts(container, 'end-dot').at(-1);
+    const label = parts(container, 'value-label').at(-1);
+    const cx = Number(dot?.getAttribute('cx'));
+    expect(Number(label?.getAttribute('x'))).toBe(cx + 8);
+    expect(Number(label?.getAttribute('y'))).toBe(Number(dot?.getAttribute('cy')) + 4);
+    const layout = chartLayout(720, 30, 'line', '11m 34s'.length * 7);
+    expect(cx).toBeCloseTo(layout.width - layout.right, 0);
   });
 
   it('labels the first and last values, captions and tabulates in minutes and seconds', () => {

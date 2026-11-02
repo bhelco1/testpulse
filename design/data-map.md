@@ -9,7 +9,7 @@ Tables and columns refer to spec §5; stats to spec §11. Public pages read runs
 | Hero total ("3,802" = Ostomate2 160 + RouteServe 1,044 + Testament 2,598) | Σ projects: distinct `tests` in latest run (§11 Total tests). Empty runs contribute 0 and are called out in the note. |
 | Hero note | n = projects whose latest default-branch run has tests; failing = distinct failed/error tests per project; skipped from the same runs; empty = latest run total 0; stale = no report within `expected_cadence_days` (date = latest `finished_at`); never reported = project with no run. Templates in components.md Landing hero. Nothing stores disabled tests, so it isn't mentioned |
 | Hero note | pass rate, skipped count, projects count from the same runs. Skipped is excluded from pass rate and always shown separately |
-| Tile · Pass rate | passed / (passed + failed + error) over latest runs. Sub-line: Σ `runs.skipped` of latest runs, "N skipped, excluded" |
+| Tile · Pass rate | passed / (passed + failed + error) over latest runs. Sub-line (v21): "Each project’s latest run", or "{passed} of {passed + failed} passed" with a failure, or "{counted projects} only" when some latest runs are empty; then " · {s} skipped, not counted" only when Σ `runs.skipped` of latest runs > 0 |
 | Tile · Projects reporting | n = registered `projects` (never-reported included); r = projects whose latest `runs_public.finished_at` is within `expected_cadence_days`. Sub-line lists silent ones ("{d} days" = elapsed 24-hour periods) then never-reported ones. Public pages never read `alerts` |
 | Tile · Runs in last 30 days | count of default-branch runs (`source = ci`) across all projects with `finished_at` in the last 30 days. Sub-line: same count per project, e.g. "Ostomate2 18 · RouteServe 6" |
 | Tile · Projects passing | `runs_public`, default branch: n = projects with at least one run; p = projects whose latest run has `status = passed`. Red = latest run `failed`; red duration = now − `finished_at` of the first `failed` run after the last `passed` run (calendar time). Latest run `empty` → "{project} last run empty". Public data only |
@@ -162,3 +162,18 @@ Same queries as landing (via `runs_public`). Tiles: Pass rate, Projects reportin
 | Document titles and social share title | Static pattern: Landing "Testament · A testament to every test." (`<title>`, `og:title`, `twitter:title`); other pages "{page title} · Testament"; admin "{page title} · Testament admin". `{page title}` uses the data the page already shows (project `display_name`, run id) |
 | Self-reporting project's name on cards, run rows, switcher, hero, admin and alerts ("Testament") | `projects.display_name` of slug `testpulse`, set in `projects/testpulse.yaml` (`display_name: Testament`) and applied by `projects:sync`. Slug, URL `/p/testpulse` and API key unchanged. Alert titles use the display name ("Testament: test count fell 23%") |
 | How it’s tested · section 04 "as the project `testpulse`" | the project's slug, shown in mono; unchanged |
+
+## v21
+| UI element | Source |
+|---|---|
+| Landing byline "Bobby Helco, quality engineering leader" | Static. Not from data |
+| Link preview (`og:image`, `twitter:image`) and site icons | Static files exported from the Share-Image and Site-Icons artboards; `og:description` static text (components.md › Site name, wordmark and page titles) |
+| Server-error page (project, run, test) | Rendered by the route's error boundary when the page's data read throws; shows only the requested path (from the URL) and static copy, nothing from the database |
+| LiveIndicator, footer "Last report received", Projects menu while a page's data failed | Not rendered / not read (components.md › SiteHeader … LiveIndicator) |
+| Failure detail with no message | `result_failures.message` null (or empty) → "No failure message" panel; `.detail` still shown when present. Parsers store null, never a placeholder such as "Unknown error" |
+| Run duration under 1 s | `runs.duration_ms` < 1000 (0 included) → "<1 s" on cards, run rows, the run page header and reports table (`reports.duration_ms`), chart tooltip, table, end label and caption |
+| Run duration chart y ticks | Same values as before; formatted in the labels' units at whole steps ("10m", "12m"), not seconds |
+| Last 40 runs strip with fewer runs | Same query; slots = capacity (≤ 40), unfilled slots drawn as one baseline; "{n−1} runs ago" from the n runs returned |
+| Test history · Median time sub | Same medians; template "{p1} ({p2} {median} · …)" |
+| ProjectCard "Not counted" with one suite | `projects.declared_suites` as before; template "Not counted: {count} {unit} in {name}, {phrase}" |
+| Admin document titles | Static pattern; link detail uses `tracked_links.company` |

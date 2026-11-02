@@ -275,7 +275,7 @@ describe('runPageView: a public passing run', () => {
       },
       expect.objectContaining({ key: 'android/shared/jvm', result: '82 passed', duration: '17 s' }),
       // 111 ms reads as the run durations do, in whole seconds rounded down.
-      expect.objectContaining({ key: 'ios/composeApp/ios-sim', tests: '50', duration: '0 s' }),
+      expect.objectContaining({ key: 'ios/composeApp/ios-sim', tests: '50', duration: '<1 s' }),
     ]);
   });
 

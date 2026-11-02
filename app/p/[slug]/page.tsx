@@ -19,6 +19,7 @@ import { StackTagGroup } from '../../../components/StackTagGroup/StackTagGroup';
 import { TrendChart } from '../../../components/TrendChart/TrendChart';
 import { now } from '../../../lib/clock';
 import { projectPageOptions, projectPageTitle, projectPageView } from '../../../lib/pages/project';
+import { headTitle } from '../../../lib/pages/server-error';
 import { SOURCE_URL, siteChromeView } from '../../../lib/pages/site';
 import { loadProjectHead } from '../../../lib/queries/heads';
 import { loadProjectPage } from '../../../lib/queries/project';
@@ -39,8 +40,11 @@ interface RouteProps {
 // link to this page in view, so it must not cost a page load.
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { slug } = await params;
-  const project = await loadProjectHead(slug);
-  return { title: project === null ? 'Not found · Testament' : projectPageTitle(project) };
+  const title = await headTitle(async () => {
+    const project = await loadProjectHead(slug);
+    return project === null ? 'Not found · Testament' : projectPageTitle(project);
+  });
+  return { title };
 }
 
 export default async function ProjectPage({ params, searchParams }: RouteProps) {

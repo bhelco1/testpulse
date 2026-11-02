@@ -6,6 +6,7 @@ import type { RunStatus } from '../../lib/ingest/normalize';
 import type { Visibility } from '../../lib/projects/schema';
 import { LockIcon } from '../icons/icons';
 import { RelativeTime } from '../RelativeTime/RelativeTime';
+import { Skeleton } from '../Skeleton/Skeleton';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
 import styles from './RunFeedRow.module.css';
 
@@ -125,36 +126,29 @@ function WebRow({
       <span className={styles.status} data-part="status">
         <StatusBadge status={run.status} variant="inline" />
       </span>
-      <span className={styles.content}>
-        <span className={styles.titleLine}>
-          {isNew && (
-            <span className={styles.chip} data-part="new">
-              New
-            </span>
-          )}
-          {run.visibility === 'private' ? (
-            <span className={styles.private} data-part="private">
-              <LockIcon size={12} strokeWidth={2.4} />
-              Private repository
-            </span>
-          ) : (
-            <span className={styles.title} data-part="title">
-              {run.title}
-            </span>
-          )}
-        </span>
-        <span className={styles.meta} data-part="meta">
-          {showProject && (
-            <>
-              <span>{run.project}</span>
-              <span>·</span>
-            </>
-          )}
-          <span>{run.branch}</span>
-          <span>·</span>
-          <span className={styles.sha} data-part="sha">
-            {sha7(run.sha)}
+      {/* Design v21 item 7: the row's parts are cells of one grid. */}
+      <span className={styles.titleLine}>
+        {isNew && (
+          <span className={styles.chip} data-part="new">
+            New
           </span>
+        )}
+        {run.visibility === 'private' ? (
+          <span className={styles.private} data-part="private">
+            <LockIcon size={12} strokeWidth={2.4} />
+            Private repository
+          </span>
+        ) : (
+          <span className={styles.title} data-part="title">
+            {run.title}
+          </span>
+        )}
+      </span>
+      <span className={styles.meta} data-part="meta">
+        {showProject && <span>{run.project} · </span>}
+        <span>{run.branch} · </span>
+        <span className={styles.sha} data-part="sha">
+          {sha7(run.sha)}
         </span>
       </span>
       <Count run={run} />
@@ -162,6 +156,29 @@ function WebRow({
         <RelativeTime when={run.when} />
       </span>
     </Link>
+  );
+}
+
+// A row still loading, in the row's own grid (design v21 item 14, "Load 20 more" busy).
+export function RunFeedRowSkeleton() {
+  return (
+    <div className={cx(styles.row, styles.skeleton)}>
+      <span className={styles.status}>
+        <Skeleton width="84px" height={14} />
+      </span>
+      <span className={cx(styles.titleLine, styles.skeletonCell)}>
+        <Skeleton width="60%" height={14} />
+      </span>
+      <span className={cx(styles.meta, styles.skeletonCell, styles.skeletonMeta)}>
+        <Skeleton width="45%" height={10} />
+      </span>
+      <span className={cx(styles.count, styles.skeletonCell)}>
+        <Skeleton width="96px" height={14} />
+      </span>
+      <span className={cx(styles.when, styles.skeletonCell, styles.skeletonMeta)}>
+        <Skeleton width="56px" height={10} />
+      </span>
+    </div>
   );
 }
 

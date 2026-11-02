@@ -129,7 +129,7 @@ export default async function HowItsTestedPage() {
               <div className={styles.strategyHead}>
                 {heading}
                 <p className={styles.intro}>
-                  Parsers are tested against result files captured from Ostomate2 and RouteServe,
+                  Parsers are tested against result files captured from Ostomate 2.0 and RouteServe,
                   not hand-written samples. Integration tests run against a local Supabase,
                   including the row-level security that hides private projects from the public.
                 </p>
@@ -199,8 +199,9 @@ export default async function HowItsTestedPage() {
                   <div className={styles.factLabel}>Failure masking</div>
                   <div className={styles.factFigure}>None</div>
                   <div className={styles.factSub}>
-                    No <code className={styles.code}>|| true</code>, no{' '}
-                    <code className={styles.code}>continue-on-error</code> on test steps.
+                    No test step is allowed to fail quietly: none uses{' '}
+                    <code className={styles.code}>|| true</code> or{' '}
+                    <code className={styles.code}>continue-on-error</code>.
                   </div>
                 </div>
               </div>
@@ -214,9 +215,9 @@ export default async function HowItsTestedPage() {
               <div>
                 {heading}
                 <p className={`${styles.intro} ${styles.silenceIntro}`}>
-                  Two incidents from Ostomate2’s post-mortems shaped how results are shown. A green
-                  dashboard means nothing if the pipeline behind it has stopped running, or if a
-                  suite passes without executing anything.
+                  Two incidents from Ostomate 2.0’s post-mortems shaped how results are shown. A
+                  green dashboard means nothing if the pipeline behind it has stopped running, or if
+                  a suite passes without executing anything.
                 </p>
               </div>
               <div className={styles.incidents}>
@@ -250,7 +251,8 @@ export default async function HowItsTestedPage() {
                 <p className={styles.intro}>
                   Since <RelativeTime when={view.since} />, Testament’s CI posts its results to this
                   site as the project <code className={styles.selfCode}>testpulse</code>, through
-                  the same shared GitHub Action Ostomate2 and RouteServe use.
+                  the same shared GitHub Action that Ostomate 2.0, RouteServe and ATPR report
+                  through.
                 </p>
               </div>
               <SelfReport view={view.self} actionsHref={ACTIONS_URL} progress={view.progress} />

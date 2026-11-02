@@ -117,8 +117,9 @@ test.describe('Ostomate2’s latest run (public, passed, two platforms)', () => 
       '50 passed',
     ]);
     await expect(rows.locator('td:nth-child(4)')).toHaveText(['60', '82', '50']);
-    // 17,746 ms, 17,747 ms and 111 ms, in whole seconds rounded down as the run durations read.
-    await expect(rows.locator('td:nth-child(6)')).toHaveText(['17 s', '17 s', '0 s']);
+    // 17,746 ms, 17,747 ms and 111 ms, in whole seconds rounded down as the run durations read;
+    // under a second reads "<1 s" (design v21 item 12).
+    await expect(rows.locator('td:nth-child(6)')).toHaveText(['17 s', '17 s', '<1 s']);
     await expect(rows.locator('td:nth-child(5) time')).toHaveText([
       /^\d\d:\d\d:\d\d$/,
       /^\d\d:\d\d:\d\d$/,
@@ -207,7 +208,8 @@ test.describe('testpulse’s run (public, failed, one platform)', () => {
       'Passed1',
       'Failed1',
       'Skipped1',
-      /^Duration\d+ s$/,
+      // 242 ms of reports reads "<1 s" (design v21 item 12).
+      'Duration<1 s',
     ]);
     await expect(tiles(page).nth(2)).toHaveAttribute('data-tone', 'fail');
     await expect(reportRows(page)).toHaveCount(1);

@@ -16,6 +16,11 @@ a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-stron
 a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 @keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* v21 items 5, 7, 10: layouts keyed to the component's own width (container queries), so they hold at any viewport and inside Phone Views */
+.tp-cq{container-type:inline-size}
+.tp-cov{display:grid;grid-template-columns:128px minmax(40px,1fr) auto;grid-template-areas:"k b v";align-items:center;column-gap:14px;row-gap:8px;font-size:14px}
+.tp-cov-k{grid-area:k;min-width:0}.tp-cov-b{grid-area:b}.tp-cov-v{grid-area:v;justify-self:end}
+@container (max-width:399px){.tp-cov{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "b b"}}
 </style>
 </helmet>
 <div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;background:var(--bg);color:var(--ink);min-height:100vh">
@@ -61,7 +66,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <!-- 02 STRATEGY -->
 <section style="padding:48px 0;border-top:1px solid var(--line)">
-<div style="max-width:760px;margin-bottom:28px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">What runs, and what it covers</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Parsers are tested against result files captured from Ostomate2 and RouteServe, not hand-written samples. Integration tests run against a local Supabase, including the row-level security that hides private projects from the public.</p></div>
+<div style="max-width:760px;margin-bottom:28px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">What runs, and what it covers</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Parsers are tested against result files captured from Ostomate 2.0 and RouteServe, not hand-written samples. Integration tests run against a local Supabase, including the row-level security that hides private projects from the public.</p></div>
 <div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:20px">
 <div style="min-width:760px">
 <div style="display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:14px 24px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>LAYER</span><span>TOOL</span><span>SCOPE</span></div>
@@ -77,14 +82,14 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;margin-top:16px">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Coverage floor</div><div style="font:500 36px/1.1 'Source Serif 4',serif;margin-top:6px">90% <span style="font-size:18px;color:var(--ink-3)">lines</span></div><div style="font-size:13.5px;color:var(--ink-2);margin-top:4px">Enforced by Vitest thresholds in the unit job. Below it, CI fails.</div></div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">On every pull request</div><div style="font:500 22px/1.35 'Source Serif 4',serif;margin-top:8px">Lint, typecheck, unit, integration, E2E</div></div>
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Failure masking</div><div style="font:500 36px/1.1 'Source Serif 4',serif;margin-top:6px">None</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:4px">No <code style="font:12.5px 'JetBrains Mono',monospace">|| true</code>, no <code style="font:12.5px 'JetBrains Mono',monospace">continue-on-error</code> on test steps.</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Failure masking</div><div style="font:500 36px/1.1 'Source Serif 4',serif;margin-top:6px">None</div><div style="font-size:13.5px;line-height:1.5;color:var(--ink-2);margin-top:4px">No test step is allowed to fail quietly: none uses <code style="font:12.5px/1.5 'JetBrains Mono',monospace;white-space:nowrap;padding:0;background:none">|| true</code> or <code style="font:12.5px/1.5 'JetBrains Mono',monospace;white-space:nowrap;padding:0;background:none">continue-on-error</code>.</div></div>
 </div>
 </section>
 
 <!-- 03 ALERTS -->
 <section style="padding:48px 0;border-top:1px solid var(--line)">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:32px 56px;align-items:start">
-<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">03</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">Why it watches for silence</h2><p style="margin:0;max-width:520px;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Two incidents from Ostomate2’s post-mortems shaped how results are shown. A green dashboard means nothing if the pipeline behind it has stopped running, or if a suite passes without executing anything.</p></div>
+<div><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">03</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">Why it watches for silence</h2><p style="margin:0;max-width:520px;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Two incidents from Ostomate 2.0’s post-mortems shaped how results are shown. A green dashboard means nothing if the pipeline behind it has stopped running, or if a suite passes without executing anything.</p></div>
 <div style="display:flex;flex-direction:column;gap:12px">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px">
 <div style="font-size:13px;color:var(--ink-3)">Incident</div><div style="font:500 21px/1.3 'Source Serif 4',serif;margin-top:4px">CI was silently dead for 11 days</div>
@@ -100,7 +105,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 <!-- 04 LIVE -->
 <section style="padding:48px 0 64px;border-top:1px solid var(--line)">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px"><div style="max-width:720px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">04</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">Testament’s own results</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Since 7 Oct, Testament’s CI posts its results to this site as the project <code style="font:13.5px 'JetBrains Mono',monospace">testpulse</code>, through the same shared GitHub Action Ostomate2 and RouteServe use.</p></div></div>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px"><div style="max-width:720px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">04</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">Testament’s own results</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Since 7 Oct, Testament’s CI posts its results to this site as the project <code style="font:13.5px 'JetBrains Mono',monospace">testpulse</code>, through the same shared GitHub Action that Ostomate 2.0, RouteServe and ATPR report through.</p></div></div>
 
 <sc-if value="{{ notReporting }}" hint-placeholder-val="{{ true }}">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px">
@@ -123,18 +128,18 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 120px;align-items:center;gap:16px;font-size:14px"><span style="text-align:right;color:var(--ink-2)">{{ l.name }}</span><div style="display:flex;justify-content:center"><div style="width:{{ l.w }};min-width:6px;height:30px;border-radius:4px;background:{{ l.bg }}"></div></div><span style="display:flex;align-items:baseline;gap:8px;white-space:nowrap"><b style="font-weight:600">{{ l.count }}</b><span style="font-size:13px;color:var(--ink-3)">{{ l.pct }}</span></span></div>
 </sc-for>
 </div>
-<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer Testament’s layer rules give it, whichever report it arrived in.</p>
+<p style="margin:18px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Every test counts in one of six layers: unit, component, integration, API, visual or E2E. The accessibility, screenshot and leak-sweep checks run inside the Playwright suite, so they count as E2E; the reporting Action’s contract tests run with the unit tests, so they count as Unit. Each test counts once, in the layer Testament’s settings give it, whichever report it arrived in.</p>
 <a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:6px;font-size:14.5px;font-weight:600">Full project page →</a>
 </article>
 <section aria-labelledby="selfcov" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
 <h3 id="selfcov" style="margin:0;font:500 20px 'Source Serif 4',serif">Coverage against the floor</h3>
 <div style="margin-top:2px;font-size:13px;color:var(--ink-3)">Lines, latest default-branch run</div>
-<div style="display:flex;flex-direction:column;gap:12px;margin-top:18px">
+<div class="tp-cq" style="display:flex;flex-direction:column;gap:12px;margin-top:18px">
 <sc-for list="{{ selfCov }}" as="v" hint-placeholder-count="1">
-<div style="display:grid;grid-template-columns:128px minmax(40px,1fr) auto;align-items:center;column-gap:14px;font-size:14px">
-<span title="{{ v.m }}" style="min-width:0;font:13px 'JetBrains Mono',monospace;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
-<div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};display:{{ v.flDisp }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
-<span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
+<div class="tp-cov">
+<span class="tp-cov-k" title="{{ v.m }}" style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
+<div class="tp-cov-b" style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};display:{{ v.flDisp }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
+<span class="tp-cov-v" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
 </div>
 </sc-for>
 </div>
@@ -171,19 +176,19 @@ class Component extends DCLogic {
 
     const principles = [
       ['Test-first', 'Every phase starts with failing tests written from its acceptance criteria. A phase is done when each criterion has a passing automated test.'],
-      ['Real fixtures', 'Parsers are tested against actual result files captured from Ostomate2, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.'],
+      ['Real fixtures', 'Parsers are tested against actual result files captured from Ostomate 2.0, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.'],
       ['Normalize on the server', 'Projects send the files their tools already produce. Testament does the parsing, so a project’s CI step stays a few lines long.'],
       ['Never fail the caller’s build', 'If Testament is down, a project’s CI stays green. The reporting step always exits 0 and logs a warning.'],
-      ['No swallowed failures', 'In Testament’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.'],
+      ['No swallowed failures', 'In Testament’s own pipeline, nothing is allowed to fail quietly: no test step uses “|| true” or “continue-on-error” to turn a failure into a pass.'],
     ].map(([title, body], i) => ({ n: String(i + 1).padStart(2, '0'), title, body }));
 
     /* v16 item 22, v19 items 9–13: after Phase 6 each row gains a second sentence for what Phase 6 added (components.md "How it’s tested page") */
     const p6 = (this.props.phase ?? 'today') === 'after Phase 6';
-    const P6 = {
-      Unit: 'The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup; admin sign-in: the sign-in action’s one neutral answer, the sign-in link’s confirm route, the owner allowlist check, and the guard every admin page and action calls first.',
-      Integration: 'The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures. The daily job against local Supabase: heartbeat, opening stale alerts, and pruning results at 180 days and visits and tracked sessions at 365. Visit recording, with bots and previews kept out of every count and no raw IP address stored in visits or tracked sessions. Admin sign-in and its actions (create, acknowledge, rotate, delete) against local Supabase Auth with a real session, each refused without one.',
-      E2E: 'The tracked-link flow: open a link, check its cookie and redirect, see the lead project first, and find the visits stored against the link; nothing the visitor sees names the company, role, contact or token. Admin sign-in with the email opened from a local mail catcher, a spent or made-up link and another address. Admin’s sections with seeded links and visits, each action, and every action refused once the session has gone. The run page’s pruned-results notice, after a real prune.',
-      'Leak sweep': 'Also checks that admin without a session shows only the sign-in form and nothing hidden.',
+    const P6 = { /* v21 item 15: plain words for a reader outside the project; the facts are the v19 ones */
+      Unit: 'The details each alert carries. The daily maintenance job: its order of steps, what happens when one fails, and the check that only the scheduler can start it. Telling bots and link previews apart from people. The codes in personal links. Admin sign-in: it answers every email address the same way, so it never reveals who can sign in; the link it emails; the owner-only check; and the guard in front of every admin page and action.',
+      Integration: 'The alert rules (a project gone quiet, a sudden drop in test count, a report with no tests, coverage under its floor), which are database queries, run against a local database with real captured results. The daily job against that database: its heartbeat, flagging quiet projects, and deleting per-test results after 180 days and visit records after 365. Visit recording that leaves bots and link previews out of every count and never stores a visitor’s IP address, only a salted hash of it. Admin sign-in and each admin action (create, acknowledge, rotate, delete) with a real signed-in session, and each one refused without it.',
+      E2E: 'Personal links (a link made for one recipient, so visits can be counted per link): open one, check its cookie, its redirect and the project it shows first, and find the visits recorded against it; nothing the visitor sees says who the link was made for or shows its code. Admin sign-in with the email caught by a local mail server, including a used or made-up link and a different address. Every admin section and action with seeded data, and every action refused once the session has ended. The notice a run shows once its per-test results have been pruned, after a real prune.',
+      'Leak sweep': 'Also checks that the admin page, opened without signing in, shows only the sign-in form and nothing else.',
     };
     /* v9 item 4: every row true today (Phases 0–4 done, 5 in progress). Phase 6 adds alert rules, bot classification, tracked links, admin sign-in and the prune job. */
     const layers = [

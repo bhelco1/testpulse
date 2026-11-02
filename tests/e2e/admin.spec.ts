@@ -37,7 +37,8 @@ test.describe('admin signed out', () => {
     async ({ page }) => {
       const response = await page.goto('/admin');
       expect(response?.status()).toBe(200);
-      await expect(page).toHaveTitle('Admin · Testament admin');
+      // Design v21 item 16: signed out, the title says what the page is for.
+      await expect(page).toHaveTitle('Sign in · Testament admin');
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
         'content',
         'noindex, nofollow',
@@ -132,6 +133,8 @@ test.describe('admin signed in', () => {
       await signInAsOwner(page);
 
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Admin');
+      // Design v21 item 16: the admin home is "Testament admin" alone, in its error state too.
+      await expect(page).toHaveTitle('Testament admin');
       await expect(banner(page).getByRole('button', { name: 'Sign out' })).toBeVisible();
       await expect(page.getByRole('textbox', { name: 'Email' })).toHaveCount(0);
       const error = page.getByRole('main').getByRole('alert');
@@ -201,6 +204,7 @@ test.describe('admin refuses', () => {
         await expect(page).toHaveURL('/admin');
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Admin');
         await expect(page.getByText('Signed in, but not as the owner.')).toBeVisible();
+        await expect(page).toHaveTitle('Testament admin');
         const card = page.getByRole('main').getByRole('alert');
         await expect(card.getByRole('heading', { level: 2 })).toHaveText(
           'This account can’t open admin',

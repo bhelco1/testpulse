@@ -12,8 +12,9 @@ import { placeReport } from '../../../lib/seed/plan.ts';
 import { createSeedClient } from '../../../lib/seed/local.ts';
 import type { SecretClientEnv } from '../../../lib/supabase/server.ts';
 
-// Reports for the specs that write (tests/e2e/live.spec.ts, written while a page is open, and
-// tests/e2e/pruned.spec.ts, written and then pruned), through
+// Reports for the specs that write (tests/e2e/live.spec.ts, written while a page is open,
+// tests/e2e/pruned.spec.ts, written and then pruned, and tests/e2e/shared-reads.spec.ts, written
+// to give the public read cache a new data version), through
 // the path the seed takes (lib/seed/seed.ts): a committed fixture through the real parser,
 // normalizeReport, placeReport and ingest_report, so a report lands at a planned instant before
 // SEED_NOW and the pages' relative times and order stay fixed. The route's own steps (key, rate
@@ -27,7 +28,8 @@ import type { SecretClientEnv } from '../../../lib/supabase/server.ts';
 export const LIVE_SLUGS = ['live-public', 'live-private'] as const;
 export type LiveSlug = (typeof LIVE_SLUGS)[number];
 export const PRUNED_SLUG = 'pruned-public';
-export type SpecSlug = LiveSlug | typeof PRUNED_SLUG;
+export const SHARED_SLUG = 'shared-public';
+export type SpecSlug = LiveSlug | typeof PRUNED_SLUG | typeof SHARED_SLUG;
 
 // Each spec project copies a seeded project's file under its own slug and name: public from
 // testpulse's, private from routeserve's.
@@ -35,6 +37,7 @@ const SOURCES: Record<SpecSlug, { file: string; name: string }> = {
   'live-public': { file: 'testpulse', name: 'Live public' },
   'live-private': { file: 'routeserve', name: 'Live private' },
   'pruned-public': { file: 'testpulse', name: 'Pruned public' },
+  'shared-public': { file: 'testpulse', name: 'Shared public' },
 };
 
 // testpulse's captured Playwright failure: 3 tests, 1 passed, 1 failed, 1 skipped.
@@ -56,6 +59,7 @@ const FIXTURES: Record<
 > = {
   'live-public': PUBLIC_FIXTURE,
   'pruned-public': PUBLIC_FIXTURE,
+  'shared-public': PUBLIC_FIXTURE,
   // The captured routeserve failure: its message and stack trace must never reach anon.
   'live-private': {
     job: 'test',

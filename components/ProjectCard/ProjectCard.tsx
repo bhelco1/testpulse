@@ -9,6 +9,7 @@ import { declaredSummary } from '../../lib/projects/declared-summary';
 import type { DeclaredSuite, Visibility } from '../../lib/projects/schema';
 import { shortSuite } from '../../lib/results/short-suite';
 import { platformSplit } from '../../lib/runs/platform-split';
+import { Breaks } from '../Breaks/Breaks';
 import { CoverageBar, type CoverageBarProps } from '../CoverageBar/CoverageBar';
 import { HealthMarker, type HealthState } from '../HealthMarker/HealthMarker';
 import { EmptyIcon } from '../icons/icons';
@@ -117,7 +118,8 @@ function FailingName({ test }: { test: FailingTest }) {
       title={`${test.suite} › ${test.name}`}
       data-part="failing-name"
     >
-      {shortSuite(test.suite)} › {test.name}
+      <Breaks text={shortSuite(test.suite)} rule="suite" /> ›{' '}
+      <Breaks text={test.name} rule="name" />
     </span>
   );
 }
@@ -262,7 +264,9 @@ function WebCard({
           <ul className={styles.reportsGrid}>
             {reports.map((report) => (
               <li key={report.key} className={styles.report} data-part="report">
-                <span className={styles.reportKey}>{report.key}</span>
+                <span className={styles.reportKey}>
+                  <Breaks text={report.key} rule="key" />
+                </span>
                 <span
                   className={cx(styles.reportCount, empty && styles.reportEmpty)}
                   data-part="report-count"

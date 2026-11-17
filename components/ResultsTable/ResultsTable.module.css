@@ -286,6 +286,42 @@
   overflow-wrap: anywhere;
 }
 
+/* Design v21 item 13 (Run Detail.dc.html, "failed, no message"). */
+.noMessage {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  border: 1px dashed var(--line-strong);
+}
+
+.noMessageIcon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ink-3);
+}
+
+.noMessageBody {
+  min-width: 0;
+}
+
+.noMessageTitle {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.noMessageText {
+  margin-top: 2px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
 .trace {
   margin: 0;
   padding: 12px 14px;

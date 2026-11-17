@@ -55,6 +55,6 @@ describe('CoverageFloors', () => {
       'line-height': '1.5',
       color: 'var(--ink-3)',
     });
-    expect(ruleFor(CSS, '.rows')).toMatchObject({ gap: '14px' });
+    expect(ruleFor(CSS, '.rows')).toMatchObject({ gap: '14px', 'container-type': 'inline-size' });
   });
 });

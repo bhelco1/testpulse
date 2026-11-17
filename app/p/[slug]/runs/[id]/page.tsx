@@ -11,6 +11,7 @@ import { SiteFooter } from '../../../../../components/SiteFooter/SiteFooter';
 import { SiteHeader } from '../../../../../components/SiteHeader/SiteHeader';
 import { now } from '../../../../../lib/clock';
 import { runPageTitle, runPageView } from '../../../../../lib/pages/run';
+import { headTitle } from '../../../../../lib/pages/server-error';
 import { SOURCE_URL, siteChromeView } from '../../../../../lib/pages/site';
 import { loadRunHead } from '../../../../../lib/queries/heads';
 import { loadRunDetail } from '../../../../../lib/queries/run';
@@ -30,8 +31,11 @@ interface RouteProps {
 // link to this page in view, so it must not cost a page load.
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { slug, id } = await params;
-  const head = await loadRunHead(slug, id);
-  return { title: head === null ? 'Not found · Testament' : runPageTitle(head.project, head.run) };
+  const title = await headTitle(async () => {
+    const head = await loadRunHead(slug, id);
+    return head === null ? 'Not found · Testament' : runPageTitle(head.project, head.run);
+  });
+  return { title };
 }
 
 export default async function RunPage({ params }: RouteProps) {

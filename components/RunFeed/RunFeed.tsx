@@ -4,7 +4,12 @@ import { ErrorState } from '../ErrorState/ErrorState';
 import { AlertCircleIcon } from '../icons/icons';
 import { LiveDot } from '../LiveIndicator/LiveIndicator';
 import { RelativeTime } from '../RelativeTime/RelativeTime';
-import { RunFeedRow, type FeedRun, type KioskFeedRun } from '../RunFeedRow/RunFeedRow';
+import {
+  RunFeedRow,
+  RunFeedRowSkeleton,
+  type FeedRun,
+  type KioskFeedRun,
+} from '../RunFeedRow/RunFeedRow';
 import { SegmentedControl } from '../SegmentedControl/SegmentedControl';
 import { Skeleton } from '../Skeleton/Skeleton';
 import styles from './RunFeed.module.css';
@@ -36,6 +41,8 @@ type ReadyFeed =
   | (ProjectList & {
       // Present while there are more runs to load.
       onLoadMore?: () => void;
+      // The next runs have been asked for and have not arrived (design v21 item 14).
+      loadingMore?: boolean;
     });
 
 type KioskFeed = { variant: 'kiosk' } & Connection &
@@ -164,6 +171,7 @@ function ProjectEmptyFeed(props: ProjectList) {
 
 function ReadyWebFeed(props: { runs: readonly FeedEntry[] } & ReadyFeed) {
   const project = props.list === 'project';
+  const loadingMore = props.list === 'project' && props.loadingMore === true;
   return (
     <section className={styles.feed}>
       {props.list === 'project' ? (
@@ -174,19 +182,30 @@ function ReadyWebFeed(props: { runs: readonly FeedEntry[] } & ReadyFeed) {
           <LiveNote connection={props} project={false} />
         </div>
       )}
-      <div role="log" aria-live="polite">
+      <div role="log" aria-live="polite" aria-busy={loadingMore || undefined}>
         <ul className={styles.list}>
           {props.runs.map(({ isNew, ...run }) => (
             <li key={run.id}>
               <RunFeedRow run={run} showProject={!project} isNew={isNew} />
             </li>
           ))}
+          {loadingMore &&
+            [0, 1, 2].map((row) => (
+              <li key={`loading-${row}`} aria-hidden="true" data-part="more-skeleton">
+                <RunFeedRowSkeleton />
+              </li>
+            ))}
         </ul>
+        {loadingMore && (
+          <span className={styles.srOnly} data-part="loading-label">
+            Loading runs
+          </span>
+        )}
       </div>
       {props.list === 'project' && props.onLoadMore && (
         <div className={styles.more}>
-          <Button variant="secondary" onClick={props.onLoadMore}>
-            Load 20 more
+          <Button variant="secondary" busy={loadingMore} onClick={props.onLoadMore}>
+            {loadingMore ? 'Loading…' : 'Load 20 more'}
           </Button>
         </div>
       )}

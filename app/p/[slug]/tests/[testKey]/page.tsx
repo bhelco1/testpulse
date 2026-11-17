@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { Breadcrumbs } from '../../../../../components/Breadcrumbs/Breadcrumbs';
+import { Breaks } from '../../../../../components/Breaks/Breaks';
 import { HistoryTiles } from '../../../../../components/HistoryTiles/HistoryTiles';
 import { PageFrame } from '../../../../../components/PageFrame/PageFrame';
 import { SiteFooter } from '../../../../../components/SiteFooter/SiteFooter';
@@ -10,6 +11,7 @@ import { StatusTimeline } from '../../../../../components/StatusTimeline/StatusT
 import { TestHeader } from '../../../../../components/TestHeader/TestHeader';
 import { TrendChart } from '../../../../../components/TrendChart/TrendChart';
 import { now } from '../../../../../lib/clock';
+import { headTitle } from '../../../../../lib/pages/server-error';
 import { SOURCE_URL, siteChromeView } from '../../../../../lib/pages/site';
 import { testHistoryTitle, testHistoryView } from '../../../../../lib/pages/test-history';
 import { loadTestHead } from '../../../../../lib/queries/heads';
@@ -30,10 +32,11 @@ interface RouteProps {
 // link to this page in view, so it must not cost a page load.
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { slug, testKey } = await params;
-  const head = await loadTestHead(slug, testKey);
-  return {
-    title: head === null ? 'Not found · Testament' : testHistoryTitle(head.project, head.test),
-  };
+  const title = await headTitle(async () => {
+    const head = await loadTestHead(slug, testKey);
+    return head === null ? 'Not found · Testament' : testHistoryTitle(head.project, head.test);
+  });
+  return { title };
 }
 
 export default async function TestHistoryPage({ params }: RouteProps) {
@@ -54,7 +57,15 @@ export default async function TestHistoryPage({ params }: RouteProps) {
   return (
     <PageFrame>
       <SiteHeader projects={site.projects} currentProject={`/p/${encodeURIComponent(slug)}`} />
-      <Breadcrumbs items={view.crumbs.items} current={view.crumbs.current} currentMono />
+      <Breadcrumbs
+        items={view.crumbs.items}
+        current={
+          <>
+            {view.crumbs.suite} › <Breaks text={view.crumbs.name} rule="name" />
+          </>
+        }
+        currentMono
+      />
       <main id="main">
         <TestHeader {...view.header}>
           {view.tiles !== null && <HistoryTiles tiles={view.tiles} />}

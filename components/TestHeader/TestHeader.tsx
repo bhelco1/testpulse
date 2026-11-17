@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import type { TimeLabel } from '../../lib/copy/time';
+import { Breaks } from '../Breaks/Breaks';
 import { FlakyIcon, XCircleIcon } from '../icons/icons';
 import { RelativeTime } from '../RelativeTime/RelativeTime';
 import styles from './TestHeader.module.css';
@@ -24,8 +25,8 @@ export interface TestHeaderProps {
 }
 
 // The top of the test history page (design/pages/Test History.dc.html, components.md "Test
-// history page"): the module and layer tags, the Flaky pill, the mismatch headline and the New
-// pill, then the test's name and suite, and the tiles below them.
+// history page"): the module and layer tags, the Flaky pill and the New pill, then the test's
+// name and suite, the mismatch headline under them, and the tiles below.
 export function TestHeader({
   name,
   suite,
@@ -51,15 +52,6 @@ export function TestHeader({
             Flaky
           </span>
         )}
-        {mismatch !== null && (
-          <span className={styles.mismatch} data-part="mismatch">
-            <XCircleIcon size={14} strokeWidth={2.6} />
-            <span>{mismatch.text}</span>
-            <span className={styles.mismatchRun} data-part="mismatch-run">
-              · {mismatch.run}, <RelativeTime when={mismatch.when} />
-            </span>
-          </span>
-        )}
         {firstSeen !== null && (
           <span className={styles.new} data-part="new">
             New · first seen <RelativeTime when={firstSeen} />
@@ -67,11 +59,24 @@ export function TestHeader({
         )}
       </div>
       <h1 id="test-name" className={styles.name}>
-        {name}
+        <Breaks text={name} rule="name" />
       </h1>
       <div className={styles.suite} data-part="suite">
-        {suite}
+        <Breaks text={suite} rule="suite" />
       </div>
+      {/* Design v21 item 9: its own line under the suite, one sentence that wraps as text. */}
+      {mismatch !== null && (
+        <p className={styles.mismatch} data-part="mismatch">
+          <XCircleIcon size={14} strokeWidth={2.6} className={styles.mismatchIcon} />
+          <span className={styles.mismatchText}>
+            <span className={styles.mismatchLead}>{mismatch.text}</span>
+            <span className={styles.mismatchRun} data-part="mismatch-run">
+              {' '}
+              · {mismatch.run}, <RelativeTime when={mismatch.when} />
+            </span>
+          </span>
+        </p>
+      )}
       {children}
     </section>
   );

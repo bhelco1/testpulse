@@ -63,7 +63,7 @@ describe('RunFeed (web, landing)', () => {
       '/p/ostomate2/runs/1',
     ]);
     // Landing rows name their project.
-    expect(links[0]?.textContent).toContain('Ostomate2·main');
+    expect(links[0]?.textContent).toContain('Ostomate2 · main');
     expect(getAllByRole('listitem')).toHaveLength(3);
   });
 
@@ -174,7 +174,7 @@ describe('RunFeed (web, landing)', () => {
 });
 
 describe('RunFeed (web, project page)', () => {
-  function renderProject(extra: { onLoadMore?: () => void } = {}) {
+  function renderProject(extra: { onLoadMore?: () => void; loadingMore?: boolean } = {}) {
     const onBranchesChange = vi.fn();
     const view = render(
       <RunFeed
@@ -199,7 +199,7 @@ describe('RunFeed (web, project page)', () => {
     const radios = within(group).getAllByRole('radio');
     expect(radios.map((radio) => radio.textContent)).toEqual(['Default branch', 'All branches']);
     expect(radios.map((radio) => radio.getAttribute('aria-checked'))).toEqual(['true', 'false']);
-    expect(getAllByRole('link')[2]?.textContent).toContain('main·0e2d0b4');
+    expect(getAllByRole('link')[2]?.textContent).toContain('main · 0e2d0b4');
     expect(getAllByRole('link')[2]?.textContent).not.toContain('Ostomate2');
   });
 
@@ -236,6 +236,45 @@ describe('RunFeed (web, project page)', () => {
     expect(more.dataset.variant).toBe('secondary');
     fireEvent.click(more);
     expect(onLoadMore).toHaveBeenCalledOnce();
+  });
+
+  // Design v21 item 14: while the next 20 load, the button is busy in place, the rows shown stay,
+  // three skeleton rows in the row's shape follow them, and the list says it is busy.
+  it('shows "Load 20 more" busy, with three skeleton rows after the rows already shown', () => {
+    const onLoadMore = vi.fn();
+    const { getByRole, container } = renderProject({ onLoadMore, loadingMore: true });
+    const busy = getByRole('button', { name: 'Loading…' });
+    expect(busy.getAttribute('aria-busy')).toBe('true');
+    expect(busy.dataset.variant).toBe('secondary');
+    fireEvent.click(busy);
+    expect(onLoadMore).not.toHaveBeenCalled();
+    const log = getByRole('log');
+    expect(log.getAttribute('aria-busy')).toBe('true');
+    expect(within(log).getAllByRole('link')).toHaveLength(RUNS.length);
+    const skeletons = [...log.querySelectorAll<HTMLElement>('[data-part="more-skeleton"]')];
+    expect(skeletons).toHaveLength(3);
+    expect(skeletons.every((row) => row.getAttribute('aria-hidden') === 'true')).toBe(true);
+    expect(
+      [...(skeletons[0]?.querySelectorAll<HTMLElement>('[data-part="skeleton"]') ?? [])].map(
+        (bar) => [bar.style.width, bar.style.height],
+      ),
+    ).toEqual([
+      ['84px', '14px'],
+      ['60%', '14px'],
+      ['45%', '10px'],
+      ['96px', '14px'],
+      ['56px', '10px'],
+    ]);
+    expect(container.querySelector('[data-part="loading-label"]')?.textContent).toBe(
+      'Loading runs',
+    );
+  });
+
+  it('is not busy otherwise', () => {
+    const { getByRole, container } = renderProject({ onLoadMore: () => {} });
+    expect(getByRole('log').getAttribute('aria-busy')).toBeNull();
+    expect(container.querySelector('[data-part="more-skeleton"]')).toBeNull();
+    expect(getByRole('button', { name: 'Load 20 more' }).getAttribute('aria-busy')).toBeNull();
   });
 
   it('has no "Load 20 more" when there is nothing more to load', () => {
@@ -645,6 +684,7 @@ describe('RunFeed styles', () => {
     expect(ruleFor(CSS, '.note.offline')).toEqual({ color: 'var(--ink-2)' });
   });
 
+  // v21 item 7: the list is the container the rows take their shape from.
   it('stacks the rows, and pads "Load 20 more" 8 16 12', () => {
     expect(ruleFor(CSS, '.list')).toEqual({
       display: 'flex',
@@ -652,6 +692,7 @@ describe('RunFeed styles', () => {
       margin: '0px',
       padding: '0px',
       'list-style': 'none',
+      'container-type': 'inline-size',
     });
     expect(ruleFor(CSS, '.more')).toEqual({ padding: '8px 16px 12px' });
   });

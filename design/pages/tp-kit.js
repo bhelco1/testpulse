@@ -57,7 +57,7 @@
   const counts = list => { const by = {}; list.forEach(s => { const u = s.layer === 'e2e' ? 'flow' : 'test'; by[u] = (by[u] || 0) + s.count; }); return ['flow', 'test'].filter(u => by[u]).map(u => qty(by[u], u)).join(' and '); };
   function declaredSummary(suites) {
     if (!suites || !suites.length) return '';
-    if (suites.length === 1) { const s = suites[0]; return s.count > 0 ? `Not counted: ${s.name} (${counts([s])}), ${PHRASE[s.status]}` : `Not counted: ${s.name}, ${PHRASE[s.status]}`; } /* v5 item 12: sync rejects count < 1; defensive fallback drops the brackets */
+    if (suites.length === 1) { const s = suites[0]; return s.count > 0 ? `Not counted: ${counts([s])} in ${s.name}, ${PHRASE[s.status]}` : `Not counted: ${s.name}, ${PHRASE[s.status]}`; } /* v21 item 15: "{count} {unit} in {name}", so a name with its own brackets never doubles them; sync rejects count < 1; defensive fallback drops the count */
     const groups = ['runs_in_ci_not_reported', 'authored_not_executed'].map(st => suites.filter(s => s.status === st)).filter(g => g.length);
     if (groups.length === 1) return `Not counted: ${counts(groups[0])} in ${groups[0].length} suites, ${PHRASE[groups[0][0].status]}`;
     return 'Not counted: ' + groups.map(g => `${counts(g)} ${PHRASE[g[0].status]}`).join('; ');
@@ -118,7 +118,9 @@
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const shortDate = (d, nowYear) => d.getUTCDate() + ' ' + MON[d.getUTCMonth()] + (d.getUTCFullYear() === (nowYear || 2026) ? '' : ' ' + d.getUTCFullYear());
   const relDays = (D, d) => D === 1 ? 'yesterday' : D < 7 ? D + ' days ago' : D < 28 ? (D < 14 ? '1 week ago' : Math.floor(D / 7) + ' weeks ago') : shortDate(d);
-  /* v13 item 6: run durations. <60 s "{s} s"; <60 min "{m}m {ss}s"; else "{h}h {mm}m". Whole seconds, rounded down. */
-  const runDur = ms => { const t = Math.floor(ms / 1000); if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); if (t < 3600) return Math.floor(t / 60) + 'm ' + p(t % 60) + 's'; return Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
-window.TPKit = { runDur, down1, relDays, shortDate, DARK, LIGHT, themeVars, S, H, ORDER, TONE, NAME, layers, cov, card, row, pairs, ratio, n, runTitle, shortSuite, platformSplit, declaredSummary, qty };
+  /* v13 item 6: run durations. <60 s "{s} s"; <60 min "{m}m {ss}s"; else "{h}h {mm}m". Whole seconds, rounded down. v21 item 12: under 1 s "<1 s", never "0 s". */
+  const runDur = ms => { const t = Math.floor(ms / 1000); if (t < 1) return '<1 s'; if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); if (t < 3600) return Math.floor(t / 60) + 'm ' + p(t % 60) + 's'; return Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
+  /* v21 item 8: where mono keys and names may wrap. A soft break (<wbr>) goes after every "/" and "."; for test names also between a lower-case letter or digit and the capital that follows it (camelCase). The " › " separator already breaks at its spaces. overflow-wrap:anywhere stays only as the last resort for a piece longer than the line. Returns plain pieces; pages turn each break into a <wbr> element. */
+  const breakPieces = (s, camel) => String(s == null ? '' : s).split(camel ? /(?<=[\/.])|(?<=[a-z0-9])(?=[A-Z])/ : /(?<=[\/.])/);
+window.TPKit = { breakPieces, runDur, down1, relDays, shortDate, DARK, LIGHT, themeVars, S, H, ORDER, TONE, NAME, layers, cov, card, row, pairs, ratio, n, runTitle, shortSuite, platformSplit, declaredSummary, qty };
 })();

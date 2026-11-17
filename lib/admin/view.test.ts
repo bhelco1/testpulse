@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { AdminAccess } from './access.ts';
-import { adminPath, adminView, NOTICE_PARAM } from './view.ts';
+import { adminPath, adminTitle, adminView, linkTitle, NOTICE_PARAM } from './view.ts';
 
 // What /admin shows (design/components.md, Admin, "Sign-in" and "Page states"; Admin.dc.html):
 // the guard's answer decides, and the address bar or a flash cookie can only choose among the
@@ -94,5 +94,34 @@ describe('adminView', () => {
       kind: 'sign-in',
       notice: null,
     });
+  });
+});
+
+// Design v21 item 16 (components.md, "Site name, wordmark and page titles"): admin titles never
+// repeat "admin". The home is "Testament admin" alone; signed out it is "Sign in"; a link is its
+// company; an unknown link "Not found".
+describe('adminTitle', () => {
+  it('titles the admin home "Testament admin" signed in, not allowed and unavailable', () => {
+    expect(adminTitle({ kind: 'shell', email: OWNER })).toBe('Testament admin');
+    expect(adminTitle({ kind: 'refused', email: 'someone@example.org' })).toBe('Testament admin');
+    expect(adminTitle({ kind: 'unavailable' })).toBe('Testament admin');
+  });
+
+  it('titles every signed-out state "Sign in · Testament admin"', () => {
+    for (const notice of [null, 'signed-out', 'link-expired'] as const) {
+      expect(adminTitle({ kind: 'sign-in', notice })).toBe('Sign in · Testament admin');
+    }
+  });
+});
+
+describe('linkTitle', () => {
+  it('titles a link by its company, and an unknown link "Not found"', () => {
+    expect(linkTitle({ company: 'Acme Robotics' })).toBe('Acme Robotics · Testament admin');
+    expect(linkTitle(null)).toBe('Not found · Testament admin');
+  });
+
+  it('titles anything else, refused or failed, as the admin home', () => {
+    expect(linkTitle('refused')).toBe('Testament admin');
+    expect(linkTitle('error')).toBe('Testament admin');
   });
 });

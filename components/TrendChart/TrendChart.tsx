@@ -405,6 +405,7 @@ function Plot({
     steps: layout.phone ? 2 : 3,
     // Seconds print to the hundredth, so a finer step would repeat its neighbour's label.
     precision: format === 'sec' ? 0.01 : undefined,
+    duration: format === 'dur',
   });
   const rows = Array.from({ length: count }, (_, i) =>
     Object.fromEntries([['i', i], ...series.map((s, si) => [`s${si}`, s.values[i]])]),

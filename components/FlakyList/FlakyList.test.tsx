@@ -121,3 +121,16 @@ describe('FlakyList', () => {
     });
   });
 });
+
+// Design v21 item 8: the name wraps at the name rule, the suite at "." and "/".
+describe('FlakyList wrapping', () => {
+  it('lets the name and suite wrap at their break points', () => {
+    const { container } = render(<FlakyList tests={[FLAKY]} />);
+    expect(container.querySelector('[data-part="name"]')?.innerHTML).toBe(
+      'asset<wbr>Create<wbr>Schema accepts a minimal valid asset',
+    );
+    expect(container.querySelector('[data-part="suite"]')?.innerHTML).toBe(
+      'packages/<wbr>shared/<wbr>src/<wbr>schemas/<wbr>asset.<wbr>test.<wbr>ts',
+    );
+  });
+});

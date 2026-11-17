@@ -1,6 +1,8 @@
 /* The top of design/pages/Test History.dc.html; every value there is literal. */
 .header {
   padding: 36px 0 40px;
+  /* The tiles go 2 × 2 below a 480 px header (design v21 item 9, HistoryTiles). */
+  container-type: inline-size;
 }
 
 .tags {
@@ -38,15 +40,31 @@
 }
 
 .mismatch {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mismatchIcon {
+  flex: none;
+  margin-top: 3px;
   color: var(--fail);
+}
+
+.mismatchText {
+  min-width: 0;
+  text-wrap: pretty;
+}
+
+.mismatchLead {
   font-weight: 600;
+  color: var(--fail);
 }
 
 .mismatchRun {
-  font-weight: 400;
   color: var(--ink-3);
 }
 

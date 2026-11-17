@@ -15,14 +15,29 @@ const pad2 = (n: number): string => String(n).padStart(2, '0');
 
 /**
  * A run's duration in seconds as every page reads it (design v13 item 6, components.md "Run
- * duration"): whole seconds rounded down; "27 s" under a minute, "11m 34s" under an hour, then
- * "1h 05m". Ingest stores durations as non-negative integers; anything else reads "0 s".
+ * duration"): whole seconds rounded down; "<1 s" under a second (v21 item 12: "0 s" read as
+ * broken), "27 s" under a minute, "11m 34s" under an hour, then "1h 05m". Ingest stores durations
+ * as non-negative integers; anything else reads "<1 s".
  */
 export function runDurationText(seconds: number): string {
   const whole = seconds > 0 ? Math.floor(seconds) : 0;
+  if (whole < 1) return '<1 s';
   if (whole < 60) return `${whole} s`;
   if (whole < 3600) return `${Math.floor(whole / 60)}m ${pad2(whole % 60)}s`;
   return `${Math.floor(whole / 3600)}h ${pad2(Math.floor((whole % 3600) / 60))}m`;
+}
+
+// A run-duration axis tick, in the units the labels use and with a zero part dropped (design v21
+// item 11, tp-charts.js tickDur): "20 s", "10m", "1h 30m", "2h"; 0 reads "0". A tick that is not a
+// whole minute reads as a figure does ("1m 30s").
+function durationTick(seconds: number): string {
+  const whole = Math.round(seconds);
+  if (whole === 0) return '0';
+  if (whole < 60) return `${whole} s`;
+  if (whole % 60 !== 0) return runDurationText(whole);
+  if (whole < 3600) return `${whole / 60}m`;
+  const minutes = Math.floor((whole % 3600) / 60);
+  return `${Math.floor(whole / 3600)}h${minutes ? ` ${pad2(minutes)}m` : ''}`;
 }
 
 // Exact is for values read as figures (value labels, tooltip, table); axis ticks drop trailing
@@ -42,10 +57,9 @@ export function formatTrendValue(value: number, format: ValueFormat, exact = fal
       return `${exact ? value.toFixed(2) : String(Number(value.toFixed(2)))} s`;
     case 'ms':
       return `${exact && value < 0.5 ? '<1' : Math.round(value)} ms`;
-    // Ticks stay in whole seconds ("660 s"); a figure reads as every run duration does (design
-    // v14 item 3).
+    // A figure reads as every run duration does (design v14 item 3); a tick in the same units.
     case 'dur':
-      return exact ? runDurationText(value) : `${Math.round(value)} s`;
+      return exact ? runDurationText(value) : durationTick(value);
     case 'int':
       return grouped.format(Math.round(value));
   }

@@ -102,7 +102,8 @@ test('a pruned run shows the retention notice in place of the results table', as
     'Passed1',
     'Failed1',
     'Skipped1',
-    /^Duration\d+ s$/,
+    // 242 ms of reports reads "<1 s" (design v21 item 12).
+    'Duration<1 s',
   ]);
   await expectNoSeriousAxeViolations(page);
 });

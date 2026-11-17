@@ -1,4 +1,5 @@
 import type { TimeLabel } from '../../lib/copy/time';
+import { Breaks } from '../Breaks/Breaks';
 import { CheckCircleIcon, EmptyIcon, XCircleIcon } from '../icons/icons';
 import { RelativeTime } from '../RelativeTime/RelativeTime';
 import styles from './RunReportTable.module.css';
@@ -60,7 +61,7 @@ export function RunReportTable({ reports }: { reports: readonly RunReportRow[] }
                 <ReportStatus status={report.status} />
               </td>
               <td role="cell" className={cx(styles.cell, styles.key)}>
-                {report.key}
+                <Breaks text={report.key} rule="key" />
               </td>
               <td role="cell" className={cx(styles.cell, styles.results)}>
                 {report.status === 'empty' ? (

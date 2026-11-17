@@ -17,7 +17,7 @@ const TILES: readonly HistoryTile[] = [
   { label: 'Runs', value: '40', sub: ['since ', timeLabel('22 Aug')], tone: 'ink' },
   { label: 'Failed', value: '1', sub: ['1 run · ios-sim'], tone: 'fail' },
   { label: 'Flaky', value: '2', sub: ['commits in 30 days · jvm'], tone: 'attn' },
-  { label: 'Median time', value: '0.41 s', sub: ['jvm · ios-sim 0.63 s'], tone: 'ink' },
+  { label: 'Median time', value: '0.41 s', sub: ['jvm (ios-sim 0.63 s)'], tone: 'ink' },
 ];
 
 // The test history page's four tiles (design/pages/Test History.dc.html; components.md, Test
@@ -36,7 +36,7 @@ describe('HistoryTiles', () => {
       ['Runs', '40', 'since 22 Aug'],
       ['Failed', '1', '1 run · ios-sim'],
       ['Flaky', '2', 'commits in 30 days · jvm'],
-      ['Median time', '0.41 s', 'jvm · ios-sim 0.63 s'],
+      ['Median time', '0.41 s', 'jvm (ios-sim 0.63 s)'],
     ]);
     expect(items[0]?.querySelector('time')?.getAttribute('datetime')).toBe(
       '2026-10-05T11:56:00.000Z',
@@ -77,5 +77,19 @@ describe('HistoryTiles', () => {
       color: 'var(--ink-3)',
       'margin-top': '2px',
     });
+  });
+});
+
+// Design v21 item 9: below a 480 px header (a phone) the tiles are 2 × 2 and tighter; their subs
+// stay, being short and carrying the platforms.
+describe('HistoryTiles on a phone', () => {
+  it('goes 2 × 2 below a 480 px header, padding 14 16, figure 32', () => {
+    const narrow = '(max-width: 479px)';
+    expect(ruleFor(CSS, '.tiles', narrow)).toEqual({
+      'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
+    });
+    expect(ruleFor(CSS, '.tile', narrow)).toEqual({ padding: '14px 16px' });
+    expect(ruleFor(CSS, '.value', narrow)).toEqual({ 'font-size': '32px', 'margin-top': '4px' });
+    expect(() => ruleFor(CSS, '.sub', narrow)).toThrow();
   });
 });

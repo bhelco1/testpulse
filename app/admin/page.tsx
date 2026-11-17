@@ -10,7 +10,7 @@ import { readAdminPage } from '../../lib/admin/data';
 import { gateFor, getAdminAccess } from '../../lib/admin/guard';
 import { readRefusedFlash } from '../../lib/admin/handlers';
 import { siteOrigin } from '../../lib/admin/origin';
-import { adminView } from '../../lib/admin/view';
+import { adminTitle, adminView } from '../../lib/admin/view';
 import { now } from '../../lib/clock';
 import { requestSignInLinkAction, signOutAction } from './actions';
 import { AdminSections } from './sections';
@@ -21,16 +21,17 @@ import { AdminSections } from './sections';
 // (lib/admin/data.ts), streamed in behind the drawn loading state. Never indexed, and no public
 // page links here.
 
-export const metadata: Metadata = {
-  title: 'Admin · Testament admin',
-  robots: { index: false, follow: false },
-};
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+// The title follows the state the page shows (design v21 item 16), so it asks the guard as the
+// page does.
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const access = await getAdminAccess();
+  const view = adminView(access, { notice: (await searchParams).notice }, await readRefusedFlash());
+  return { title: adminTitle(view), robots: { index: false, follow: false } };
+}
+
+export default async function AdminPage({ searchParams }: Props) {
   const access = await getAdminAccess();
   const query = await searchParams;
   const view = adminView(access, { notice: query.notice }, await readRefusedFlash());

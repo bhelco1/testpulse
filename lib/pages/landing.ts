@@ -60,10 +60,11 @@ export const LANDING_ERROR = {
 
 type NameOf = (slug: string) => string;
 
-// components.md StatTile, Pass rate (design v8 item 9). The lead is "Latest runs" when every
-// latest run counted and none failed, "{passed} of {passed + failed}" when every one counted and
-// one failed, and "{counted projects} only" whenever a latest run is not counted (empty or all
-// skipped), failing or not. No rate at all reads "—".
+// components.md StatTile, Pass rate (design v8 item 9, worded as v21 item 15). The lead is "Each
+// project’s latest run" when every latest run counted and none failed, "{passed} of {passed +
+// failed} passed" when every one counted and one failed, and "{counted projects} only" whenever a
+// latest run is not counted (empty or all skipped), failing or not. The skipped count follows only
+// when there is one: at 0 the hero note already says so. No rate at all reads "—".
 function passRateTile(
   { passRate }: LandingHeadline,
   projects: readonly LandingProject[],
@@ -78,13 +79,11 @@ function passRateTile(
     passRate.counted.length < withRun
       ? `${joinNames(passRate.counted.map(nameOf))} only`
       : passRate.failed > 0
-        ? `${formatCount(passRate.passed)} of ${formatCount(passRate.passed + passRate.failed)}`
-        : 'Latest runs';
-  return {
-    label,
-    value: formatTrendValue(passRate.rate * 100, 'pct'),
-    sub: `${lead} · ${formatCount(passRate.skipped)} skipped, excluded`,
-  };
+        ? `${formatCount(passRate.passed)} of ${formatCount(passRate.passed + passRate.failed)} passed`
+        : 'Each project’s latest run';
+  const skipped =
+    passRate.skipped > 0 ? ` · ${formatCount(passRate.skipped)} skipped, not counted` : '';
+  return { label, value: formatTrendValue(passRate.rate * 100, 'pct'), sub: `${lead}${skipped}` };
 }
 
 // components.md StatTile, Projects reporting (design v8 item 8): "{r} of {n}", n counting every

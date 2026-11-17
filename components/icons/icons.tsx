@@ -214,3 +214,12 @@ export function NoteIcon(props: IconProps) {
     </Svg>
   );
 }
+
+// A round speech bubble: a failure the report gave no message (design v21 item 13).
+export function MessageIcon(props: IconProps) {
+  return (
+    <Svg {...props} linecap="round" linejoin="round">
+      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z" />
+    </Svg>
+  );
+}

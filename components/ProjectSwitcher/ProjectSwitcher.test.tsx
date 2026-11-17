@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { ruleFor } from '../testing/stylesheet';
 import { ProjectSwitcher, type SwitcherProject } from './ProjectSwitcher';
+import styles from './ProjectSwitcher.module.css';
 
 afterEach(cleanup);
 
@@ -167,6 +168,21 @@ describe('ProjectSwitcher', () => {
       'font-size': '14px',
       color: 'var(--ink-3)',
     });
+  });
+
+  // Design v21 items 1 and 2: while the page's data failed to load, the menu says so in the same
+  // line, rather than claim there are no projects.
+  it('opens to one non-link line, "Projects couldn’t be loaded", when they could not be read', () => {
+    const { getByRole, container } = render(<ProjectSwitcher projects="unavailable" />);
+    const button = getByRole('button', { name: 'Projects' });
+    fireEvent.click(button);
+    const panel = container.querySelector<HTMLElement>(
+      `[id="${button.getAttribute('aria-controls') ?? ''}"]`,
+    );
+    expect(panel?.hidden).toBe(false);
+    expect(panel?.textContent).toBe('Projects couldn’t be loaded');
+    expect(panel?.querySelector('p')?.className).toBe(styles.empty);
+    expect(within(panel as HTMLElement).queryAllByRole('link')).toEqual([]);
   });
 
   it('draws the panel and rows as the design does, current and hover on the same fill', () => {

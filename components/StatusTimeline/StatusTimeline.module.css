@@ -18,9 +18,28 @@
   padding-bottom: 2px;
 }
 
+/* Design v21 item 6: the slots that fit, across the whole strip. The runs fill from the right and
+   the slots not yet filled are one dashed baseline; each group's share is its slot count, set
+   inline as its flex-grow. */
+.slots {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 48px;
+}
+
+.unfilled {
+  flex-basis: 0;
+  min-width: 0;
+  height: 0;
+  border-top: 1.5px dashed var(--line-strong);
+}
+
 /* Right-aligned and clipped on the left, so the latest runs are the ones that stay in view. */
 .cells {
-  flex: 1;
+  flex-basis: 0;
   min-width: 0;
   display: flex;
   justify-content: flex-end;
@@ -48,7 +67,7 @@
 }
 
 .cell {
-  flex: 0 1 16px;
+  flex: 1 1 0;
   min-width: 6px;
   box-sizing: border-box;
   border-radius: 2px;
@@ -92,13 +111,33 @@
   border: 1.5px dashed var(--attn);
 }
 
+/* The same two groups as the strip, so the labels line up with the slots under them. */
 .ends {
   display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
+  gap: 3px;
   margin-top: var(--space-2);
   font-size: 12.5px;
   color: var(--ink-3);
+}
+
+/* Few runs in a narrow strip leave the runs' group narrower than "{n} runs ago" and "Latest":
+   that group keeps its text's width and "No earlier runs" gives way, cut with an ellipsis, so no
+   label leaves the card. */
+.noEarlier {
+  flex-basis: 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.endsRuns {
+  flex-basis: 0;
+  min-width: max-content;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  white-space: nowrap;
 }
 
 .withPlatforms .ends {

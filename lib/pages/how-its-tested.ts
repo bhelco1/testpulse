@@ -44,7 +44,7 @@ export const PRINCIPLES: readonly Principle[] = [
   ],
   [
     'Real fixtures',
-    'Parsers are tested against actual result files captured from Ostomate2, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
+    'Parsers are tested against actual result files captured from Ostomate 2.0, RouteServe and Testament itself: Gradle JUnit XML, Jest JSON, Vitest and Playwright output, JaCoCo and istanbul coverage.',
   ],
   [
     'Normalize on the server',
@@ -56,7 +56,7 @@ export const PRINCIPLES: readonly Principle[] = [
   ],
   [
     'No swallowed failures',
-    'In Testament’s own pipeline, nothing is allowed to fail quietly. No || true, no continue-on-error on test steps.',
+    'In Testament’s own pipeline, nothing is allowed to fail quietly: no test step uses “|| true” or “continue-on-error” to turn a failure into a pass.',
   ],
 ].map(([title, body], index) => ({
   n: String(index + 1).padStart(2, '0'),
@@ -108,7 +108,7 @@ export const STRATEGY: readonly StrategyRow[] = [
       'Parsers against real fixtures, layer resolution, stat calculations, API key hashing. 90% line floor.',
     tone: LAYER_TONE.unit,
     phase6:
-      'The alert detail schemas; the daily job’s step order and failure handling; the cron route’s secret check; bot and link-preview classification of user agents; tracked-link token generation and lookup; admin sign-in: the sign-in action’s one neutral answer, the sign-in link’s confirm route, the owner allowlist check, and the guard every admin page and action calls first.',
+      'The details each alert carries. The daily maintenance job: its order of steps, what happens when one fails, and the check that only the scheduler can start it. Telling bots and link previews apart from people. The codes in personal links. Admin sign-in: it answers every email address the same way, so it never reveals who can sign in; the link it emails; the owner-only check; and the guard in front of every admin page and action.',
   },
   {
     name: 'Contract',
@@ -133,7 +133,7 @@ export const STRATEGY: readonly StrategyRow[] = [
       'The ingestion endpoint end to end against local Supabase: idempotent retries, transactions and rollups, and row-level security checked with the anonymous client, so private projects stay hidden.',
     tone: LAYER_TONE.integration,
     phase6:
-      'The alert rules (stale, count drop, empty report, below floor), which are SQL, against local Supabase with captured fixtures. The daily job against local Supabase: heartbeat, opening stale alerts, and pruning results at 180 days and visits and tracked sessions at 365. Visit recording, with bots and previews kept out of every count and no raw IP address stored in visits or tracked sessions. Admin sign-in and its actions (create, acknowledge, rotate, delete) against local Supabase Auth with a real session, each refused without one.',
+      'The alert rules (a project gone quiet, a sudden drop in test count, a report with no tests, coverage under its floor), which are database queries, run against a local database with real captured results. The daily job against that database: its heartbeat, flagging quiet projects, and deleting per-test results after 180 days and visit records after 365. Visit recording that leaves bots and link previews out of every count and never stores a visitor’s IP address, only a salted hash of it. Admin sign-in and each admin action (create, acknowledge, rotate, delete) with a real signed-in session, and each one refused without it.',
   },
   {
     name: 'E2E',
@@ -142,7 +142,7 @@ export const STRATEGY: readonly StrategyRow[] = [
       'A seeded database behind the landing, project, run and test-history pages; visibility rules in the rendered UI; every public page again with JavaScript turned off.',
     tone: LAYER_TONE.e2e,
     phase6:
-      'The tracked-link flow: open a link, check its cookie and redirect, see the lead project first, and find the visits stored against the link; nothing the visitor sees names the company, role, contact or token. Admin sign-in with the email opened from a local mail catcher, a spent or made-up link and another address. Admin’s sections with seeded links and visits, each action, and every action refused once the session has gone. The run page’s pruned-results notice, after a real prune.',
+      'Personal links (a link made for one recipient, so visits can be counted per link): open one, check its cookie, its redirect and the project it shows first, and find the visits recorded against it; nothing the visitor sees says who the link was made for or shows its code. Admin sign-in with the email caught by a local mail server, including a used or made-up link and a different address. Every admin section and action with seeded data, and every action refused once the session has ended. The notice a run shows once its per-test results have been pruned, after a real prune.',
   },
   {
     name: 'Accessibility',
@@ -167,14 +167,14 @@ export const STRATEGY: readonly StrategyRow[] = [
       'Walks every page that can show a private project as a visitor and fails if any private project’s failure text, stack trace or source link appears anywhere. Counted with E2E.',
     tone: null,
     phase6:
-      'Also checks that admin without a session shows only the sign-in form and nothing hidden.',
+      'Also checks that the admin page, opened without signing in, shows only the sign-in form and nothing else.',
   },
 ];
 
 // The note under the self-report's pyramid (v9 item 4: contract tests count as Unit; v12 item 1:
 // no literal figures).
 export const PYRAMID_NOTE =
-  'Only spec §8 layers are counted. The axe, visual and leak-sweep checks run inside the Playwright suite and count as E2E; the Action’s contract tests run in the unit job and count as Unit. Each test counts once, in the layer Testament’s layer rules give it, whichever report it arrived in.';
+  'Every test counts in one of six layers: unit, component, integration, API, visual or E2E. The accessibility, screenshot and leak-sweep checks run inside the Playwright suite, so they count as E2E; the reporting Action’s contract tests run with the unit tests, so they count as Unit. Each test counts once, in the layer Testament’s settings give it, whichever report it arrived in.';
 
 export interface SelfRun {
   readonly status: RunStatus;

@@ -182,6 +182,26 @@ test.describe('an Ostomate2 test on one platform (public)', () => {
   test('the oldest cell is 8 runs ago', { tag: '@js' }, async ({ page }) => {
     await expect(timeline(page).locator('[data-part="oldest"]')).toHaveText('8 runs ago');
   });
+
+  // Design v21 item 6: the runs leave the other slots that fit a baseline, "No earlier runs",
+  // and no end label leaves the card, even at 390.
+  test(
+    'marks the slots not yet filled, its labels inside the card',
+    { tag: '@js' },
+    async ({ page }) => {
+      await expect(timeline(page).locator('[data-part="unfilled"]')).toHaveCount(
+        await strips(page).count(),
+      );
+      await expect(timeline(page).locator('[data-part="no-earlier"]')).toHaveText(
+        'No earlier runs',
+      );
+      const card = await timeline(page).locator('[data-part="strip"]').first().boundingBox();
+      const latest = await timeline(page).locator('[data-part="latest"]').boundingBox();
+      expect((latest?.x ?? 0) + (latest?.width ?? 0)).toBeLessThanOrEqual(
+        (card?.x ?? 0) + (card?.width ?? 0) + 0.5,
+      );
+    },
+  );
 });
 
 test.describe('an Ostomate2 test on two platforms (public)', () => {
@@ -208,7 +228,7 @@ test.describe('an Ostomate2 test on two platforms (public)', () => {
       ['Runs', '9', 'since 24 Sep'],
       ['Failed', '0', 'on any platform'],
       ['Flaky', '0', 'none in 30 days'],
-      ['Median time', '0.03 s', 'jvm · ios-sim 3 ms'],
+      ['Median time', '0.03 s', 'jvm (ios-sim 3 ms)'],
     ]);
   });
 

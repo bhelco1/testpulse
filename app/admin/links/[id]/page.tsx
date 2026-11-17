@@ -10,7 +10,7 @@ import { PageFrame } from '../../../../components/PageFrame/PageFrame';
 import { readLinkDetail } from '../../../../lib/admin/data';
 import { gateFor, getAdminAccess } from '../../../../lib/admin/guard';
 import { siteOrigin } from '../../../../lib/admin/origin';
-import { adminPath } from '../../../../lib/admin/view';
+import { adminPath, linkTitle } from '../../../../lib/admin/view';
 import { now } from '../../../../lib/clock';
 import { linkDetailView } from '../../../../lib/pages/admin';
 import { deleteLinkAction, signOutAction } from '../../actions';
@@ -29,11 +29,12 @@ const linkFor = cache(async (id: string) => {
 });
 
 // A not-found boundary's own metadata does not replace its page's, so the 404's title is chosen
-// here, as the public pages choose theirs; anyone but the owner gets the admin title alone.
+// here, as the public pages choose theirs; anyone but the owner gets the admin title alone. A link
+// is titled by its company (design v21 item 16).
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const detail = await linkFor((await params).id);
   return {
-    title: detail === null ? 'Not found · Testament admin' : 'Admin · Testament admin',
+    title: linkTitle(detail === null || typeof detail === 'string' ? detail : detail.link),
     robots: { index: false, follow: false },
   };
 }

@@ -159,11 +159,35 @@ function oldestLabel(capacity: number | null, shown: number, total: number): str
   return shown < total ? `Last ${qty(shown, 'run')}` : `${qty(shown - 1, 'run')} ago`;
 }
 
-function Ends({ oldest }: { oldest: string }) {
+// The slots a strip has: the runs that fit once measured, 40 before (design v21 item 6). Those the
+// shown runs do not fill are drawn as one baseline.
+const unfilledSlots = (capacity: number | null, shown: number) =>
+  Math.max(0, (capacity ?? MAX_CELLS) - shown);
+
+function Unfilled({ slots }: { slots: number }) {
+  if (slots === 0) return null;
+  return (
+    <div
+      className={styles.unfilled}
+      style={{ flexGrow: slots }}
+      data-part="unfilled"
+      aria-hidden="true"
+    />
+  );
+}
+
+function Ends({ oldest, shown, unfilled }: { oldest: string; shown: number; unfilled: number }) {
   return (
     <div className={styles.ends}>
-      <span data-part="oldest">{oldest}</span>
-      <span data-part="latest">Latest</span>
+      {unfilled > 0 && (
+        <span className={styles.noEarlier} style={{ flexGrow: unfilled }} data-part="no-earlier">
+          No earlier runs
+        </span>
+      )}
+      <span className={styles.endsRuns} style={{ flexGrow: shown }} data-part="ends-runs">
+        <span data-part="oldest">{oldest}</span>
+        <span data-part="latest">Latest</span>
+      </span>
     </div>
   );
 }
@@ -208,25 +232,39 @@ function RunsTimeline({ runs, defaultBranch }: Extract<StatusTimelineProps, { ki
     .map(([n, status]) => `${n} ${status}`);
   const name = `Last ${qty(shown.length, 'run')} on ${defaultBranch}: ${counts.join(', ')}.`;
 
+  const unfilled = unfilledSlots(capacity, shown.length);
+
   return (
     <div data-kind="runs" data-platforms="false">
       <div className={styles.strips}>
         <div className={styles.strip} data-part="strip">
-          <div ref={measured} className={styles.cells} role="img" aria-label={name}>
-            {shown.map((run, i) => (
-              <span
-                key={i}
-                className={`${styles.cell} ${styles[LOOK[run.status].className]}`}
-                data-part="cell"
-                data-status={run.status}
-              >
-                {LOOK[run.status].glyph}
-              </span>
-            ))}
+          <div ref={measured} className={styles.slots}>
+            <Unfilled slots={unfilled} />
+            <div
+              className={styles.cells}
+              style={{ flexGrow: shown.length }}
+              role="img"
+              aria-label={name}
+            >
+              {shown.map((run, i) => (
+                <span
+                  key={i}
+                  className={`${styles.cell} ${styles[LOOK[run.status].className]}`}
+                  data-part="cell"
+                  data-status={run.status}
+                >
+                  {LOOK[run.status].glyph}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-      <Ends oldest={oldestLabel(capacity, shown.length, runs.length)} />
+      <Ends
+        oldest={oldestLabel(capacity, shown.length, runs.length)}
+        shown={shown.length}
+        unfilled={unfilled}
+      />
       <Legend kind="runs" present={new Set(shown.map((run) => run.status))} />
     </div>
   );
@@ -267,6 +305,7 @@ function ResultsTimeline({
     cells: shownRuns.map((run) => statusOn(run, platform)),
   }));
   const withPlatforms = strips.length > 1;
+  const unfilled = unfilledSlots(capacity, shownRuns.length);
   const cellId = (strip: number, index: number) => `${id}-${strip}-${index}`;
 
   const onKeyDown = (strip: number) => (event: KeyboardEvent<HTMLDivElement>) => {
@@ -329,50 +368,62 @@ function ResultsTimeline({
             )}
             <div
               ref={(node) => {
-                boxes.current[s] = node;
                 if (s === 0) measured.current = node;
               }}
-              className={cx(styles.cells, styles.listbox)}
-              role="listbox"
-              aria-orientation="horizontal"
-              tabIndex={0}
-              aria-label={`${testName}${withPlatforms ? ` on ${strip.platform}` : ''}, last ${qty(strip.cells.length, 'run')}`}
-              aria-activedescendant={cellId(s, current - first)}
-              onKeyDown={onKeyDown(s)}
-              onPointerDown={onPointer}
-              onPointerMove={onPointer}
+              className={styles.slots}
             >
-              {strip.cells.map((status, i) => {
-                const look = LOOK[status];
-                const cellRun = shownRuns[i];
-                const isSelected = first + i === current;
-                return (
-                  <span
-                    key={i}
-                    id={cellId(s, i)}
-                    role="option"
-                    aria-selected={isSelected}
-                    aria-label={
-                      cellRun &&
-                      `${look.word}, ${cellRun.when.text}, ${isPrivate ? PRIVATE_TITLE : cellRun.title}, ${sha7(cellRun.sha)}`
-                    }
-                    className={cx(
-                      styles.cell,
-                      styles[look.className],
-                      isSelected && styles.selected,
-                    )}
-                    data-part="cell"
-                    data-status={status}
-                  >
-                    {look.glyph}
-                  </span>
-                );
-              })}
+              <Unfilled slots={unfilled} />
+              <div
+                ref={(node) => {
+                  boxes.current[s] = node;
+                }}
+                className={cx(styles.cells, styles.listbox)}
+                style={{ flexGrow: shownRuns.length }}
+                role="listbox"
+                aria-orientation="horizontal"
+                tabIndex={0}
+                aria-label={`${testName}${withPlatforms ? ` on ${strip.platform}` : ''}, last ${qty(strip.cells.length, 'run')}`}
+                aria-activedescendant={cellId(s, current - first)}
+                onKeyDown={onKeyDown(s)}
+                onPointerDown={onPointer}
+                onPointerMove={onPointer}
+              >
+                {strip.cells.map((status, i) => {
+                  const look = LOOK[status];
+                  const cellRun = shownRuns[i];
+                  const isSelected = first + i === current;
+                  return (
+                    <span
+                      key={i}
+                      id={cellId(s, i)}
+                      role="option"
+                      aria-selected={isSelected}
+                      aria-label={
+                        cellRun &&
+                        `${look.word}, ${cellRun.when.text}, ${isPrivate ? PRIVATE_TITLE : cellRun.title}, ${sha7(cellRun.sha)}`
+                      }
+                      className={cx(
+                        styles.cell,
+                        styles[look.className],
+                        isSelected && styles.selected,
+                      )}
+                      data-part="cell"
+                      data-status={status}
+                    >
+                      {look.glyph}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
         ))}
       </div>
-      <Ends oldest={oldestLabel(capacity, shownRuns.length, runs.length)} />
+      <Ends
+        oldest={oldestLabel(capacity, shownRuns.length, runs.length)}
+        shown={shownRuns.length}
+        unfilled={unfilled}
+      />
       <Legend kind="results" present={present} />
       {run && (
         <div className={styles.panel} aria-live="polite" data-part="panel">

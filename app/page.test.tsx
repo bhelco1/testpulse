@@ -15,6 +15,18 @@ vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 vi.mock('next/server', () => ({ connection: () => Promise.resolve() }));
 // No session cookie: the visitor did not arrive by a tracked link, so no lead is asked for.
 vi.mock('next/headers', () => ({ cookies: () => Promise.resolve({ get: () => undefined }) }));
+// The live subscription, observed: the error state must not mount it (design v21 item 2).
+const LiveUpdatesSpy = vi.hoisted(() => vi.fn());
+vi.mock('../components/LiveUpdates/LiveUpdates', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../components/LiveUpdates/LiveUpdates')>();
+  return {
+    ...actual,
+    LiveUpdates: (props: Parameters<typeof actual.LiveUpdates>[0]) => {
+      LiveUpdatesSpy();
+      return actual.LiveUpdates(props);
+    },
+  };
+});
 vi.mock('next/navigation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/navigation')>()),
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
@@ -39,11 +51,9 @@ async function render(): Promise<HTMLElement> {
 // design/components.md, "Site name, wordmark and page titles" (v20): Landing's document title is
 // the name and the tagline, and the same string is the social share title.
 describe('the landing page’s metadata', () => {
-  it('is titled "Testament · A testament to every test." for the tab and for sharing', () => {
-    const title = 'Testament · A testament to every test.';
-    expect(metadata.title).toBe(title);
-    expect(metadata.openGraph?.title).toBe(title);
-    expect(metadata.twitter?.title).toBe(title);
+  // The share title is every page's, from the layout (lib/pages/site-meta.test.ts).
+  it('is titled "Testament · A testament to every test." in the tab', () => {
+    expect(metadata).toEqual({ title: 'Testament · A testament to every test.' });
   });
 });
 
@@ -63,11 +73,40 @@ describe('the landing page’s tagline style', () => {
   });
 });
 
+// Design v21 item 4: a byline directly under the h1, so the first screen says who built this.
+describe('the landing page’s byline style', () => {
+  it('sets the name at 600 in --ink and the rest in --ink-2, at 15/1.5, 8 under the h1', () => {
+    const css = join(import.meta.dirname, 'page.module.css');
+    expect(ruleFor(css, '.byline')).toEqual({
+      margin: '8px 0px 4px',
+      'font-size': '15px',
+      'line-height': '1.5',
+      color: 'var(--ink-2)',
+    });
+    expect(ruleFor(css, '.bylineName')).toEqual({ 'font-weight': '600', color: 'var(--ink)' });
+    expect(ruleFor(css, '.lede')).toMatchObject({ margin: '0px' });
+    expect(ruleFor(css, '.bylineAlone')).toEqual({ 'margin-bottom': '24px' });
+  });
+});
+
+// Design v21 item 5: keyed to the main column's own width, as the drawing's container query is.
+describe('the landing page on a phone', () => {
+  it('puts the tiles 2 × 2 and the hero note at 15 below a 480 px column', () => {
+    const css = join(import.meta.dirname, 'page.module.css');
+    expect(ruleFor(css, '.main')).toMatchObject({ 'container-type': 'inline-size' });
+    expect(ruleFor(css, '.tiles', '(max-width: 479px)')).toEqual({
+      'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
+    });
+    expect(ruleFor(css, '.note', '(max-width: 479px)')).toEqual({ 'font-size': '15px' });
+  });
+});
+
 describe('the landing page', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://127.0.0.1:54321');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_unit_test_placeholder');
     vi.stubEnv('TESTPULSE_FIXED_NOW', '2026-10-05T12:00:00.000Z');
+    LiveUpdatesSpy.mockClear();
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -98,8 +137,16 @@ describe('the landing page', () => {
     expect(main.queryByText('Live test results for every project I build.')).toBeNull();
     // v20: the tagline leads the page only when the page has something to lead.
     expect(main.queryByText('A testament to every test.')).toBeNull();
+    // v21 item 4: nor the byline.
+    expect(main.queryByText(/quality engineering leader/)).toBeNull();
     expect(document.body.querySelector('[data-part="tiles"]')).toBeNull();
     expect(document.body.textContent).not.toMatch(/Last report received/);
+    // v21 items 1 and 2: the menu says the projects couldn't be read, and the header holds the
+    // theme toggle alone: nothing subscribes, so it never shows Live or Offline.
+    const banner = within(document.body.querySelector('header') as HTMLElement);
+    expect(banner.getByText('Projects couldn’t be loaded')).toBeTruthy();
+    expect(document.body.querySelector('[data-part="controls"]')?.children).toHaveLength(1);
+    expect(LiveUpdatesSpy).not.toHaveBeenCalled();
     // The cause reaches the server log, by the query that failed and Postgres's code.
     expect(logged).toHaveBeenCalledWith(expect.stringMatching(/PGRST002/));
   });
@@ -116,6 +163,11 @@ describe('the landing page', () => {
     const tagline = main.getByText('A testament to every test.');
     expect(tagline.tagName).toBe('P');
     expect(tagline.nextElementSibling).toBe(main.getByRole('heading', { level: 1 }));
+    // v21 item 4: the byline directly under the h1, the name in its own span.
+    const byline = main.getByRole('heading', { level: 1 }).nextElementSibling as HTMLElement;
+    expect(byline.tagName).toBe('P');
+    expect(byline.textContent).toBe('Bobby Helco, quality engineering leader');
+    expect(byline.querySelector('span')?.textContent).toBe('Bobby Helco');
     expect(main.getByRole('heading', { level: 2 }).textContent).toBe('No projects yet');
     expect(
       main.getByText('Projects appear here once they’re registered and send their first report.'),

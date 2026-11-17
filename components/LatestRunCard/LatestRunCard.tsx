@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import type { LatestRunView } from '../../lib/pages/project';
+import { Breaks } from '../Breaks/Breaks';
 import { RecoveryStats } from '../RecoveryStats/RecoveryStats';
 import { RelativeTime } from '../RelativeTime/RelativeTime';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
@@ -48,7 +49,9 @@ export function LatestRunCard({ run }: LatestRunCardProps) {
           title={run.failing.full}
           data-part="failing"
         >
-          <span className={styles.failName}>{run.failing.short}</span>
+          <span className={styles.failName}>
+            <Breaks text={run.failing.short} rule="name" />
+          </span>
           <span className={styles.failPlatform}>{run.failing.platform}</span>
         </Link>
       )}

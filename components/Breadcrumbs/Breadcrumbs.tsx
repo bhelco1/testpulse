@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 import styles from './Breadcrumbs.module.css';
 
@@ -9,7 +10,8 @@ export interface BreadcrumbLink {
 
 export interface BreadcrumbsProps {
   items: readonly BreadcrumbLink[];
-  current: string;
+  // Text, or a test name with its soft breaks (design v21 item 8).
+  current: ReactNode;
   // Test names are shown in monospace, as everywhere else on the site.
   currentMono?: boolean;
 }
@@ -31,7 +33,13 @@ export function Breadcrumbs({ items, current, currentMono = false }: Breadcrumbs
         ))}
         <li className={styles.item}>
           <span aria-current="page" className={currentClass} data-mono={String(currentMono)}>
-            {current}
+            {/* Text is one flex item already; a name with soft breaks is held in one too, so its
+                pieces wrap as one run rather than each becoming an item of its own. */}
+            {typeof current === 'string' ? (
+              current
+            ) : (
+              <span className={styles.currentText}>{current}</span>
+            )}
           </span>
         </li>
       </ol>

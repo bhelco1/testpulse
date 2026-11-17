@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { Breaks } from '../Breaks/Breaks';
 import { Button } from '../Button/Button';
 import type { SwitcherProject } from '../ProjectSwitcher/ProjectSwitcher';
 import { StatusBadge } from '../StatusBadge/StatusBadge';
@@ -65,10 +66,13 @@ export function NotFound(props: NotFoundProps) {
   );
 }
 
+// The chip is a flex box, so the path sits in one span and its soft breaks wrap as one run.
 function Path({ path }: { path: ReactNode }) {
   return (
     <div className={styles.path} data-part="path">
-      {path}
+      <span className={styles.pathText}>
+        {typeof path === 'string' ? <Breaks text={path} rule="path" /> : path}
+      </span>
     </div>
   );
 }

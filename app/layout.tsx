@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { ThemeRestore } from '../components/ThemeRestore/ThemeRestore';
 import { VisitBeacon } from '../components/VisitBeacon/VisitBeacon';
 import { themeInitScript } from '../lib/design/theme';
+import { siteMetadata } from '../lib/pages/site-meta';
 
 import '../design/tokens.css';
 import './globals.css';
@@ -39,11 +40,7 @@ const jetBrainsMono = localFont({
   variable: '--font-jetbrains-mono',
 });
 
-export const metadata: Metadata = {
-  title: 'Testament',
-  description:
-    "Live test results for Bobby Helco's software projects, reported by each project's CI.",
-};
+export const metadata: Metadata = siteMetadata;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const fontVariables = `${sourceSerif.variable} ${publicSans.variable} ${jetBrainsMono.variable}`;

@@ -49,14 +49,39 @@ describe('Breadcrumbs', () => {
   });
 
   it('sets a test name as the current page in monospace', () => {
-    const { getByText } = render(
+    const { container } = render(
       <Breadcrumbs
         items={[{ label: 'Overview', href: '/' }]}
         current="HomeViewModelTest › rendersToday"
         currentMono
       />,
     );
-    expect(getByText('HomeViewModelTest › rendersToday').dataset.mono).toBe('true');
+    const current = container.querySelector<HTMLElement>('[aria-current="page"]');
+    expect(current?.textContent).toBe('HomeViewModelTest › rendersToday');
+    expect(current?.dataset.mono).toBe('true');
+    expect(ruleFor(CSS, '.currentText')).toEqual({
+      'min-width': '0px',
+      'overflow-wrap': 'anywhere',
+    });
+  });
+
+  it('takes a current page with soft breaks in it, as a test name has (v21 item 8)', () => {
+    const { container } = render(
+      <Breadcrumbs
+        items={[{ label: 'Overview', href: '/' }]}
+        current={
+          <>
+            HomeViewModelTest › renders
+            <wbr />
+            Today
+          </>
+        }
+        currentMono
+      />,
+    );
+    const current = container.querySelector('[aria-current="page"]');
+    expect(current?.textContent).toBe('HomeViewModelTest › rendersToday');
+    expect(current?.querySelectorAll('wbr')).toHaveLength(1);
   });
 
   it('makes every link and the current page a 44px flex item', () => {

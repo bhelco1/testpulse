@@ -40,3 +40,19 @@
   color: var(--ink-3);
   margin-top: 2px;
 }
+
+/* Design v21 item 9: 2 × 2 below a 480 px header (TestHeader is the container). */
+@container (max-width: 479px) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tile {
+    padding: 14px 16px;
+  }
+
+  .value {
+    font-size: 32px;
+    margin-top: 4px;
+  }
+}

@@ -363,6 +363,8 @@ test('shows every section from the database, and records no visit of admin', asy
   });
   await page.reload();
   await expectHydrated(page, 'button[aria-label="Copy link for Acme Health"]');
+  // Design v21 item 16: the signed-in home is "Testament admin" alone.
+  await expect(page).toHaveTitle('Testament admin');
 
   const alerts = section(page, 'Open alerts');
   await expect(alerts.getByText('4 open')).toBeVisible();
@@ -467,7 +469,8 @@ test('shows a link’s detail, opened and not, and 404 for no such link', async 
   await expect(page).toHaveURL(`/admin/links/${ids.acme}`);
   // The title comes from generateMetadata's database read, which Next streams after the page's
   // content on a client navigation, so axe below must not run before it has arrived.
-  await expect(page).toHaveTitle('Admin · Testament admin');
+  // Design v21 item 16: a link's page is titled by its company.
+  await expect(page).toHaveTitle('Acme Health · Testament admin');
   await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toHaveText(
     'Admin/Tracked links/Acme Health',
   );

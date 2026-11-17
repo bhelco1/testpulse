@@ -1,8 +1,10 @@
 .row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  grid-template-areas: 'status title count' 'status meta when';
+  column-gap: 16px;
+  row-gap: 2px;
   align-items: center;
-  gap: 6px 16px;
   padding: 14px 16px;
   min-height: var(--target-min);
   box-sizing: border-box;
@@ -28,28 +30,27 @@
 }
 
 .status {
+  grid-area: status;
+  align-self: start;
   display: flex;
-  width: 104px;
-  flex: none;
-}
-
-.content {
-  flex: 1 1 220px;
-  min-width: 0;
+  align-items: center;
+  height: 22px;
 }
 
 .titleLine {
+  grid-area: title;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 15px;
+  line-height: 22px;
   font-weight: 500;
   min-width: 0;
 }
 
 .chip {
   flex: none;
-  font: 600 11px var(--font-sans);
+  font: 600 11px/1.5 var(--font-sans);
   padding: 2px 7px;
   border-radius: var(--radius-pill);
   background: var(--ink);
@@ -60,23 +61,29 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   color: var(--ink-3);
   font-weight: 400;
+  white-space: nowrap;
 }
 
 .title {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 6px;
+  grid-area: meta;
+  display: block;
+  min-width: 0;
   font-size: 13px;
+  line-height: 19px;
   color: var(--ink-3);
-  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sha {
@@ -84,9 +91,12 @@
 }
 
 .count {
+  grid-area: count;
+  justify-self: end;
   display: flex;
   gap: 6px;
   font-size: 14px;
+  line-height: 22px;
   white-space: nowrap;
 }
 
@@ -110,10 +120,46 @@
 }
 
 .when {
-  margin-left: auto;
+  grid-area: when;
+  justify-self: end;
   font-size: 13px;
+  line-height: 19px;
   color: var(--ink-3);
   white-space: nowrap;
+}
+
+/* Design v21 item 7: in a list under 400 px (the list is the container) the count and time take a
+   third line, count left and time right; every row keeps the same shape. After the
+   rules it overrides, which have the same specificity. */
+@container (max-width: 399px) {
+  .row {
+    grid-template-areas: 'status title title' 'status meta meta' 'count count when';
+  }
+
+  .count {
+    justify-self: start;
+    padding-top: 6px;
+  }
+
+  .when {
+    padding-top: 6px;
+  }
+}
+
+/* The loading row (design v21 item 14): each bar centred in its cell, the cells at the row's line
+   heights, so the skeleton is the row's height. */
+.skeleton:hover {
+  background: none;
+}
+
+.skeletonCell {
+  display: flex;
+  align-items: center;
+  height: 22px;
+}
+
+.skeletonMeta {
+  height: 19px;
 }
 
 .tile {

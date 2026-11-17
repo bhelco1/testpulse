@@ -13,7 +13,7 @@
   const fmtFor = f => f === 'pct' ? (v, e) => (e ? down1(v).toFixed(1) : String(down1(v))) + '%'
     : f === 'ms' ? (v, e) => (e && v < 0.5 ? '<1' : Math.round(v)) + ' ms'
     : f === 'sec' ? (v, e) => v < 0.01 && (e || v > 0) ? msStr(v) : /* v9 item 8: a stored 0 ms reads "<1 ms" */ (e ? v.toFixed(2) : String(+v.toFixed(2))) + ' s' /* v8 item 48: under 10 ms reads in ms */
-    : f === 'dur' ? (v, e) => e ? runDurS(v) : Math.round(v) + ' s' /* v14 item 3: axis ticks in seconds; tooltip, table and end label in the run-duration format */
+    : f === 'dur' ? (v, e) => e ? runDurS(v) : tickDur(v) /* v21 item 11: ticks in the labels' units ("10m", "12m"; "20 s"; "1h 30m"), never "1500 s"; tooltip, table and end label in the run-duration format */
     : v => Math.round(v).toLocaleString('en-US');
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const p2 = x => String(x).padStart(2, '0');
@@ -23,17 +23,20 @@
   if (typeof document !== 'undefined' && !document.getElementById('tpc-style')) { const st = document.createElement('style'); st.id = 'tpc-style';
     st.textContent = '.tpc-row:hover{background:var(--raised)}.tpc-link{text-decoration:none}.tpc-link:hover{text-decoration:underline;text-decoration-color:currentColor}.tpc-link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:6px}';
     document.head.appendChild(st); }
-  const runDurS = v => { const t = Math.floor(v); if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); return t < 3600 ? Math.floor(t / 60) + 'm ' + p(t % 60) + 's' : Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
+  const runDurS = v => { const t = Math.floor(v); if (t < 1) return '<1 s'; /* v21 item 12 */ if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); return t < 3600 ? Math.floor(t / 60) + 'm ' + p(t % 60) + 's' : Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
+  /* v21 item 11: y ticks for run durations step in the labels' units and drop a zero part: under 2 minutes whole seconds ("20 s"), then whole minutes ("10m", "12m"), from 2 hours half hours ("1h 30m", "2h"). 0 reads "0". */
+  const tickDur = v => { const t = Math.round(v); if (t === 0) return '0'; if (t < 60 || t % 60) return t < 60 ? t + ' s' : runDurS(t); if (t < 3600) return t / 60 + 'm'; const m = Math.floor(t % 3600 / 60); return Math.floor(t / 3600) + 'h' + (m ? ' ' + String(m).padStart(2, '0') + 'm' : ''); };
   const ago = (k, unit) => k === 0 ? 'Latest' : k + (unit === 'day' ? (k === 1 ? ' day ago' : ' days ago') : (k === 1 ? ' run ago' : ' runs ago'));
   const has = v => v != null && isFinite(v);
   let mctx = null;
   const textW = (t, f) => { mctx = mctx || document.createElement('canvas').getContext('2d'); mctx.font = f; return mctx.measureText(t).width; };
-  function nice(lo, hi, count, pct, whole, zero, hund) {
+  function nice(lo, hi, count, pct, whole, zero, hund, durMode) {
     if (!isFinite(lo) || !isFinite(hi)) { lo = 0; hi = 1; }
     if (hi === lo) { if (zero || lo === 0) { lo = Math.max(0, lo); hi = lo + 1; } else { hi = lo + 1; lo = lo - 1; } }
     const raw = (hi - lo) / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
     let step = (whole ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10]).map(m => m * mag).find(s => s >= raw) || 10 * mag;
     if (whole) step = Math.max(1, Math.round(step));
+    if (durMode && hi >= 120) { const c = hi >= 7200 ? [1800, 3600, 7200, 10800, 21600] : [60, 120, 300, 600, 900, 1800, 3600]; step = c.find(x => x >= raw) || c[c.length - 1]; } /* v21 item 11: whole minutes from 2 minutes, half hours from 2 hours */
     /* v11 item 12: seconds — never below 0.01 s; skip any candidate (e.g. 2.5×10ⁿ) that isn't a whole number of hundredths */
     if (hund) { const ok = v => v >= 0.01 - 1e-12 && Math.abs(v * 100 - Math.round(v * 100)) < 1e-6;
       if (!ok(step)) { const c = []; for (let e = -2; e <= 6; e++) [1, 2, 2.5, 5].forEach(m => c.push(m * Math.pow(10, e))); step = c.filter(ok).sort((a, b) => a - b).find(v => v >= Math.max(raw, 0.01) - 1e-12) || step; } }
@@ -98,7 +101,7 @@
       const pct = fmt === 'pct';
       let lo = zero ? 0 : Math.min(...all), hi = Math.max(...all);
       if (!zero) { const pad = Math.max((hi - lo) * 0.12, pct ? 1 : (hi || 1) * 0.02); lo -= pad; hi += pad; }
-      const dom = nice(lo, hi, phone ? 2 : 3, pct, fmt === 'int' || fmt === 'dur' || fmt === 'ms', zero, fmt === 'sec');
+      const dom = nice(lo, hi, phone ? 2 : 3, pct, fmt === 'int' || fmt === 'dur' || fmt === 'ms', zero, fmt === 'sec', fmt === 'dur');
       /* v10 item 11: left margin fits the widest y label (8 + width, rounded up), minimum 56 (phone 44) */
       const L = Math.max(phone ? 44 : 56, Math.ceil(8 + Math.max(0, ...dom.ticks.map(t => textW(f(t), '12px ' + font)))));
       const halo = { stroke: 'var(--surface)', strokeWidth: 3, paintOrder: 'stroke', strokeLinejoin: 'round' }; /* v10 item 13: value and floor labels sit on a 3 px surface halo */

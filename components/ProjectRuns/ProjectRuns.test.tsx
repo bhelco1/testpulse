@@ -24,7 +24,11 @@ vi.mock('../../lib/supabase/public', () => ({ createPublicClient: () => ({}) }))
 
 const AS_OF = timeLabel('12:00');
 
-beforeEach(() => push.mockReset());
+// A block body: a function returned from beforeEach is run as its teardown, and mockReset returns
+// the mock.
+beforeEach(() => {
+  push.mockReset();
+});
 afterEach(cleanup);
 
 const RUN: FeedRun = {
@@ -103,6 +107,38 @@ describe('ProjectRuns', () => {
       />,
     );
     expect(queryByRole('button', { name: 'Load 20 more' })).toBeNull();
+  });
+
+  // Design v21 item 14: busy from the click until the longer list arrives, then focus moves to the
+  // first new row.
+  it('shows the busy state while the next 20 load, then focuses the first new row', async () => {
+    const more = (id: string): FeedRun => ({ ...RUN, id, href: `/p/ostomate2/runs/${id}` });
+    // The navigation, as the transition sees it: pending until the longer list is rendered.
+    let arrive = () => {};
+    push.mockImplementation(() => new Promise<void>((resolve) => (arrive = resolve)));
+    const props = (items: readonly FeedRun[], loadMoreHref: string | null) =>
+      ({
+        asOf: AS_OF,
+        project: 'Ostomate 2.0',
+        runs: { branches: 'all', items, branchHrefs: HREFS, loadMoreHref },
+      }) as const;
+    const { getByRole, queryByRole, rerender, container } = render(
+      <ProjectRuns {...props([RUN], '/p/ostomate2?branches=all&runs=30')} />,
+    );
+
+    fireEvent.click(getByRole('button', { name: 'Load 20 more' }));
+    expect(getByRole('button', { name: 'Loading…' }).getAttribute('aria-busy')).toBe('true');
+    expect(container.querySelectorAll('[data-part="more-skeleton"]')).toHaveLength(3);
+
+    await act(async () => {
+      rerender(<ProjectRuns {...props([RUN, more('r2'), more('r3')], '/p/ostomate2?runs=50')} />);
+      arrive();
+      await Promise.resolve();
+    });
+    expect(queryByRole('button', { name: 'Loading…' })).toBeNull();
+    expect(getByRole('button', { name: 'Load 20 more' })).toBeTruthy();
+    expect(container.querySelector('[data-part="more-skeleton"]')).toBeNull();
+    expect(document.activeElement?.getAttribute('href')).toBe('/p/ostomate2/runs/r2');
   });
 
   it('keeps the header and filter with no runs, naming the project', () => {

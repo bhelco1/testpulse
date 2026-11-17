@@ -15,7 +15,8 @@ export interface SwitcherProject {
 }
 
 export interface ProjectSwitcherProps {
-  projects: readonly SwitcherProject[];
+  // 'unavailable' while the page's data failed to load (design v21 item 1).
+  projects: readonly SwitcherProject[] | 'unavailable';
   // The project page being shown, if any.
   currentHref?: string;
 }
@@ -67,7 +68,9 @@ export function ProjectSwitcher({ projects, currentHref }: ProjectSwitcherProps)
         Projects <Chevron size={14} strokeWidth={2.4} />
       </button>
       <div id={panelId} className={styles.panel} hidden={!open}>
-        {projects.length === 0 ? (
+        {projects === 'unavailable' ? (
+          <p className={styles.empty}>Projects couldn’t be loaded</p>
+        ) : projects.length === 0 ? (
           <p className={styles.empty}>No projects yet</p>
         ) : (
           <ul className={styles.list}>

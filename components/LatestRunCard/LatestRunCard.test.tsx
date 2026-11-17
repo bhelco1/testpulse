@@ -178,3 +178,13 @@ describe('LatestRunCard', () => {
     });
   });
 });
+
+// Design v21 item 8: the failing name wraps at the name rule's break points, by soft breaks only.
+describe('LatestRunCard failing name', () => {
+  it('breaks after "." and "/" and at camelCase humps', () => {
+    const { container } = render(<LatestRunCard run={FAILED} />);
+    const name = container.querySelector('[data-part="failing"] span');
+    expect(name?.textContent).toBe('asset.test.ts › accepts a minimal valid asset');
+    expect(name?.innerHTML).toBe('asset.<wbr>test.<wbr>ts › accepts a minimal valid asset');
+  });
+});

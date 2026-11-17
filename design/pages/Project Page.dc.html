@@ -18,7 +18,19 @@ a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-stron
 a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
 @keyframes tpShimmer{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}
 @keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes tpSpin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* v21 items 5, 7, 10: layouts keyed to the component's own width (container queries), so they hold at any viewport and inside Phone Views */
+.tp-cq{container-type:inline-size}
+.tp-run{display:grid;grid-template-columns:104px minmax(0,1fr) auto;grid-template-areas:"s t c" "s m w";column-gap:16px;row-gap:2px;align-items:center}
+.tp-run-s{grid-area:s;align-self:start;height:22px}.tp-run-t{grid-area:t;min-width:0}.tp-run-m{grid-area:m;min-width:0}.tp-run-c{grid-area:c;justify-self:end}.tp-run-w{grid-area:w;justify-self:end}
+@container (max-width:399px){.tp-run{grid-template-areas:"s t t" "s m m" "c c w"}.tp-run-c{justify-self:start;padding-top:6px}.tp-run-w{padding-top:6px}}
+.tp-cov{display:grid;grid-template-columns:128px minmax(40px,1fr) auto;grid-template-areas:"k b v";align-items:center;column-gap:14px;row-gap:8px;font-size:14px}
+.tp-cov-k{grid-area:k;min-width:0}.tp-cov-b{grid-area:b}.tp-cov-v{grid-area:v;justify-self:end}
+@container (max-width:399px){.tp-cov{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "b b"}}
+.tp-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
+.tp-tile{padding:18px 20px}.tp-tile-v{font:500 40px/1.1 'Source Serif 4',serif;margin-top:8px}.tp-hero-note{font-size:18px}
+@container (max-width:479px){.tp-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tp-tile{padding:14px 16px}.tp-tile-v{font-size:32px;margin-top:4px}.tp-tile-plain{display:none}.tp-hero-note{font-size:15px}}
 </style>
 </helmet>
 <div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;--shadow-card:none;--shadow-menu:0 16px 40px -12px rgba(0,0,0,.7);background:var(--bg);color:var(--ink);min-height:100vh">
@@ -75,7 +87,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </div>
 <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px"><span style="font:500 64px/1 'Source Serif 4',serif;color:{{ run.figColor }}">{{ run.figure }}</span><span style="font-size:15px;color:var(--ink-2)">{{ run.line }}</span></div>
 <sc-if value="{{ isFail }}" hint-placeholder-val="{{ false }}">
-<a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ run.failName }}</span><span style="font-size:13px;color:var(--ink-3)">{{ run.failPlat }}</span></a>
+<a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ run.failNameB }}</span><span style="font-size:13px;color:var(--ink-3)">{{ run.failPlat }}</span></a>
 </sc-if>
 <div style="margin-top:10px;font-size:13.5px;color:var(--ink-3)">{{ p.platforms }}</div>
 <div style="display:flex;flex-wrap:wrap;gap:16px 12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
@@ -136,12 +148,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
 <div style="font:500 22px 'Source Serif 4',serif">Line coverage against enforced floors</div>
 <p style="margin:4px 0 22px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">The amber tick is the floor CI enforces; a build below it fails. Scale 0 to 100.</p>
-<div style="display:flex;flex-direction:column;gap:14px">
+<div class="tp-cq" style="display:flex;flex-direction:column;gap:14px">
 <sc-for list="{{ coverage }}" as="v" hint-placeholder-count="2">
-<div style="display:grid;grid-template-columns:128px minmax(40px,1fr) auto;align-items:center;column-gap:14px;font-size:14px">
-<span style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
-<div style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};display:{{ v.flDisp }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
-<span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
+<div class="tp-cov">
+<span class="tp-cov-k" title="{{ v.m }}" style="font:13px 'JetBrains Mono',monospace;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.m }}</span>
+<div class="tp-cov-b" style="position:relative;height:6px;border-radius:99px;background:var(--raised)"><div style="width:{{ v.w }};height:100%;border-radius:99px;background:var(--ink)"></div><div style="position:absolute;left:{{ v.fl }};display:{{ v.flDisp }};top:-4px;width:2px;height:14px;background:var(--attn)"></div></div>
+<span class="tp-cov-v" style="display:flex;align-items:center;gap:6px;white-space:nowrap"><sc-if value="{{ v.below }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></sc-if><b style="font-weight:600;color:{{ v.ink }}">{{ v.v }}</b><span style="color:{{ v.floorInk }}">{{ v.floorLabel }}</span></span>
 </div>
 </sc-for>
 </div>
@@ -153,7 +165,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <p style="margin:4px 0 18px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">{{ p.reportsNote }}</p>
 <div style="border-radius:12px;background:var(--inset);border:1px solid var(--line)">
 <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>JOB / MODULE / PLATFORM</span><span>TESTS</span></div>
-<sc-for list="{{ p.reports }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font:13px 'JetBrains Mono',monospace"><span style="color:var(--ink-2);overflow-wrap:anywhere">{{ r.k }}</span><span>{{ r.n }}</span></div></sc-for>
+<sc-for list="{{ p.reports }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font:13px 'JetBrains Mono',monospace"><span style="min-width:0;color:var(--ink-2);overflow-wrap:anywhere">{{ r.kb }}</span><span>{{ r.n }}</span></div></sc-for>
 <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;font-size:13.5px"><span style="color:var(--ink-3)">{{ p.reportsFoot }}</span><b style="font-weight:600">{{ p.total }}</b></div>
 </div>
 </div>
@@ -175,10 +187,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </div>
 <div style="margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
 <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div><div style="font:500 20px 'Source Serif 4',serif">Last 40 runs</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3)">Default branch · run status</div></div><span style="font-size:13px;color:var(--ink-3)">{{ stripNote }}</span></div>
-<div role="img" aria-label="{{ stripAria }}" style="display:flex;justify-content:flex-end;align-items:flex-end;gap:3px;height:48px;overflow:hidden">
-<sc-for list="{{ strip }}" as="c" hint-placeholder-count="40"><span style="flex:0 1 16px;min-width:6px;height:{{ c.h }};box-sizing:border-box;border-radius:2px;background:{{ c.bg }};border:{{ c.bd }};display:flex;justify-content:center;align-items:flex-start;font:700 10px/14px 'Public Sans',sans-serif;color:var(--on-ink)">{{ c.g }}</span></sc-for>
-</div>
-<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><span>39 runs ago</span><span>Latest</span></div>
+<div style="display:flex;gap:3px;align-items:flex-end;height:48px">
+<sc-if value="{{ stripHasEmpty }}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="flex:{{ stripEmptyGrow }};min-width:0;height:0;border-top:1.5px dashed var(--line-strong)"></div></sc-if>
+<div role="img" aria-label="{{ stripAria }}" style="flex:{{ stripGrow }};min-width:0;display:flex;justify-content:flex-end;align-items:flex-end;gap:3px;height:48px;overflow:hidden">
+<sc-for list="{{ strip }}" as="c" hint-placeholder-count="40"><span style="flex:1 1 0;min-width:6px;height:{{ c.h }};box-sizing:border-box;border-radius:2px;background:{{ c.bg }};border:{{ c.bd }};display:flex;justify-content:center;align-items:flex-start;font:700 10px/14px 'Public Sans',sans-serif;color:var(--on-ink)">{{ c.g }}</span></sc-for>
+</div></div>
+<div style="display:flex;gap:3px;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><sc-if value="{{ stripHasEmpty }}" hint-placeholder-val="{{ false }}"><span style="flex:{{ stripEmptyGrow }};min-width:0;white-space:nowrap">No earlier runs</span></sc-if><span style="flex:{{ stripGrow }};min-width:0;display:flex;justify-content:space-between;gap:12px;white-space:nowrap"><span>{{ stripOldest }}</span><span>Latest</span></span></div>
 <div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)"><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:14px;border-radius:2px;background:var(--pass)"></span>Passed</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;border-radius:2px;background:var(--fail)"></span>Failed</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;box-sizing:border-box;border-radius:2px;background:var(--attn-tint);border:1.5px dashed var(--attn)"></span>Empty</span></div>
 </div>
 </section>
@@ -191,20 +205,22 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 12px;padding:12px 12px 8px 16px"><h2 style="margin:0;font:500 24px 'Source Serif 4',serif">Runs</h2>
 <div role="radiogroup" aria-label="Branches" style="display:flex;padding:3px;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:10px"><sc-for list="{{ branchTabs }}" as="b" hint-placeholder-count="2"><button role="radio" aria-checked="{{ b.on }}" onClick="{{ b.pick }}" style="min-height:44px;padding:0 14px;border-radius:6px;border:none;cursor:pointer;background:{{ b.bg }};color:{{ b.ink }};font:{{ b.weight }} 14px 'Public Sans',sans-serif">{{ b.label }}</button></sc-for></div></div>
 <div style="display:flex;align-items:center;gap:8px;padding:0 16px 10px;font-size:13.5px;color:var(--ink-3)"><span style="width:8px;height:8px;border-radius:50%;background:var(--pass)"></span><span>Updates as reports arrive</span></div>
-<div role="log" aria-live="polite" style="display:flex;flex-direction:column">
+<div role="log" aria-live="polite" aria-busy="{{ moreBusy }}" class="tp-cq" style="display:flex;flex-direction:column">
 <sc-for list="{{ runs }}" as="r" hint-placeholder-count="4">
-<a href="#" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:14px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:{{ r.bg }};text-decoration:none" style-hover="background:var(--raised)">
-<span style="display:flex;align-items:center;gap:6px;width:104px;flex:none;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ r.st.r }}" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.w }}</span></span>
-<div style="flex:1 1 220px;min-width:0">
-<div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;min-width:0"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;color:var(--ink-3);font-weight:400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><sc-if value="{{ r.hasTitle }}" hint-placeholder-val="{{ true }}"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></sc-if></div>
-<div style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:13px;color:var(--ink-3);margin-top:2px"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }}</span><span>·</span></sc-if><span>{{ r.branch }}</span><span>·</span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></div>
-</div>
-<span style="display:flex;gap:6px;font-size:14px;white-space:nowrap"><span style="color:{{ r.countInk }};font-weight:{{ r.countW }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
-<span style="margin-left:auto;font-size:13px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span>
+<a href="#" class="tp-run" style="padding:14px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:{{ r.bg }};text-decoration:none" style-hover="background:var(--raised)">
+<span class="tp-run-s" style="display:flex;align-items:center;gap:6px;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg style="flex:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ r.st.r }}" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.w }}</span></span>
+<span class="tp-run-t" style="display:flex;align-items:center;gap:8px;font-size:15px;line-height:22px;font-weight:500"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px/1.5 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink-3);font-weight:400;white-space:nowrap"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><sc-if value="{{ r.hasTitle }}" hint-placeholder-val="{{ true }}"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></sc-if></span>
+<span class="tp-run-m" style="display:block;font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }} · </span></sc-if><span>{{ r.branch }} · </span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></span>
+<span class="tp-run-c" style="display:flex;gap:6px;font-size:14px;line-height:22px;white-space:nowrap"><span style="color:{{ r.countInk }};font-weight:{{ r.countW }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
+<span class="tp-run-w" style="font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span>
 </a>
 </sc-for>
+<sc-if value="{{ moreBusyOn }}" hint-placeholder-val="{{ false }}"><div aria-hidden="true" style="animation:tpShimmer 1.6s ease-in-out infinite"><sc-for list="{{ three }}" as="k" hint-placeholder-count="3"><div class="tp-run" style="padding:14px 16px"><span class="tp-run-s" style="display:flex;align-items:center"><span style="width:84px;height:14px;border-radius:4px;background:var(--raised)"></span></span><span class="tp-run-t" style="display:flex;align-items:center;height:22px"><span style="width:60%;height:14px;border-radius:4px;background:var(--raised)"></span></span><span class="tp-run-m" style="display:flex;align-items:center;height:19px"><span style="width:45%;height:10px;border-radius:4px;background:var(--raised)"></span></span><span class="tp-run-c" style="display:flex;align-items:center;height:22px"><span style="width:96px;height:14px;border-radius:4px;background:var(--raised)"></span></span><span class="tp-run-w" style="display:flex;align-items:center;height:19px"><span style="width:56px;height:10px;border-radius:4px;background:var(--raised)"></span></span></div></sc-for></div><span style="position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap">Loading runs</span></sc-if>
 </div>
-<div style="padding:8px 16px 12px"><button style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer" style-hover="background:var(--raised)">Load 20 more</button></div>
+<div style="padding:8px 16px 12px">
+<sc-if value="{{ moreIdle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ loadMore }}" style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer" style-hover="background:var(--raised)">Load 20 more</button></sc-if>
+<sc-if value="{{ moreBusyOn }}" hint-placeholder-val="{{ false }}"><button aria-busy="true" aria-disabled="true" style="min-height:44px;padding:0 16px;display:inline-flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 15px 'Public Sans',sans-serif;cursor:progress"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" style="flex:none;animation:tpSpin .9s linear infinite"><circle cx="12" cy="12" r="9" stroke="var(--ink-3)" stroke-opacity=".5"></circle><path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor"></path></svg>Loading…</button></sc-if>
+</div>
 </section>
 
 <section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
@@ -213,8 +229,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ hasFlaky }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ p.flaky }}" as="f" hint-placeholder-count="1">
 <a href="#" style="display:block;padding:12px 14px;border-radius:12px;background:var(--inset);border:1px solid var(--line);text-decoration:none" style-hover="background:var(--raised)">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><span style="font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ f.name }}</span><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></div>
-<div style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:3px">{{ f.suite }}</div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><span style="min-width:0;font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ f.nameB }}</span><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></div>
+<div style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:3px;overflow-wrap:anywhere">{{ f.suiteB }}</div>
 <div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px;font-size:13px;color:var(--ink-2)"><span>{{ f.rate }}</span><span>{{ f.layer }}</span><span>{{ f.plat }}</span></div>
 </a>
 </sc-for>
@@ -231,9 +247,9 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received {{ p.lastReport }}</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;project&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ostomate2&quot;,&quot;routeserve&quot;],&quot;default&quot;:&quot;ostomate2&quot;,&quot;tsType&quot;:&quot;'ostomate2' | 'routeserve'&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;current&quot;,&quot;latest run failed&quot;,&quot;stale&quot;,&quot;coverage below floor&quot;,&quot;no recoveries in 90 days&quot;],&quot;default&quot;:&quot;current&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;project&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ostomate2&quot;,&quot;routeserve&quot;],&quot;default&quot;:&quot;ostomate2&quot;,&quot;tsType&quot;:&quot;'ostomate2' | 'routeserve'&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;current&quot;,&quot;latest run failed&quot;,&quot;stale&quot;,&quot;coverage below floor&quot;,&quot;no recoveries in 90 days&quot;,&quot;12 runs so far&quot;,&quot;loading 20 more runs&quot;],&quot;default&quot;:&quot;current&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
-  state = { project: null, theme: null, menuOpen: false, branches: 'default' };
+  state = { project: null, theme: null, menuOpen: false, branches: 'default', more: false };
   static DARK = { bg:'#121110', surface:'#1a1917', inset:'#151412', raised:'#211f1c', line:'#2a2825', 'line-strong':'#3d3a35', ink:'#ede9e3', 'ink-2':'#cfc9bf', 'ink-3':'#a8a298', pass:'#7fd79a', 'pass-tint':'#1d2a20', fail:'#f4897c', 'fail-tint':'#33201c', attn:'#e3b35c', 'attn-tint':'#302716', neutral:'#b3ada3', 'neutral-tint':'#252320', 'on-ink':'#121110', 'layer-1':'#ede9e3', 'layer-2':'#b8b2a8', 'layer-3':'#8a847a', 'layer-4':'#6f6a62' };
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0', 'layer-1':'#1c1a17', 'layer-2':'#57524b', 'layer-3':'#7a746b', 'layer-4':'#8f897f' };
   static DATES = ['2 Jul','11 Jul','20 Jul','29 Jul','7 Aug','16 Aug','25 Aug','3 Sep','12 Sep','21 Sep'];
@@ -403,7 +419,11 @@ class Component extends DCLogic {
     });
     const branchTabs = [['default', 'Default branch'], ['all', 'All branches']].map(([k, label]) => { const on = (this.state.branches || 'default') === k; return { label, on, bg: on ? 'var(--raised)' : 'transparent', ink: on ? 'var(--ink)' : 'var(--ink-2)', weight: on ? 600 : 500, pick: () => this.setState({ branches: k }) }; });
 
-    const strip = Array.from({ length: 40 }, () => ({ h: '14px', bg: 'var(--pass)', bd: 'none', g: '' }));
+    /* v21 item 6: the strip always spans the card. Slots = capacity (40 here); runs fill from the right, cells share the width (flex 1, min 6 px); the slots not yet filled are one dashed baseline labelled "No earlier runs", and "{n−1} runs ago" sits under the oldest real cell */
+    const nRuns = sc === '12 runs so far' ? 12 : 40;
+    const strip = Array.from({ length: nRuns }, () => ({ h: '14px', bg: 'var(--pass)', bd: 'none', g: '' }));
+    const brk = (t, camel) => React.createElement(React.Fragment, null, ...K.breakPieces(t, camel).flatMap((x, i) => i ? [React.createElement('wbr'), x] : [x])); /* v21 item 8 */
+    const moreBusy = sc === 'loading 20 more runs' || this.state.more; /* v21 item 14 */
     const menuItems = Object.keys(all).map(k => ({ name: all[k].name, cur: k === key ? 'page' : 'false', note: k === key ? 'Current' : '', bg: k === key ? 'var(--surface)' : 'transparent', st: K.S.passed, pick: e => { e.preventDefault(); this.setState({ project: k, menuOpen: false }); } }))
       .concat([{ name: 'Testament', cur: 'false', note: '', bg: 'transparent', st: K.S.not_reporting, pick: e => e.preventDefault() }]);
 
@@ -411,9 +431,11 @@ class Component extends DCLogic {
 
     return Object.assign(base, {
       themeVars: K.themeVars(dark), liveDot, menuItems,
-      p: Object.assign({}, p, { hasDeclared: p.declared.length > 0, lastReport: stale ? '1 week ago' : p.lastReport }),
+      p: Object.assign({}, p, { hasDeclared: p.declared.length > 0, lastReport: stale ? '1 week ago' : p.lastReport, reports: p.reports.map(r => Object.assign({}, r, { kb: brk(r.k) })), flaky: p.flaky.map(f => Object.assign({}, f, { nameB: brk(f.name, true), suiteB: brk(f.suite) })) }),
       isPublic: !p.private, isStale: stale, isHealthy: !stale, isPass: !failed, isFail: failed, isBelow: below, rec,
-      run, pyramid, pyrCols: '110px minmax(0,1fr) 120px', coverage, charts, runs, branchTabs, strip, stripNote: 'All 40 passed.', stripAria: 'Last 40 runs on main: 40 passed.',
+      run: Object.assign(run, { failNameB: brk(run.failName || '', true) }), pyramid, pyrCols: '110px minmax(0,1fr) 120px', coverage, charts, runs, branchTabs, strip,
+      stripNote: `All ${nRuns} passed.`, stripAria: `Last ${nRuns} runs on main: ${nRuns} passed.`, stripOldest: nRuns > 1 ? `${nRuns - 1} runs ago` : '', stripHasEmpty: nRuns < 40, stripGrow: `${nRuns} 1 0`, stripEmptyGrow: `${40 - nRuns} 1 0`,
+      moreBusy: moreBusy ? 'true' : 'false', moreBusyOn: moreBusy, moreIdle: !moreBusy, three: [1, 2, 3], loadMore: () => this.setState({ more: true }),
       hasFlaky: p.flaky.length > 0, noFlaky: p.flaky.length === 0,
     });
   }

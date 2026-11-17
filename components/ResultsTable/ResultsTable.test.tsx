@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ruleFor } from '../testing/stylesheet';
-import { ResultsTable, type ResultRow } from './ResultsTable';
+import { ResultsTable, type FailureDetail, type ResultRow } from './ResultsTable';
 import styles from './ResultsTable.module.css';
 
 afterEach(cleanup);
@@ -692,7 +692,8 @@ describe('ResultsTable rows', () => {
     expect(test?.body.querySelectorAll('[data-part="private-notice"]')).toHaveLength(1);
   });
 
-  it('public with a failure whose text is missing: the head, and no empty message or trace', () => {
+  // Design v21 item 13: a missing message is said, never left blank or shown as a placeholder.
+  it('public with a failure whose text is missing: the head, the no-message panel, no empty trace', () => {
     const bare = row('bare', {
       suite: 'com.ostomate.app.sync.SyncQueueTest',
       name: 'syncsOnReconnect',
@@ -715,6 +716,113 @@ describe('ResultsTable rows', () => {
     ]);
     expect(blocks.map((block) => block.querySelectorAll('pre').length)).toEqual([1, 0]);
     expect(container.textContent).not.toContain('Details hidden');
+    expect(
+      blocks.map((block) => block.querySelectorAll('[data-part="no-message"]').length),
+    ).toEqual([0, 1]);
+  });
+
+  // Design v21 item 8: the narrow layout wraps the name (name rule) and suite (suite rule); the
+  // wide layout keeps them on one line with an ellipsis, where the soft breaks do nothing.
+  it('puts soft breaks in the name and suite, and none in their text', () => {
+    const { container } = renderTable();
+    const test = testRows(container).find((t) => t.name === 'rendersToday');
+    const name = test?.row.querySelector('[data-part="name"]');
+    expect(name?.innerHTML).toBe('renders<wbr>Today');
+    expect(name?.textContent).toBe('rendersToday');
+    expect(test?.row.querySelector('[data-part="suite"]')?.querySelectorAll('wbr').length).toBe(
+      (test?.row.querySelector('[data-part="suite"]')?.textContent?.match(/[./](?=.)/g) ?? [])
+        .length,
+    );
+  });
+
+  describe('a failure the report gave no message (design v21 item 13)', () => {
+    const noMessage = (failure: Partial<FailureDetail>) =>
+      row('silent', {
+        suite: 'com.ostomate.app.ui.home.HomeViewModelTest',
+        name: 'rendersToday',
+        status: failure.status ?? 'failed',
+        platforms: [{ platform: 'jvm', status: failure.status ?? 'failed' }],
+        failures: [
+          {
+            platform: 'jvm',
+            status: 'failed',
+            duration: '0.10 s',
+            message: null,
+            detail: null,
+            ...failure,
+          },
+        ],
+      });
+    const panelOf = (container: HTMLElement) =>
+      testRows(container)[0]?.body.querySelector<HTMLElement>('[data-part="no-message"]');
+
+    it('says so in a panel, with no message line and no trace', () => {
+      const { container } = renderTable({ results: [noMessage({})] });
+      const panel = panelOf(container);
+      expect(panel?.textContent).toBe(
+        'No failure messageThe report marked this test as failed but included no message or stack trace. The CI run’s log may say more.',
+      );
+      expect(panel?.querySelector('svg path')?.getAttribute('d')).toBe(
+        'M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z',
+      );
+      const body = testRows(container)[0]?.body;
+      expect(body?.querySelector('[data-part="message"]')).toBeNull();
+      expect(body?.querySelector('pre')).toBeNull();
+      expect(container.textContent).not.toContain('Unknown error');
+      expect(within(body as HTMLElement).getByRole('link', { name: 'Test history' })).toBeTruthy();
+    });
+
+    it('treats an empty message as none', () => {
+      const { container } = renderTable({ results: [noMessage({ message: '  ' })] });
+      expect(panelOf(container)).toBeTruthy();
+      expect(testRows(container)[0]?.body.querySelector('[data-part="message"]')).toBeNull();
+    });
+
+    it('says “errored” for an error', () => {
+      const { container } = renderTable({ results: [noMessage({ status: 'error' })] });
+      expect(panelOf(container)?.textContent).toContain(
+        'The report marked this test as errored but included no message or stack trace.',
+      );
+    });
+
+    it('points to the stack trace below when there is one', () => {
+      const { container } = renderTable({ results: [noMessage({ detail: 'at a\nat b' })] });
+      expect(panelOf(container)?.textContent).toBe(
+        'No failure messageThe report marked this test as failed but included no message; its stack trace is below.',
+      );
+      expect(testRows(container)[0]?.body.querySelector('pre')?.textContent).toBe('at a\nat b');
+    });
+
+    it('leaves a private project as it was: the notice, no panel', () => {
+      const { container } = renderTable({ results: [noMessage({})], visibility: 'private' });
+      expect(panelOf(container)).toBeNull();
+      expect(container.textContent).toContain('Details hidden');
+    });
+
+    it('draws the panel as the design does', () => {
+      expect(ruleFor(CSS, '.noMessage')).toEqual({
+        display: 'flex',
+        gap: '10px',
+        'align-items': 'flex-start',
+        'margin-bottom': '8px',
+        padding: '12px 14px',
+        'border-radius': 'var(--radius-sm)',
+        background: 'var(--inset)',
+        border: '1px dashed var(--line-strong)',
+      });
+      expect(ruleFor(CSS, '.noMessageTitle')).toEqual({
+        'font-weight': '600',
+        'font-size': '14px',
+        color: 'var(--ink)',
+      });
+      expect(ruleFor(CSS, '.noMessageText')).toEqual({
+        'margin-top': '2px',
+        'font-size': '13.5px',
+        'line-height': '1.5',
+        color: 'var(--ink-2)',
+        'text-wrap': 'pretty',
+      });
+    });
   });
 
   // Design v5 item 8: the line lives in the expanded detail, which only failed and error rows

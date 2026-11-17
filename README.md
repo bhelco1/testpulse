@@ -6,7 +6,7 @@ evaluating quality engineering leadership work, and doubles as a working cross-p
 dashboard. The site is itself a portfolio piece, built test-first, and reports its own results
 on its own dashboard.
 
-Live site: https://testpulse-iota.vercel.app
+Live site: https://testament.helcolabs.com
 
 The specification in `docs/spec.md` is the source of truth for the data model, API contract,
 stats, phases, and acceptance criteria.

@@ -13,7 +13,7 @@ If a request conflicts with the spec, stop and say so. If a decision changes, up
 
 ## Current phase
 
-Phase 7: Launch. Design v20 is in `design/` (its kiosk is a Later candidate, not built), and the public name is Testament; testpulse stays the internal name. The address, testament.helcolabs.com, is configured last (spec section 18, question 1). Update this line when a phase completes.
+Phase 7: Launch. Design v20 is in `design/` (its kiosk is a Later candidate, not built), and the public name is Testament; testpulse stays the internal name. The address, testament.helcolabs.com, is live since 2026-11-17 (spec section 18, question 1); the launch review is the remaining Phase 7 criterion. Update this line when a phase completes.
 
 ## How to work
 

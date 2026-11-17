@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type { NextConfig } from 'next';
 
 // Admin compares each project file deployed with the site with its database row when /admin
@@ -6,7 +8,13 @@ import type { NextConfig } from 'next';
 // page reads them from (spec section 15, "Admin" as built).
 export const ADMIN_TRACED_FILES = { '/admin': ['./projects/*.yaml'] };
 
+// Each build's own name in the public read cache's keys (lib/queries/cache.ts). The cache outlives a
+// deployment, and on this machine a build, so an entry is only ever read by the code that wrote
+// it. The build inlines the value into the server code.
+const BUILD_ID = randomUUID();
+
 const nextConfig: NextConfig = {
+  env: { TESTPULSE_BUILD_ID: BUILD_ID },
   outputFileTracingIncludes: ADMIN_TRACED_FILES,
   // A tracked link is /v/<token> (spec section 14). Its handler uses the secret client, which
   // only app/api may reach, so the public address is rewritten, on the server, to the API route.

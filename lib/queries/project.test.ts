@@ -9,7 +9,7 @@ import {
   type Answer,
   type Query,
 } from './fake-client.test-support.ts';
-import { loadProjectPage, runListLimit } from './project.ts';
+import { loadProjectPage, projectPageAsOf, runListLimit } from './project.ts';
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 
@@ -720,4 +720,30 @@ describe('runListLimit', () => {
   ])('reads %s as %i', (requested, limit) => {
     expect(runListLimit(requested)).toBe(limit);
   });
+});
+
+// Cached, the project page is read as of the minute's last millisecond (decision 2026-11-17); its
+// health and Red now are put back at the exact instant at render.
+describe('projectPageAsOf', () => {
+  const red = [
+    runRow('ci-1', '2026-10-03T10:00:00+00:00'),
+    runRow('ci-2', '2026-10-05T09:00:00+00:00', { status: 'failed', passed: 2, failed: 1 }),
+  ];
+  const until = new Date('2026-10-05T11:59:59.999Z');
+
+  it.each([['2026-10-05T11:59:00Z'], ['2026-10-05T11:59:31Z']])(
+    'gives the page as of %s from the one read at the end of the minute',
+    async (instant) => {
+      const exact = new Date(instant);
+      const read = (at: Date) =>
+        loadProjectPage('ostomate2', {}, fakeClient(answering({ runs: red })).client, at);
+      const cached = await read(until);
+      if (cached === null) throw new Error('no page');
+
+      expect(projectPageAsOf(cached, exact)).toEqual(await read(exact));
+      expect(projectPageAsOf(cached, exact).summary.timeToGreen.stillRed?.elapsedMs).toBe(
+        exact.getTime() - new Date('2026-10-05T09:00:00Z').getTime(),
+      );
+    },
+  );
 });

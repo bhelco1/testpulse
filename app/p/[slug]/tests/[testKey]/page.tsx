@@ -14,9 +14,11 @@ import { now } from '../../../../../lib/clock';
 import { headTitle } from '../../../../../lib/pages/server-error';
 import { SOURCE_URL, siteChromeView } from '../../../../../lib/pages/site';
 import { testHistoryTitle, testHistoryView } from '../../../../../lib/pages/test-history';
-import { loadTestHead } from '../../../../../lib/queries/heads';
-import { loadSiteChrome } from '../../../../../lib/queries/site';
-import { loadTestHistory } from '../../../../../lib/queries/test-history';
+import {
+  readSiteChrome,
+  readTestHead,
+  readTestHistory,
+} from '../../../../../lib/queries/public-reads';
 import styles from './page.module.css';
 
 // /p/[slug]/tests/[testKey] (spec section 13): server-rendered as anon through lib/queries, so a
@@ -33,7 +35,7 @@ interface RouteProps {
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { slug, testKey } = await params;
   const title = await headTitle(async () => {
-    const head = await loadTestHead(slug, testKey);
+    const head = await readTestHead(slug, testKey, now());
     return head === null ? 'Not found · Testament' : testHistoryTitle(head.project, head.test);
   });
   return { title };
@@ -43,8 +45,8 @@ export default async function TestHistoryPage({ params }: RouteProps) {
   const { slug, testKey } = await params;
   const at = now();
   const [history, chrome] = await Promise.all([
-    loadTestHistory(slug, testKey, undefined, at),
-    loadSiteChrome(undefined, at),
+    readTestHistory(slug, testKey, at),
+    readSiteChrome(at),
   ]);
   if (history === null) notFound();
   const view = testHistoryView(history, at);

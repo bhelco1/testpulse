@@ -21,9 +21,11 @@ import { now } from '../../../lib/clock';
 import { projectPageOptions, projectPageTitle, projectPageView } from '../../../lib/pages/project';
 import { headTitle } from '../../../lib/pages/server-error';
 import { SOURCE_URL, siteChromeView } from '../../../lib/pages/site';
-import { loadProjectHead } from '../../../lib/queries/heads';
-import { loadProjectPage } from '../../../lib/queries/project';
-import { loadSiteChrome } from '../../../lib/queries/site';
+import {
+  readProjectHead,
+  readProjectPage,
+  readSiteChrome,
+} from '../../../lib/queries/public-reads';
 import styles from './page.module.css';
 
 // /p/[slug] (spec section 13): server-rendered as anon through lib/queries, so a private
@@ -41,7 +43,7 @@ interface RouteProps {
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { slug } = await params;
   const title = await headTitle(async () => {
-    const project = await loadProjectHead(slug);
+    const project = await readProjectHead(slug, now());
     return project === null ? 'Not found · Testament' : projectPageTitle(project);
   });
   return { title };
@@ -52,8 +54,8 @@ export default async function ProjectPage({ params, searchParams }: RouteProps) 
   const { branches, runLimit } = projectPageOptions(await searchParams);
   const at = now();
   const [page, chrome] = await Promise.all([
-    loadProjectPage(slug, { branches, runLimit }, undefined, at),
-    loadSiteChrome(undefined, at),
+    readProjectPage(slug, { branches, runLimit }, at),
+    readSiteChrome(at),
   ]);
   if (page === null) notFound();
   const view = projectPageView(page, at);

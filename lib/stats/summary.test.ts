@@ -7,6 +7,7 @@ import {
   landingHeadline,
   projectSummary,
   runsInLast30Days,
+  summaryAsOf,
   type ProjectSummary,
   type ProjectSummaryInput,
   type SummaryProject,
@@ -485,5 +486,65 @@ describe('landingHeadline', () => {
       rate: null,
       counted: [],
     });
+  });
+});
+
+// Cached public reads run as of the end of the current minute (decision 2026-11-17); what is
+// shown relative to now is recomputed from the exact instant at render, so a page never shows a
+// stale or red duration up to a minute old.
+describe('summaryAsOf', () => {
+  const red = [
+    run('g', '2026-10-04T08:00:00Z'),
+    run('f1', '2026-10-04T09:00:00Z', { status: 'failed', passed: 9, failed: 1 }),
+    run('f2', '2026-10-05T09:00:00Z', { status: 'failed', passed: 9, failed: 1 }),
+  ];
+  const input: ProjectSummaryInput = {
+    project: project({ expectedCadenceDays: 1, coverageFloors: {} }),
+    runs: red,
+    lastReportAt: at('2026-10-04T11:59:30Z'),
+    latestRunTests: [tally('f2', 'unit', 'failed', 1)],
+    coverage: [],
+  };
+  // The minute's last millisecond, as the cached read ran, and two instants inside the minute.
+  const until = at('2026-10-05T11:59:59.999Z');
+
+  it.each([['2026-10-05T11:59:00Z'], ['2026-10-05T11:59:31Z'], ['2026-10-05T11:59:59.999Z']])(
+    'gives the summary at %s exactly, from the one read at the end of the minute',
+    (instant) => {
+      const exact = at(instant);
+
+      expect(summaryAsOf(projectSummary(input, until), input.lastReportAt, exact)).toEqual(
+        projectSummary(input, exact),
+      );
+    },
+  );
+
+  it('moves Red now and the days since the last report with the exact clock', () => {
+    const cached = projectSummary(input, until);
+    const before = summaryAsOf(cached, input.lastReportAt, at('2026-10-05T11:59:29Z'));
+    const after = summaryAsOf(cached, input.lastReportAt, at('2026-10-05T11:59:31Z'));
+
+    // Red since f1, 2026-10-04T09:00Z: 26 h 59 min 29 s, then 2 s more.
+    expect(before.timeToGreen.stillRed?.elapsedMs).toBe(26 * HOUR + 59 * 60_000 + 29_000);
+    expect(after.timeToGreen.stillRed?.elapsedMs).toBe(26 * HOUR + 59 * 60_000 + 31_000);
+    // One whole day since the last report at 11:59:30 is reached between the two.
+    expect(before.health).toEqual({
+      daysSinceLastReport: 0,
+      problems: [],
+      marker: { health: 'healthy' },
+    });
+    expect(after.health).toEqual({
+      daysSinceLastReport: 1,
+      problems: [],
+      marker: { health: 'healthy' },
+    });
+  });
+
+  it('leaves a project that has never reported as not reporting', () => {
+    const none = { ...input, runs: [], lastReportAt: null, latestRunTests: [] };
+
+    expect(summaryAsOf(projectSummary(none, until), null, at('2026-10-05T11:59:10Z'))).toEqual(
+      projectSummary(none, at('2026-10-05T11:59:10Z')),
+    );
   });
 });

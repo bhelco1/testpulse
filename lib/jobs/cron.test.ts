@@ -50,7 +50,8 @@ function deps(result: DailySummary = summary(false)) {
   const runJob = vi.fn(async () => result);
   const now = vi.fn(() => NOW);
   const log = { info: vi.fn(), error: vi.fn() };
-  return { client, createClient, runJob, now, log };
+  const revalidatePublicReads = vi.fn();
+  return { client, createClient, runJob, now, log, revalidatePublicReads };
 }
 
 const env = (secret: string | undefined) => ({ [CRON_SECRET_VAR]: secret });
@@ -174,6 +175,68 @@ describe('handleDailyCron', () => {
     );
     expect(answer).toEqual({ status: 500, body: { error: 'The daily job failed unexpectedly.' } });
     expect(d.log.error).toHaveBeenCalledWith('testpulse daily: failed unexpectedly: unexpected');
+  });
+});
+
+// The public read cache is keyed by the reports' version (decision 2026-11-17); the prune removes
+// results and marks runs pruned without touching a report, so the job revalidates the cache itself
+// whenever the prune removed something public pages show.
+describe('handleDailyCron and the public read cache', () => {
+  const pruned = (counts: Partial<DailySummary['pruned']>, failed = false): DailySummary => ({
+    ...summary(failed),
+    pruned: { ...summary(failed).pruned, ...counts },
+  });
+  const run = (d: ReturnType<typeof deps>) =>
+    handleDailyCron({ authorization: `Bearer ${SECRET}`, env: env(SECRET) }, d);
+
+  it.each([
+    ['results', { results: 3 }],
+    ['failure text', { result_failures: 1 }],
+    ['pruned marks', { runs_marked_pruned: 1 }],
+  ])('revalidates it once after a prune that removed %s', async (_, counts) => {
+    const d = deps(pruned(counts));
+
+    expect(await run(d)).toEqual({ status: 200, body: pruned(counts) });
+    expect(d.revalidatePublicReads).toHaveBeenCalledTimes(1);
+  });
+
+  it('revalidates it after a prune that removed rows before a later step failed', async () => {
+    const d = deps(pruned({ results: 3 }, true));
+
+    expect((await run(d)).status).toBe(500);
+    expect(d.revalidatePublicReads).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['nothing', {}],
+    ['only rows no public page shows', { visits: 4, tracked_sessions: 2, rate_limit_buckets: 9 }],
+  ])('leaves it alone when the prune removed %s', async (_, counts) => {
+    const d = deps(pruned(counts));
+
+    await run(d);
+
+    expect(d.revalidatePublicReads).not.toHaveBeenCalled();
+  });
+
+  it('leaves it alone when the job throws', async () => {
+    const d = deps();
+    d.runJob.mockRejectedValue(new Error('unexpected'));
+
+    await run(d);
+
+    expect(d.revalidatePublicReads).not.toHaveBeenCalled();
+  });
+
+  it('logs a failed revalidation by name and still answers with the job’s summary', async () => {
+    const d = deps(pruned({ results: 3 }));
+    d.revalidatePublicReads.mockImplementation(() => {
+      throw new TypeError('Invariant: static generation store missing; detail that is not logged');
+    });
+
+    expect(await run(d)).toEqual({ status: 200, body: pruned({ results: 3 }) });
+    expect(d.log.error).toHaveBeenCalledWith(
+      'testpulse daily: revalidating the public read cache failed: TypeError',
+    );
   });
 });
 

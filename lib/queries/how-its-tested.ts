@@ -1,6 +1,6 @@
 import { now } from '../clock.ts';
 import { latestCoverageWithLines, type ModuleCoverageWithLines } from '../stats/coverage.ts';
-import { projectSummary, type ProjectSummary } from '../stats/summary.ts';
+import { projectSummary, summaryAsOf, type ProjectSummary } from '../stats/summary.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
 import { loadProject, loadSummaryInput } from './project-summary.ts';
 
@@ -15,6 +15,8 @@ export const SELF_SLUG = 'testpulse';
 export interface SelfResults {
   /** The project's summary, as its landing card reads it. */
   readonly summary: ProjectSummary;
+  /** When the project last reported, which its health is counted from (section 11). */
+  readonly lastReportAt: Date | null;
   /** The latest default-branch CI run's duration (runs.duration_ms); null before the first. */
   readonly latestDurationMs: number | null;
   /**
@@ -43,5 +45,23 @@ export async function loadHowItsTested(
     defaultBranch: project.defaultBranch,
     floors: project.coverageFloors,
   });
-  return { self: { summary, latestDurationMs: latest?.durationMs ?? null, coverage } };
+  return {
+    self: {
+      summary,
+      lastReportAt: input.lastReportAt,
+      latestDurationMs: latest?.durationMs ?? null,
+      coverage,
+    },
+  };
+}
+
+/**
+ * The section as of `at`, from one read as of a later instant in the same minute
+ * (lib/queries/read-minute.ts): health and Red now are recomputed at the exact instant
+ * (decision 2026-11-17).
+ */
+export function howItsTestedAsOf(page: HowItsTested, at: Date): HowItsTested {
+  const { self } = page;
+  if (self === null) return page;
+  return { self: { ...self, summary: summaryAsOf(self.summary, self.lastReportAt, at) } };
 }

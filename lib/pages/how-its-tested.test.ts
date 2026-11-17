@@ -54,7 +54,7 @@ const summary = (overrides: Partial<ProjectSummary> = {}): ProjectSummary => ({
 });
 
 const seeded: HowItsTested = {
-  self: { summary: summary(), latestDurationMs: 242, coverage: [] },
+  self: { summary: summary(), lastReportAt: null, latestDurationMs: 242, coverage: [] },
 };
 const missing: HowItsTested = { self: null };
 
@@ -227,7 +227,14 @@ describe('howItsTestedView', () => {
 
     it('is “not reporting yet” when testpulse is registered but has no run', () => {
       const view = howItsTestedView(
-        { self: { summary: summary({ latestRun: null }), latestDurationMs: null, coverage: [] } },
+        {
+          self: {
+            summary: summary({ latestRun: null }),
+            lastReportAt: null,
+            latestDurationMs: null,
+            coverage: [],
+          },
+        },
         NOW,
       );
       expect(view.self).toEqual({ state: 'not_reporting' });
@@ -270,6 +277,7 @@ describe('howItsTestedView', () => {
               totalTests: 2598,
               layers: { unit: 1528, component: 655, integration: 180, e2e: 235 },
             }),
+            lastReportAt: null,
             latestDurationMs: 1_073_000,
             coverage: [],
           },
@@ -295,6 +303,7 @@ describe('howItsTestedView', () => {
         {
           self: {
             summary: summary(),
+            lastReportAt: null,
             latestDurationMs: 242,
             coverage: [
               {
@@ -336,6 +345,7 @@ describe('howItsTestedView', () => {
         {
           self: {
             summary: summary({ totalTests: 5, layers: { e2e: 2, unit: 2, integration: 1 } }),
+            lastReportAt: null,
             latestDurationMs: 1_500,
             coverage: [],
           },
@@ -352,6 +362,7 @@ describe('howItsTestedView', () => {
         {
           self: {
             summary: summary({ totalTests: 1, layers: { e2e: 1 } }),
+            lastReportAt: null,
             latestDurationMs: 4,
             coverage: [],
           },

@@ -42,6 +42,11 @@ export interface CronDeps {
   readonly createClient?: () => SupabaseClient;
   readonly runJob?: (client: SupabaseClient, now: Date) => Promise<DailySummary>;
   readonly log?: DailyLog;
+  /**
+   * Marks the public read cache stale (lib/queries/cache.ts). Its entries are keyed by the
+   * reports' version, which the prune does not change, so the route passes revalidateTag here.
+   */
+  readonly revalidatePublicReads?: () => void;
 }
 
 const LOG_PREFIX = 'testpulse daily:';
@@ -49,6 +54,22 @@ const UNAUTHORIZED: CronResponse = { status: 401, body: { error: 'Unauthorized' 
 
 const messageOf = (cause: unknown): string =>
   cause instanceof Error ? cause.message : String(cause);
+
+// What a public page shows that the prune can remove: results, failure text and pruned marks.
+const prunedPublicRows = ({ pruned }: DailySummary): boolean =>
+  pruned.results + pruned.result_failures + pruned.runs_marked_pruned > 0;
+
+// A cache that stays stale until its 300 s fallback is not worth failing a job that did its work,
+// so a failure is logged by its name alone and the summary stands.
+function revalidateAfterPrune(summary: DailySummary, deps: CronDeps, log: DailyLog): void {
+  if (deps.revalidatePublicReads === undefined || !prunedPublicRows(summary)) return;
+  try {
+    deps.revalidatePublicReads();
+  } catch (error) {
+    const name = error instanceof Error ? error.name : typeof error;
+    log.error(`${LOG_PREFIX} revalidating the public read cache failed: ${name}`);
+  }
+}
 
 export async function handleDailyCron(request: CronRequest, deps: CronDeps): Promise<CronResponse> {
   const log = deps.log ?? { info: console.info, error: console.error };
@@ -72,6 +93,7 @@ export async function handleDailyCron(request: CronRequest, deps: CronDeps): Pro
 
   try {
     const summary = await (deps.runJob ?? runDailyJob)(client, now);
+    revalidateAfterPrune(summary, deps, log);
     return { status: summary.status === 'ok' ? 200 : 500, body: summary };
   } catch (error) {
     log.error(`${LOG_PREFIX} failed unexpectedly: ${messageOf(error)}`);

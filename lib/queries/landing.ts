@@ -7,6 +7,7 @@ import { byFinish, countsTowardCiOnlyStats, latestRun } from '../stats/rules.ts'
 import {
   landingHeadline,
   projectSummary,
+  summaryAsOf,
   type LandingHeadline,
   type ProjectSummary,
 } from '../stats/summary.ts';
@@ -112,4 +113,14 @@ export async function loadLanding(
     headline: landingHeadline(projects),
     recentRuns: await loadRecentRuns(client, candidates),
   };
+}
+
+/**
+ * The landing as of `at`, from one read as of a later instant in the same minute
+ * (lib/queries/read-minute.ts): each card's health and Red now, and the headline built from them,
+ * are recomputed at the exact instant (decision 2026-11-17).
+ */
+export function landingAsOf(landing: Landing, at: Date): Landing {
+  const projects = landing.projects.map((card) => summaryAsOf(card, card.lastReportAt, at));
+  return { ...landing, projects, headline: landingHeadline(projects) };
 }

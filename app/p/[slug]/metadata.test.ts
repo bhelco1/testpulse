@@ -2,11 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fakeClient, type Answer, type Query } from '../../../lib/queries/fake-client.test-support';
+import { resetNextCache } from '../../../lib/queries/next-cache.test-support';
 import { generateMetadata as projectHead } from './page';
 import { generateMetadata as runHead } from './runs/[id]/page';
 import { generateMetadata as testHead } from './tests/[testKey]/page';
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
+// The public read cache needs a Next.js server; this stands in for it (lib/queries/cache.ts).
+vi.mock('next/cache', () => import('../../../lib/queries/next-cache.test-support'));
 
 // Next.js prefetches the head of every linked page that scrolls into view, up to four at a time,
 // and a head request runs generateMetadata alone. A head that read its whole page made each run
@@ -67,6 +70,8 @@ const testRow = {
 const answering =
   (visibility: 'public' | 'private', found = true) =>
   (query: Query): Answer => {
+    // The data version every cached read is keyed by (lib/queries/data-version.ts).
+    if (query.table === 'reports') return { data: [], count: 0 };
     if (query.table === 'projects_public') return { data: [projectRow(visibility)] };
     if (!found) return { data: [] };
     if (query.table === 'runs_public') return { data: [runRow] };
@@ -84,6 +89,8 @@ function serve(visibility: 'public' | 'private', found = true) {
   );
 }
 
+// Each head first reads the data version, one row of reports (decision 2026-11-17), then only
+// what its title needs.
 const tables = () => queries.map((query) => query.table);
 const searchParams = Promise.resolve({ branches: 'all' });
 
@@ -92,6 +99,7 @@ describe('page heads read only what their titles need', () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://127.0.0.1:54321');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_unit_test_placeholder');
     vi.stubEnv('TESTPULSE_FIXED_NOW', '2026-10-05T12:00:00.000Z');
+    resetNextCache();
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -107,7 +115,7 @@ describe('page heads read only what their titles need', () => {
     });
 
     expect(head).toEqual({ title: 'Ostomate 2.0 · Testament' });
-    expect(tables()).toEqual(['projects_public']);
+    expect(tables()).toEqual(['reports', 'projects_public']);
   });
 
   it('the run page reads the project and the run, and no results', async () => {
@@ -116,7 +124,7 @@ describe('page heads read only what their titles need', () => {
     const head = await runHead({ params: Promise.resolve({ slug: 'ostomate2', id: RUN_ID }) });
 
     expect(head).toEqual({ title: 'Push to main · Ostomate 2.0 · Testament' });
-    expect(tables()).toEqual(['projects_public', 'runs_public']);
+    expect(tables()).toEqual(['reports', 'projects_public', 'runs_public']);
   });
 
   it('a private project’s run is titled by its CI run ID, as its page heads it', async () => {
@@ -133,7 +141,7 @@ describe('page heads read only what their titles need', () => {
     const head = await testHead({ params: Promise.resolve({ slug: 'ostomate2', testKey: KEY }) });
 
     expect(head).toEqual({ title: 'rendersToday · Ostomate 2.0 · Testament' });
-    expect(tables()).toEqual(['projects_public', 'tests']);
+    expect(tables()).toEqual(['reports', 'projects_public', 'tests']);
   });
 
   it('each reads Not found when there is no such run or test', async () => {

@@ -8,7 +8,7 @@ import {
   type Answer,
   type Query,
 } from './fake-client.test-support.ts';
-import { loadHowItsTested, SELF_SLUG } from './how-its-tested.ts';
+import { howItsTestedAsOf, loadHowItsTested, SELF_SLUG } from './how-its-tested.ts';
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 
@@ -225,5 +225,38 @@ describe('loadHowItsTested', () => {
       'http://127.0.0.1:54321',
       'sb_publishable_test',
     ]);
+  });
+});
+
+// Cached, the live section is read as of the minute's last millisecond (decision 2026-11-17); its
+// health and Red now are put back at the exact instant at render.
+describe('howItsTestedAsOf', () => {
+  const until = new Date('2026-10-05T11:59:59.999Z');
+  const tables = {
+    projects: [projectRow],
+    runs: [
+      runRow('r0', '2026-10-04T10:00:00+00:00', { status: 'passed', failed: 0 }),
+      runRow('r1', '2026-10-05T09:00:00+00:00'),
+    ],
+    tallies: [tally('r1', 'failed', 1)],
+  };
+
+  it.each([['2026-10-05T11:59:00Z'], ['2026-10-05T11:59:31Z']])(
+    'gives the section as of %s from the one read at the end of the minute',
+    async (instant) => {
+      const exact = new Date(instant);
+      const read = (at: Date) => loadHowItsTested(fakeClient(answering(tables)).client, at);
+
+      const asOf = howItsTestedAsOf(await read(until), exact);
+
+      expect(asOf).toEqual(await read(exact));
+      expect(asOf.self?.summary.timeToGreen.stillRed?.elapsedMs).toBe(
+        exact.getTime() - new Date('2026-10-05T09:00:00Z').getTime(),
+      );
+    },
+  );
+
+  it('leaves an unregistered project as it is', () => {
+    expect(howItsTestedAsOf({ self: null }, until)).toEqual({ self: null });
   });
 });

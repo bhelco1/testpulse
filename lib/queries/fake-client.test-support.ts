@@ -15,6 +15,8 @@ export interface Query {
 export interface Answer {
   readonly data?: unknown;
   readonly error?: { code: string; message: string } | null;
+  /** What PostgREST counted, for a query that asked for a count. */
+  readonly count?: number | null;
 }
 
 export const argsOf = (query: Query, method: string): unknown[][] =>
@@ -35,8 +37,8 @@ export function fakeClient(answer: (query: Query) => Answer): {
   const queries: Query[] = [];
   const settle = (query: Query) => {
     queries.push(query);
-    const { data = null, error = null } = answer(query);
-    return { data, error };
+    const { data = null, error = null, count = null } = answer(query);
+    return { data, error, count };
   };
   const chain = (query: Query): unknown =>
     new Proxy(

@@ -20,7 +20,7 @@ import type { Visibility } from '../projects/schema';
 import type { RunDetail } from '../queries/run';
 import type { RunReport } from '../queries/run-rows';
 import { rowDurationMs, type RunTestRow } from '../results/run-results';
-import { shortSuite } from '../results/short-suite';
+import { testLabel } from '../results/short-suite';
 import { isFailing, mismatchSentence, platformMismatch } from '../results/table';
 import { testHref } from './project';
 
@@ -145,11 +145,11 @@ const sortedUnique = (values: readonly string[]): string[] =>
   [...new Set(values)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
 // The failed-run banner (design/components.md, Run page; the Design System's four banners in
-// section 10). Heads: "1 test failed: {short suite} › {name}" or "1 test errored: …", else "{f}
-// tests failed", "{e} tests errored" or "{f} failed, {e} errored", each test counted once under
-// its row status. Sub-line from the data: "In {module}, {layer} layer." and the mismatch sentence
-// for one test; "In {modules}. On {platforms}." for several, the platforms being those that
-// failed or errored; a private project adds its sentence.
+// section 10). Heads: "1 test failed: {short suite} › {name}" ({name} alone when the suite is the
+// name) or "1 test errored: …", else "{f} tests failed", "{e} tests errored" or "{f} failed, {e}
+// errored", each test counted once under its row status. Sub-line from the data: "In {module},
+// {layer} layer." and the mismatch sentence for one test; "In {modules}. On {platforms}." for
+// several, the platforms being those that failed or errored; a private project adds its sentence.
 function failedRunBanner(
   status: RunDetail['run']['status'],
   rows: readonly RunTestRow[] | null,
@@ -164,7 +164,7 @@ function failedRunBanner(
   let title: string;
   if (failing.length === 1) {
     const verb = failed === 1 ? 'failed' : 'errored';
-    title = `1 test ${verb}: ${shortSuite(first.suite)} › ${first.name}`;
+    title = `1 test ${verb}: ${testLabel(first.suite, first.name)}`;
     sentences.push(`In ${first.module}, ${LAYER_LABEL[first.layer]} layer.`);
     const mismatch = platformMismatch(first.platforms);
     if (mismatch) sentences.push(mismatchSentence(mismatch));

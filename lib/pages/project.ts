@@ -22,7 +22,7 @@ import { LAYER_LABEL, layerSegments, type LayerSegment } from '../design/layers'
 import type { DeclaredSuite } from '../projects/schema';
 import { declaredStatusFor } from '../projects/stack-match';
 import type { BranchScope, ProjectPage, ProjectPageOptions } from '../queries/project';
-import { shortSuite } from '../results/short-suite';
+import { fullTestLabel, testLabel } from '../results/short-suite';
 import { runTitle } from '../runs/title';
 import { feedRun, runHref } from './feed';
 import type { PublicHealth } from '../stats/health';
@@ -245,8 +245,8 @@ function latestRunView(page: ProjectPage, now: Date): LatestRunView | null {
     failing:
       run.status === 'failed' && firstFailing !== undefined
         ? {
-            short: `${shortSuite(firstFailing.suite)} › ${firstFailing.name}`,
-            full: `${firstFailing.suite} › ${firstFailing.name}`,
+            short: testLabel(firstFailing.suite, firstFailing.name),
+            full: fullTestLabel(firstFailing.suite, firstFailing.name),
             platform: firstFailing.platform,
             href,
           }

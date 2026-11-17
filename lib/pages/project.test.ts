@@ -310,6 +310,35 @@ describe('projectPageView', () => {
       });
     });
 
+    // A Maestro flow's suite is its own title (Ostomate2 handoff 1, item 4): it is named once.
+    it('names a failing test whose suite is its name once', () => {
+      const title = 'Journey 3: Edit/delete event from calendar day sheet';
+      const failedPage = page({
+        summary: {
+          ...summary,
+          latestRun: { ...LATEST, status: 'failed', passed: 1040, failed: 1 },
+          totalTests: 1041,
+        },
+        latestRun: {
+          ...LATEST_RUN,
+          failing: [
+            {
+              testKey: 'k1',
+              suite: title,
+              name: title,
+              platform: 'android-emulator',
+              status: 'failed',
+            },
+          ],
+        },
+      });
+
+      expect(projectPageView(failedPage, NOW).latestRun?.failing).toMatchObject({
+        short: title,
+        full: title,
+      });
+    });
+
     it('says test in the singular at one', () => {
       const one = page({
         summary: { ...summary, totalTests: 1, latestRun: { ...LATEST, passed: 1 } },

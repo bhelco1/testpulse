@@ -14,7 +14,7 @@ import {
 } from '../copy/time';
 import { LAYER_LABEL } from '../design/layers';
 import type { TestHistoryPage } from '../queries/test-history';
-import { shortSuite } from '../results/short-suite';
+import { suiteLabel, testLabel } from '../results/short-suite';
 import type { DurationByPlatform, HistoryCell } from '../stats/test-history';
 import { runHref } from './feed';
 import type { HistoryChart } from './project';
@@ -28,10 +28,13 @@ export interface TestHistoryView {
   readonly title: string;
   readonly crumbs: {
     readonly items: readonly { readonly label: string; readonly href: string }[];
-    /** "{short suite} › {name}", as the mock's breadcrumb draws it. */
+    /**
+     * "{short suite} › {name}", as the mock's breadcrumb draws it; the name alone when the
+     * suite is the name.
+     */
     readonly current: string;
-    /** Its two parts, so the page can let the name wrap (design v21 item 8). */
-    readonly suite: string;
+    /** Its two parts, so the page can let the name wrap (design v21 item 8); null when the same. */
+    readonly suite: string | null;
     readonly name: string;
   };
   readonly header: {
@@ -227,8 +230,8 @@ export function testHistoryView(page: TestHistoryPage, now: Date): TestHistoryVi
         { label: 'Overview', href: '/' },
         { label: project.name, href: projectHref(slug) },
       ],
-      current: `${shortSuite(test.suite)} › ${test.name}`,
-      suite: shortSuite(test.suite),
+      current: testLabel(test.suite, test.name),
+      suite: suiteLabel(test.suite, test.name),
       name: test.name,
     },
     header: {

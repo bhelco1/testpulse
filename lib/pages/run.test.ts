@@ -455,6 +455,22 @@ describe('runPageView: the failed-run banner', () => {
     expect(view.banner).toMatchObject({ title: '2 tests errored', filter: 'error' });
   });
 
+  // A Maestro flow's suite is its own title (Ostomate2 handoff 1, item 4): it is named once.
+  it('one failed test whose suite is its name: "1 test failed: {name}"', () => {
+    const title = 'iOS Journey: Onboarding walkthrough';
+    const view = runPageView(
+      failedRun([
+        failingRow(title, 'failed', [outcome('ios-sim', 'failed', 98_000)], {
+          module: 'e2e',
+          suite: title,
+          layer: 'e2e',
+        }),
+      ]),
+      NOW,
+    );
+    expect(view.banner).toMatchObject({ title: `1 test failed: ${title}` });
+  });
+
   it('one errored test: "1 test errored: {short suite} › {name}"', () => {
     const view = runPageView(
       failedRun([failingRow('migratesSchema', 'error', [outcome('jvm', 'error', 310)])]),

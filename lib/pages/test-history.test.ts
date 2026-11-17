@@ -404,6 +404,19 @@ const FLAKY: TestHistory = {
   },
 };
 
+// A Maestro flow's suite is its own title (Ostomate2 handoff 1, item 4): the crumb names it once.
+describe('testHistoryView, a test whose suite is its name', () => {
+  const title = 'Journey 3: Edit/delete event from calendar day sheet';
+  const view = testHistoryView(
+    page(OSTOMATE2, { module: 'e2e', suite: title, name: title }, TWO_PLATFORMS),
+    NOW,
+  );
+
+  it('names the test once in its breadcrumb, with no suite', () => {
+    expect(view.crumbs).toMatchObject({ current: title, suite: null, name: title });
+  });
+});
+
 describe('testHistoryView, a private project’s flaky test', () => {
   const view = testHistoryView(
     page(

@@ -61,7 +61,8 @@ export default async function TestHistoryPage({ params }: RouteProps) {
         items={view.crumbs.items}
         current={
           <>
-            {view.crumbs.suite} › <Breaks text={view.crumbs.name} rule="name" />
+            {view.crumbs.suite !== null && <>{view.crumbs.suite} › </>}
+            <Breaks text={view.crumbs.name} rule="name" />
           </>
         }
         currentMono

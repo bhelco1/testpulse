@@ -7,7 +7,7 @@ import type { LayerSegment } from '../../lib/design/layers';
 import type { RunStatus } from '../../lib/ingest/normalize';
 import { declaredSummary } from '../../lib/projects/declared-summary';
 import type { DeclaredSuite, Visibility } from '../../lib/projects/schema';
-import { shortSuite } from '../../lib/results/short-suite';
+import { fullTestLabel, suiteLabel, testLabel } from '../../lib/results/short-suite';
 import { platformSplit } from '../../lib/runs/platform-split';
 import { Breaks } from '../Breaks/Breaks';
 import { CoverageBar, type CoverageBarProps } from '../CoverageBar/CoverageBar';
@@ -112,13 +112,18 @@ function Heading({
 }
 
 function FailingName({ test }: { test: FailingTest }) {
+  const suite = suiteLabel(test.suite, test.name);
   return (
     <span
       className={styles.failingName}
-      title={`${test.suite} › ${test.name}`}
+      title={fullTestLabel(test.suite, test.name)}
       data-part="failing-name"
     >
-      <Breaks text={shortSuite(test.suite)} rule="suite" /> ›{' '}
+      {suite !== null && (
+        <>
+          <Breaks text={suite} rule="suite" /> ›{' '}
+        </>
+      )}
       <Breaks text={test.name} rule="name" />
     </span>
   );
@@ -366,7 +371,7 @@ function KioskCard({
       {failed && firstFailing && (
         <div className={styles.failing} data-part="failing">
           <span className={styles.failingName}>
-            {shortSuite(firstFailing.suite)} › {firstFailing.name}
+            {testLabel(firstFailing.suite, firstFailing.name)}
           </span>
           <span className={styles.failingSide}>
             <span>{firstFailing.platform}</span>

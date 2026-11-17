@@ -177,6 +177,21 @@ describe('ProjectCard (web)', () => {
     );
   });
 
+  // A Maestro flow's suite is its own title (Ostomate2 handoff 1, item 4): it is named once.
+  it('failed: names a test whose suite is its name once, whole', () => {
+    const title = 'Journey 3: Edit/delete event from calendar day sheet';
+    const { container } = render(
+      <ProjectCard
+        {...FAILED}
+        failing={[{ suite: title, name: title, platform: 'android-emulator' }]}
+      />,
+    );
+    const name = part(cardOf(container), 'failing-name');
+
+    expect(name?.textContent).toBe(title);
+    expect(name?.getAttribute('title')).toBe(title);
+  });
+
   // Design v21 item 8: the block wraps, never truncates: the suite after "." and "/", the name
   // also at camelCase humps, by soft breaks only.
   it('failed: lets the failing name wrap at its break points', () => {

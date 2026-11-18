@@ -3,8 +3,10 @@
 // (node_modules/next/dist/server/web/spec-extension/unstable-cache.js): the entry is stored as
 // JSON.stringify of the value, a miss hands back the value itself and a hit hands back JSON.parse
 // of what was stored. A stale entry (ageNextCache) is handed back as it is while the callback
-// refreshes it in the background, as Next.js does inside a request. Every call's key parts and
-// options are recorded for the tests to read.
+// refreshes it in the background, as Next.js does inside a request: every call that finds it stale
+// starts a refresh, since Next.js shares one only within a request, and a refresh that fails is
+// dropped (Next.js logs it), leaving the entry stale. Every call's key parts and options are
+// recorded for the tests to read.
 
 export interface CacheCall {
   readonly keyParts: readonly string[];
@@ -52,9 +54,12 @@ export function unstable_cache<T>(
     if (stored !== undefined) {
       if (stored.stale) {
         refreshes.push(
-          callback().then((value) => {
-            store.set(key, { json: JSON.stringify(value), stale: false });
-          }),
+          callback().then(
+            (value) => {
+              store.set(key, { json: JSON.stringify(value), stale: false });
+            },
+            () => undefined,
+          ),
         );
       }
       // What Next.js returns on a hit: the parsed JSON, whatever type the callback promised.

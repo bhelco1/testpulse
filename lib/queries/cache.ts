@@ -57,7 +57,10 @@ const flight = singleFlight();
  * A read cached for the UTC day of `at` and the current data version. The read runs as of the
  * last millisecond of the minute of `at` (readMinute): a miss's own, or, for a refresh, that of
  * the view that found the entry stale. What moves with the clock is the caller's to put back at
- * the exact instant. Concurrent misses on one server instance share one read.
+ * the exact instant. Concurrent misses on one server instance share one read, and so do the
+ * background refreshes of the views that find one entry stale: Next.js shares a refresh only
+ * within a request, and a stale hit returns at once, so the outer flight is over before the next
+ * view arrives and each would otherwise start its own refresh.
  */
 export function cachedRead<A extends readonly KeyArg[], T>(
   name: string,
@@ -67,11 +70,13 @@ export function cachedRead<A extends readonly KeyArg[], T>(
     const version = await requestVersion();
     const { day, until } = readMinute(at);
     const keyParts = cacheKey(name, args, { version, day, build: BUILD_ID });
-    const stored = await flight(keyParts[0] ?? name, () =>
-      unstable_cache(async () => toCacheJson(await read(args, until)), keyParts, {
-        tags: [PUBLIC_READS_TAG],
-        revalidate: REFRESH_AFTER_SECONDS,
-      })(),
+    const key = keyParts[0] ?? name;
+    const stored = await flight(key, () =>
+      unstable_cache(
+        () => flight(`${key}#read`, async () => toCacheJson(await read(args, until))),
+        keyParts,
+        { tags: [PUBLIC_READS_TAG], revalidate: REFRESH_AFTER_SECONDS },
+      )(),
     );
     return fromCacheJson(stored);
   };

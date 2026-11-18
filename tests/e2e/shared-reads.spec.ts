@@ -224,14 +224,21 @@ async function view(path: string): Promise<{ readonly html: string; readonly ms:
 // were: only the entries' age can bring the new name in, as for projects:sync in production. The
 // entries are aged by setting their files' modified time back past the refresh time and starting
 // a new server, which has nothing in memory and so reads them, and their age, from the file, as a
-// new instance would; waiting out the refresh time would do the same in a minute more.
-test('an entry past its refresh time is served as it was, and refreshed for a later view', async () => {
+// new instance would; waiting out the refresh time would do the same in a minute more. Overlapping
+// views of the stale entries then share one refresh: a stale hit returns at once, so only the
+// refresh's own flight (lib/queries/cache.ts) keeps each view from starting another.
+test('an entry past its refresh time is served as it was, and refreshed once for a later view', async () => {
   test.setTimeout(120_000);
   const path = `/p/${SHARED_SLUG}`;
+  // A new report makes every entry of the page cold, so the first view's reads are all of them.
+  await ingestLiveRun(SHARED_SLUG, run('3', '11:32:00'));
   const since = Date.now() - 1_000;
+  takeReads();
 
   const first = await view(path);
+  const one = takeReads();
   expect(first.html).toContain(SHARED_NAME);
+  expect(one.total).toBeGreaterThan(0);
   await expect.poll(() => entriesNaming(SHARED_NAME, since).length).toBeGreaterThan(0);
 
   await rename(RENAMED);
@@ -259,8 +266,26 @@ test('an entry past its refresh time is served as it was, and refreshed for a la
   expect(stale.html).not.toContain(RENAMED);
   expect(stale.ms).toBeLessThan(SLOW_READS_MS);
 
+  // While that refresh's reads are held, more views find the entries stale, all at hit speed.
+  const overlapping = await Promise.all(Array.from({ length: VISITORS }, () => view(path)));
+  for (const each of overlapping) {
+    expect(each.html).toContain(SHARED_NAME);
+    expect(each.ms).toBeLessThan(SLOW_READS_MS);
+  }
+
   // The refresh ran in the background, so a later view has the new name.
   await expect
     .poll(async () => (await view(path)).html.includes(RENAMED), { timeout: 30_000 })
     .toBe(true);
+
+  // One refresh in all: no read ran more often than the cold view ran it.
+  const refreshed = takeReads();
+  test.info().annotations.push({
+    type: 'reads',
+    description: `${path}: ${String(VISITORS + 1)} stale views, ${String(refreshed.total)} refresh reads (one cold view: ${String(one.total)})`,
+  });
+  expect(refreshed.total).toBeGreaterThan(0);
+  for (const [read, count] of refreshed.reads) {
+    expect(count, read).toBeLessThanOrEqual(one.reads.get(read) ?? 0);
+  }
 });

@@ -154,6 +154,46 @@ describe('cachedRead', () => {
     ]);
   });
 
+  it('runs one refresh for the views that find an entry stale while it runs', async () => {
+    let finish: (value: string) => void = () => undefined;
+    const load = vi
+      .fn<(args: readonly [], until: Date) => Promise<string>>()
+      .mockResolvedValueOnce('old')
+      .mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+    const read = cachedRead('landing', load);
+
+    await read([], AT);
+    ageNextCache();
+    // One after another, so no view joins another's call: each finds the entry stale.
+    const views: string[] = [];
+    for (let view = 0; view < 5; view += 1) views.push(await read([], AT));
+    finish('new');
+    await settleNextCache();
+
+    expect(views).toEqual(Array.from({ length: 5 }, () => 'old'));
+    expect(load).toHaveBeenCalledTimes(2);
+    await expect(read([], AT)).resolves.toBe('new');
+  });
+
+  it('keeps no failed refresh: the next view gets the stale entry and refreshes again', async () => {
+    const load = vi
+      .fn<(args: readonly [], until: Date) => Promise<string>>()
+      .mockResolvedValueOnce('old')
+      .mockRejectedValueOnce(new Error('load the run results: 57014'))
+      .mockResolvedValueOnce('new');
+    const read = cachedRead('landing', load);
+
+    await read([], AT);
+    ageNextCache();
+    await expect(read([], AT)).resolves.toBe('old');
+    await settleNextCache();
+    await expect(read([], AT)).resolves.toBe('old');
+    await settleNextCache();
+
+    expect(load).toHaveBeenCalledTimes(3);
+    await expect(read([], AT)).resolves.toBe('new');
+  });
+
   it('reads afresh once a report changes the data version', async () => {
     const load = vi.fn(() => Promise.resolve('page'));
     const read = cachedRead('landing', load);

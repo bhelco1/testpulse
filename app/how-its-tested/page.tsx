@@ -19,8 +19,7 @@ import {
   TITLE,
 } from '../../lib/pages/how-its-tested';
 import { SOURCE_URL, siteChromeView } from '../../lib/pages/site';
-import { loadHowItsTested } from '../../lib/queries/how-its-tested';
-import { loadSiteChrome } from '../../lib/queries/site';
+import { readHowItsTested, readSiteChrome } from '../../lib/queries/public-reads';
 import styles from './page.module.css';
 
 // /how-its-tested (spec section 13): testpulse's own strategy and live results, following
@@ -65,10 +64,7 @@ export default async function HowItsTestedPage() {
   // Rendered per request: the live section and the footer move with the data and the clock.
   await connection();
   const at = now();
-  const [data, chrome] = await Promise.all([
-    loadHowItsTested(undefined, at),
-    loadSiteChrome(undefined, at),
-  ]);
+  const [data, chrome] = await Promise.all([readHowItsTested(at), readSiteChrome(at)]);
   const view = howItsTestedView(data, at);
   const site = siteChromeView(chrome, at);
 

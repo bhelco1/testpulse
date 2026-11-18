@@ -8,7 +8,7 @@ import { RelativeTime } from '../../components/RelativeTime/RelativeTime';
 import { now } from '../../lib/clock';
 import { PRIVACY, privacyView, type PrivacySection } from '../../lib/pages/privacy';
 import { SOURCE_URL, siteChromeView } from '../../lib/pages/site';
-import { loadSiteChrome } from '../../lib/queries/site';
+import { readSiteChrome } from '../../lib/queries/public-reads';
 import styles from './page.module.css';
 
 // /privacy (spec section 13.8), following design/pages/Privacy.dc.html in its "after Phase 6"
@@ -22,7 +22,7 @@ export default async function PrivacyPage() {
   // Rendered per request: the project switcher and the footer move with the data and the clock.
   await connection();
   const at = now();
-  const site = siteChromeView(await loadSiteChrome(undefined, at), at);
+  const site = siteChromeView(await readSiteChrome(at), at);
   const view = privacyView(at);
 
   return (

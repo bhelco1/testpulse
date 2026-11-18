@@ -8,7 +8,7 @@ import {
   type Answer,
   type Query,
 } from './fake-client.test-support.ts';
-import { loadLanding } from './landing.ts';
+import { landingAsOf, loadLanding } from './landing.ts';
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 
@@ -539,5 +539,45 @@ describe('loadLanding', () => {
     expect(vi.mocked(createClient).mock.calls[0]?.[1]).toBe('sb_publishable_unit_test_placeholder');
     const runs = queries.find((query) => query.table === 'runs_public');
     expect(argsOf(runs as Query, 'lte')).toEqual([['finished_at', '2026-10-05T12:00:00.000Z']]);
+  });
+});
+
+// Cached, the landing is read as of the minute's last millisecond (decision 2026-11-17); what
+// moves with the clock is put back at the exact instant at render.
+describe('landingAsOf', () => {
+  const tables = {
+    projects: [projectRow({ expected_cadence_days: 1 })],
+    runs: [
+      runRow('r1', '2026-10-04T05:00:00+00:00'),
+      runRow('r2', '2026-10-04T09:00:00+00:00', { status: 'failed', passed: 9, failed: 1 }),
+    ],
+    lastReport: [{ finished_at: '2026-10-03T11:59:30+00:00' }],
+    tallies: [tally('r2', 'unit', 'failed', 1)],
+  };
+  const until = new Date('2026-10-05T11:59:59.999Z');
+
+  it.each([['2026-10-05T11:59:00Z'], ['2026-10-05T11:59:29Z'], ['2026-10-05T11:59:31Z']])(
+    'gives the landing as of %s from the one read at the end of the minute',
+    async (instant) => {
+      const exact = new Date(instant);
+      const cached = await loadLanding(fakeClient(answering(tables)).client, until);
+      const direct = await loadLanding(fakeClient(answering(tables)).client, exact);
+
+      expect(landingAsOf(cached, exact)).toEqual(direct);
+    },
+  );
+
+  it('moves the silent days and Red now with the exact clock', async () => {
+    const cached = await loadLanding(fakeClient(answering(tables)).client, until);
+
+    const before = landingAsOf(cached, new Date('2026-10-05T11:59:29Z'));
+    const after = landingAsOf(cached, new Date('2026-10-05T11:59:31Z'));
+
+    // Last report 2026-10-03T11:59:30Z: 1 whole day, then 2, past the 1-day cadence.
+    expect(before.headline.projectsReporting.silent).toEqual([]);
+    expect(after.headline.projectsReporting.silent).toEqual([{ slug: 'ostomate2', days: 2 }]);
+    const redFor = (landing: typeof cached) =>
+      landing.projects[0]?.timeToGreen.stillRed?.elapsedMs ?? Number.NaN;
+    expect(redFor(after) - redFor(before)).toBe(2_000);
   });
 });

@@ -7,7 +7,7 @@ import { flakeRateRun, talliedFlakyTests } from '../stats/flaky.ts';
 import { PUBLIC_RUN_COLUMNS, PublicRunRowSchema, type PublicRun } from '../stats/input.ts';
 import { readByRunIds } from '../stats/load.ts';
 import { countsTowardCiOnlyStats, lastRuns, latestRun, TREND_RUNS } from '../stats/rules.ts';
-import { projectSummary, type ProjectSummary } from '../stats/summary.ts';
+import { projectSummary, summaryAsOf, type ProjectSummary } from '../stats/summary.ts';
 import {
   talliedCountTrend,
   talliedTestsByRun,
@@ -290,4 +290,13 @@ export async function loadProjectPage(
       hasMore: listed.length > runLimit,
     },
   };
+}
+
+/**
+ * The page as of `at`, from one read as of a later instant in the same minute
+ * (lib/queries/read-minute.ts): health and Red now are recomputed at the exact instant
+ * (decision 2026-11-17).
+ */
+export function projectPageAsOf(page: ProjectPage, at: Date): ProjectPage {
+  return { ...page, summary: summaryAsOf(page.summary, page.lastReportAt, at) };
 }

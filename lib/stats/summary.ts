@@ -146,6 +146,37 @@ export function projectSummary(input: ProjectSummaryInput, now: Date): ProjectSu
   };
 }
 
+/**
+ * The summary as of `now`, from one computed as of a later instant in the same minute with no run
+ * finished between the two (lib/queries/read-minute.ts): the values that move with the clock,
+ * health and how long the branch has been red, are recomputed; everything else is a run's and
+ * stays (decision 2026-11-17).
+ */
+export function summaryAsOf<S extends ProjectSummary>(
+  summary: S,
+  lastReportAt: Date | null,
+  now: Date,
+): S {
+  const { stillRed } = summary.timeToGreen;
+  return {
+    ...summary,
+    timeToGreen: {
+      ...summary.timeToGreen,
+      stillRed:
+        stillRed === null
+          ? null
+          : { ...stillRed, elapsedMs: now.getTime() - stillRed.failedAt.getTime() },
+    },
+    health: projectHealth({
+      lastReportAt,
+      expectedCadenceDays: summary.project.expectedCadenceDays,
+      latestRun: summary.latestRun,
+      coverage: summary.coverage,
+      now,
+    }),
+  };
+}
+
 export function landingHeadline(summaries: readonly ProjectSummary[]): LandingHeadline {
   const sum = (pick: (summary: ProjectSummary) => number) =>
     summaries.reduce((total, summary) => total + pick(summary), 0);

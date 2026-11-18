@@ -8,7 +8,7 @@ import { SiteFooter } from '../components/SiteFooter/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader/SiteHeader';
 import { now } from '../lib/clock';
 import { SOURCE_URL, siteChromeView } from '../lib/pages/site';
-import { loadSiteChrome } from '../lib/queries/site';
+import { readSiteChrome } from '../lib/queries/public-reads';
 
 // Any address no route answers (design/components.md, "NotFound (page)", page kind), served with
 // 404 and the site's header and footer rather than Next.js's default page.
@@ -19,7 +19,7 @@ export default async function SiteNotFound() {
   // data and the clock.
   await connection();
   const at = now();
-  const site = siteChromeView(await loadSiteChrome(undefined, at), at);
+  const site = siteChromeView(await readSiteChrome(at), at);
   return (
     <PageFrame>
       <SiteHeader projects={site.projects} />

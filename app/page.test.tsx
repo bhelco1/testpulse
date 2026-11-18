@@ -8,9 +8,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ruleFor } from '../components/testing/stylesheet';
 import { fakeClient, type Answer } from '../lib/queries/fake-client.test-support';
+import { resetNextCache } from '../lib/queries/next-cache.test-support';
 import LandingPage, { metadata } from './page';
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
+// The public read cache needs a Next.js server; this stands in for it (lib/queries/cache.ts).
+vi.mock('next/cache', () => import('../lib/queries/next-cache.test-support'));
 // connection() needs a request; the render here is the page function called directly.
 vi.mock('next/server', () => ({ connection: () => Promise.resolve() }));
 // No session cookie: the visitor did not arrive by a tracked link, so no lead is asked for.
@@ -107,6 +110,7 @@ describe('the landing page', () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_unit_test_placeholder');
     vi.stubEnv('TESTPULSE_FIXED_NOW', '2026-10-05T12:00:00.000Z');
     LiveUpdatesSpy.mockClear();
+    resetNextCache();
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -152,7 +156,8 @@ describe('the landing page', () => {
   });
 
   it('shows the h1 and the “No projects yet” card when no project is registered', async () => {
-    serve(() => ({ data: [] }));
+    // No rows anywhere; the reports' count is the data version every cached read is keyed by.
+    serve(() => ({ data: [], count: 0 }));
 
     const main = within((await render()).querySelector('main') as HTMLElement);
 

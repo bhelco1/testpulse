@@ -70,6 +70,10 @@ const ADMIN_SECTIONS_SPEC = '**/admin-sections.spec.ts';
 // The server-error spec starts a server of its own whose every database read fails, so it runs
 // there too, one file at a time, rather than once per viewport (tests/e2e/server-error.spec.ts).
 const SERVER_ERROR_SPEC = '**/server-error.spec.ts';
+// The shared-reads spec writes a project of its own to give the public read cache a new data
+// version, and counts the reads of a server of its own, so it runs there too, one file at a time
+// (tests/e2e/shared-reads.spec.ts).
+const SHARED_READS_SPEC = '**/shared-reads.spec.ts';
 const SEEDED = 'seeded';
 // The private-data leak sweep visits every page that can show a private project, so it runs once,
 // in a project of its own, rather than in every viewport and theme (tests/e2e/leak-sweep.spec.ts).
@@ -114,6 +118,7 @@ export default defineConfig({
         ADMIN_MAIL_SPEC,
         ADMIN_SECTIONS_SPEC,
         SERVER_ERROR_SPEC,
+        SHARED_READS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withJs,
@@ -130,6 +135,7 @@ export default defineConfig({
         ADMIN_MAIL_SPEC,
         ADMIN_SECTIONS_SPEC,
         SERVER_ERROR_SPEC,
+        SHARED_READS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withJs,
@@ -146,6 +152,7 @@ export default defineConfig({
         ADMIN_MAIL_SPEC,
         ADMIN_SECTIONS_SPEC,
         SERVER_ERROR_SPEC,
+        SHARED_READS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withJs,
@@ -162,6 +169,7 @@ export default defineConfig({
         ADMIN_MAIL_SPEC,
         ADMIN_SECTIONS_SPEC,
         SERVER_ERROR_SPEC,
+        SHARED_READS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withJs,
@@ -180,6 +188,7 @@ export default defineConfig({
         ADMIN_MAIL_SPEC,
         ADMIN_SECTIONS_SPEC,
         SERVER_ERROR_SPEC,
+        SHARED_READS_SPEC,
         SWEEP_SPEC,
       ],
       grepInvert: withoutJs,
@@ -209,6 +218,7 @@ export default defineConfig({
         ADMIN_MAIL_SPEC,
         ADMIN_SECTIONS_SPEC,
         SERVER_ERROR_SPEC,
+        SHARED_READS_SPEC,
       ],
       // One file at a time: each writes while the other's pages would be open.
       workers: 1,

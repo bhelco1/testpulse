@@ -13,9 +13,11 @@ import { now } from '../../../../../lib/clock';
 import { runPageTitle, runPageView } from '../../../../../lib/pages/run';
 import { headTitle } from '../../../../../lib/pages/server-error';
 import { SOURCE_URL, siteChromeView } from '../../../../../lib/pages/site';
-import { loadRunHead } from '../../../../../lib/queries/heads';
-import { loadRunDetail } from '../../../../../lib/queries/run';
-import { loadSiteChrome } from '../../../../../lib/queries/site';
+import {
+  readRunDetail,
+  readRunHead,
+  readSiteChrome,
+} from '../../../../../lib/queries/public-reads';
 import styles from './page.module.css';
 
 // /p/[slug]/runs/[id] (spec section 13): server-rendered as anon through lib/queries, so a
@@ -32,7 +34,7 @@ interface RouteProps {
 export async function generateMetadata({ params }: RouteProps): Promise<Metadata> {
   const { slug, id } = await params;
   const title = await headTitle(async () => {
-    const head = await loadRunHead(slug, id);
+    const head = await readRunHead(slug, id, now());
     return head === null ? 'Not found · Testament' : runPageTitle(head.project, head.run);
   });
   return { title };
@@ -41,10 +43,7 @@ export async function generateMetadata({ params }: RouteProps): Promise<Metadata
 export default async function RunPage({ params }: RouteProps) {
   const { slug, id } = await params;
   const at = now();
-  const [detail, chrome] = await Promise.all([
-    loadRunDetail(slug, id, undefined, at),
-    loadSiteChrome(undefined, at),
-  ]);
+  const [detail, chrome] = await Promise.all([readRunDetail(slug, id, at), readSiteChrome(at)]);
   if (detail === null) notFound();
   const view = runPageView(detail, at);
   const site = siteChromeView(chrome, at);

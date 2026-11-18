@@ -17,9 +17,8 @@ import { now } from '../lib/clock';
 import { LANDING_ERROR, landingView, type ReadyLandingView } from '../lib/pages/landing';
 import { SOURCE_URL, siteChromeView } from '../lib/pages/site';
 import { SITE_TITLE } from '../lib/pages/site-meta';
-import { loadLanding } from '../lib/queries/landing';
 import { loadLeadProject } from '../lib/queries/lead';
-import { loadSiteChrome } from '../lib/queries/site';
+import { readLanding, readSiteChrome } from '../lib/queries/public-reads';
 import { parseSessionId, SESSION_COOKIE } from '../lib/visits/session';
 import styles from './page.module.css';
 
@@ -44,11 +43,7 @@ export default async function LandingPage() {
   const session = parseSessionId((await cookies()).get(SESSION_COOKIE)?.value);
   let loaded;
   try {
-    loaded = await Promise.all([
-      loadLanding(undefined, at),
-      loadSiteChrome(undefined, at),
-      loadLeadProject(session),
-    ]);
+    loaded = await Promise.all([readLanding(at), readSiteChrome(at), loadLeadProject(session)]);
   } catch (error) {
     // Next.js signals such as a dynamic-rendering bailout travel as errors; they are not ours.
     unstable_rethrow(error);

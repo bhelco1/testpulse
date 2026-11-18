@@ -83,25 +83,24 @@ const FailureRowSchema = z.object({
   detail: z.string(),
 });
 
-async function loadResultRows(
+/**
+ * The run's per-test rows: its results, failure text where visibility allows, and section 11's
+ * flaky flag from the given flaky tests. Never cached (decision 2026-11-17): a large public run's
+ * rows are 0.4 to 2 MB, over the cache's budget.
+ */
+export async function loadRunResults(
   client: PublicClient,
-  project: ProjectDetail,
-  run: PublicRun,
-  at: Date,
+  runId: string,
+  flakyTestIds: readonly string[],
 ): Promise<RunTestRow[]> {
-  // Flaky is section 11's flag as of now, over the 30 days before it, which the database answers
-  // (flaky_tests) while the run's own rows are read.
-  const [results, flaky] = await Promise.all([
-    readAll('load the run results', RunResultRowSchema, (from, to) =>
-      client
-        .from('results')
-        .select(RUN_RESULT_COLUMNS)
-        .eq('reports.run_id', run.id)
-        .order('id')
-        .range(from, to),
-    ),
-    loadFlakyTests(client, project.id, at),
-  ]);
+  const results = await readAll('load the run results', RunResultRowSchema, (from, to) =>
+    client
+      .from('results')
+      .select(RUN_RESULT_COLUMNS)
+      .eq('reports.run_id', runId)
+      .order('id')
+      .range(from, to),
+  );
   const failingIds = results
     .filter((result) => result.status === 'failed' || result.status === 'error')
     .map((result) => result.resultId);
@@ -122,7 +121,7 @@ async function loadResultRows(
   return runTestRows(
     results,
     new Map(failures.map((row) => [row.result_id, { message: row.message, detail: row.detail }])),
-    new Set(flaky.map((test) => test.testId)),
+    new Set(flakyTestIds),
   );
 }
 
@@ -151,21 +150,38 @@ export async function findRun(
   return run;
 }
 
-export async function loadRunDetail(
+/** Everything the run page reads but its per-test rows: what may be cached (decision 2026-11-17). */
+export interface RunShell {
+  readonly project: ProjectDetail;
+  readonly run: PublicRun;
+  readonly reports: readonly RunReport[];
+  /**
+   * Section 11's flaky tests of the project as of now, over the 30 days before it (flaky_tests);
+   * null once the run's results were pruned, when there are no rows to flag.
+   */
+  readonly flakyTestIds: readonly string[] | null;
+}
+
+export async function loadRunShell(
   slug: string,
   runId: string,
   client: PublicClient = createPublicClient(),
   at: Date = now(),
-): Promise<RunDetail | null> {
+): Promise<RunShell | null> {
   const project = await loadProject(client, slug);
   if (project === null) return null;
   const run = await findRun(client, project, runId);
   if (run === null) return null;
-
-  const [reports, results] = await Promise.all([
+  const [reports, flaky] = await Promise.all([
     loadRunReports(client, run.id),
-    run.resultsPrunedAt === null ? loadResultRows(client, project, run, at) : null,
+    run.resultsPrunedAt === null ? loadFlakyTests(client, project.id, at) : null,
   ]);
+  return { project, run, reports, flakyTestIds: flaky?.map((test) => test.testId) ?? null };
+}
+
+/** The run page from its shell and, unless its results were pruned, its per-test rows. */
+export function runDetailOf(shell: RunShell, results: readonly RunTestRow[] | null): RunDetail {
+  const { project, run, reports } = shell;
   return {
     project,
     run: {
@@ -178,4 +194,19 @@ export async function loadRunDetail(
     reports,
     results,
   };
+}
+
+export async function loadRunDetail(
+  slug: string,
+  runId: string,
+  client: PublicClient = createPublicClient(),
+  at: Date = now(),
+): Promise<RunDetail | null> {
+  const shell = await loadRunShell(slug, runId, client, at);
+  if (shell === null) return null;
+  const results =
+    shell.flakyTestIds === null
+      ? null
+      : await loadRunResults(client, shell.run.id, shell.flakyTestIds);
+  return runDetailOf(shell, results);
 }

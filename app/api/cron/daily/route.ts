@@ -1,5 +1,8 @@
+import { revalidateTag } from 'next/cache';
+
 import { now } from '../../../../lib/clock';
 import { handleDailyCron } from '../../../../lib/jobs/cron';
+import { PUBLIC_READS_TAG } from '../../../../lib/queries/cache';
 
 // The daily scheduled function (spec section 12), called once a day by Vercel cron (vercel.json)
 // with `Authorization: Bearer ${CRON_SECRET}`. The logic is lib/jobs/cron.ts and lib/jobs/daily.ts.
@@ -11,7 +14,12 @@ export const maxDuration = 300;
 export async function GET(request: Request): Promise<Response> {
   const { status, body } = await handleDailyCron(
     { authorization: request.headers.get('authorization'), env: process.env },
-    { now: () => now() },
+    {
+      now: () => now(),
+      // Expired at once rather than served stale while it refreshes: the prune's notice and
+      // emptied results show on the next view.
+      revalidatePublicReads: () => revalidateTag(PUBLIC_READS_TAG, { expire: 0 }),
+    },
   );
   return Response.json(body, { status, headers: { 'cache-control': 'no-store' } });
 }

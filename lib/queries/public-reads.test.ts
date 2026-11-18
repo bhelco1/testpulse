@@ -18,8 +18,8 @@ import {
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 vi.mock('next/cache', () => import('./next-cache.test-support.ts'));
 
-// What the public pages and their heads read through the cache (decision 2026-11-17): each read's
-// key is its arguments as plain values, the data version, the minute and the build; a run's
+// What the public pages and their heads read through the cache (decisions 2026-11-17 and
+// 2026-11-18): each read's key is its arguments as plain values, the data version, the UTC day and the build; a run's
 // per-test rows are never cached; and what moves with the clock is put back at the exact instant.
 
 const RUN_ID = '0b5a3c1e-6f0e-4d1c-9a55-3c2a1b0f9e77';
@@ -127,7 +127,7 @@ const key = (read: string, args: readonly unknown[]) => ({
   read,
   build: 'unbuilt',
   version: VERSION,
-  minute: '2026-10-05T11:59:00.000Z',
+  day: '2026-10-05',
   args,
 });
 
@@ -210,7 +210,7 @@ describe('the public reads', () => {
     const page = await readProjectPage('ostomate2', {}, at('2026-10-05T11:59:31Z'));
     const self = await readHowItsTested(at('2026-10-05T11:59:31Z'));
 
-    // One entry each: both landings came from the one read of the minute.
+    // One entry each: both landings came from the one read of the day.
     expect(cacheCalls.filter((call) => call.hit)).toHaveLength(1);
     // Red since 2026-10-04T09:00Z; last reported 2026-10-03T11:59:30Z, cadence 1 day.
     expect(before.projects[0]?.timeToGreen.stillRed?.elapsedMs).toBe(

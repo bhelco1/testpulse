@@ -746,4 +746,14 @@ describe('projectPageAsOf', () => {
       );
     },
   );
+
+  it('gives the page as of a later instant of the same UTC day from a read earlier that day', async () => {
+    const exact = new Date('2026-10-05T23:59:59.999Z');
+    const read = (at: Date) =>
+      loadProjectPage('ostomate2', {}, fakeClient(answering({ runs: red })).client, at);
+    const cached = await read(until);
+    if (cached === null) throw new Error('no page');
+
+    expect(projectPageAsOf(cached, exact)).toEqual(await read(exact));
+  });
 });

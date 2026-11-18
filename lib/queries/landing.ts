@@ -116,7 +116,7 @@ export async function loadLanding(
 }
 
 /**
- * The landing as of `at`, from one read as of a later instant in the same minute
+ * The landing as of `at`, from one read as of another instant of the same UTC day
  * (lib/queries/read-minute.ts): each card's health and Red now, and the headline built from them,
  * are recomputed at the exact instant (decision 2026-11-17).
  */

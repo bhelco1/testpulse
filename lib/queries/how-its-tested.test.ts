@@ -256,6 +256,13 @@ describe('howItsTestedAsOf', () => {
     },
   );
 
+  it('gives the section as of a later instant of the same UTC day from a read earlier that day', async () => {
+    const exact = new Date('2026-10-05T23:59:59.999Z');
+    const read = (at: Date) => loadHowItsTested(fakeClient(answering(tables)).client, at);
+
+    expect(howItsTestedAsOf(await read(until), exact)).toEqual(await read(exact));
+  });
+
   it('leaves an unregistered project as it is', () => {
     expect(howItsTestedAsOf({ self: null }, until)).toEqual({ self: null });
   });

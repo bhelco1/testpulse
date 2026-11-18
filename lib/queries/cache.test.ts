@@ -4,19 +4,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   cacheKey,
   cachedRead,
-  FALLBACK_REVALIDATE_SECONDS,
   PUBLIC_READS_TAG,
+  REFRESH_AFTER_SECONDS,
   sharedRead,
 } from './cache.ts';
 import { fakeClient, type Answer, type Query } from './fake-client.test-support.ts';
-import { cacheCalls, resetNextCache } from './next-cache.test-support.ts';
+import {
+  ageNextCache,
+  cacheCalls,
+  resetNextCache,
+  settleNextCache,
+} from './next-cache.test-support.ts';
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }));
 vi.mock('next/cache', () => import('./next-cache.test-support.ts'));
 
-// The public read cache (decision 2026-11-17): every read is keyed by its name, its arguments,
-// the data version read once per page view, the minute and the build, tagged public-reads, with
-// a 300 s fallback for writes no report marks (projects:sync).
+// The public read cache (decisions 2026-11-17 and 2026-11-18): every read is keyed by its name,
+// its arguments, the data version read once per page view, the UTC day and the build, tagged
+// public-reads. An entry older than 60 s is served as it is and refreshed in the background, which
+// bounds the writes no report marks (projects:sync).
 
 let reports = { count: 1368, newest: '2026-10-05T11:58:00.123456+00:00' };
 let queries: Query[] = [];
@@ -49,11 +55,11 @@ afterEach(() => {
 });
 
 describe('cacheKey', () => {
-  it('is one part naming the read, the build, the data version, the minute and the arguments', () => {
+  it('is one part naming the read, the build, the data version, the UTC day and the arguments', () => {
     expect(
       cacheKey('project-page', ['ostomate2', 'all', 20], {
         version: VERSION,
-        minute: '2026-10-05T11:59:00.000Z',
+        day: '2026-10-05',
         build: 'build-1',
       }),
     ).toEqual([
@@ -61,21 +67,21 @@ describe('cacheKey', () => {
         read: 'project-page',
         build: 'build-1',
         version: VERSION,
-        minute: '2026-10-05T11:59:00.000Z',
+        day: '2026-10-05',
         args: ['ostomate2', 'all', 20],
       }),
     ]);
   });
 
   it('tells apart arguments a joined string would run together', () => {
-    const context = { version: VERSION, minute: '2026-10-05T11:59:00.000Z', build: 'b' };
+    const context = { version: VERSION, day: '2026-10-05', build: 'b' };
 
     expect(cacheKey('r', ['a,b', 'c'], context)).not.toEqual(cacheKey('r', ['a', 'b,c'], context));
   });
 });
 
 describe('cachedRead', () => {
-  it('reads as of the minute’s last millisecond, keyed by its start, tagged with the fallback', async () => {
+  it('reads as of the minute’s last millisecond, keyed by the UTC day, refreshed after 60 s', async () => {
     const load = vi.fn((_args: readonly [string], until: Date) =>
       Promise.resolve({ until, slug: _args[0] }),
     );
@@ -87,11 +93,13 @@ describe('cachedRead', () => {
     expect(load).toHaveBeenCalledWith(['ostomate2'], new Date('2026-10-05T11:59:59.999Z'));
     const [call] = cacheCalls;
     expect(call?.tags).toEqual([PUBLIC_READS_TAG]);
-    expect(call?.revalidate).toBe(FALLBACK_REVALIDATE_SECONDS);
-    expect(JSON.parse(call?.keyParts[0] ?? '{}')).toMatchObject({
+    expect(REFRESH_AFTER_SECONDS).toBe(60);
+    expect(call?.revalidate).toBe(REFRESH_AFTER_SECONDS);
+    expect(JSON.parse(call?.keyParts[0] ?? '{}')).toEqual({
       read: 'project-head',
+      build: 'unbuilt',
       version: VERSION,
-      minute: '2026-10-05T11:59:00.000Z',
+      day: '2026-10-05',
       args: ['ostomate2'],
     });
   });
@@ -109,15 +117,81 @@ describe('cachedRead', () => {
     expect(hit.finishedAt).toBeInstanceOf(Date);
   });
 
-  it('shares one entry within a minute and reads afresh in the next', async () => {
+  it('shares one entry across the minutes of a UTC day and reads afresh on the next day', async () => {
     const load = vi.fn(() => Promise.resolve('page'));
     const read = cachedRead('landing', load);
 
     await read([], new Date('2026-10-05T11:59:00.000Z'));
-    await read([], new Date('2026-10-05T11:59:59.999Z'));
     await read([], new Date('2026-10-05T12:00:00.000Z'));
+    await read([], new Date('2026-10-05T23:59:59.999Z'));
+    expect(load).toHaveBeenCalledTimes(1);
 
+    await read([], new Date('2026-10-06T00:00:00.000Z'));
     expect(load).toHaveBeenCalledTimes(2);
+    const days = cacheCalls.map(
+      (call) => (JSON.parse(call.keyParts[0] ?? '{}') as { day: string }).day,
+    );
+    expect(days).toEqual(['2026-10-05', '2026-10-05', '2026-10-05', '2026-10-06']);
+  });
+
+  it('serves a stale entry as it is and refreshes it as of the refreshing view’s minute', async () => {
+    const load = vi.fn((_args: readonly [], until: Date) => Promise.resolve(until.toISOString()));
+    const read = cachedRead('landing', load);
+
+    await read([], AT);
+    ageNextCache();
+    const stale = await read([], new Date('2026-10-05T12:07:10.000Z'));
+    await settleNextCache();
+    const refreshed = await read([], new Date('2026-10-05T12:07:30.000Z'));
+
+    expect(stale).toBe('2026-10-05T11:59:59.999Z');
+    expect(refreshed).toBe('2026-10-05T12:07:59.999Z');
+    expect(load).toHaveBeenLastCalledWith([], new Date('2026-10-05T12:07:59.999Z'));
+    expect(cacheCalls.map((call) => [call.hit, call.stale])).toEqual([
+      [false, false],
+      [true, true],
+      [true, false],
+    ]);
+  });
+
+  it('runs one refresh for the views that find an entry stale while it runs', async () => {
+    let finish: (value: string) => void = () => undefined;
+    const load = vi
+      .fn<(args: readonly [], until: Date) => Promise<string>>()
+      .mockResolvedValueOnce('old')
+      .mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+    const read = cachedRead('landing', load);
+
+    await read([], AT);
+    ageNextCache();
+    // One after another, so no view joins another's call: each finds the entry stale.
+    const views: string[] = [];
+    for (let view = 0; view < 5; view += 1) views.push(await read([], AT));
+    finish('new');
+    await settleNextCache();
+
+    expect(views).toEqual(Array.from({ length: 5 }, () => 'old'));
+    expect(load).toHaveBeenCalledTimes(2);
+    await expect(read([], AT)).resolves.toBe('new');
+  });
+
+  it('keeps no failed refresh: the next view gets the stale entry and refreshes again', async () => {
+    const load = vi
+      .fn<(args: readonly [], until: Date) => Promise<string>>()
+      .mockResolvedValueOnce('old')
+      .mockRejectedValueOnce(new Error('load the run results: 57014'))
+      .mockResolvedValueOnce('new');
+    const read = cachedRead('landing', load);
+
+    await read([], AT);
+    ageNextCache();
+    await expect(read([], AT)).resolves.toBe('old');
+    await settleNextCache();
+    await expect(read([], AT)).resolves.toBe('old');
+    await settleNextCache();
+
+    expect(load).toHaveBeenCalledTimes(3);
+    await expect(read([], AT)).resolves.toBe('new');
   });
 
   it('reads afresh once a report changes the data version', async () => {

@@ -59,7 +59,7 @@ const messageOf = (cause: unknown): string =>
 const prunedPublicRows = ({ pruned }: DailySummary): boolean =>
   pruned.results + pruned.result_failures + pruned.runs_marked_pruned > 0;
 
-// A cache that stays stale until its 300 s fallback is not worth failing a job that did its work,
+// A cache that stays stale until its 60 s refresh is not worth failing a job that did its work,
 // so a failure is logged by its name alone and the summary stands.
 function revalidateAfterPrune(summary: DailySummary, deps: CronDeps, log: DailyLog): void {
   if (deps.revalidatePublicReads === undefined || !prunedPublicRows(summary)) return;

@@ -567,6 +567,14 @@ describe('landingAsOf', () => {
     },
   );
 
+  it('gives the landing as of a later instant of the same UTC day from a read earlier that day', async () => {
+    const exact = new Date('2026-10-05T23:59:59.999Z');
+    const cached = await loadLanding(fakeClient(answering(tables)).client, until);
+    const direct = await loadLanding(fakeClient(answering(tables)).client, exact);
+
+    expect(landingAsOf(cached, exact)).toEqual(direct);
+  });
+
   it('moves the silent days and Red now with the exact clock', async () => {
     const cached = await loadLanding(fakeClient(answering(tables)).client, until);
 

@@ -1,14 +1,29 @@
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  utimesSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { performance } from 'node:perf_hooks';
 
 import { expect, request, test, type APIRequestContext } from '@playwright/test';
 
 import { FIXED_NOW_VAR } from '../../lib/clock.ts';
 import { SEED_NOW } from '../../lib/seed/plan.ts';
-import { ingestLiveRun, registerProjects, removeProjects, SHARED_SLUG } from './support/ingest.ts';
+import {
+  admin,
+  ingestLiveRun,
+  registerProjects,
+  removeProjects,
+  SHARED_SLUG,
+} from './support/ingest.ts';
 
 // The public read cache, end to end (decision 2026-11-17): when a report arrives and many visitors
 // load a page at once, the page's database reads run once, not once per visitor; only the data
@@ -16,8 +31,10 @@ import { ingestLiveRun, registerProjects, removeProjects, SHARED_SLUG } from './
 // Supabase, through a server of its own whose preload logs every request it sends to Supabase
 // (tests/e2e/support/count-reads.ts), the database reads one load costs are counted first; a new
 // report then makes every cached entry cold, and 20 concurrent loads of / and of /p/testpulse
-// may cost at most twice that one load's reads. It runs in the `live` project, one file at a
-// time, since it writes a project of its own (playwright.config.ts), which it deletes afterwards.
+// may cost at most twice that one load's reads. Then, with no new report, an entry older than
+// its refresh time is served as it was while it refreshes in the background (decision
+// 2026-11-18). It runs in the `live` project, one file at a time, since it writes a project of
+// its own (playwright.config.ts), which it deletes afterwards.
 
 test.describe.configure({ mode: 'serial' });
 
@@ -34,7 +51,9 @@ const log = join(dir, 'reads.log');
 let server: { readonly stop: () => Promise<void> } | undefined;
 let api: APIRequestContext | undefined;
 
-async function startServer(): Promise<NonNullable<typeof server>> {
+async function startServer(
+  extraEnv: Readonly<Record<string, string>> = {},
+): Promise<NonNullable<typeof server>> {
   writeFileSync(log, '');
   const child = spawn(
     'node_modules/.bin/next',
@@ -47,6 +66,7 @@ async function startServer(): Promise<NonNullable<typeof server>> {
         SUPABASE_SECRET_KEY: '',
         TESTPULSE_E2E_READ_LOG: log,
         NODE_OPTIONS: '--import ./tests/e2e/support/count-reads.ts',
+        ...extraEnv,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     },
@@ -163,5 +183,109 @@ test(`${String(VISITORS)} concurrent loads of each page after a report share its
     for (const [read, count] of reads.reads) {
       expect(count, read).toBeLessThanOrEqual(2 * (one.reads.get(read) ?? 0));
     }
+  }
+});
+
+// Next.js's file cache, which every `next start` of this build shares: one file per entry, its
+// age read from the file's modified time when a server has it in memory no longer.
+const FETCH_CACHE = join(process.cwd(), '.next', 'cache', 'fetch-cache');
+const SHARED_NAME = 'Shared public';
+const RENAMED = 'Common public';
+// Past the 60-second refresh time of lib/queries/cache.ts, and short of the 300 seconds it was.
+const AGE_SECONDS = 90;
+// Every read a view waits on is held this long on the restarted server (count-reads.ts); the
+// data version's probe is not.
+const SLOW_READS_MS = 3_000;
+
+async function rename(name: string): Promise<void> {
+  const { error } = await admin().from('projects').update({ name }).eq('slug', SHARED_SLUG);
+  if (error) throw new Error(`rename ${SHARED_SLUG}: ${error.code} ${error.message}`);
+}
+
+/** The cache files that hold the spec project’s name, written since `since` (by default, ever). */
+function entriesNaming(name: string, since = 0): string[] {
+  return readdirSync(FETCH_CACHE)
+    .map((file) => join(FETCH_CACHE, file))
+    .filter((file) => statSync(file).mtimeMs >= since && readFileSync(file, 'utf8').includes(name));
+}
+
+async function view(path: string): Promise<{ readonly html: string; readonly ms: number }> {
+  if (api === undefined) throw new Error('no request context');
+  const started = performance.now();
+  const response = await api.get(path);
+  const html = await response.text();
+  const ms = performance.now() - started;
+  expect(response.status(), path).toBe(200);
+  expect(html, path).not.toContain('couldn’t be loaded');
+  return { html, ms };
+}
+
+// A rename changes a project's row and no report, so the data version and every key stay as they
+// were: only the entries' age can bring the new name in, as for projects:sync in production. The
+// entries are aged by setting their files' modified time back past the refresh time and starting
+// a new server, which has nothing in memory and so reads them, and their age, from the file, as a
+// new instance would; waiting out the refresh time would do the same in a minute more. Overlapping
+// views of the stale entries then share one refresh: a stale hit returns at once, so only the
+// refresh's own flight (lib/queries/cache.ts) keeps each view from starting another.
+test('an entry past its refresh time is served as it was, and refreshed once for a later view', async () => {
+  test.setTimeout(120_000);
+  const path = `/p/${SHARED_SLUG}`;
+  // A new report makes every entry of the page cold, so the first view's reads are all of them.
+  await ingestLiveRun(SHARED_SLUG, run('3', '11:32:00'));
+  const since = Date.now() - 1_000;
+  takeReads();
+
+  const first = await view(path);
+  const one = takeReads();
+  expect(first.html).toContain(SHARED_NAME);
+  expect(one.total).toBeGreaterThan(0);
+  await expect.poll(() => entriesNaming(SHARED_NAME, since).length).toBeGreaterThan(0);
+
+  await rename(RENAMED);
+  const fresh = await view(path);
+  // Younger than its refresh time, the entry is served as it is.
+  expect(fresh.html).toContain(SHARED_NAME);
+  expect(fresh.html).not.toContain(RENAMED);
+
+  await server?.stop();
+  const aged = new Date(Date.now() - AGE_SECONDS * 1_000);
+  const entries = entriesNaming(SHARED_NAME);
+  for (const file of entries) utimesSync(file, aged, aged);
+  server = await startServer({
+    TESTPULSE_E2E_SLOW_READS_MS: String(SLOW_READS_MS),
+    TESTPULSE_E2E_FAST_READ: PROBE,
+  });
+
+  const stale = await view(path);
+  test.info().annotations.push({
+    type: 'reads',
+    description: `${path}: ${String(entries.length)} cache files naming the project aged ${String(AGE_SECONDS)} s; the stale view took ${String(Math.round(stale.ms))} ms with every read held ${String(SLOW_READS_MS)} ms`,
+  });
+  // Served as it was, and without waiting on a read: a refresh in the request would have held it.
+  expect(stale.html).toContain(SHARED_NAME);
+  expect(stale.html).not.toContain(RENAMED);
+  expect(stale.ms).toBeLessThan(SLOW_READS_MS);
+
+  // While that refresh's reads are held, more views find the entries stale, all at hit speed.
+  const overlapping = await Promise.all(Array.from({ length: VISITORS }, () => view(path)));
+  for (const each of overlapping) {
+    expect(each.html).toContain(SHARED_NAME);
+    expect(each.ms).toBeLessThan(SLOW_READS_MS);
+  }
+
+  // The refresh ran in the background, so a later view has the new name.
+  await expect
+    .poll(async () => (await view(path)).html.includes(RENAMED), { timeout: 30_000 })
+    .toBe(true);
+
+  // One refresh in all: no read ran more often than the cold view ran it.
+  const refreshed = takeReads();
+  test.info().annotations.push({
+    type: 'reads',
+    description: `${path}: ${String(VISITORS + 1)} stale views, ${String(refreshed.total)} refresh reads (one cold view: ${String(one.total)})`,
+  });
+  expect(refreshed.total).toBeGreaterThan(0);
+  for (const [read, count] of refreshed.reads) {
+    expect(count, read).toBeLessThanOrEqual(one.reads.get(read) ?? 0);
   }
 });

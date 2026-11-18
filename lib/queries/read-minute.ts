@@ -1,29 +1,20 @@
-// The minute a cached public read belongs to (decision 2026-11-17). Everyone who visits in the
-// same minute shares one entry, keyed by the minute's start. The read itself runs up to the
-// minute's last millisecond rather than its start, so a run that has finished by now is never
-// left out; a run stamped up to a minute ahead of the server's clock can show up to a minute early.
-// A UTC day is a whole number of minutes, so the bound never crosses into the next day, and the
-// day-aligned windows of section 11 are those of the exact instant. Pure: the instant is passed in.
+// When a cached public read belongs to (decision 2026-11-18). Everyone who visits on the same UTC
+// day shares one entry while the data version holds, keyed by the day. The read itself runs up to
+// the last millisecond of the minute it runs in, so a run that has finished by then is never left
+// out. A UTC day is a whole number of minutes, so the bound never crosses into the next day, and
+// the day-aligned windows of section 11 are those of every instant the entry is served at.
+// Pure: the instant is passed in.
 
 const MINUTE_MS = 60_000;
 
 export interface ReadMinute {
-  /** The minute's start, as an ISO instant: the cache key's time part. */
-  readonly start: string;
+  /** The UTC day, as YYYY-MM-DD: the cache key's time part. */
+  readonly day: string;
   /** The minute's last millisecond: the instant the cached read runs as of. */
   readonly until: Date;
 }
 
 export function readMinute(at: Date): ReadMinute {
-  const start = new Date(Math.floor(at.getTime() / MINUTE_MS) * MINUTE_MS);
-  return { start: start.toISOString(), until: new Date(start.getTime() + MINUTE_MS - 1) };
-}
-
-/** The last millisecond of the minute a key names. */
-export function minuteUntil(start: string): Date {
-  const time = new Date(start).getTime();
-  if (Number.isNaN(time) || time % MINUTE_MS !== 0) {
-    throw new Error(`a read minute must be the start of a minute; got ${JSON.stringify(start)}`);
-  }
-  return new Date(time + MINUTE_MS - 1);
+  const start = Math.floor(at.getTime() / MINUTE_MS) * MINUTE_MS;
+  return { day: at.toISOString().slice(0, 10), until: new Date(start + MINUTE_MS - 1) };
 }

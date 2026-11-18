@@ -1059,6 +1059,7 @@ Self-reporting, once part of this phase, moved ahead of Phase 6 (decision 2026-1
 
 - Cache Components (`'use cache'`, Next.js 16's replacement for `unstable_cache`), recorded 2026-11-17. Define first: the Suspense fallbacks each page shows while a cached segment loads, which the design does not draw.
 - An index on `reports(created_at)` for the data version (13, "Shared reads"), once reports pass about 50,000; at 1,368 the read takes 0.56 ms in the database.
+- Reports by webhook (requested by Bobby 2026-11-18): instead of each project's CI running the report action and posting its result files to `/api/v1/reports` (section 8), GitHub sends testpulse a `workflow_run` webhook when a run finishes, and testpulse fetches that run's result artifacts through GitHub's API. Reporting projects would need no reporter step or API key, and testpulse would know when a run has finished, which bears on expected reports' "In progress" state. Define first: how testpulse is authorised to read artifacts, private repositories included (a GitHub App, or a token per project, and where it is kept); how the webhook's signature is verified; how artifacts map to report keys; whether today's route stays for projects outside GitHub Actions; and the reporting standard's version that results.
 
 ## 18. Open questions
 

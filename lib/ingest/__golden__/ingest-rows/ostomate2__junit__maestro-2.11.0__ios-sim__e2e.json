@@ -1,0 +1,124 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 5,
+        "failed": 0,
+        "passed": 5,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 5,
+        "failed": 0,
+        "passed": 5,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/maestro-2.11.0/ios-sim/e2e",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:56:41.311Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 198689,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "ios-e2e-maestro",
+        "module": "e2e",
+        "platform": "ios-sim",
+        "format": "junit",
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 198689,
+        "started_at": "2026-11-18T11:56:41.311Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 5,
+      "sha256": "0966adc4cf675ea65ce9e6c9f545b5a22af29cff031d44ad130c46c26527b1e1"
+    },
+    "results": {
+      "count": 5,
+      "sha256": "45dabbb4d470d636b0770a0224397f95f32c2758e5b7a59343190e77b8d9dfd8"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/maestro-2.11.0/ios-sim/e2e",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:01:41.311Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 198689,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "ios-e2e-maestro",
+        "module": "e2e",
+        "platform": "ios-sim",
+        "format": "junit",
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 198689,
+        "started_at": "2026-11-18T12:01:41.311Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 5,
+      "sha256": "84ba4d29eb4c075e0c8e1f0505321711e2d429ad4576abcc594db48d3d0dde8d"
+    },
+    "results": {
+      "count": 5,
+      "sha256": "45dabbb4d470d636b0770a0224397f95f32c2758e5b7a59343190e77b8d9dfd8"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  }
+}

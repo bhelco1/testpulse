@@ -1,0 +1,138 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 3,
+        "failed": 1,
+        "passed": 1,
+        "skipped": 1
+      },
+      "replaced": false,
+      "run_status": "failed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 3,
+        "failed": 1,
+        "passed": 1,
+        "skipped": 1
+      },
+      "replaced": true,
+      "run_status": "failed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-testpulse/junit/playwright-one-failure.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:59:59.758Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "failed",
+      "total": 3,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 1,
+      "duration_ms": 242,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "e2e-failure",
+        "module": "e2e",
+        "platform": "chromium",
+        "format": "junit",
+        "total": 3,
+        "passed": 1,
+        "failed": 1,
+        "skipped": 1,
+        "duration_ms": 242,
+        "started_at": "2026-11-18T11:59:59.758Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 3,
+      "sha256": "b9d5e0aa97aa45f295240067597091353225f78575da5133ddc19ccb40c7da83"
+    },
+    "results": {
+      "count": 3,
+      "sha256": "67f28545a16530cb735032393a0027e9df9aaa507803b20e4ba4c8c7dcdcee9a"
+    },
+    "result_failures": {
+      "count": 1,
+      "rows": [
+        {
+          "test_key": "d2395498d47c5d3320d1aeac3bed4f81d2e83702189860424884326c8030c8e5",
+          "status": "failed",
+          "message": "expect(received).toBe(expected) // Object.is equality",
+          "detail_sha256": "8556d79cebbebdfda82cb6439186996a52d214427842e93e41941da84d1b2a56"
+        }
+      ]
+    },
+    "coverage": [],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-testpulse/junit/playwright-one-failure.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:04:59.758Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "failed",
+      "total": 3,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 1,
+      "duration_ms": 242,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "e2e-failure",
+        "module": "e2e",
+        "platform": "chromium",
+        "format": "junit",
+        "total": 3,
+        "passed": 1,
+        "failed": 1,
+        "skipped": 1,
+        "duration_ms": 242,
+        "started_at": "2026-11-18T12:04:59.758Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 3,
+      "sha256": "e7f761301517487ef45da527210dd43ad0885f241a28cbde26ec8fb32018db97"
+    },
+    "results": {
+      "count": 3,
+      "sha256": "67f28545a16530cb735032393a0027e9df9aaa507803b20e4ba4c8c7dcdcee9a"
+    },
+    "result_failures": {
+      "count": 1,
+      "rows": [
+        {
+          "test_key": "d2395498d47c5d3320d1aeac3bed4f81d2e83702189860424884326c8030c8e5",
+          "status": "failed",
+          "message": "expect(received).toBe(expected) // Object.is equality",
+          "detail_sha256": "8556d79cebbebdfda82cb6439186996a52d214427842e93e41941da84d1b2a56"
+        }
+      ]
+    },
+    "coverage": [],
+    "alerts": []
+  }
+}

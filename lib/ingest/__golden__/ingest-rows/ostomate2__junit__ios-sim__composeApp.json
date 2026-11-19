@@ -1,0 +1,124 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 50,
+        "failed": 0,
+        "passed": 50,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 50,
+        "failed": 0,
+        "passed": 50,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/ios-sim/composeApp",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:59:59.889Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 111,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "ios",
+        "module": "composeApp",
+        "platform": "ios-sim",
+        "format": "junit",
+        "total": 50,
+        "passed": 50,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 111,
+        "started_at": "2026-11-18T11:59:59.889Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 50,
+      "sha256": "eb41c0e08651e1f5a2cee5bf96ef01005a69c96870b301abd1a6cc1958562cb4"
+    },
+    "results": {
+      "count": 50,
+      "sha256": "ba791dd11221d96e7fd04a6e6892ae3afdd1d64bc6e4f988fb0e2e7b0e4435cf"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/ios-sim/composeApp",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:04:59.889Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 111,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "ios",
+        "module": "composeApp",
+        "platform": "ios-sim",
+        "format": "junit",
+        "total": 50,
+        "passed": 50,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 111,
+        "started_at": "2026-11-18T12:04:59.889Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 50,
+      "sha256": "08d9d5a09d61add6e6afe6017afd9f34b53cf83109e8f2212df3be8889f7212c"
+    },
+    "results": {
+      "count": 50,
+      "sha256": "ba791dd11221d96e7fd04a6e6892ae3afdd1d64bc6e4f988fb0e2e7b0e4435cf"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  }
+}

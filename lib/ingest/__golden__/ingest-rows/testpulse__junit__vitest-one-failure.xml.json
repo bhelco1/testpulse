@@ -1,0 +1,138 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 3,
+        "failed": 1,
+        "passed": 1,
+        "skipped": 1
+      },
+      "replaced": false,
+      "run_status": "failed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 3,
+        "failed": 1,
+        "passed": 1,
+        "skipped": 1
+      },
+      "replaced": true,
+      "run_status": "failed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-testpulse/junit/vitest-one-failure.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:59:59.995Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "failed",
+      "total": 3,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 1,
+      "duration_ms": 5,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "checks-failure",
+        "module": "unit",
+        "platform": "node",
+        "format": "junit",
+        "total": 3,
+        "passed": 1,
+        "failed": 1,
+        "skipped": 1,
+        "duration_ms": 5,
+        "started_at": "2026-11-18T11:59:59.995Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 3,
+      "sha256": "10864f633d093f2c0509f50087076805833deb7e5ef21a8563467f598d6110da"
+    },
+    "results": {
+      "count": 3,
+      "sha256": "ea0c36a4abe0041c3ddb61212474a5cb3de1ef828e351ea766e1b99bde4c6a14"
+    },
+    "result_failures": {
+      "count": 1,
+      "rows": [
+        {
+          "test_key": "6dbe7e5269e7efe6950c4afa549f377a82cf7b6183d04587baadac7978a5bb92",
+          "status": "failed",
+          "message": "expected 1 to be 2 // Object.is equality",
+          "detail_sha256": "96a67ea5aaf42de1c80663d7760f6a4b2c6af05e5b490ac1cc91f25953b72521"
+        }
+      ]
+    },
+    "coverage": [],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-testpulse/junit/vitest-one-failure.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:04:59.995Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "failed",
+      "total": 3,
+      "passed": 1,
+      "failed": 1,
+      "skipped": 1,
+      "duration_ms": 5,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "checks-failure",
+        "module": "unit",
+        "platform": "node",
+        "format": "junit",
+        "total": 3,
+        "passed": 1,
+        "failed": 1,
+        "skipped": 1,
+        "duration_ms": 5,
+        "started_at": "2026-11-18T12:04:59.995Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 3,
+      "sha256": "79e49be234b80624c24dcd564176a2e6c9f4fc9c47a39ce280fc396ca687324c"
+    },
+    "results": {
+      "count": 3,
+      "sha256": "ea0c36a4abe0041c3ddb61212474a5cb3de1ef828e351ea766e1b99bde4c6a14"
+    },
+    "result_failures": {
+      "count": 1,
+      "rows": [
+        {
+          "test_key": "6dbe7e5269e7efe6950c4afa549f377a82cf7b6183d04587baadac7978a5bb92",
+          "status": "failed",
+          "message": "expected 1 to be 2 // Object.is equality",
+          "detail_sha256": "96a67ea5aaf42de1c80663d7760f6a4b2c6af05e5b490ac1cc91f25953b72521"
+        }
+      ]
+    },
+    "coverage": [],
+    "alerts": []
+  }
+}

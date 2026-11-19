@@ -1,0 +1,144 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 119,
+        "failed": 0,
+        "passed": 119,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 119,
+        "failed": 0,
+        "passed": 119,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-routeserve/jest/shared.json",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:59:37.396Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 119,
+      "passed": 119,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 22604,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "test",
+        "module": "shared",
+        "platform": "node",
+        "format": "jest-json",
+        "total": 119,
+        "passed": 119,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 22604,
+        "started_at": "2026-11-18T11:59:37.396Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 119,
+      "sha256": "fdf5335c75b698d8b71892fc4898b75b4ba0d1e0ebe0b7f8cf76b2a39d7fbd3a"
+    },
+    "results": {
+      "count": 119,
+      "sha256": "b55a800c5cc4b795385e3cbd39ca1727186a415579fa690350a2ad4b5821fd3c"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "shared",
+        "format": "istanbul",
+        "lines_covered": 102,
+        "lines_total": 102,
+        "branches_covered": 5,
+        "branches_total": 5,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-routeserve/jest/shared.json",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:04:37.396Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 119,
+      "passed": 119,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 22604,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "test",
+        "module": "shared",
+        "platform": "node",
+        "format": "jest-json",
+        "total": 119,
+        "passed": 119,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 22604,
+        "started_at": "2026-11-18T12:04:37.396Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 119,
+      "sha256": "fc922be0d509eecf6bf996348dc2c68b64a2492b79ee7dd95ffca4dd51af8a37"
+    },
+    "results": {
+      "count": 119,
+      "sha256": "b55a800c5cc4b795385e3cbd39ca1727186a415579fa690350a2ad4b5821fd3c"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "shared",
+        "format": "istanbul",
+        "lines_covered": 102,
+        "lines_total": 102,
+        "branches_covered": 5,
+        "branches_total": 5,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  }
+}

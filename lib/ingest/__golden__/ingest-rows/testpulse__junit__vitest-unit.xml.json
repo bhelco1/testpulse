@@ -1,0 +1,144 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 2168,
+        "failed": 0,
+        "passed": 2168,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 2168,
+        "failed": 0,
+        "passed": 2168,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-testpulse/junit/vitest-unit.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:57:55.492Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 2168,
+      "passed": 2168,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 124508,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "checks",
+        "module": "unit",
+        "platform": "node",
+        "format": "junit",
+        "total": 2168,
+        "passed": 2168,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 124508,
+        "started_at": "2026-11-18T11:57:55.492Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 2168,
+      "sha256": "835ee9822025a1b994b032bcb41f122c5b337aa129cdd1d0fcfd9ae27a216d26"
+    },
+    "results": {
+      "count": 2168,
+      "sha256": "2adc10ce217bfefce541191e4549aec7655b79de2246e2cc675153594a2e4fe4"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "unit",
+        "format": "istanbul",
+        "lines_covered": 3125,
+        "lines_total": 3141,
+        "branches_covered": 2385,
+        "branches_total": 2497,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-testpulse/junit/vitest-unit.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:02:55.492Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 2168,
+      "passed": 2168,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 124508,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "checks",
+        "module": "unit",
+        "platform": "node",
+        "format": "junit",
+        "total": 2168,
+        "passed": 2168,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 124508,
+        "started_at": "2026-11-18T12:02:55.492Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 2168,
+      "sha256": "95c6deb2fbdcd6ac0174bc60f48cd0df8851fcf9a68d72386f88b4caae46918d"
+    },
+    "results": {
+      "count": 2168,
+      "sha256": "2adc10ce217bfefce541191e4549aec7655b79de2246e2cc675153594a2e4fe4"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "unit",
+        "format": "istanbul",
+        "lines_covered": 3125,
+        "lines_total": 3141,
+        "branches_covered": 2385,
+        "branches_total": 2497,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 60,
+        "failed": 0,
+        "passed": 60,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 60,
+        "failed": 0,
+        "passed": 60,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/jvm/composeApp",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:59:42.254Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 17746,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "android",
+        "module": "composeApp",
+        "platform": "jvm",
+        "format": "junit",
+        "total": 60,
+        "passed": 60,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 17746,
+        "started_at": "2026-11-18T11:59:42.254Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 60,
+      "sha256": "92502428e7aafbea94f62e153501f13232ef0bf6ddcdcf498fb9afe526bd0b3a"
+    },
+    "results": {
+      "count": 60,
+      "sha256": "8cfd884a0097f3e9c0dd8c46bd580f48d06441e40ee471ca17b42e18dda9f259"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "composeApp",
+        "format": "jacoco",
+        "lines_covered": 497,
+        "lines_total": 527,
+        "branches_covered": 116,
+        "branches_total": 164,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/jvm/composeApp",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:04:42.254Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 17746,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "android",
+        "module": "composeApp",
+        "platform": "jvm",
+        "format": "junit",
+        "total": 60,
+        "passed": 60,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 17746,
+        "started_at": "2026-11-18T12:04:42.254Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 60,
+      "sha256": "dbf87d14f11dbb7fadf66094a8d59352884214cff4999f5a166989409a276f6b"
+    },
+    "results": {
+      "count": 60,
+      "sha256": "8cfd884a0097f3e9c0dd8c46bd580f48d06441e40ee471ca17b42e18dda9f259"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "composeApp",
+        "format": "jacoco",
+        "lines_covered": 497,
+        "lines_total": 527,
+        "branches_covered": 116,
+        "branches_total": 164,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  }
+}

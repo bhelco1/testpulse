@@ -377,6 +377,44 @@ describe('report inbox (spec section 6.6, decision 2026-11-18)', () => {
     expect(alerts[0]?.resolved_at).not.toBeNull();
   });
 
+  // pg_cron writes a cron.job_run_details row for every run: 1,440 a day for the drain, on a
+  // 500 MB database. The drain removes its own rows once they are 7 days old.
+  it("removes the drain's own run history after 7 days, and no other job's", () => {
+    const OTHER_JOB = `inbox-test-other-${suffix}`;
+    sql(`select cron.schedule('${OTHER_JOB}', '0 0 1 1 *', 'select 1')`);
+    // runid is given, as the CLI's role may not use pg_cron's sequence: far above any run the
+    // sequence will reach, and removed again below.
+    let nextRun = 9_000_000_000_000 + Math.floor(Math.random() * 1_000_000) * 10;
+    const history = (job: string, age: string): number => {
+      nextRun += 1;
+      sql(
+        'insert into cron.job_run_details (jobid, runid, command, status, start_time, end_time) ' +
+          `select jobid, ${String(nextRun)}, command, 'succeeded', now() - interval '${age}', ` +
+          `now() - interval '${age}' + interval '1 second' from cron.job ` +
+          `where jobname = '${job}'`,
+      );
+      return nextRun;
+    };
+    const drainOld = history(DRAIN_JOB, '7 days 1 minute');
+    const drainNew = history(DRAIN_JOB, '6 days 23 hours');
+    const otherOld = history(OTHER_JOB, '30 days');
+    try {
+      drain();
+
+      const left = sql(
+        'select runid from cron.job_run_details ' +
+          `where runid in (${[drainOld, drainNew, otherOld].map(String).join(', ')}) order by runid`,
+      ).map((row) => Number(row.runid));
+      expect(left).toEqual([drainNew, otherOld]);
+    } finally {
+      sql(
+        'delete from cron.job_run_details ' +
+          `where runid in (${[drainOld, drainNew, otherOld].map(String).join(', ')})`,
+      );
+      sql(`select cron.unschedule('${OTHER_JOB}')`);
+    }
+  });
+
   it('keeps the inbox and its functions from anon', async () => {
     const read = await anon.from('report_inbox').select('*').limit(1);
     expect(read.error?.code).toBe(PERMISSION_DENIED);

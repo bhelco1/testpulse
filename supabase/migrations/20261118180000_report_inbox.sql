@@ -691,6 +691,13 @@ $$;
 -- is tried at most once, oldest receipt first; a row whose 5 tries are spent is parked instead.
 -- It stops starting rows after 50 seconds, so one call ends before the next minute's. Transaction
 -- control rules out a SET clause, so every name is schema-qualified.
+--
+-- pg_cron keeps a cron.job_run_details row for every run, 1,440 a day for this job and nothing
+-- removes them, so each call first deletes this job's rows older than 7 days, at most 1,000 at a
+-- time: about 10,000 rows are kept, where a year would be over 500,000 on a 500 MB database. It
+-- is done here rather than in prune_expired because this runs as the owner, which may delete in
+-- the cron schema, while prune_expired runs as service_role, which has no right there; and the
+-- job that writes the rows keeps them bounded even when the daily job does not run.
 -- ---------------------------------------------------------------------------------------------
 
 create procedure public.process_report_inbox()
@@ -701,6 +708,17 @@ declare
   v_id uuid;
   v_deadline timestamptz := clock_timestamp() + interval '50 seconds';
 begin
+  delete from cron.job_run_details d
+  where d.runid in (
+    select r.runid
+    from cron.job_run_details r
+    join cron.job j on j.jobid = r.jobid
+    where j.jobname = 'process-report-inbox' and r.start_time < now() - interval '7 days'
+    order by r.runid
+    limit 1000
+  );
+  commit;
+
   select coalesce(array_agg(id order by received_at, id), '{}')
   into v_ids
   from public.report_inbox

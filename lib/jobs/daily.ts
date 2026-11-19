@@ -92,7 +92,8 @@ const removedAny = (batch: PruneBatch): boolean =>
     batch.result_failures +
     batch.visits +
     batch.tracked_sessions +
-    batch.rate_limit_buckets >
+    batch.rate_limit_buckets +
+    batch.report_inbox >
   0;
 
 function addProjects(totals: Map<string, PrunedProject>, projects: readonly PrunedProject[]): void {
@@ -147,6 +148,7 @@ export async function pruneUntilDone(
       tracked_sessions: removed.tracked_sessions + batch.tracked_sessions,
       rate_limit_buckets: removed.rate_limit_buckets + batch.rate_limit_buckets,
       runs_marked_pruned: removed.runs_marked_pruned + batch.runs_marked_pruned,
+      report_inbox: removed.report_inbox + batch.report_inbox,
     };
     addProjects(byProject, batch.projects);
     if (!removedAny(batch)) return outcome(true, null);
@@ -266,7 +268,7 @@ export async function runDailyJob(
   log.info(
     `${LOG_PREFIX} pruned ${removed.results} results, ${removed.result_failures} result_failures, ` +
       `${removed.visits} visits, ${removed.tracked_sessions} tracked_sessions, ` +
-      `${removed.rate_limit_buckets} rate_limit_buckets, ` +
+      `${removed.rate_limit_buckets} rate_limit_buckets, ${removed.report_inbox} report_inbox, ` +
       `${removed.runs_marked_pruned} runs marked pruned in ${prune.batches} batches`,
   );
 

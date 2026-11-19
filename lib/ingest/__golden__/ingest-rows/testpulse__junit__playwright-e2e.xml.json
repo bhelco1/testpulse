@@ -1,0 +1,162 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 882,
+        "failed": 3,
+        "passed": 879,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "failed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 882,
+        "failed": 3,
+        "passed": 879,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "failed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-testpulse/junit/playwright-e2e.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T10:32:51.080Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "failed",
+      "total": 882,
+      "passed": 879,
+      "failed": 3,
+      "skipped": 0,
+      "duration_ms": 5228920,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "e2e",
+        "module": "e2e",
+        "platform": "chromium",
+        "format": "junit",
+        "total": 882,
+        "passed": 879,
+        "failed": 3,
+        "skipped": 0,
+        "duration_ms": 5228920,
+        "started_at": "2026-11-18T10:32:51.080Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 235,
+      "sha256": "098186f7cf539bde77d55979346f836a2bddcea685ad512f6c771e33ee6c361c"
+    },
+    "results": {
+      "count": 882,
+      "sha256": "0d1f08b82056cd99ac6221da09cbcc416ceebfd651a8004a103c83eef48e94c5"
+    },
+    "result_failures": {
+      "count": 3,
+      "rows": [
+        {
+          "test_key": "a0fae83bcd9a92aba0205e03a4f7d3c16912b40ac7af0da0c965a025b8988ac2",
+          "status": "failed",
+          "message": "expect(locator).toHaveCount(expected) failed",
+          "detail_sha256": "d114bca61fef5abba3b03b3bb38114c9f71ef0f8b18be2b949945bae5d22ccce"
+        },
+        {
+          "test_key": "9abc69820895295a430d7c62b31f243620308c02b68a35f1354e26a8b4f1a689",
+          "status": "error",
+          "message": "Test timeout of 30000ms exceeded.",
+          "detail_sha256": "cbf33708dce51487e02e4b5e3ebdbc8580b6c1fe12536ad0e9e508e5c8177358"
+        },
+        {
+          "test_key": "ec11074dae5932b75cf4ae1fb0fc55b797bd07744f1425d2da8b628454ffc601",
+          "status": "error",
+          "message": "Test timeout of 30000ms exceeded.",
+          "detail_sha256": "d900dd8079492c4a87bf6ea267dd49892162b7d3850a84e042c1833dec35869f"
+        }
+      ]
+    },
+    "coverage": [],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-testpulse/junit/playwright-e2e.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T10:37:51.080Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "failed",
+      "total": 882,
+      "passed": 879,
+      "failed": 3,
+      "skipped": 0,
+      "duration_ms": 5228920,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "e2e",
+        "module": "e2e",
+        "platform": "chromium",
+        "format": "junit",
+        "total": 882,
+        "passed": 879,
+        "failed": 3,
+        "skipped": 0,
+        "duration_ms": 5228920,
+        "started_at": "2026-11-18T10:37:51.080Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 235,
+      "sha256": "5b9520fb678508f3f90cb31e022d89045383ed1d5fb3273aec3857addc49b47c"
+    },
+    "results": {
+      "count": 882,
+      "sha256": "0d1f08b82056cd99ac6221da09cbcc416ceebfd651a8004a103c83eef48e94c5"
+    },
+    "result_failures": {
+      "count": 3,
+      "rows": [
+        {
+          "test_key": "a0fae83bcd9a92aba0205e03a4f7d3c16912b40ac7af0da0c965a025b8988ac2",
+          "status": "failed",
+          "message": "expect(locator).toHaveCount(expected) failed",
+          "detail_sha256": "d114bca61fef5abba3b03b3bb38114c9f71ef0f8b18be2b949945bae5d22ccce"
+        },
+        {
+          "test_key": "9abc69820895295a430d7c62b31f243620308c02b68a35f1354e26a8b4f1a689",
+          "status": "error",
+          "message": "Test timeout of 30000ms exceeded.",
+          "detail_sha256": "cbf33708dce51487e02e4b5e3ebdbc8580b6c1fe12536ad0e9e508e5c8177358"
+        },
+        {
+          "test_key": "ec11074dae5932b75cf4ae1fb0fc55b797bd07744f1425d2da8b628454ffc601",
+          "status": "error",
+          "message": "Test timeout of 30000ms exceeded.",
+          "detail_sha256": "d900dd8079492c4a87bf6ea267dd49892162b7d3850a84e042c1833dec35869f"
+        }
+      ]
+    },
+    "coverage": [],
+    "alerts": []
+  }
+}

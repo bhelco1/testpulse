@@ -8,9 +8,9 @@
 set -uo pipefail
 
 # A warning annotation is easy to miss on a green job, so a report that was not sent, or that
-# got anything but 200 or 201, also leaves a line in the job summary. A summary that cannot be
-# written is ignored, stderr first so not even the failed redirect prints: reporting never fails
-# the build.
+# got anything but 200, 201 or 202, also leaves a line in the job summary. A summary that cannot
+# be written is ignored, stderr first so not even the failed redirect prints: reporting never
+# fails the build.
 report="${1:-}/${2:-}/${3:-}"
 summarize() {
   if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
@@ -98,15 +98,25 @@ if [ -n "$cov_file" ] && [ -f "$cov_file" ]; then args+=(-F "${cov_format}=@${co
 out=$(mktemp "${TMPDIR:-/tmp}/testpulse.XXXXXX")
 trap 'rm -f "$out"' EXIT
 
-# curl writes 000 itself when it never got a response, so the default is only for curl failing
-# to run at all. Adding `|| echo 000` here instead would concatenate the two into 000000.
-code=$(curl -sS -o "$out" -w '%{http_code}' --max-time 30 --retry 2 \
-  -H "Authorization: Bearer ${TESTPULSE_TOKEN}" "${args[@]}" \
-  "${TESTPULSE_URL}/api/v1/reports")
-code=${code:-000}
+# 202 means the report is stored and will be processed shortly, so it is a success like 200 and
+# 201. No response (000) or a 5xx is worth another try: 5 attempts, waiting 5, 10, 20 and 40 s
+# between them, about 2 minutes in all. Any 4xx is final, as sending the same request again gets
+# the same answer. curl writes 000 itself when it never got a response, so the default is only
+# for curl failing to run at all; adding `|| echo 000` instead would concatenate the two.
+code=000
+for delay in 5 10 20 40 0; do
+  code=$(curl -sS -o "$out" -w '%{http_code}' --max-time 30 \
+    -H "Authorization: Bearer ${TESTPULSE_TOKEN}" "${args[@]}" \
+    "${TESTPULSE_URL}/api/v1/reports")
+  code=${code:-000}
+  case "$code" in
+    000 | 5??) [ "$delay" -gt 0 ] && sleep "$delay" ;;
+    *) break ;;
+  esac
+done
 
-if [ "$code" != "200" ] && [ "$code" != "201" ]; then
+if [ "$code" != "200" ] && [ "$code" != "201" ] && [ "$code" != "202" ]; then
   echo "::warning::testpulse report failed (HTTP ${code}): $(head -c 500 "$out" 2>/dev/null)"
-  summarize "got HTTP ${code}, not 200 or 201. The step's warning has the response."
+  summarize "got HTTP ${code}, not 200, 201 or 202. The step's warning has the response."
 fi
 exit 0

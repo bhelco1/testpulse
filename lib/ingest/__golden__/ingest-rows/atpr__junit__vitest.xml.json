@@ -1,0 +1,124 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 39,
+        "failed": 0,
+        "passed": 39,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 39,
+        "failed": 0,
+        "passed": 39,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-atpr/junit/vitest.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:59:59.314Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 39,
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 686,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "test",
+        "module": "atpr",
+        "platform": "node",
+        "format": "junit",
+        "total": 39,
+        "passed": 39,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 686,
+        "started_at": "2026-11-18T11:59:59.314Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 39,
+      "sha256": "adf396912652194667b1c17cd750fbb52893e84bfdd808d8e7e53b8a2ef40286"
+    },
+    "results": {
+      "count": 39,
+      "sha256": "32eeafe1defb4495d0a0e764af4e644ab15713bcdbd885cd48c4f88da9cba18a"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-atpr/junit/vitest.xml",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:04:59.314Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 39,
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 686,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "test",
+        "module": "atpr",
+        "platform": "node",
+        "format": "junit",
+        "total": 39,
+        "passed": 39,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 686,
+        "started_at": "2026-11-18T12:04:59.314Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 39,
+      "sha256": "d1ed134b59aedab17fc64776f41ed22a6023989525938ad154517269f6f9b2cf"
+    },
+    "results": {
+      "count": 39,
+      "sha256": "32eeafe1defb4495d0a0e764af4e644ab15713bcdbd885cd48c4f88da9cba18a"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  }
+}

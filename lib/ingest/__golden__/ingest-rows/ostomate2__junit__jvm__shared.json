@@ -1,0 +1,144 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 82,
+        "failed": 0,
+        "passed": 82,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 82,
+        "failed": 0,
+        "passed": 82,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/jvm/shared",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:59:42.253Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 82,
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 17747,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "android",
+        "module": "shared",
+        "platform": "jvm",
+        "format": "junit",
+        "total": 82,
+        "passed": 82,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 17747,
+        "started_at": "2026-11-18T11:59:42.253Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 82,
+      "sha256": "e9f9b0fd7b918281ed250bbf3deb259accb446ab80ec8df214dec34485eec6c9"
+    },
+    "results": {
+      "count": 82,
+      "sha256": "356184710cc1fab3d101872023162977d4868ffbcc2b915e5011db5d33611ba9"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "shared",
+        "format": "jacoco",
+        "lines_covered": 457,
+        "lines_total": 490,
+        "branches_covered": 105,
+        "branches_total": 140,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/jvm/shared",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:04:42.253Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 82,
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 17747,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "android",
+        "module": "shared",
+        "platform": "jvm",
+        "format": "junit",
+        "total": 82,
+        "passed": 82,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 17747,
+        "started_at": "2026-11-18T12:04:42.253Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 82,
+      "sha256": "24976d2583d3512bad5f0fd7fee494763d6b5cb25044081c2f7a8d00e5dbf831"
+    },
+    "results": {
+      "count": 82,
+      "sha256": "356184710cc1fab3d101872023162977d4868ffbcc2b915e5011db5d33611ba9"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "shared",
+        "format": "jacoco",
+        "lines_covered": 457,
+        "lines_total": 490,
+        "branches_covered": 105,
+        "branches_total": 140,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  }
+}

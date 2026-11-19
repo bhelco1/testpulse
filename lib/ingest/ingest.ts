@@ -24,6 +24,13 @@ import { MAX_BODY_BYTES, PartsError, readParts, type ReportParts } from './parts
 // Spec section 6.3.
 export const RATE_LIMIT_PER_MINUTE = 60;
 
+/**
+ * Spec section 6.6: how long the route waits for its own try at a stored report before it
+ * answers 202 and leaves the rest to the inbox drain. Well inside a CI step's patience and the
+ * platform's function limit, and longer than a 2,000-test report takes on a quiet database.
+ */
+export const PROCESS_WITHIN_MS = 10_000;
+
 const UNAUTHORIZED_MESSAGE = 'missing or unknown API key';
 const EMPTY_REPORT_MESSAGE = 'the report parsed but contained zero test cases';
 // An unexpected failure says nothing else to the caller. The exception message, the stack and
@@ -41,6 +48,11 @@ export interface IngestInput {
   /** Deferred so the size and encoding headers can refuse a body before it is read. */
   readonly formData: () => Promise<FormData>;
   readonly receivedAt: Date;
+}
+
+export interface IngestOptions {
+  /** The bound on the route's own try; {@link PROCESS_WITHIN_MS} unless a test shortens it. */
+  readonly processWithinMs?: number;
 }
 
 const IngestResultSchema = z.object({
@@ -67,6 +79,14 @@ export interface IngestSuccessBody {
   readonly error?: string;
 }
 
+/** 202: stored, not yet processed; the inbox drain finishes it (spec section 6.6). */
+export interface IngestAcceptedBody {
+  readonly status: 'accepted';
+  readonly inbox_id: string;
+  /** Every other body may carry an error; this one never does. */
+  readonly error?: undefined;
+}
+
 export interface IngestErrorBody {
   readonly error: string;
   /** The offending part, for 400s about the body (spec 6.3). */
@@ -77,6 +97,7 @@ export interface IngestErrorBody {
 
 export type IngestResponse =
   | { readonly status: 200 | 201 | 422; readonly body: IngestSuccessBody }
+  | { readonly status: 202; readonly body: IngestAcceptedBody }
   | { readonly status: 400 | 401 | 413 | 415 | 429 | 500; readonly body: IngestErrorBody };
 
 const unauthorized = (): IngestResponse => ({
@@ -155,10 +176,66 @@ async function rateLimitHit(client: SupabaseClient, hash: string, minute: Date):
   return Number(data);
 }
 
-async function writeReport(client: SupabaseClient, payload: IngestPayload): Promise<IngestResult> {
-  const { data, error } = await client.rpc('ingest_report', { payload });
-  if (error) throw failed('ingest_report', error);
-  return IngestResultSchema.parse(data);
+/** The report's row in report_inbox: once this returns, the report cannot be lost. */
+async function storeReport(client: SupabaseClient, payload: IngestPayload): Promise<string> {
+  const { data, error } = await client.rpc('store_report', { payload });
+  if (error) throw failed('store_report', error);
+  return z.uuid().parse(data);
+}
+
+const TryAnswerSchema = z.union([
+  z.object({ status: z.literal('processed'), result: z.unknown() }),
+  z.object({ status: z.enum(['pending', 'parked']) }),
+  z.null(),
+]);
+
+type TryOutcome =
+  | { readonly processed: true; readonly result: IngestResult }
+  | { readonly processed: false; readonly reason: string };
+
+/**
+ * One try at the stored row, given up after `withinMs`. Every way it can fall short (no answer
+ * in time, a database error, a cancel, a row busy elsewhere) leaves the row pending for the
+ * drain, so each is an outcome here, not a throw. Only a processed answer of the wrong shape
+ * throws: the report is stored, but this code and the database disagree, which is a bug.
+ */
+async function tryStoredReport(
+  client: SupabaseClient,
+  inboxId: string,
+  withinMs: number,
+): Promise<TryOutcome> {
+  const abort = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timedOut = new Promise<TryOutcome>((resolve) => {
+    timer = setTimeout(() => {
+      abort.abort();
+      resolve({ processed: false, reason: `no answer within ${String(withinMs)} ms` });
+    }, withinMs);
+  });
+  const attempt = (async (): Promise<TryOutcome> => {
+    let answer: { data: unknown; error: { code: string; message: string } | null };
+    try {
+      answer = await client
+        .rpc('ingest_stored_report', { p_inbox_id: inboxId })
+        .abortSignal(abort.signal);
+    } catch (error) {
+      return { processed: false, reason: error instanceof Error ? error.message : String(error) };
+    }
+    if (answer.error) {
+      return { processed: false, reason: `${answer.error.code} ${answer.error.message}` };
+    }
+    const parsed = TryAnswerSchema.parse(answer.data);
+    if (parsed === null)
+      return { processed: false, reason: 'the row is being processed elsewhere' };
+    if (parsed.status !== 'processed')
+      return { processed: false, reason: `the row is ${parsed.status}` };
+    return { processed: true, result: IngestResultSchema.parse(parsed.result) };
+  })();
+  try {
+    return await Promise.race([attempt, timedOut]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** A ParseError tagged with the multipart part it came from, so the 400 can name it. */
@@ -228,7 +305,11 @@ function refused(error: PartsError | PartParseError): IngestResponse {
  * headers and two indexed lookups, the size and encoding checks need only headers, and the body
  * is read last.
  */
-async function runIngest(client: SupabaseClient, input: IngestInput): Promise<IngestResponse> {
+async function runIngest(
+  client: SupabaseClient,
+  input: IngestInput,
+  options: IngestOptions,
+): Promise<IngestResponse> {
   const key = bearerKey(input.authorization);
   if (key === null) return unauthorized();
   const hash = hashApiKey(key);
@@ -302,7 +383,17 @@ async function runIngest(client: SupabaseClient, input: IngestInput): Promise<In
     throw error;
   }
 
-  const result = await writeReport(client, payload);
+  const inboxId = await storeReport(client, payload);
+  const outcome = await tryStoredReport(
+    client,
+    inboxId,
+    options.processWithinMs ?? PROCESS_WITHIN_MS,
+  );
+  if (!outcome.processed) {
+    console.error(`${LOG_PREFIX} report ${inboxId} stored, not yet processed: ${outcome.reason}`);
+    return { status: 202, body: { status: 'accepted', inbox_id: inboxId } };
+  }
+  const { result } = outcome;
   const body: IngestSuccessBody = {
     run_id: result.run_id,
     report_id: result.report_id,
@@ -323,9 +414,10 @@ async function runIngest(client: SupabaseClient, input: IngestInput): Promise<In
 export async function ingestReport(
   client: SupabaseClient,
   input: IngestInput,
+  options: IngestOptions = {},
 ): Promise<IngestResponse> {
   try {
-    return await runIngest(client, input);
+    return await runIngest(client, input, options);
   } catch (error) {
     return internalError(LOG_PREFIX, error);
   }

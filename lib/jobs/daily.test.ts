@@ -66,6 +66,7 @@ const batch = (overrides: Partial<PruneBatch> = {}): PruneBatch => ({
   visits: 0,
   tracked_sessions: 0,
   rate_limit_buckets: 0,
+  report_inbox: 0,
   projects: [],
   ...overrides,
 });
@@ -193,6 +194,7 @@ describe('runDailyJob', () => {
         tracked_sessions: 2,
         rate_limit_buckets: 20,
         runs_marked_pruned: 4,
+        report_inbox: 0,
       },
       pruned_by_project: [
         {
@@ -366,6 +368,7 @@ describe('runDailyJob', () => {
       tracked_sessions: 0,
       rate_limit_buckets: 0,
       runs_marked_pruned: 3,
+      report_inbox: 0,
     });
     expect(summary.pruned_by_project).toEqual(removedA.projects);
   });
@@ -419,7 +422,7 @@ describe('runDailyJob', () => {
     expect(info).toEqual([
       'testpulse daily: pruned ostomate2: 6 results, 0 result_failures, 0 runs marked pruned',
       'testpulse daily: pruned routeserve: 4 results, 0 result_failures, 1 runs marked pruned',
-      'testpulse daily: pruned 10 results, 0 result_failures, 7 visits, 2 tracked_sessions, 20 rate_limit_buckets, 1 runs marked pruned in 2 batches',
+      'testpulse daily: pruned 10 results, 0 result_failures, 7 visits, 2 tracked_sessions, 20 rate_limit_buckets, 0 report_inbox, 1 runs marked pruned in 2 batches',
     ]);
     expect(errors).toEqual(['testpulse daily: stale_check failed: check_stale: XX000 stale broke']);
   });
@@ -450,6 +453,19 @@ describe('pruneUntilDone', () => {
     const outcome = await pruneUntilDone(fake.client, NOW, options());
     expect(outcome).toMatchObject({ batches: 3, complete: true, error: null });
     expect(outcome.removed.tracked_sessions).toBe(5_012);
+  });
+
+  it('keeps going while a batch removes only processed inbox rows, and adds them up', async () => {
+    const fake = scripted({
+      prune: [
+        { data: batch({ report_inbox: 5_000 }) },
+        { data: batch({ report_inbox: 3 }) },
+        { data: batch() },
+      ],
+    });
+    const outcome = await pruneUntilDone(fake.client, NOW, options());
+    expect(outcome).toMatchObject({ batches: 3, complete: true, error: null });
+    expect(outcome.removed.report_inbox).toBe(5_003);
   });
 
   it('starts no batch once the budget is used, and says the prune is not complete', async () => {

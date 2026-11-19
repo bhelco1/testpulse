@@ -86,4 +86,13 @@ describe('DailySummarySchema', () => {
     const parsed = DailySummarySchema.parse({ ...ok, pruned: before });
     expect(parsed.pruned).toEqual({ ...NOTHING_PRUNED, visits: 4, tracked_sessions: 0 });
   });
+
+  // Summaries written before the report inbox (migration 20261118180000) have no report_inbox
+  // count; none were pruned then, so they read as 0.
+  it('reads a summary from before the report inbox as having pruned none of it', () => {
+    const before = { ...NOTHING_PRUNED, visits: 2 } as Record<string, number>;
+    delete before.report_inbox;
+    const parsed = DailySummarySchema.parse({ ...ok, pruned: before });
+    expect(parsed.pruned).toEqual({ ...NOTHING_PRUNED, visits: 2, report_inbox: 0 });
+  });
 });

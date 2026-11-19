@@ -60,6 +60,19 @@ interface Outcome {
   stderr: string;
 }
 
+// The script waits between retries with `sleep`, found on PATH; this one, first on the tests'
+// PATH, records each wait instead of taking it, so a test of the full backoff takes no time.
+const fakeBin = mkdtempSync(join(tmpdir(), 'testpulse-bin-'));
+const sleepLog = join(fakeBin, 'sleeps');
+writeFileSync(join(fakeBin, 'sleep'), `#!/bin/sh\necho "$@" >> "${sleepLog}"\n`, { mode: 0o755 });
+const sleeps = (): string[] => {
+  try {
+    return readFileSync(sleepLog, 'utf8').split('\n').filter(Boolean);
+  } catch {
+    return [];
+  }
+};
+
 // The test process itself serves the request, so the script has to run asynchronously: a
 // synchronous spawn would block the event loop and the server could never answer.
 function runBash(bashArgs: string[], env: Record<string, string>): Promise<Outcome> {
@@ -67,7 +80,11 @@ function runBash(bashArgs: string[], env: Record<string, string>): Promise<Outco
     // Only PATH (and NODE_ENV, which Next's ProcessEnv type requires) is inherited: the test
     // must not pick up the GITHUB_* variables of a CI runner.
     const child = spawn('bash', bashArgs, {
-      env: { NODE_ENV: process.env.NODE_ENV, PATH: process.env.PATH ?? '/usr/bin:/bin', ...env },
+      env: {
+        NODE_ENV: process.env.NODE_ENV,
+        PATH: `${fakeBin}:${process.env.PATH ?? '/usr/bin:/bin'}`,
+        ...env,
+      },
     });
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
@@ -213,6 +230,7 @@ function startServer(reply: (request: Captured) => Reply): Promise<LocalServer> 
 
 afterEach(() => {
   for (const server of servers.splice(0)) server.close();
+  rmSync(sleepLog, { force: true });
 });
 
 interface Part {
@@ -412,7 +430,79 @@ describe.each([scriptEntry, actionEntry])(
 
       expect(outcome).toEqual(success);
       expect(server.requests).toHaveLength(2);
+      expect(sleeps()).toEqual(['5']);
     });
+
+    // Spec section 6.6: stored, processed shortly; nothing for the reporting repo to act on.
+    it('treats 202 (stored, not yet processed) as success, without a retry', async () => {
+      const server = await startServer(() => ({
+        status: 202,
+        body: '{"status":"accepted","inbox_id":"i"}',
+      }));
+
+      const outcome = await entry.run(junitArgs, baseEnv(server.url));
+
+      expect(outcome).toEqual(success);
+      expect(server.requests).toHaveLength(1);
+      expect(sleeps()).toEqual([]);
+    });
+
+    it('makes 5 attempts on a lasting 5xx, waiting 5, 10, 20 and 40 s, then warns and exits 0', async () => {
+      const server = await startServer(() => ({ status: 500, body: '{"error":"internal error"}' }));
+
+      const outcome = await entry.run(junitArgs, baseEnv(server.url));
+
+      expect(outcome).toEqual({
+        code: 0,
+        stdout: '::warning::testpulse report failed (HTTP 500): {"error":"internal error"}\n',
+        stderr: '',
+      });
+      expect(server.requests).toHaveLength(5);
+      expect(sleeps()).toEqual(['5', '10', '20', '40']);
+    });
+
+    it('makes the same 5 attempts when no response comes back at all', async () => {
+      const server = await startServer(created);
+      await server.close();
+
+      const outcome = await entry.run(junitArgs, baseEnv(server.url));
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).toBe('::warning::testpulse report failed (HTTP 000): \n');
+      expect(outcome.stderr.match(/curl: \(7\)/g)).toHaveLength(5);
+      expect(sleeps()).toEqual(['5', '10', '20', '40']);
+    });
+
+    it('stops after a 202 that follows a 502', async () => {
+      let attempts = 0;
+      const server = await startServer(() => {
+        attempts += 1;
+        return attempts === 1
+          ? { status: 502, body: 'bad gateway' }
+          : { status: 202, body: '{"status":"accepted","inbox_id":"i"}' };
+      });
+
+      const outcome = await entry.run(junitArgs, baseEnv(server.url));
+
+      expect(outcome).toEqual(success);
+      expect(server.requests).toHaveLength(2);
+    });
+
+    it.each([400, 401, 413, 415, 422, 429])(
+      'does not retry a %s: the same request would get the same answer',
+      async (status) => {
+        const server = await startServer(() => ({ status, body: '{"error":"no"}' }));
+
+        const outcome = await entry.run(junitArgs, baseEnv(server.url));
+
+        expect(outcome.code).toBe(0);
+        expect(outcome.stdout).toBe(
+          `::warning::testpulse report failed (HTTP ${status}): {"error":"no"}\n`,
+        );
+        expect(server.requests).toHaveLength(1);
+        expect(sleeps()).toEqual([]);
+      },
+    );
 
     it('escapes backslashes and double quotes in the values it interpolates into meta', async () => {
       const server = await startServer(created);
@@ -557,7 +647,7 @@ describe.each([scriptEntry, actionEntry])(
 
         expect(outcome.code).toBe(0);
         expect(summary()).toBe(
-          "- testpulse: report `android/shared/jvm` got HTTP 401, not 200 or 201. The step's " +
+          "- testpulse: report `android/shared/jvm` got HTTP 401, not 200, 201 or 202. The step's " +
             'warning has the response.\n',
         );
       });
@@ -631,10 +721,12 @@ describe.each([scriptEntry, actionEntry])(
 );
 
 describe('the reporter source', () => {
-  it('bounds each attempt with --max-time and retries twice', () => {
+  // Its own loop retries (5 attempts, the behaviour tests above); curl's --retry would add
+  // attempts of its own on top of them, and retries a 429 the loop deliberately does not.
+  it('bounds each attempt with --max-time and leaves retrying to its own loop', () => {
     const script = readFileSync(scriptPath, 'utf8');
     expect(script).toMatch(/--max-time \d+/);
-    expect(script).toContain('--retry 2');
+    expect(script).not.toContain('--retry');
   });
 
   it('writes the response to a private temporary file rather than a fixed path', () => {

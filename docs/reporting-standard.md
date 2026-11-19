@@ -1,6 +1,6 @@
-# testpulse reporting standard, v1
+# testpulse reporting standard, v1.1
 
-Version 1, 2026-09-30. Owner: testpulse (this file). Implementation truth: [`docs/spec.md`](spec.md).
+Version 1.1, 2026-11-18 (version 1, 2026-09-30). Owner: testpulse (this file). Implementation truth: [`docs/spec.md`](spec.md).
 
 This is the rulebook for a project that reports test results to testpulse. It is written for whoever changes that project's CI, test frameworks or result output, human or Claude session, working in the project's own repository. It states what the project must do; the spec states how testpulse implements it, and each rule cites the spec section it comes from.
 
@@ -17,6 +17,7 @@ testpulse shows a project's test results only as well as the project reports the
 **Versions.**
 
 - A change that adds, removes or tightens a MUST or SHOULD creates the next version (v2, v3, …). It is made in a testpulse PR that updates this file, adds a row to the changelog at the end, and adds a row to the spec's decision log ([spec §19](spec.md#19-decision-log)).
+- A change to what testpulse answers or what the reporter does that asks nothing new of a project (a new success response, more retries) creates the next minor version (v1.1, v1.2, …), with a changelog row and a decision-log row like a major one. A project that conforms to v1 conforms to every v1.x unchanged, so a conformance statement names only the major version; a project that copies the reporter takes the new copy when it can.
 - A change that only clarifies wording, fixes a link or updates an example keeps the version number.
 - A project conforms to the version its conformance statement names. Moving to a new version is a change in that project's repo: meet the new rules, then update the version in its statement.
 
@@ -185,10 +186,10 @@ What the reporter does today, through the shared action or a copied script (sect
 | Fewer than five arguments (or action inputs) | skips | `::warning::` with usage, summary |
 | No file matches the results glob | posts meta only; the endpoint answers 400, "one of junit or jest is required" | `::warning::` with status and body, summary |
 | Coverage file missing | posts results without coverage | none |
-| Timeout, or HTTP 408, 429, 500, 502, 503, 504 | retried up to twice by curl, 30 s per attempt | `::warning::` and summary if still failing |
-| Connection refused or DNS failure | not retried | `::warning::` with `HTTP 000`, summary |
-| 400, 401, 413, 415 | not retried | `::warning::` with status and the first 500 bytes of the body, summary with the status |
+| No response (timeout, connection refused, DNS failure) or any 5xx | retried: 5 attempts in all, 30 s each at most, waiting 5, 10, 20 and 40 s between them, about 2 minutes | `::warning::` with the last status (`HTTP 000` for no response) and body, summary, if the fifth still fails |
+| Any 4xx: 400, 401, 413, 415, 429 | not retried: the same request would get the same answer | `::warning::` with status and the first 500 bytes of the body, summary with the status |
 | 422, zero tests | stored | `::warning::` with the body, summary with the status |
+| 202 | stored, processed within about a minute ([spec §6.6](spec.md#66-report-inbox)); a report the database cannot process after 5 tries opens a `report_not_processed` alert for testpulse's owner | none |
 | 200 or 201 | done | none |
 
 Every case exits 0, and a job summary that cannot be written is ignored. A missing secret is still only a notice (and a summary line) even on the default branch, a missing coverage file has no signal at all, and testpulse keeps no record of a request it refused.
@@ -303,4 +304,5 @@ None open. A question this standard raises is recorded here, decided in testpuls
 | Version | Date | Change |
 |---|---|---|
 | v1 | 2026-09-30 | First version. Incorporates the decisions of 2026-09-30 on the draft's open questions (failed uploads, missing coverage, several workflows, partial re-runs, reports varying by trigger, running every test after a failure, the conformance link, the shared action, tools with no fixture), on Maestro flow titles, on the versioning process and on CI workflow status. Not yet published to projects. |
+| v1.1 | 2026-11-18 | Minor: asks nothing new of a project. The endpoint may answer 202 (stored, processed shortly, [spec §6.6](spec.md#66-report-inbox)), which the reporter counts as success; the reporter retries no response and any 5xx 5 times over about 2 minutes, and no 4xx (it used curl's two retries, which included 429). Minor versions are added to the versioning rules (section 1). After 4 reports were lost on 2026-11-18, when the database cancelled `ingest_report` (57014) under load. Projects that copy `scripts/testpulse-report.sh` take the new copy; the shared action has it once its `v1` tag moves. |
 | v1 | 2026-10-07 | Wording only, so still v1: no MUST or SHOULD is added, removed or tightened. The shared action is available and the onboarding checklist shows its `uses:` form, with a copied script still conforming; the reporter writes a job-summary line when a report is refused or not sent; testpulse reports its own results (Vitest and Playwright in use, with fixtures, and each Playwright project its own platform); the conformance link opens now testpulse is public. |

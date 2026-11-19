@@ -217,6 +217,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
     visits: 0,
     tracked_sessions: 0,
     rate_limit_buckets: 0,
+    report_inbox: 0,
     projects: [],
   };
 
@@ -256,6 +257,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
         visits: 0,
         tracked_sessions: 0,
         rate_limit_buckets: 0,
+        report_inbox: 0,
         projects: [
           {
             project_id: project.id,
@@ -607,6 +609,43 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
     });
   });
 
+  describe('report_inbox (decision 2026-11-18)', () => {
+    it('removes processed rows 7 × 24 hours after processing, and keeps pending and parked ones', async () => {
+      const project = await register('inbox');
+      const NOW = new Date('1994-03-01T12:00:00.000Z');
+      const row = (status: string, processedAt: Date | null) => ({
+        project_id: project.id,
+        payload: { project_id: project.id },
+        received_at: at(NOW, -30 * DAY_MS).toISOString(),
+        status,
+        attempts: status === 'parked' ? 5 : 1,
+        processed_at: processedAt?.toISOString() ?? null,
+        result: processedAt === null ? null : { run_id: 'r' },
+      });
+      const inserted = unwrap(
+        await admin
+          .from('report_inbox')
+          .insert([
+            row('processed', at(NOW, -7 * DAY_MS)),
+            row('processed', at(NOW, -7 * DAY_MS + 1)),
+            row('pending', null),
+            row('parked', null),
+          ])
+          .select('id'),
+        'insert inbox rows',
+      ).map((r) => r.id as string);
+
+      expect(await prune(NOW)).toEqual({ ...NOTHING, report_inbox: 1 });
+
+      const left = unwrap(
+        await admin.from('report_inbox').select('id, status').eq('project_id', project.id),
+        'select inbox rows',
+      );
+      expect(left.map((r) => r.id).sort()).toEqual(inserted.slice(1).sort());
+      expect(await prune(NOW)).toEqual(NOTHING);
+    });
+  });
+
   describe('access', () => {
     it('refuses anon', async () => {
       const result = await anon.rpc('prune_expired', { p_now: '1990-01-01T00:00:00.000Z' });
@@ -689,6 +728,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
           tracked_sessions: 0,
           rate_limit_buckets: 0,
           runs_marked_pruned: 1,
+          report_inbox: 0,
         },
         pruned_by_project: [
           {
@@ -766,6 +806,7 @@ describe('the daily job against Postgres (spec sections 5.12 and 12)', () => {
       tracked_sessions: 0,
       rate_limit_buckets: 0,
       runs_marked_pruned: 3,
+      report_inbox: 0,
     });
   });
 });

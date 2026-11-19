@@ -1,0 +1,124 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 7,
+        "failed": 0,
+        "passed": 7,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 7,
+        "failed": 0,
+        "passed": 7,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/maestro-2.11.0/android-emulator/e2e",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:57:14.630Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 165370,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "android-e2e-maestro",
+        "module": "e2e",
+        "platform": "android-emulator",
+        "format": "junit",
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 165370,
+        "started_at": "2026-11-18T11:57:14.630Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 7,
+      "sha256": "140515f2f137cbdb29bad89343bf21bcdd016dece87d31cd8933279689dd97ce"
+    },
+    "results": {
+      "count": 7,
+      "sha256": "a0e9d5170e5274294cc9e2ed3a26829625666cd101cead01f21fc4f60e0e887e"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/maestro-2.11.0/android-emulator/e2e",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:02:14.630Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 165370,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "android-e2e-maestro",
+        "module": "e2e",
+        "platform": "android-emulator",
+        "format": "junit",
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 165370,
+        "started_at": "2026-11-18T12:02:14.630Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 7,
+      "sha256": "8db0ab9160d3c8f79144ec4e48c921d04733edb86acf2f014788929638dd45b4"
+    },
+    "results": {
+      "count": 7,
+      "sha256": "a0e9d5170e5274294cc9e2ed3a26829625666cd101cead01f21fc4f60e0e887e"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  }
+}

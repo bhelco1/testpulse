@@ -1,0 +1,124 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 7,
+        "failed": 0,
+        "passed": 7,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 7,
+        "failed": 0,
+        "passed": 7,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/android-emulator/e2e",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:57:08.000Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 172000,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "android-e2e",
+        "module": "e2e",
+        "platform": "android-emulator",
+        "format": "junit",
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 172000,
+        "started_at": "2026-11-18T11:57:08.000Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 7,
+      "sha256": "3149c2fbbeef05d7f6750eb27fb06f3fa03ca18e7f41f5557768bd87102aec29"
+    },
+    "results": {
+      "count": 7,
+      "sha256": "7e71ea8d92baee8128a839bd95c9d34ddcba8750d6d31c8ceaa5169cb31d225b"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-ostomate2/junit/android-emulator/e2e",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:02:08.000Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 172000,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "android-e2e",
+        "module": "e2e",
+        "platform": "android-emulator",
+        "format": "junit",
+        "total": 7,
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 172000,
+        "started_at": "2026-11-18T12:02:08.000Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 7,
+      "sha256": "3dba7b4d567e163e6e2589df6edeb82b485c5f2ed952456c9851e33076b46975"
+    },
+    "results": {
+      "count": 7,
+      "sha256": "7e71ea8d92baee8128a839bd95c9d34ddcba8750d6d31c8ceaa5169cb31d225b"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [],
+    "alerts": []
+  }
+}

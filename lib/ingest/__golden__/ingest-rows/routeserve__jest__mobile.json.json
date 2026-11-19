@@ -1,0 +1,144 @@
+{
+  "answers": {
+    "first": {
+      "totals": {
+        "total": 428,
+        "failed": 0,
+        "passed": 428,
+        "skipped": 0
+      },
+      "replaced": false,
+      "run_status": "passed"
+    },
+    "replaced": {
+      "totals": {
+        "total": 428,
+        "failed": 0,
+        "passed": 428,
+        "skipped": 0
+      },
+      "replaced": true,
+      "run_status": "passed"
+    }
+  },
+  "after_first": {
+    "run": {
+      "ci_run_id": "rows-routeserve/jest/mobile.json",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T11:58:51.281Z",
+      "finished_at": "2026-11-18T12:00:00.000Z",
+      "status": "passed",
+      "total": 428,
+      "passed": 428,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 68719,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "test",
+        "module": "mobile",
+        "platform": "node",
+        "format": "jest-json",
+        "total": 428,
+        "passed": 428,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 68719,
+        "started_at": "2026-11-18T11:58:51.281Z",
+        "finished_at": "2026-11-18T12:00:00.000Z",
+        "received_at": "2026-11-18T12:00:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 424,
+      "sha256": "4df7800a87fa61f240e1b59f07deaffaf0c31bb8d8f6469d99af65a4f7dabe50"
+    },
+    "results": {
+      "count": 428,
+      "sha256": "488513b7bd900129c36f4b0481011a3d134778ee99148a856d96a01d8de14aff"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "mobile",
+        "format": "istanbul",
+        "lines_covered": 1496,
+        "lines_total": 1551,
+        "branches_covered": 1139,
+        "branches_total": 1300,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  },
+  "after_replace": {
+    "run": {
+      "ci_run_id": "rows-routeserve/jest/mobile.json",
+      "run_attempt": 1,
+      "commit_sha": "2ec580f377e52f0a1ae584661ff09b07821ea1e2",
+      "branch": "main",
+      "event": "push",
+      "run_url": null,
+      "started_at": "2026-11-18T12:03:51.281Z",
+      "finished_at": "2026-11-18T12:05:00.000Z",
+      "status": "passed",
+      "total": 428,
+      "passed": 428,
+      "failed": 0,
+      "skipped": 0,
+      "duration_ms": 68719,
+      "source": "ci",
+      "results_pruned_at": null
+    },
+    "reports": [
+      {
+        "job": "test",
+        "module": "mobile",
+        "platform": "node",
+        "format": "jest-json",
+        "total": 428,
+        "passed": 428,
+        "failed": 0,
+        "skipped": 0,
+        "duration_ms": 68719,
+        "started_at": "2026-11-18T12:03:51.281Z",
+        "finished_at": "2026-11-18T12:05:00.000Z",
+        "received_at": "2026-11-18T12:05:00.000Z"
+      }
+    ],
+    "tests": {
+      "count": 424,
+      "sha256": "cfcaeaee98d6c0809862da169f252815dcb9c5cf22e706e29efb9f4de230f8de"
+    },
+    "results": {
+      "count": 428,
+      "sha256": "488513b7bd900129c36f4b0481011a3d134778ee99148a856d96a01d8de14aff"
+    },
+    "result_failures": {
+      "count": 0,
+      "rows": []
+    },
+    "coverage": [
+      {
+        "module": "mobile",
+        "format": "istanbul",
+        "lines_covered": 1496,
+        "lines_total": 1551,
+        "branches_covered": 1139,
+        "branches_total": 1300,
+        "lines_pct": null
+      }
+    ],
+    "alerts": []
+  }
+}

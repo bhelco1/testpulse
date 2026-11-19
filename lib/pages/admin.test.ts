@@ -617,6 +617,7 @@ const ON_TIME: DailySummary = {
     tracked_sessions: 0,
     rate_limit_buckets: 12,
     runs_marked_pruned: 0,
+    report_inbox: 0,
   },
   pruned_by_project: [],
   prune_batches: 2,

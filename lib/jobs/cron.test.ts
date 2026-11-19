@@ -38,6 +38,7 @@ const summary = (failed: boolean): DailySummary => ({
     tracked_sessions: 0,
     rate_limit_buckets: 0,
     runs_marked_pruned: 0,
+    report_inbox: 0,
   },
   pruned_by_project: [],
   prune_batches: failed ? 0 : 1,

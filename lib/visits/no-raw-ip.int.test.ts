@@ -75,6 +75,7 @@ describe('no raw address column (spec section 15)', () => {
       'visits',
       'heartbeats',
       'rate_limit_buckets',
+      'report_inbox',
       'projects_public',
       'runs_public',
     ]) {

@@ -23,6 +23,11 @@ export const PrunedCountsSchema = z.strictObject({
   tracked_sessions: Count.default(0),
   rate_limit_buckets: Count,
   runs_marked_pruned: Count,
+  /**
+   * Processed inbox rows (migration 20261118180000_report_inbox.sql); a summary written before has
+   * none, and none were pruned then.
+   */
+  report_inbox: Count.default(0),
 });
 export type PrunedCounts = z.infer<typeof PrunedCountsSchema>;
 
@@ -44,6 +49,7 @@ export const PruneBatchSchema = z.strictObject({
   visits: Count,
   tracked_sessions: Count,
   rate_limit_buckets: Count,
+  report_inbox: Count,
   projects: z.array(PrunedProjectSchema),
 });
 export type PruneBatch = z.infer<typeof PruneBatchSchema>;
@@ -92,4 +98,5 @@ export const NOTHING_PRUNED: PrunedCounts = {
   tracked_sessions: 0,
   rate_limit_buckets: 0,
   runs_marked_pruned: 0,
+  report_inbox: 0,
 };

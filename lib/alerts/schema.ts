@@ -4,7 +4,15 @@ import { z } from 'zod';
 // TypeScript definition of those keys; ingest_report and check_stale write them, and
 // lib/alerts/alerts.int.test.ts parses every alert they write with these schemas.
 
+/** The kinds the admin page shows; AlertSchema is their union. */
 export const ALERT_KINDS = ['stale', 'count_drop', 'empty_run', 'coverage_below_floor'] as const;
+
+/**
+ * Every kind the alerts table holds. report_not_processed (spec section 12, decision 2026-11-18)
+ * is stored and resolved by the database but has no admin row yet: its design does not exist, so
+ * it stays out of AlertSchema and the admin page reads only ALERT_KINDS until it is designed.
+ */
+export const STORED_ALERT_KINDS = [...ALERT_KINDS, 'report_not_processed'] as const;
 
 // A timestamptz as PostgREST and to_jsonb give it, e.g. 2026-10-08T12:00:00+00:00.
 const Instant = z.iso.datetime({ offset: true });
@@ -48,6 +56,18 @@ export const CoverageBelowFloorDetailSchema = z.strictObject({
   report_id: z.uuid(),
 });
 
+/** A report the inbox drain gave up on after 5 tries; error is the last one recorded. */
+export const ReportNotProcessedDetailSchema = z.strictObject({
+  inbox_id: z.uuid(),
+  ci_run_id: Name,
+  job: Name,
+  module: Name,
+  platform: Name,
+  received_at: Instant,
+  attempts: z.literal(5),
+  error: z.string().min(1).max(300).nullable(),
+});
+
 const base = {
   id: z.uuid(),
   project_id: z.uuid(),
@@ -78,9 +98,15 @@ export const AlertSchema = z.discriminatedUnion('kind', [
   selfResolving('coverage_below_floor', CoverageBelowFloorDetailSchema),
 ]);
 
+export const ReportNotProcessedAlertSchema = selfResolving(
+  'report_not_processed',
+  ReportNotProcessedDetailSchema,
+);
+
 export type AlertKind = (typeof ALERT_KINDS)[number];
 export type StaleDetail = z.output<typeof StaleDetailSchema>;
 export type CountDropDetail = z.output<typeof CountDropDetailSchema>;
 export type EmptyRunDetail = z.output<typeof EmptyRunDetailSchema>;
 export type CoverageBelowFloorDetail = z.output<typeof CoverageBelowFloorDetailSchema>;
 export type Alert = z.output<typeof AlertSchema>;
+export type ReportNotProcessedDetail = z.output<typeof ReportNotProcessedDetailSchema>;

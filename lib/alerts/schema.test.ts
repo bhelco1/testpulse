@@ -6,7 +6,9 @@ import {
   CountDropDetailSchema,
   CoverageBelowFloorDetailSchema,
   EmptyRunDetailSchema,
+  ReportNotProcessedAlertSchema,
   StaleDetailSchema,
+  STORED_ALERT_KINDS,
 } from './schema.ts';
 
 // Spec sections 5.9 and 12: the detail each alert kind stores, as ingest_report and check_stale
@@ -42,8 +44,67 @@ const countDrop = {
 };
 
 describe('alert kinds', () => {
-  it('are the four of the alerts table check constraint', () => {
+  it('are the four the admin page shows', () => {
     expect(ALERT_KINDS).toEqual(['stale', 'count_drop', 'empty_run', 'coverage_below_floor']);
+  });
+
+  it('are stored as those and report_not_processed, as the alerts table check constraint allows', () => {
+    expect(STORED_ALERT_KINDS).toEqual([...ALERT_KINDS, 'report_not_processed']);
+  });
+
+  it('leave report_not_processed out of the admin union until its row is designed', () => {
+    const detail = {
+      inbox_id: REPORT_ID,
+      ci_run_id: '35644117162',
+      job: 'android',
+      module: 'shared',
+      platform: 'jvm',
+      received_at: OPENED,
+      attempts: 5,
+      error: 'P0001 ingest_report: payload.report totals 1/82/0/0 do not match its tests 82/82/0/0',
+    };
+    expect(AlertSchema.safeParse(row('report_not_processed', detail)).success).toBe(false);
+    expect(ReportNotProcessedAlertSchema.parse(row('report_not_processed', detail)).detail).toEqual(
+      detail,
+    );
+  });
+});
+
+describe('ReportNotProcessedAlertSchema', () => {
+  const detail = {
+    inbox_id: REPORT_ID,
+    ci_run_id: '35644117162',
+    job: 'android',
+    module: 'shared',
+    platform: 'jvm',
+    received_at: OPENED,
+    attempts: 5,
+    error: null,
+  };
+
+  it('takes a null error: every try may have been cancelled before it could record one', () => {
+    expect(
+      ReportNotProcessedAlertSchema.parse(row('report_not_processed', detail)).detail.error,
+    ).toBeNull();
+  });
+
+  it.each([
+    ['fewer than 5 tries', { ...detail, attempts: 4 }],
+    ['an error over 300 characters', { ...detail, error: 'x'.repeat(301) }],
+    ['an inbox id that is not a UUID', { ...detail, inbox_id: 'nope' }],
+    ['an unknown key', { ...detail, payload: {} }],
+  ])('refuses %s', (_label, bad) => {
+    expect(ReportNotProcessedAlertSchema.safeParse(row('report_not_processed', bad)).success).toBe(
+      false,
+    );
+  });
+
+  it('refuses an acknowledgement: only count_drop can be acknowledged', () => {
+    expect(
+      ReportNotProcessedAlertSchema.safeParse(
+        row('report_not_processed', detail, { acknowledged_at: OPENED, resolved_at: OPENED }),
+      ).success,
+    ).toBe(false);
   });
 });
 

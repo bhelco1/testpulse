@@ -94,7 +94,14 @@ describe('loadOpenAlerts', () => {
       },
     ]);
     expect(calls.map(({ table, steps }) => [table, steps.slice(1)])).toEqual([
-      ['alerts', ['is("resolved_at", null)', 'order("opened_at", {"ascending":false})']],
+      [
+        'alerts',
+        [
+          'in("kind", ["stale","count_drop","empty_run","coverage_below_floor"])',
+          'is("resolved_at", null)',
+          'order("opened_at", {"ascending":false})',
+        ],
+      ],
       ['reports', [`in("id", ["${REPORT}"])`]],
       ['projects', [`in("id", ["${P}"])`]],
     ]);
@@ -214,6 +221,7 @@ const FINISHED_RUN = {
     tracked_sessions: 0,
     rate_limit_buckets: 0,
     runs_marked_pruned: 0,
+    report_inbox: 0,
   },
   pruned_by_project: [],
   prune_batches: 1,

@@ -390,6 +390,7 @@ describe('schema and row-level security (spec sections 5 and 9)', () => {
       'alerts',
       'heartbeats',
       'rate_limit_buckets',
+      'report_inbox',
     ])('is refused all access to %s', async (table) => {
       const result = await anon.from(table).select('*').limit(1);
       expect(result.error?.code).toBe(PERMISSION_DENIED);
@@ -454,6 +455,7 @@ describe('schema and row-level security (spec sections 5 and 9)', () => {
       'visits',
       'heartbeats',
       'rate_limit_buckets',
+      'report_inbox',
       'projects_public',
       'runs_public',
     ])('is refused select on %s', async (relation) => {

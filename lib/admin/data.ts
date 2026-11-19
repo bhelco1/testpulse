@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-import { AlertSchema } from '../alerts/schema.ts';
+import { ALERT_KINDS, AlertSchema } from '../alerts/schema.ts';
 import { DailySummarySchema, type DailySummary } from '../jobs/summary.ts';
 import type { ProjectRow } from '../projects/repo.ts';
 import { createSecretClient } from '../supabase/server.ts';
@@ -56,6 +56,8 @@ export async function loadOpenAlerts(client: SupabaseClient): Promise<OpenAlert[
   const { data, error } = await client
     .from('alerts')
     .select(ALERT_COLUMNS)
+    // report_not_processed has no admin row yet (lib/alerts/schema.ts, STORED_ALERT_KINDS).
+    .in('kind', ALERT_KINDS)
     .is('resolved_at', null)
     .order('opened_at', { ascending: false });
   if (error) throw failed('alerts', error);

@@ -537,14 +537,42 @@ describe('ingestReport inbox (spec section 6.6, 202)', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const fake = fakeClient({ project: PROJECT });
     const rpc = fake.client.rpc.bind(fake.client);
-    fake.client.rpc = ((fn: string, args: Record<string, unknown>) =>
-      fn === 'ingest_stored_report'
-        ? Object.assign(Promise.reject(new Error('fetch failed')), {
-            abortSignal: () => Promise.reject(new Error('fetch failed')),
-          })
-        : rpc(fn, args as never)) as never;
+    // One rejected promise, made only when the try is called, and the one the builder hands on:
+    // a second, never awaited, would be an unhandled rejection of the test's own making.
+    fake.client.rpc = ((fn: string, args: Record<string, unknown>) => {
+      if (fn !== 'ingest_stored_report') return rpc(fn, args as never);
+      const failing = Promise.reject(new Error('fetch failed'));
+      return Object.assign(failing, { abortSignal: () => failing });
+    }) as never;
 
     expect(await ingestReport(fake.client, input())).toEqual(accepted);
+  });
+
+  it('leaves no unhandled rejection when a try it gave up on fails later', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const unhandled: unknown[] = [];
+    const record = (reason: unknown) => unhandled.push(reason);
+    process.on('unhandledRejection', record);
+    try {
+      const fake = fakeClient({ project: PROJECT });
+      const rpc = fake.client.rpc.bind(fake.client);
+      fake.client.rpc = ((fn: string, args: Record<string, unknown>) => {
+        if (fn !== 'ingest_stored_report') return rpc(fn, args as never);
+        // Answers after the bound with a body the route cannot parse, so the abandoned try
+        // rejects once nobody is waiting on it.
+        const late = new Promise((resolve) => {
+          setTimeout(() => resolve({ data: { status: 'processed', result: {} }, error: null }), 40);
+        });
+        return Object.assign(late, { abortSignal: () => late });
+      }) as never;
+
+      expect(await ingestReport(fake.client, input(), { processWithinMs: 5 })).toEqual(accepted);
+      await new Promise((resolve) => setTimeout(resolve, 80));
+
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off('unhandledRejection', record);
+    }
   });
 
   it('answers 500 when the processed answer does not have the result shape', async () => {

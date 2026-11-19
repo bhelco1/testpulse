@@ -10,6 +10,7 @@ import {
   type IngestInput,
   ingestReport,
   ingestReportWithSecretClient,
+  PROCESS_WITHIN_MS,
   RATE_LIMIT_PER_MINUTE,
 } from './ingest';
 import { MAX_BODY_BYTES } from './parts';
@@ -45,19 +46,48 @@ interface FakeOptions {
   project?: typeof PROJECT | null;
   rateCount?: number;
   ingestResult?: Record<string, unknown>;
+  /** What one try at the stored report answers; 'never' is a try that does not answer. */
+  tryAnswer?: { data: unknown; error: { code: string; message: string } | null } | 'never';
 }
 
 interface Fake {
   client: SupabaseClient;
   lookups: string[];
   rpcCalls: Array<{ fn: string; args: Record<string, unknown> }>;
+  signals: AbortSignal[];
 }
 
+const INBOX_ID = '99999999-8888-4777-8666-555555555555';
+
 // The ingest module only ever uses two shapes of the client: a single-row lookup on projects
-// by api_key_hash, and RPC. The fake records both so a test can assert what was (not) called.
+// by api_key_hash, and RPC, whose builder can take an abort signal. The fake records both so a
+// test can assert what was (not) called.
 function fakeClient(options: FakeOptions = {}): Fake {
   const lookups: string[] = [];
   const rpcCalls: Fake['rpcCalls'] = [];
+  const signals: AbortSignal[] = [];
+  const answer = async (fn: string): Promise<unknown> => {
+    if (fn === 'rate_limit_hit') return { data: options.rateCount ?? 1, error: null };
+    if (fn === 'store_report') return { data: INBOX_ID, error: null };
+    if (fn === 'ingest_stored_report') {
+      if (options.tryAnswer === 'never') return new Promise(() => {});
+      if (options.tryAnswer !== undefined) return options.tryAnswer;
+      return {
+        data: {
+          status: 'processed',
+          result: options.ingestResult ?? {
+            run_id: 'run-1',
+            report_id: 'report-1',
+            replaced: false,
+            totals: { total: 82, passed: 82, failed: 0, skipped: 0 },
+            run_status: 'passed',
+          },
+        },
+        error: null,
+      };
+    }
+    return { data: null, error: { code: '42883', message: `unknown function ${fn}` } };
+  };
   const client = {
     from: (table: string) => ({
       select: () => ({
@@ -69,25 +99,18 @@ function fakeClient(options: FakeOptions = {}): Fake {
         }),
       }),
     }),
-    rpc: async (fn: string, args: Record<string, unknown>) => {
+    rpc: (fn: string, args: Record<string, unknown>) => {
       rpcCalls.push({ fn, args });
-      if (fn === 'rate_limit_hit') return { data: options.rateCount ?? 1, error: null };
-      if (fn === 'ingest_report') {
-        return {
-          data: options.ingestResult ?? {
-            run_id: 'run-1',
-            report_id: 'report-1',
-            replaced: false,
-            totals: { total: 82, passed: 82, failed: 0, skipped: 0 },
-            run_status: 'passed',
-          },
-          error: null,
-        };
-      }
-      return { data: null, error: { code: '42883', message: `unknown function ${fn}` } };
+      const pending = answer(fn);
+      return Object.assign(pending, {
+        abortSignal: (signal: AbortSignal) => {
+          signals.push(signal);
+          return pending;
+        },
+      });
     },
   } as unknown as SupabaseClient;
-  return { client, lookups, rpcCalls };
+  return { client, lookups, rpcCalls, signals };
 }
 
 const multipart = (
@@ -363,7 +386,7 @@ describe('ingestReport validation (spec section 6.3, 400)', () => {
     const response = await ingestReport(fake.client, input({ formData: async () => form }));
 
     expect(response.status).toBe(201);
-    const ingest = fake.rpcCalls.find((call) => call.fn === 'ingest_report');
+    const ingest = fake.rpcCalls.find((call) => call.fn === 'store_report');
     const payload = ingest?.args.payload as {
       report: { format: string };
       tests: Array<{ suite: string }>;
@@ -388,7 +411,7 @@ describe('ingestReport responses (spec section 6.3)', () => {
         run_status: 'passed',
       },
     });
-    const ingest = fake.rpcCalls.find((call) => call.fn === 'ingest_report');
+    const ingest = fake.rpcCalls.find((call) => call.fn === 'store_report');
     expect(ingest?.args.payload).toMatchObject({
       project_id: PROJECT.id,
       received_at: RECEIVED_AT.toISOString(),
@@ -443,8 +466,97 @@ describe('ingestReport responses (spec section 6.3)', () => {
       run_status: 'empty',
       error: 'the report parsed but contained zero test cases',
     });
-    const ingest = fake.rpcCalls.find((call) => call.fn === 'ingest_report');
+    const ingest = fake.rpcCalls.find((call) => call.fn === 'store_report');
     expect(ingest?.args.payload).toMatchObject({ report: { total: 0 }, tests: [] });
+  });
+});
+
+// Spec section 6.6 (decision 2026-11-18): the report is stored before it is tried, and what the
+// try does not finish within its bound is answered 202 and finished by the inbox drain.
+describe('ingestReport inbox (spec section 6.6, 202)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const accepted = { status: 202, body: { status: 'accepted', inbox_id: INBOX_ID } };
+
+  it('stores the payload, then tries the stored row, bounded at 10 seconds by default', async () => {
+    const fake = fakeClient({ project: PROJECT });
+
+    const response = await ingestReport(fake.client, input());
+
+    expect(response.status).toBe(201);
+    expect(fake.rpcCalls.map((call) => call.fn)).toEqual([
+      'rate_limit_hit',
+      'store_report',
+      'ingest_stored_report',
+    ]);
+    expect(fake.rpcCalls[2]?.args).toEqual({ p_inbox_id: INBOX_ID });
+    expect(fake.signals).toHaveLength(1);
+    expect(PROCESS_WITHIN_MS).toBe(10_000);
+  });
+
+  it.each<[string, FakeOptions['tryAnswer']]>([
+    ['the row was busy elsewhere', { data: null, error: null }],
+    [
+      'ingest_report raised and the row stays pending',
+      { data: { status: 'pending' }, error: null },
+    ],
+    ['the row was parked', { data: { status: 'parked' }, error: null }],
+    [
+      'the database cancelled the try (57014)',
+      {
+        data: null,
+        error: { code: '57014', message: 'canceling statement due to statement timeout' },
+      },
+    ],
+  ])('answers 202 with the inbox id when %s', async (_label, tryAnswer) => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fake = fakeClient({ project: PROJECT, tryAnswer });
+
+    const response = await ingestReport(fake.client, input());
+
+    expect(response).toEqual(accepted);
+    expect(logged).toHaveBeenCalledOnce();
+    const line = String(logged.mock.calls[0]?.[0]);
+    expect(line).toContain(`ingest: report ${INBOX_ID} stored, not yet processed:`);
+    expect(line).not.toContain(KEY);
+  });
+
+  it('answers 202 when the try has not answered within its bound, and aborts it', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fake = fakeClient({ project: PROJECT, tryAnswer: 'never' });
+
+    const response = await ingestReport(fake.client, input(), { processWithinMs: 20 });
+
+    expect(response).toEqual(accepted);
+    expect(fake.signals[0]?.aborted).toBe(true);
+  });
+
+  it('answers 202 when the try rejects outright', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fake = fakeClient({ project: PROJECT });
+    const rpc = fake.client.rpc.bind(fake.client);
+    fake.client.rpc = ((fn: string, args: Record<string, unknown>) =>
+      fn === 'ingest_stored_report'
+        ? Object.assign(Promise.reject(new Error('fetch failed')), {
+            abortSignal: () => Promise.reject(new Error('fetch failed')),
+          })
+        : rpc(fn, args as never)) as never;
+
+    expect(await ingestReport(fake.client, input())).toEqual(accepted);
+  });
+
+  it('answers 500 when the processed answer does not have the result shape', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fake = fakeClient({
+      project: PROJECT,
+      tryAnswer: { data: { status: 'processed', result: { run_id: 1 } }, error: null },
+    });
+
+    const response = await ingestReport(fake.client, input());
+
+    expect(response).toEqual({ status: 500, body: { error: 'internal error' } });
   });
 });
 
@@ -511,7 +623,7 @@ describe('ingestReport unexpected failures (500)', () => {
 
   it.each<[string, (fake: Fake) => void]>([
     [
-      'the write function raises',
+      'the inbox write raises, so nothing was stored',
       (fake) => {
         fake.client.rpc = (async (fn: string) =>
           fn === 'rate_limit_hit'

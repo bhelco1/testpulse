@@ -147,16 +147,18 @@ describe('report inbox (spec section 6.6, decision 2026-11-18)', () => {
   };
 
   // Holds the project row from another session, as a busy database would: ingest_report locks
-  // it before writing, so a try waits until the hold ends.
+  // it before writing, so a try waits until the hold ends. FOR NO KEY UPDATE is the lock
+  // ingest_report takes, so storing the report, whose foreign key only shares the key, still
+  // goes through.
   const holdProject = (seconds: number): Promise<void> =>
     sqlInBackground(
       `with held as materialized (select id from public.projects where id = '${projectId}' ` +
-        `for update) select pg_sleep(${String(seconds)}) from held`,
+        `for no key update) select pg_sleep(${String(seconds)}) from held`,
     );
   const holding = async () =>
     sql(
       "select pid from pg_stat_activity where wait_event = 'PgSleep' " +
-        "and query ilike '%for update%'",
+        "and query ilike '%for no key update%'",
     ).length > 0;
   const waitingTry = () =>
     sql(
@@ -166,7 +168,7 @@ describe('report inbox (spec section 6.6, decision 2026-11-18)', () => {
   const endHold = () =>
     sql(
       "select pg_cancel_backend(pid) from pg_stat_activity where query ilike '%pg_sleep(%' " +
-        "and query ilike '%for update%' and pid <> pg_backend_pid()",
+        "and query ilike '%for no key update%' and pid <> pg_backend_pid()",
     );
 
   beforeAll(async () => {
@@ -324,7 +326,8 @@ describe('report inbox (spec section 6.6, decision 2026-11-18)', () => {
         .from('alerts')
         .select('id, project_id, kind, detail, opened_at, resolved_at, acknowledged_at')
         .eq('project_id', projectId)
-        .eq('kind', 'report_not_processed'),
+        .eq('kind', 'report_not_processed')
+        .eq('detail->>inbox_id', id),
       'select alerts',
     );
     expect(alerts).toHaveLength(1);
@@ -366,7 +369,8 @@ describe('report inbox (spec section 6.6, decision 2026-11-18)', () => {
         .from('alerts')
         .select('resolved_at')
         .eq('project_id', projectId)
-        .eq('kind', 'report_not_processed'),
+        .eq('kind', 'report_not_processed')
+        .eq('detail->>inbox_id', id as string),
       'select alerts',
     );
     expect(alerts).toHaveLength(1);

@@ -964,7 +964,10 @@ $$;
 revoke execute on function public.store_report(jsonb) from public, anon, authenticated;
 revoke execute on function public.park_stored_report(uuid) from public, anon, authenticated;
 revoke execute on function public.ingest_stored_report(uuid) from public, anon, authenticated;
-revoke execute on procedure public.process_report_inbox() from public, anon, authenticated;
+-- Supabase's default privileges also grant service_role every new routine; the drain is not
+-- the route's to call, so it is taken back from service_role too.
+revoke execute on procedure public.process_report_inbox()
+  from public, anon, authenticated, service_role;
 
 grant execute on function public.store_report(jsonb) to service_role;
 grant execute on function public.park_stored_report(uuid) to service_role;

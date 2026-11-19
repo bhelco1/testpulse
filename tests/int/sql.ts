@@ -23,7 +23,13 @@ export function sql(query: string): Array<Record<string, unknown>> {
   if (result.status !== 0) {
     throw new Error(`supabase db query exited ${String(result.status)}: ${result.stderr}`);
   }
-  const rows: unknown = JSON.parse(result.stdout);
+  // A statement with no rows (CALL, say) prints its command tag instead of JSON.
+  let rows: unknown;
+  try {
+    rows = JSON.parse(result.stdout);
+  } catch {
+    return [];
+  }
   return Array.isArray(rows) ? (rows as Array<Record<string, unknown>>) : [];
 }
 

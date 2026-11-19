@@ -174,6 +174,7 @@ test.describe('admin signed in', () => {
       expect(
         (await context.cookies()).filter(({ name }) => name.startsWith('testpulse_admin_auth')),
       ).toEqual([]);
+      await expect(page).toHaveTitle('Sign in · Testament admin');
       await expectNoSeriousAxeViolations(page);
 
       // The old cookies, put back, no longer open admin: Supabase ended the session.

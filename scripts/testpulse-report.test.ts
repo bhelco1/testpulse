@@ -130,17 +130,58 @@ const POSITIONAL_INPUTS = [
   'coverage-file',
 ] as const;
 
+// The part of GitHub's `github` context the step reads: `sha` is GITHUB_SHA, and `event` is the
+// webhook payload the runner also writes to GITHUB_EVENT_PATH, read here from that same file.
+interface GithubContext {
+  readonly sha: string;
+  readonly event: unknown;
+}
+
+function githubContext(env: Record<string, string>): GithubContext {
+  const eventPath = env.GITHUB_EVENT_PATH;
+  return {
+    sha: env.GITHUB_SHA ?? '',
+    event: eventPath === undefined ? {} : (JSON.parse(readFileSync(eventPath, 'utf8')) as unknown),
+  };
+}
+
+// A property path into the context, as GitHub evaluates one: a missing property anywhere along
+// it is null rather than an error, and null renders as an empty string.
+function lookup(root: unknown, path: string[]): unknown {
+  return path.reduce<unknown>(
+    (value, key) =>
+      typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[key] : null,
+    root,
+  );
+}
+
 // What the runner does with the step: every `${{ inputs.<name> }}` in its env becomes the input's
-// value (the caller's, else the default, else empty), and `run` goes to bash as GitHub's
-// `shell: bash` runs it. Any other expression would be untested, so it fails the test instead.
-function evaluateInputs(template: string, inputs: Record<string, string>): string {
-  return template.replace(/\$\{\{\s*([^}]*?)\s*\}\}/g, (_match, expression: string) => {
-    const name = /^inputs\.([a-z-]+)$/.exec(expression)?.[1];
-    if (name === undefined || !(name in action.inputs)) {
-      throw new Error(`action.yml uses an expression this test does not model: ${expression}`);
+// value (the caller's, else the default, else empty), a `github.<path>` the context's value, and
+// `a || b` the first operand that is not empty, and `run` goes to bash as GitHub's `shell: bash`
+// runs it. Any other expression would be untested, so it fails the test instead.
+function evaluateExpressions(
+  template: string,
+  inputs: Record<string, string>,
+  github: GithubContext,
+): string {
+  const operand = (expression: string): string => {
+    const input = /^inputs\.([a-z-]+)$/.exec(expression)?.[1];
+    if (input !== undefined && input in action.inputs) {
+      return inputs[input] ?? action.inputs[input]?.default ?? '';
     }
-    return inputs[name] ?? action.inputs[name]?.default ?? '';
-  });
+    const path = /^github\.([a-z_]+(?:\.[a-z_]+)*)$/.exec(expression)?.[1];
+    if (path !== undefined) {
+      const value = lookup(github, path.split('.'));
+      return typeof value === 'string' ? value : '';
+    }
+    throw new Error(`action.yml uses an expression this test does not model: ${expression}`);
+  };
+  return template.replace(/\$\{\{\s*([^}]*?)\s*\}\}/g, (_match, expression: string) =>
+    expression
+      .split('||')
+      .map((part) => operand(part.trim()))
+      .reduce((first, next) => (first === '' ? next : first), ''),
+  );
 }
 
 interface Entry {
@@ -167,7 +208,10 @@ const actionEntry: Entry = {
     if (url !== undefined) inputs.url = url;
     if (token !== undefined) inputs.token = token;
     const stepEnv = Object.fromEntries(
-      Object.entries(actionStep.env).map(([name, value]) => [name, evaluateInputs(value, inputs)]),
+      Object.entries(actionStep.env).map(([name, value]) => [
+        name,
+        evaluateExpressions(value, inputs, githubContext(runnerEnv)),
+      ]),
     );
     return runBash(['--noprofile', '--norc', '-eo', 'pipefail', '-c', actionStep.run], {
       ...runnerEnv,
@@ -719,6 +763,119 @@ describe.each([scriptEntry, actionEntry])(
     });
   },
 );
+
+// On a pull_request event GITHUB_SHA is the merge commit GitHub makes of the PR and its base,
+// which is on no branch; the PR's own commit is only in the event payload. The SHAs are those of
+// testpulse run 44635791678 (PR #43), which reported the merge commit 2db891a.
+describe('the commit the reporter sends (spec Appendix A)', () => {
+  const mergeSha = '2db891aa8065002ec1be912caf4d69dd28e01c89';
+  const headSha = '5b2460f1e352c196a6c4ad861bf12a9a9b9fdbd4';
+  const baseSha = '8a50af9b1ff6dc7ef97f95919791b67299787039';
+
+  const eventDir = mkdtempSync(join(tmpdir(), 'testpulse-event-'));
+  const writeEvent = (name: string, payload: unknown): string => {
+    const path = join(eventDir, name);
+    writeFileSync(path, JSON.stringify(payload, null, 2));
+    return path;
+  };
+  const pullRequestEvent = writeEvent('pull_request.json', {
+    action: 'synchronize',
+    number: 43,
+    pull_request: {
+      number: 43,
+      head: { ref: 'test/admin-signout-title', sha: headSha },
+      base: { ref: 'main', sha: baseSha },
+    },
+  });
+  const pushEvent = writeEvent('push.json', {
+    ref: 'refs/heads/main',
+    before: baseSha,
+    after: githubEnv.GITHUB_SHA,
+    head_commit: { id: githubEnv.GITHUB_SHA },
+  });
+
+  const pullRequestEnv = (url: string): Record<string, string> => ({
+    ...baseEnv(url),
+    GITHUB_SHA: mergeSha,
+    GITHUB_EVENT_NAME: 'pull_request',
+    GITHUB_HEAD_REF: 'test/admin-signout-title',
+    GITHUB_REF_NAME: '43/merge',
+    GITHUB_EVENT_PATH: pullRequestEvent,
+  });
+
+  const sentCommit = (server: LocalServer): string => {
+    expect(server.requests).toHaveLength(1);
+    const request = server.requests[0] as Captured;
+    const parts = parseMultipart(request.headers['content-type'], request.body);
+    return ReportMetaSchema.parse(JSON.parse(only(parts, 'meta').body.toString('utf8'))).commit_sha;
+  };
+
+  it("sends the pull request's head commit, not GitHub's merge commit, through the action", async () => {
+    const server = await startServer(created);
+
+    const outcome = await actionEntry.run(junitArgs, pullRequestEnv(server.url));
+
+    expect(outcome).toEqual(success);
+    expect(sentCommit(server)).toBe(headSha);
+  });
+
+  it('sends GITHUB_SHA on a push through the action', async () => {
+    const server = await startServer(created);
+
+    const outcome = await actionEntry.run(junitArgs, {
+      ...baseEnv(server.url),
+      GITHUB_EVENT_PATH: pushEvent,
+    });
+
+    expect(outcome).toEqual(success);
+    expect(sentCommit(server)).toBe(githubEnv.GITHUB_SHA);
+  });
+
+  it('sends TESTPULSE_COMMIT_SHA when a workflow calling the script directly sets it', async () => {
+    const server = await startServer(created);
+
+    const outcome = await scriptEntry.run(junitArgs, {
+      ...pullRequestEnv(server.url),
+      TESTPULSE_COMMIT_SHA: headSha,
+    });
+
+    expect(outcome).toEqual(success);
+    expect(sentCommit(server)).toBe(headSha);
+  });
+
+  it.each([
+    ['unset', {}],
+    ['empty', { TESTPULSE_COMMIT_SHA: '' }],
+  ])(
+    'falls back to GITHUB_SHA when the script is called directly with TESTPULSE_COMMIT_SHA %s',
+    async (_label, commitEnv) => {
+      const server = await startServer(created);
+
+      const outcome = await scriptEntry.run(junitArgs, {
+        ...pullRequestEnv(server.url),
+        ...commitEnv,
+      });
+
+      expect(outcome).toEqual(success);
+      expect(sentCommit(server)).toBe(mergeSha);
+    },
+  );
+
+  it('still skips with a warning when GITHUB_SHA is missing, even with TESTPULSE_COMMIT_SHA set', async () => {
+    const server = await startServer(created);
+    const env: Record<string, string> = {
+      ...pullRequestEnv(server.url),
+      TESTPULSE_COMMIT_SHA: headSha,
+    };
+    delete env.GITHUB_SHA;
+
+    const outcome = await scriptEntry.run(junitArgs, env);
+
+    expect(outcome.code).toBe(0);
+    expect(outcome.stdout).toBe('::warning::testpulse: missing GITHUB_SHA; skipping\n');
+    expect(server.requests).toHaveLength(0);
+  });
+});
 
 describe('the reporter source', () => {
   // Its own loop retries (5 attempts, the behaviour tests above); curl's --retry would add

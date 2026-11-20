@@ -36,7 +36,9 @@ const CSS = join(import.meta.dirname, 'TrendChart.module.css');
 // draws at exactly that width; each test sets the width the browser would report. Recharts itself
 // is not mocked: every line, bar, tick and dot below is what it rendered.
 let chartWidth = 720;
-let resize: (() => void) | undefined;
+// Fires the chart's ResizeObserver as the browser does, with the size it observed: the width set
+// now unless one is given.
+let resize: ((width?: number) => void) | undefined;
 // jsdom has no canvas either. The chart measures its end-value labels with a 2D context's
 // measureText, as tp-charts.js does (design v5 item 6); this stand-in gives every character the
 // same width, so a test can say exactly how wide a label is.
@@ -74,8 +76,9 @@ beforeEach(() => {
   vi.stubGlobal(
     'ResizeObserver',
     class {
-      constructor(callback: () => void) {
-        resize = callback;
+      constructor(callback: (entries: unknown[]) => void) {
+        resize = (width = chartWidth) =>
+          callback([{ contentRect: { width }, borderBoxSize: [{ inlineSize: width }] }]);
       }
       observe() {}
       disconnect() {}
@@ -579,6 +582,39 @@ describe('TrendChart at phone width', () => {
     });
     expect(container.querySelector('svg')?.getAttribute('height')).toBe('250');
     expect(parts(container, 'dot')).toHaveLength(8);
+  });
+
+  // CI run 44632760225: a full-page screenshot briefly lays the page out with every chart 0 px
+  // wide. The observer saw 0 and then the width again, but the frame after it measured the page
+  // while it was 0 px wide once more, a size the observer never reported, so nothing redrew it:
+  // RouteServe's apps/mobile coverage kept its empty placeholder, under its title and caption.
+  it('draws at the width the observer last saw, not one measured between its reports', async () => {
+    const { container } = render(<TrendChart {...COVERAGE} />);
+    await act(async () => {
+      chartWidth = 0;
+      resize?.(0);
+      resize?.(720);
+      await new Promise((done) => requestAnimationFrame(done));
+      chartWidth = 720;
+    });
+    expect(parts(container, 'placeholder')).toHaveLength(0);
+    expect(container.querySelector('svg')?.getAttribute('width')).toBe('720');
+    expect(parts(container, 'dot')).toHaveLength(8);
+  });
+
+  // A chart 0 px wide shows nothing, so there is nothing to redraw; the placeholder in its place
+  // would be what the screenshot catches when the page is laid out again at its width.
+  it('keeps its plot while the page is laid out 0 px wide for a moment', async () => {
+    const { container } = render(<TrendChart {...COVERAGE} />);
+    const drawn = container.querySelector('svg')?.getAttribute('width');
+    expect(Number(drawn)).toBeGreaterThan(0);
+    await act(async () => {
+      chartWidth = 0;
+      resize?.(0);
+      await new Promise((done) => requestAnimationFrame(done));
+    });
+    expect(parts(container, 'placeholder')).toHaveLength(0);
+    expect(container.querySelector('svg')?.getAttribute('width')).toBe(drawn);
   });
 });
 

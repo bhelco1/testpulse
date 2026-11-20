@@ -21,10 +21,49 @@ const PROJECTS = [
 const projectOf = (query: Query) =>
   argsOf(query, 'eq').find(([column]) => column === 'project_id')?.[1];
 
+const runRow = (id: string, status: string, finishedAt: string, startedAt = finishedAt) => ({
+  id,
+  ci_run_id: `ci-${id}`,
+  run_attempt: 1,
+  commit_sha: `sha-${id}`,
+  branch: 'main',
+  status,
+  passed: 1,
+  failed: status === 'failed' ? 1 : 0,
+  skipped: 0,
+  started_at: startedAt,
+  finished_at: finishedAt,
+  source: 'ci',
+});
+
+const reportRow = (runId: string, job: string, receivedAt: string) => ({
+  run_id: runId,
+  job,
+  module: job,
+  platform: 'node',
+  format: 'junit',
+  total: 1,
+  passed: 1,
+  failed: 0,
+  skipped: 0,
+  duration_ms: 1_000,
+  started_at: receivedAt,
+  finished_at: receivedAt,
+  received_at: receivedAt,
+});
+
 const answering =
-  (latest: Record<string, string | undefined>, lastReport: string | null) =>
+  (
+    latest: Record<string, string | readonly unknown[] | undefined>,
+    lastReport: string | null,
+    reports: readonly ReturnType<typeof reportRow>[] = [],
+  ) =>
   (query: Query): Answer => {
     if (query.table === 'projects_public') return { data: PROJECTS };
+    if (query.table === 'reports') {
+      const [, ids = []] = (argsOf(query, 'in')[0] ?? []) as [string, string[]];
+      return { data: reports.filter((row) => ids.includes(row.run_id)) };
+    }
     if (query.table !== 'runs_public') {
       return { error: { code: 'X', message: `unexpected ${query.table}` } };
     }
@@ -32,8 +71,14 @@ const answering =
     if (project === undefined) {
       return { data: lastReport === null ? [] : [{ finished_at: lastReport }] };
     }
-    const status = latest[String(project)];
-    return { data: status === undefined ? [] : [{ id: `run-${String(project)}`, status }] };
+    const runs = latest[String(project)];
+    if (runs === undefined) return { data: [] };
+    return {
+      data:
+        typeof runs === 'string'
+          ? [runRow(`run-${String(project)}`, runs, '2026-10-05T09:00:00+00:00')]
+          : runs,
+    };
   };
 
 describe('loadSiteChrome', () => {
@@ -72,7 +117,11 @@ describe('loadSiteChrome', () => {
 
     const testpulse = queries.find((query) => projectOf(query) === 'p3') as Query;
     expect(testpulse.calls).toEqual([
-      ['select', 'id, status'],
+      [
+        'select',
+        'id, ci_run_id, run_attempt, commit_sha, branch, status, passed, failed, skipped, ' +
+          'started_at, finished_at, source',
+      ],
       ['eq', 'project_id', 'p3'],
       ['eq', 'branch', 'trunk'],
       ['eq', 'source', 'ci'],
@@ -81,8 +130,62 @@ describe('loadSiteChrome', () => {
       ['order', 'started_at', { ascending: false }],
       ['order', 'ci_run_id', { ascending: false }],
       ['order', 'run_attempt', { ascending: false }],
-      ['limit', 1],
+      ['range', 0, 4],
     ]);
+  });
+
+  it('keeps the latest settled run while a new run’s reports are arriving (decision 2026-11-19)', async () => {
+    // s1 passed with unit and e2e reports. n2 has its unit report in, failing, 10 minutes after
+    // it arrived, and is waiting on e2e: the switcher keeps s1, as the landing card does.
+    const runs = [
+      runRow('n2', 'failed', '2026-10-05T11:50:00+00:00'),
+      runRow('s1', 'passed', '2026-10-05T10:20:00+00:00', '2026-10-05T10:00:00+00:00'),
+    ];
+    const reports = [
+      reportRow('n2', 'unit', '2026-10-05T11:50:00+00:00'),
+      reportRow('s1', 'unit', '2026-10-05T10:01:00+00:00'),
+      reportRow('s1', 'e2e', '2026-10-05T10:20:00+00:00'),
+    ];
+    const { client, queries } = fakeClient(answering({ p1: runs }, null, reports));
+
+    const chrome = await loadSiteChrome(client, NOW);
+
+    expect(chrome.projects[0]).toEqual({
+      slug: 'ostomate2',
+      name: 'Ostomate 2.0',
+      status: 'passed',
+      latestRunId: 's1',
+    });
+    const read = queries.filter((query) => query.table === 'reports');
+    expect(read.map((query) => argsOf(query, 'in'))).toEqual([[['run_id', ['n2', 's1']]]]);
+  });
+
+  it('reads further back while none of the runs read has settled by time', async () => {
+    const page = (from: number) =>
+      Array.from({ length: 5 }, (_, index) => {
+        const minute = 59 - from - index;
+        return runRow(
+          `r${String(from + index)}`,
+          'passed',
+          `2026-10-05T11:${String(minute).padStart(2, '0')}:00+00:00`,
+        );
+      });
+    const { client, queries } = fakeClient((query) => {
+      if (query.table === 'runs_public' && projectOf(query) === 'p1') {
+        const [from = 0] = (argsOf(query, 'range')[0] ?? []) as number[];
+        return { data: from === 0 ? page(0) : page(5).slice(0, 2) };
+      }
+      return answering({}, null)(query);
+    });
+
+    const chrome = await loadSiteChrome(client, NOW);
+
+    // Every run is under 45 minutes old and none has reports to compare: the newest is latest.
+    expect(chrome.projects[0]?.latestRunId).toBe('r0');
+    const pages = queries.filter(
+      (query) => query.table === 'runs_public' && projectOf(query) === 'p1',
+    );
+    expect(pages.map((query) => argsOf(query, 'range'))).toEqual([[[0, 4]], [[5, 9]]]);
   });
 
   it('dates the last report by the latest CI run on any branch of any project', async () => {

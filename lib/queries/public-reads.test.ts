@@ -100,7 +100,8 @@ let queries: Query[] = [];
 const answer = (query: Query): Answer => {
   switch (query.table) {
     case 'reports':
-      return query.calls.some(([method]) => method === 'eq')
+      // A run's reports (eq) and the newest runs' (in) are none; the data version is the rest.
+      return query.calls.some(([method]) => method === 'eq' || method === 'in')
         ? { data: [] }
         : { data: [{ created_at: '2026-10-05T11:58:00.123456+00:00' }], count: 27 };
     case 'projects_public':

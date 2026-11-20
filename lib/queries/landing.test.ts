@@ -141,8 +141,15 @@ const answering =
         const [, ids] = (argsOf(query, 'in')[0] ?? []) as [string, string[]];
         return { data: tables.coverage?.(ids) ?? [] };
       }
-      case 'reports':
-        return { data: tables.reports?.(String(eqValue(query, 'run_id'))) ?? [] };
+      // The newest runs' reports, read together (loadSettleReports), each with its run.
+      case 'reports': {
+        const [, ids = []] = (argsOf(query, 'in')[0] ?? []) as [string, string[]];
+        return {
+          data: ids.flatMap((runId) =>
+            (tables.reports?.(runId) ?? []).map((row) => ({ run_id: runId, ...(row as object) })),
+          ),
+        };
+      }
       default:
         return { error: { code: 'X', message: `unexpected table ${query.table}` } };
     }
@@ -200,7 +207,7 @@ describe('loadLanding', () => {
 
     const landing = await loadLanding(client, NOW);
 
-    const [, runs, lastReport, tallies, coverage, reports, failing, reportCounts, feed, ...rest] =
+    const [, runs, lastReport, reports, tallies, coverage, failing, reportCounts, feed, ...rest] =
       queries;
     expect(rest).toEqual([]);
     expect(runs?.table).toBe('runs_public');
@@ -252,9 +259,16 @@ describe('loadLanding', () => {
     ]);
     expect(landing.headline).toMatchObject({ totalTests: 2, runsInLast30Days: { total: 2 } });
 
-    // The latest run's reports in key order and its failing tests, for the card.
+    // The newest runs' reports in key order, which tell which run is the latest settled one
+    // (lib/stats/settled.ts) and give the card the latest run's reports; then its failing tests.
     expect(reports?.table).toBe('reports');
-    expect(argsOf(reports as Query, 'eq')).toEqual([['run_id', 'r2']]);
+    expect(argsOf(reports as Query, 'in')).toEqual([['run_id', ['r2', 'r1']]]);
+    expect(argsOf(reports as Query, 'order')).toEqual([
+      ['run_id'],
+      ['job'],
+      ['module'],
+      ['platform'],
+    ]);
     expect(failing?.table).toBe('results');
     expect(argsOf(failing as Query, 'eq')).toEqual([['reports.run_id', 'r2']]);
     expect(argsOf(failing as Query, 'in')).toEqual([['status', ['failed', 'error']]]);

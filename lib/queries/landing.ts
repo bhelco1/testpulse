@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { now } from '../clock.ts';
 import type { Visibility } from '../projects/schema.ts';
 import type { PublicRun } from '../stats/input.ts';
-import { byFinish, countsTowardCiOnlyStats, latestRun } from '../stats/rules.ts';
+import { byFinish, countsTowardCiOnlyStats } from '../stats/rules.ts';
 import {
   landingHeadline,
   projectSummary,
@@ -28,7 +28,7 @@ import {
 // views; nothing here hides or reveals anything. Time is read once, here, and passed to lib/stats.
 
 export interface LandingProject extends ProjectSummary {
-  /** The latest default-branch CI run's reports, failing tests and duration; null before the first. */
+  /** The latest settled default-branch CI run's reports, failing tests and duration; null before the first. */
   readonly latestRunDetail: LatestRunDetail | null;
   /** The latest finished_at of the project's CI runs on any branch: its last report (section 11). */
   readonly lastReportAt: Date | null;
@@ -93,11 +93,12 @@ export async function loadLanding(
   const loaded = await Promise.all(
     parsed.data.map(async (project) => {
       const input = await loadSummaryInput(client, project, at);
-      const latest = latestRun(input.runs, project.defaultBranch, at);
+      const { latest } = input;
       const card: LandingProject = {
         ...projectSummary(input, at),
         lastReportAt: input.lastReportAt,
-        latestRunDetail: latest === null ? null : await loadLatestRunDetail(client, latest),
+        latestRunDetail:
+          latest === null ? null : await loadLatestRunDetail(client, latest.run, latest.reports),
       };
       const { slug, name, visibility } = project;
       const candidates: FeedCandidate[] = input.runs

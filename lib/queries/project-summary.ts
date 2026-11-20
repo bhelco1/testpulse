@@ -10,15 +10,23 @@ import {
   type StatsCoverage,
 } from '../stats/input.ts';
 import { readAll, readByRunIds } from '../stats/load.ts';
-import { byFinish, countsTowardTrends, latestRun, TREND_SOURCES } from '../stats/rules.ts';
+import {
+  byFinish,
+  countsTowardCiOnlyStats,
+  countsTowardTrends,
+  TREND_SOURCES,
+} from '../stats/rules.ts';
+import { latestSettledRun } from '../stats/settled.ts';
 import type { ProjectSummaryInput, SummaryProject } from '../stats/summary.ts';
 import type { PublicClient } from '../supabase/public.ts';
 import { loadTestTallies } from './aggregates.ts';
+import { loadSettleReports, reportsOf, type ReceivedReport, type RunReport } from './run-rows.ts';
 
 // What the landing page's project cards and the project page both read for one project (spec
-// sections 11 and 13), as anon: projects_public, runs_public, the coverage table, and the latest
-// run's test counts from run_test_tallies (lib/queries/aggregates.ts), which reads the reports,
-// results and tests tables as its caller. That is all section 9 opens. A private project's rows
+// sections 11 and 13), as anon: projects_public, runs_public, the coverage table, the newest
+// runs' reports, which tell which run is the latest settled one (lib/stats/settled.ts), and the
+// latest run's test counts from run_test_tallies (lib/queries/aggregates.ts), which reads the
+// reports, results and tests tables as its caller. That is all section 9 opens. A private project's rows
 // arrive already redacted by the views; nothing here hides or reveals anything. Reads that do
 // not wait on each other run together.
 
@@ -137,6 +145,9 @@ async function loadCoverage(
 
 export interface SummaryInput extends ProjectSummaryInput {
   readonly runs: readonly PublicRun[];
+  readonly receipts: readonly ReceivedReport[];
+  /** The latest settled default-branch CI run and its reports; null before the first. */
+  readonly latest: { readonly run: PublicRun; readonly reports: readonly RunReport[] } | null;
 }
 
 export async function loadSummaryInput(
@@ -171,12 +182,28 @@ export async function loadSummaryInput(
   );
 
   const [runs, [lastReportAt = null]] = await Promise.all([loadRuns, loadLastReport]);
-  const latest = latestRun(runs, project.defaultBranch, at);
+  const newestFirst = runs
+    .filter((run) => countsTowardCiOnlyStats(run, project.defaultBranch))
+    .sort((a, b) => byFinish(b, a))
+    .map((run) => run.id);
+  const receipts = await loadSettleReports(client, newestFirst, at);
+  const latest = latestSettledRun(runs, receipts, {
+    defaultBranch: project.defaultBranch,
+    now: at,
+  });
   // The latest run's distinct tests by layer and status, counted in the database.
   const [latestRunTests, coverage] = await Promise.all([
     latest === null ? [] : loadTestTallies(client, [latest.id]),
     loadCoverage(client, project, runs),
   ]);
 
-  return { project, runs, lastReportAt, latestRunTests, coverage };
+  return {
+    project,
+    runs,
+    lastReportAt,
+    latestRunTests,
+    receipts,
+    coverage,
+    latest: latest === null ? null : { run: latest, reports: reportsOf(receipts, latest.id) },
+  };
 }

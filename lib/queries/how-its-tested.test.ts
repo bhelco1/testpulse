@@ -104,6 +104,10 @@ const answering =
         return { data: tables.tallies ?? [] };
       case 'coverage':
         return { data: tables.coverage ?? [] };
+      // The newest runs' reports, which tell which run is settled (lib/stats/settled.ts): with
+      // none, the newest run is the latest.
+      case 'reports':
+        return { data: [] };
       default:
         return { error: { code: 'X', message: `unexpected table ${query.table}` } };
     }

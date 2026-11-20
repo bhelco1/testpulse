@@ -260,6 +260,20 @@ describe('TrendChart without JavaScript', () => {
     expect(doc.querySelector('svg')).toBeNull();
   });
 
+  // tests/e2e/support/charts.ts expectChartsDrawn finds every chart and its plot by these.
+  it('marks the chart and its drawn plot, so a wait can tell a drawn chart from a blank one', () => {
+    const { container } = render(<TrendChart {...PASS_RATE} />);
+    const [chart] = parts(container, 'trend-chart');
+    expect(chart?.tagName).toBe('FIGURE');
+    const [plot] = parts(container, 'plot');
+    expect(plot?.getAttribute('role')).toBe('img');
+    expect(plot?.querySelector('svg path.recharts-line-curve')).not.toBeNull();
+    const html = renderToStaticMarkup(<TrendChart {...PASS_RATE} />);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.querySelector('figure')?.getAttribute('data-part')).toBe('trend-chart');
+    expect(doc.querySelector('[data-part="plot"]')).toBeNull();
+  });
+
   it('holds the chart height before the width is measured, so nothing jumps', () => {
     const html = renderToStaticMarkup(<TrendChart {...PASS_RATE} />);
     const doc = new DOMParser().parseFromString(html, 'text/html');

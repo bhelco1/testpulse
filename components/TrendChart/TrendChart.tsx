@@ -227,6 +227,7 @@ export function TrendChart(props: TrendChartProps) {
   return (
     <figure
       className={styles.figure}
+      data-part="trend-chart"
       aria-busy={loading || undefined}
       aria-label={loading ? 'Loading chart' : undefined}
     >
@@ -650,6 +651,7 @@ function Plot({
         aria-label={label}
         tabIndex={0}
         className={styles.surface}
+        data-part="plot"
         onPointerMove={onPointerMove}
         onPointerLeave={() => setHover(null)}
         onFocus={() => setHover(count - 1)}

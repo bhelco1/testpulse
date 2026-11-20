@@ -68,6 +68,8 @@ export interface RunPageView {
     | {
         readonly kind: 'rows';
         readonly visibility: Visibility;
+        /** The project's test history path, which each row's key completes. */
+        readonly historyPrefix: string;
         readonly rows: readonly ResultRow[];
       }
     | { readonly kind: 'pruned'; readonly totals: PrunedTotals; readonly prunedOn: TimeLabel }
@@ -197,7 +199,7 @@ const emptyRunBody = (reports: number): string =>
     ? '1 report arrived, but it held no test cases.'
     : `${qty(reports, 'report')} arrived, but none held any test cases.`;
 
-function resultRow(slug: string, row: RunTestRow, isPrivate: boolean): ResultRow {
+function resultRow(row: RunTestRow, isPrivate: boolean): ResultRow {
   const duration = rowDurationMs(row.platforms);
   return {
     key: row.testKey,
@@ -208,7 +210,6 @@ function resultRow(slug: string, row: RunTestRow, isPrivate: boolean): ResultRow
     flaky: row.flaky,
     platforms: row.platforms.map(({ platform, status }) => ({ platform, status })),
     time: duration === null ? '—' : formatTestTime(duration),
-    historyHref: testHref(slug, row.testKey),
     failures: isFailing(row.status) ? failuresOf(row, isPrivate) : [],
   };
 }
@@ -282,7 +283,8 @@ export function runPageView(detail: RunDetail, now: Date): RunPageView {
           : {
               kind: 'rows',
               visibility: project.visibility,
-              rows: results.map((row) => resultRow(project.slug, row, isPrivate)),
+              historyPrefix: testHref(project.slug, ''),
+              rows: results.map((row) => resultRow(row, isPrivate)),
             },
   };
 }

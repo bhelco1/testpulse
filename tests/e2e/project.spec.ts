@@ -389,6 +389,36 @@ test.describe('RouteServe (private)', () => {
     await expect(page.getByRole('button', { name: 'Load 20 more' })).toHaveCount(0);
   });
 
+  // Next.js prefetches a link as it scrolls into view, so each run row cost the server a render of
+  // the run page's head, and the database its reads, on every view of the list, for a page most
+  // views never open. The footer's privacy link, below the list, still prefetches: once it has,
+  // every run row has been in view.
+  test('prefetches no run row’s page as the list scrolls by', { tag: '@js' }, async ({ page }) => {
+    const prefetched: string[] = [];
+    page.on('request', (request) => {
+      if (request.headers()['next-router-prefetch'] !== undefined) {
+        prefetched.push(new URL(request.url()).pathname);
+      }
+    });
+    await open(page, '/p/routeserve');
+    await expectLive(page);
+    const rowHrefs = await runsLog(page)
+      .getByRole('link')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+    const elsewhere = await page
+      .locator('a[href*="/runs/"]')
+      .evaluateAll((links) =>
+        links.filter((link) => !link.closest('[role="log"]')).map((l) => l.getAttribute('href')),
+      );
+    const rowsOnly = rowHrefs.filter((href) => !elsewhere.includes(href));
+    expect(rowsOnly.length).toBeGreaterThanOrEqual(9);
+
+    await runsLog(page).scrollIntoViewIfNeeded();
+    await page.getByRole('contentinfo').scrollIntoViewIfNeeded();
+    await expect.poll(() => prefetched).toContain('/privacy');
+    expect(prefetched.filter((path) => rowsOnly.includes(path))).toEqual([]);
+  });
+
   // Design v21 item 14: busy while the longer list loads (held here until the busy state is
   // checked), the rows already shown kept, then focus on the first new row.
   test('loads 20 more across all branches', { tag: '@js' }, async ({ page }) => {

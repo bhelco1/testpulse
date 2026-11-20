@@ -58,15 +58,18 @@ const runRow = (id: string, finishedAt: string, overrides: Record<string, unknow
 
 const THE_RUN = runRow(RUN_ID, '2026-10-05T09:26:17.747+00:00');
 
+const REPORT_IDS = { jvm: 'report-jvm', 'ios-sim': 'report-ios' } as const;
+
 const resultRow = (
   id: string,
   testId: string,
   status: string,
-  platform: string,
+  platform: keyof typeof REPORT_IDS,
   overrides: Record<string, unknown> = {},
 ) => ({
   id,
   test_id: testId,
+  report_id: REPORT_IDS[platform],
   status,
   duration_ms: 400,
   tests: {
@@ -76,7 +79,6 @@ const resultRow = (
     name: testId,
     layer: 'unit',
   },
-  reports: { run_id: RUN_ID, job: platform === 'jvm' ? 'android' : 'ios', platform },
   ...overrides,
 });
 
@@ -89,6 +91,7 @@ const RESULTS = [
 ];
 
 const REPORT = {
+  id: REPORT_IDS.jvm,
   job: 'android',
   module: 'composeApp',
   platform: 'jvm',
@@ -101,6 +104,17 @@ const REPORT = {
   started_at: '2026-10-05T09:26:00+00:00',
   finished_at: '2026-10-05T09:26:17.747+00:00',
   received_at: '2026-10-05T09:26:19.120+00:00',
+};
+
+const IOS_REPORT = {
+  ...REPORT,
+  id: REPORT_IDS['ios-sim'],
+  job: 'ios',
+  platform: 'ios-sim',
+  total: 1,
+  passed: 0,
+  failed: 1,
+  skipped: 0,
 };
 
 interface Tables {
@@ -123,7 +137,7 @@ const answering =
           ? { data: tables.run ?? [THE_RUN] }
           : { error: { code: 'X', message: 'the run page reads no other runs' } };
       case 'reports':
-        return { data: [REPORT] };
+        return { data: [REPORT, IOS_REPORT] };
       case 'results':
         return { data: RESULTS };
       case 'rpc:flaky_tests':
@@ -193,7 +207,7 @@ describe('loadRunDetail', () => {
       failed: 1,
       skipped: 1,
       durationMs: 26_000,
-      reports: 1,
+      reports: 2,
       resultsPrunedAt: null,
       tests: { total: 3, passed: 1, failed: 1, skipped: 1 },
     });
@@ -206,6 +220,7 @@ describe('loadRunDetail', () => {
         finishedAt: new Date('2026-10-05T09:26:17.747Z'),
         receivedAt: new Date('2026-10-05T09:26:19.120Z'),
       }),
+      expect.objectContaining({ job: 'ios', module: 'composeApp', platform: 'ios-sim', total: 1 }),
     ]);
   });
 
@@ -286,11 +301,38 @@ describe('loadRunDetail', () => {
       p_since: '2026-09-06T00:00:00.000Z',
       p_until: '2026-10-05T12:00:00.000Z',
     });
-    // Only the run's own results are read as rows.
-    expect(queries.filter((query) => query.table === 'results')).toHaveLength(1);
-    expect(argsOf(queries.find((query) => query.table === 'results') as Query, 'eq')).toEqual([
-      ['reports.run_id', RUN_ID],
-    ]);
+  });
+
+  // Filtering results on an embedded report column made Postgres walk the whole results table in
+  // id order for every page of 1,000, which took a 4,000-result run page about 9 s in production
+  // (2026-11-20). Asked by the run's report IDs, results_report_id_idx finds just its rows.
+  it('reads only the run’s own results, by its report IDs, and no other table for them', async () => {
+    const { client, queries } = fakeClient(answering({}));
+
+    await loadRunDetail('ostomate2', RUN_ID, client, NOW);
+
+    const reports = queries.filter((query) => query.table === 'reports');
+    expect(reports).toHaveLength(1);
+    expect(argsOf(reports[0] as Query, 'eq')).toEqual([['run_id', RUN_ID]]);
+    expect(String(argsOf(reports[0] as Query, 'select')[0])).toMatch(/^id, /);
+    const results = queries.filter((query) => query.table === 'results');
+    expect(results).toHaveLength(1);
+    const read = results[0] as Query;
+    expect(argsOf(read, 'in')).toEqual([['report_id', [REPORT_IDS.jvm, REPORT_IDS['ios-sim']]]]);
+    expect(argsOf(read, 'eq')).toEqual([]);
+    expect(String(argsOf(read, 'select')[0])).not.toContain('reports');
+  });
+
+  it('reads no results for a run without reports', async () => {
+    const answer = answering({});
+    const { client, queries } = fakeClient((query) =>
+      query.table === 'reports' ? { data: [] } : answer(query),
+    );
+
+    const detail = await loadRunDetail('ostomate2', RUN_ID, client, NOW);
+
+    expect(detail?.results).toEqual([]);
+    expect(queries.some((query) => query.table === 'results')).toBe(false);
   });
 
   it('shows the pruned notice’s totals in place of results, and reads no results', async () => {
@@ -348,6 +390,19 @@ describe('loadRunDetail', () => {
 
     await expect(loadRunDetail('ostomate2', RUN_ID, client, NOW)).rejects.toThrow(
       'load the run results returned an unexpected row',
+    );
+  });
+
+  it('refuses a result of a report that is not the run’s', async () => {
+    const answer = answering({});
+    const { client } = fakeClient((query) =>
+      query.table === 'results'
+        ? { data: [resultRow('x9', 't-pass', 'passed', 'jvm', { report_id: 'report-other' })] }
+        : answer(query),
+    );
+
+    await expect(loadRunDetail('ostomate2', RUN_ID, client, NOW)).rejects.toThrow(
+      'load the run results returned another run’s result',
     );
   });
 

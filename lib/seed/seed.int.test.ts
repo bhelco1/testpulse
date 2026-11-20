@@ -1210,17 +1210,29 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
     };
 
     // Result rows are read for one run's failing tests (a latest-run card) and, on the run page,
-    // for that run's own rows, which it shows one by one. Every count over results is the
-    // database's answer instead; any other read of results is a page counting rows itself.
-    const otherResultReads = (requests: readonly URL[], ownRun?: string): string[] =>
+    // for that run's own rows, which it shows one by one, asked for by its reports' IDs. Every
+    // count over results is the database's answer instead; any other read of results is a page
+    // counting rows itself.
+    const otherResultReads = (requests: readonly URL[], ownReports: readonly string[] = []) =>
       requests
         .filter((url) => url.pathname === '/rest/v1/results')
         .filter((url) => {
           const run = url.searchParams.get('reports.run_id') ?? '';
           const failing = url.searchParams.get('status') === 'in.(failed,error)';
-          return !(/^eq\./.test(run) && (failing || run === `eq.${ownRun}`));
+          if (/^eq\./.test(run) && failing) return false;
+          const reports = /^in\.\((.+)\)$/.exec(url.searchParams.get('report_id') ?? '')?.[1];
+          return !(reports?.split(',').every((id) => ownReports.includes(id)) ?? false);
         })
         .map((url) => decodeURIComponent(url.search));
+
+    const reportsOf = async (runId: string): Promise<string[]> => {
+      const { data, error } = await createPublicClient()
+        .from('reports')
+        .select('id')
+        .eq('run_id', runId);
+      if (error) throw new Error(`reports of ${runId}: ${error.message}`);
+      return (data as { id: string }[]).map((row) => row.id);
+    };
 
     const latestRunOf = async (slug: string): Promise<string> => {
       const page = await loadProjectPage(slug, {}, createPublicClient(), NOW);
@@ -1250,7 +1262,10 @@ describe('the e2e seed against local Supabase (spec section 16)', () => {
       const requests = await requestsOf(() =>
         loadRunDetail(slug, runId, createPublicClient(), NOW),
       );
-      expect(otherResultReads(requests, runId)).toEqual([]);
+      const ownReports = await reportsOf(runId);
+      expect(ownReports.length).toBeGreaterThan(0);
+      expect(requests.some((url) => url.pathname === '/rest/v1/results')).toBe(true);
+      expect(otherResultReads(requests, ownReports)).toEqual([]);
       expect(requests.length).toBeLessThanOrEqual(RUN_REQUESTS);
     });
   });

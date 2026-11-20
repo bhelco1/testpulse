@@ -92,7 +92,7 @@ export async function readRunDetail(
   const results = await sharedRead(
     'run-results',
     [shell.run.id, await dataVersion(), flakyTestIds.join(',')],
-    () => loadRunResults(createPublicClient(), shell.run.id, flakyTestIds),
+    () => loadRunResults(createPublicClient(), shell.reports, flakyTestIds),
   );
   return runDetailOf(shell, results);
 }

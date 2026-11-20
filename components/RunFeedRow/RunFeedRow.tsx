@@ -121,8 +121,15 @@ function WebRow({
   showProject?: boolean;
   isNew?: boolean;
 }) {
+  // Not prefetched: in view, every row would cost the server its run page's head and the
+  // database its reads on each view of the list, for pages most views never open.
   return (
-    <Link href={run.href} className={cx(styles.row, isNew && styles.new)} data-variant="web">
+    <Link
+      href={run.href}
+      prefetch={false}
+      className={cx(styles.row, isNew && styles.new)}
+      data-variant="web"
+    >
       <span className={styles.status} data-part="status">
         <StatusBadge status={run.status} variant="inline" />
       </span>

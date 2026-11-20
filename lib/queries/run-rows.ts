@@ -139,12 +139,22 @@ export async function loadSettleReports(
 export const reportsOf = (rows: readonly ReceivedReport[], runId: string): RunReport[] =>
   rows.filter((row) => row.runId === runId).map((row) => row.report);
 
+const IdentifiedReportRowSchema = z
+  .object({ id: z.string().min(1), ...reportFields })
+  .transform((row) => ({ id: row.id, ...toRunReport(row) }));
+
+/** A report with its ID, by which the run page reads the report's results. */
+export type IdentifiedRunReport = z.output<typeof IdentifiedReportRowSchema>;
+
 /** A run's reports in job, module, platform order, the order the unique key reads in (5.3). */
-export function loadRunReports(client: PublicClient, runId: string): Promise<RunReport[]> {
-  return readAll('load the run reports', ReportRowSchema, (from, to) =>
+export function loadRunReports(
+  client: PublicClient,
+  runId: string,
+): Promise<IdentifiedRunReport[]> {
+  return readAll('load the run reports', IdentifiedReportRowSchema, (from, to) =>
     client
       .from('reports')
-      .select(REPORT_COLUMNS)
+      .select(`id, ${REPORT_COLUMNS}`)
       .eq('run_id', runId)
       .order('job')
       .order('module')

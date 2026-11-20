@@ -83,6 +83,7 @@ const testRow = {
 const resultRow = {
   id: 'res-1',
   test_id: 'test-1',
+  report_id: 'report-1',
   status: 'failed',
   duration_ms: 400,
   tests: {
@@ -92,7 +93,24 @@ const resultRow = {
     name: 'rendersToday',
     layer: 'unit',
   },
+  // Other pages read a result with its report embedded; the run page by its report_id.
   reports: { run_id: RUN_ID, job: 'test', module: 'composeApp', platform: 'jvm' },
+};
+
+const runReportRow = {
+  id: 'report-1',
+  job: 'test',
+  module: 'composeApp',
+  platform: 'jvm',
+  format: 'junit',
+  total: 1,
+  passed: 0,
+  failed: 1,
+  skipped: 0,
+  duration_ms: 400,
+  started_at: '2026-10-04T08:59:00+00:00',
+  finished_at: '2026-10-04T09:00:00+00:00',
+  received_at: '2026-10-04T09:00:01+00:00',
 };
 
 let queries: Query[] = [];
@@ -100,10 +118,13 @@ let queries: Query[] = [];
 const answer = (query: Query): Answer => {
   switch (query.table) {
     case 'reports':
-      // A run's reports (eq) and the newest runs' (in) are none; the data version is the rest.
-      return query.calls.some(([method]) => method === 'eq' || method === 'in')
-        ? { data: [] }
-        : { data: [{ created_at: '2026-10-05T11:58:00.123456+00:00' }], count: 27 };
+      // The run page's run has one report (eq) and the newest runs' (in) none; the data version
+      // is the rest.
+      return query.calls.some(([method]) => method === 'eq')
+        ? { data: [runReportRow] }
+        : query.calls.some(([method]) => method === 'in')
+          ? { data: [] }
+          : { data: [{ created_at: '2026-10-05T11:58:00.123456+00:00' }], count: 27 };
     case 'projects_public':
       return { data: [projectRow] };
     case 'runs_public':

@@ -9,7 +9,13 @@ import { testOutcomes, type RunTests } from '../stats/test-counts.ts';
 import { createPublicClient, type PublicClient } from '../supabase/public.ts';
 import { loadFlakyTests } from './aggregates.ts';
 import { loadProject, type ProjectDetail } from './project-summary.ts';
-import { loadRunReports, toListedRun, type ListedRun, type RunReport } from './run-rows.ts';
+import {
+  loadRunReports,
+  toListedRun,
+  type IdentifiedRunReport,
+  type ListedRun,
+  type RunReport,
+} from './run-rows.ts';
 
 // The run page, /p/[slug]/runs/[id] (spec section 13; design/data-map.md, Run detail): the
 // run's metadata, its reports by job, module and platform, and one results-table row per test
@@ -40,30 +46,36 @@ export interface RunDetail {
 // runs.id is a UUID (section 5); anything else is not a run, and is not sent to the database.
 const RUN_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Results are asked for by report_id, which results_report_id_idx finds. A filter on an embedded
+// report column instead (reports.run_id) made Postgres walk the whole results table in id order
+// for each page of 1,000: about 9 s for a 4,000-result run in production (2026-11-20).
 const RUN_RESULT_COLUMNS =
-  'id, test_id, status, duration_ms, tests!inner(test_key, module, suite, name, layer), ' +
-  'reports!inner(run_id, job, platform)';
+  'id, test_id, report_id, status, duration_ms, tests!inner(test_key, module, suite, name, layer)';
 
-const RunResultRowSchema = z
-  .object({
-    id: z.string().min(1),
-    test_id: z.string().min(1),
-    status: z.enum(['passed', 'failed', 'error', 'skipped']),
-    duration_ms: z.int().min(0),
-    tests: z.object({
-      test_key: z.string().min(1),
-      module: z.string(),
-      suite: z.string(),
-      name: z.string(),
-      layer: LayerSchema,
-    }),
-    reports: z.object({
-      run_id: z.string().min(1),
-      job: z.string().min(1),
-      platform: z.string().min(1),
-    }),
-  })
-  .transform((row): RunResultInput => ({
+const RunResultRowSchema = z.object({
+  id: z.string().min(1),
+  test_id: z.string().min(1),
+  report_id: z.string().min(1),
+  status: z.enum(['passed', 'failed', 'error', 'skipped']),
+  duration_ms: z.int().min(0),
+  tests: z.object({
+    test_key: z.string().min(1),
+    module: z.string(),
+    suite: z.string(),
+    name: z.string(),
+    layer: LayerSchema,
+  }),
+});
+
+type RunResultRow = z.output<typeof RunResultRowSchema>;
+
+function resultInput(
+  row: RunResultRow,
+  reports: ReadonlyMap<string, Pick<RunReport, 'job' | 'platform'>>,
+): RunResultInput {
+  const report = reports.get(row.report_id);
+  if (report === undefined) throw new Error('load the run results returned another run’s result');
+  return {
     resultId: row.id,
     testId: row.test_id,
     testKey: row.tests.test_key,
@@ -73,9 +85,10 @@ const RunResultRowSchema = z
     layer: row.tests.layer,
     status: row.status,
     durationMs: row.duration_ms,
-    job: row.reports.job,
-    platform: row.reports.platform,
-  }));
+    job: report.job,
+    platform: report.platform,
+  };
+}
 
 const FailureRowSchema = z.object({
   result_id: z.string().min(1),
@@ -90,17 +103,23 @@ const FailureRowSchema = z.object({
  */
 export async function loadRunResults(
   client: PublicClient,
-  runId: string,
+  reports: readonly IdentifiedRunReport[],
   flakyTestIds: readonly string[],
 ): Promise<RunTestRow[]> {
-  const results = await readAll('load the run results', RunResultRowSchema, (from, to) =>
-    client
-      .from('results')
-      .select(RUN_RESULT_COLUMNS)
-      .eq('reports.run_id', runId)
-      .order('id')
-      .range(from, to),
+  const byId = new Map(reports.map((report) => [report.id, report]));
+  const rows = await readByRunIds(
+    'load the run results',
+    RunResultRowSchema,
+    [...byId.keys()],
+    (ids, from, to) =>
+      client
+        .from('results')
+        .select(RUN_RESULT_COLUMNS)
+        .in('report_id', [...ids])
+        .order('id')
+        .range(from, to),
   );
+  const results = rows.map((row) => resultInput(row, byId));
   const failingIds = results
     .filter((result) => result.status === 'failed' || result.status === 'error')
     .map((result) => result.resultId);
@@ -154,7 +173,7 @@ export async function findRun(
 export interface RunShell {
   readonly project: ProjectDetail;
   readonly run: PublicRun;
-  readonly reports: readonly RunReport[];
+  readonly reports: readonly IdentifiedRunReport[];
   /**
    * Section 11's flaky tests of the project as of now, over the 30 days before it (flaky_tests);
    * null once the run's results were pruned, when there are no rows to flag.
@@ -207,6 +226,6 @@ export async function loadRunDetail(
   const results =
     shell.flakyTestIds === null
       ? null
-      : await loadRunResults(client, shell.run.id, shell.flakyTestIds);
+      : await loadRunResults(client, shell.reports, shell.flakyTestIds);
   return runDetailOf(shell, results);
 }

@@ -47,7 +47,6 @@ export interface ResultRow extends TableResult {
   platforms: readonly PlatformResult[];
   // Already formatted, such as "0.41 s", or "—" when the test did not run.
   time: string;
-  historyHref: string;
   // Each failed or error result, in platform data order (design v7 item 3, `ResultRow.failures`),
   // with result_failures' text where RLS returned it; never for a private project.
   failures: readonly FailureDetail[];
@@ -86,6 +85,9 @@ export type ResultsTableProps =
   | {
       results: readonly ResultRow[];
       visibility: Visibility;
+      // The project's test history path, such as "/p/ostomate2/tests/"; a row's key completes it.
+      // A run sends thousands of rows to the browser, so no row repeats its key in a link.
+      historyPrefix: string;
       limit: number;
       onLoadMore: () => void;
       request?: FilterRequest | null;
@@ -110,6 +112,7 @@ const STATUS_LABELS: readonly [StatusFilter, string][] = [
 function Table({
   results,
   visibility,
+  historyPrefix,
   limit,
   onLoadMore,
   request = null,
@@ -231,6 +234,7 @@ function Table({
               <TestRows
                 key={result.key}
                 result={result}
+                historyHref={`${historyPrefix}${result.key}`}
                 isPrivate={visibility === 'private'}
                 open={!closed.has(result.key)}
                 onToggle={() => toggle(result.key)}
@@ -319,12 +323,14 @@ function Platforms({ platforms, layer }: { platforms: readonly PlatformResult[];
 
 function TestRows({
   result,
+  historyHref,
   isPrivate,
   open,
   onToggle,
   detailId,
 }: {
   result: ResultRow;
+  historyHref: string;
   isPrivate: boolean;
   open: boolean;
   onToggle: () => void;
@@ -372,11 +378,7 @@ function TestRows({
                 <Breaks text={result.name} rule="name" />
               </button>
             ) : (
-              <Link
-                href={result.historyHref}
-                className={cx(styles.name, styles.rowLink)}
-                data-part="name"
-              >
+              <Link href={historyHref} className={cx(styles.name, styles.rowLink)} data-part="name">
                 <Breaks text={result.name} rule="name" />
               </Link>
             )}
@@ -422,7 +424,7 @@ function TestRows({
                     <Failures failures={result.failures} withText={!isPrivate} />
                   )}
                   {isPrivate && <PrivateDetailsNotice />}
-                  <Link href={result.historyHref} className={styles.history}>
+                  <Link href={historyHref} className={styles.history}>
                     Test history
                   </Link>
                 </div>

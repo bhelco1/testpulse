@@ -309,6 +309,7 @@ describe('runPageView: a public passing run', () => {
     expect(view.results).toEqual({
       kind: 'rows',
       visibility: 'public',
+      historyPrefix: '/p/ostomate2/tests/',
       rows: [
         {
           key: 'addEventForDateLogsAtNoon-key',
@@ -322,12 +323,21 @@ describe('runPageView: a public passing run', () => {
             { platform: 'ios-sim', status: 'passed' },
           ],
           time: '0.03 s',
-          historyHref: '/p/ostomate2/tests/addEventForDateLogsAtNoon-key',
           failures: [],
         },
         expect.objectContaining({ name: 'rendersMonthGrid', layer: 'visual', time: '2.84 s' }),
       ],
     });
+  });
+
+  // Every row goes to the browser in the page's payload, which for a run of thousands of tests
+  // was 2 MB with each row's history link spelling its key out again; the table builds the link
+  // from historyPrefix and the key instead, so each key is sent once.
+  it('sends each test’s key once, its history link built from the prefix', () => {
+    const sent = JSON.stringify(view.results);
+    for (const row of PASSING.results ?? []) {
+      expect(sent.split(row.testKey)).toHaveLength(2);
+    }
   });
 });
 
@@ -554,8 +564,8 @@ describe('runPageView: a private failing run', () => {
       failures: [
         { platform: 'node', status: 'failed', duration: '4 ms', message: null, detail: null },
       ],
-      historyHref: '/p/routeserve/tests/assetCreateSchema accepts a minimal valid asset-key',
     });
+    expect(view.results).toMatchObject({ historyPrefix: '/p/routeserve/tests/' });
   });
 
   it('heads each failing platform with its bare key, status and time, and no text', () => {

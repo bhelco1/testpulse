@@ -21,6 +21,8 @@ const has = (element: Element | null | undefined, name: string) => {
   return element?.classList.contains(className) ?? false;
 };
 
+const HISTORY = '/p/ostomate2/tests/';
+
 const TRACE =
   'at kotlin.test.assertEquals(Assertions.kt:63)\n' +
   'at com.ostomate.app.ui.home.HomeViewModelTest.rendersToday(HomeViewModelTest.kt:48)';
@@ -37,7 +39,6 @@ const row = (
     { platform: 'ios-sim', status: extra.status },
   ],
   time: '0.08 s',
-  historyHref: `/p/ostomate2/tests/${key}`,
   failures: [],
   ...extra,
 });
@@ -121,6 +122,7 @@ function renderTable(
     <ResultsTable
       results={extra.results ?? RESULTS}
       visibility={extra.visibility ?? 'public'}
+      historyPrefix={HISTORY}
       limit={extra.limit ?? 50}
       onLoadMore={onLoadMore}
     />,
@@ -236,6 +238,7 @@ describe('ResultsTable filters', () => {
       <ResultsTable
         results={RESULTS}
         visibility="public"
+        historyPrefix={HISTORY}
         limit={50}
         onLoadMore={() => {}}
         request={null}
@@ -246,6 +249,7 @@ describe('ResultsTable filters', () => {
       <ResultsTable
         results={RESULTS}
         visibility="public"
+        historyPrefix={HISTORY}
         limit={50}
         onLoadMore={() => {}}
         request={{ status: 'failed', seq: 1 }}
@@ -257,7 +261,12 @@ describe('ResultsTable filters', () => {
   });
 
   it('takes the same request again after the reader changed the filter', () => {
-    const props = { results: RESULTS, visibility: 'public' as const, limit: 50 };
+    const props = {
+      results: RESULTS,
+      visibility: 'public' as const,
+      historyPrefix: HISTORY,
+      limit: 50,
+    };
     const view = render(
       <ResultsTable {...props} onLoadMore={() => {}} request={{ status: 'error', seq: 1 }} />,
     );
@@ -891,7 +900,13 @@ describe('ResultsTable rows', () => {
 
   it('renders on the server with failures open, so the detail reads without JavaScript', () => {
     const html = renderToStaticMarkup(
-      <ResultsTable results={RESULTS} visibility="public" limit={50} onLoadMore={() => {}} />,
+      <ResultsTable
+        results={RESULTS}
+        visibility="public"
+        historyPrefix={HISTORY}
+        limit={50}
+        onLoadMore={() => {}}
+      />,
     );
     expect(html).toContain('aria-expanded="true"');
     expect(html).toContain('Room database not initialised');

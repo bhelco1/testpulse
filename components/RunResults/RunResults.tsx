@@ -40,6 +40,7 @@ export function RunResults({ results }: { results: RunPageView['results'] }) {
     <ResultsTable
       results={results.rows}
       visibility={results.visibility}
+      historyPrefix={results.historyPrefix}
       limit={limit}
       onLoadMore={() => setLimit((shown) => shown + PAGE)}
       request={request}

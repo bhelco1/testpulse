@@ -19,6 +19,8 @@ const PRUNED_ON = {
 
 afterEach(cleanup);
 
+const HISTORY = '/p/routeserve/tests/';
+
 const rows: ResultRow[] = Array.from({ length: 120 }, (_, index) => ({
   key: `t${String(index).padStart(3, '0')}`,
   suite: 'packages/shared/src/time.test.ts',
@@ -28,7 +30,6 @@ const rows: ResultRow[] = Array.from({ length: 120 }, (_, index) => ({
   flaky: false,
   platforms: [{ platform: 'node', status: 'passed' }],
   time: '0.01 s',
-  historyHref: `/p/routeserve/tests/t${index}`,
   failures: [],
 }));
 
@@ -38,7 +39,7 @@ const shown = (container: HTMLElement) => container.querySelectorAll('[data-part
 describe('RunResults', () => {
   it('shows the first 50 rows, then 50 more each time it is asked', () => {
     const { container, getByRole, queryByRole } = render(
-      <RunResults results={{ kind: 'rows', visibility: 'public', rows }} />,
+      <RunResults results={{ kind: 'rows', visibility: 'public', historyPrefix: HISTORY, rows }} />,
     );
     expect(shown(container)).toBe(50);
     fireEvent.click(getByRole('button', { name: 'Load 50 more' }));
@@ -120,7 +121,14 @@ describe('RunResults', () => {
         <FailedRunBanner
           banner={{ title: '1 test failed', body: 'x', action: 'Show failure', filter: 'failed' }}
         />
-        <RunResults results={{ kind: 'rows', visibility: 'public', rows: [...rows, failing] }} />
+        <RunResults
+          results={{
+            kind: 'rows',
+            visibility: 'public',
+            historyPrefix: HISTORY,
+            rows: [...rows, failing],
+          }}
+        />
       </RunFilterProvider>,
     );
     fireEvent.click(getByRole('link', { name: 'Show failure' }));

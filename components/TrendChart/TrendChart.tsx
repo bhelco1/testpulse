@@ -124,6 +124,11 @@ function inMilliseconds(data: TrendData): ShownData {
 
 // The width the chart is drawn at, measured the way tp-charts.js measures it: whole pixels, and
 // only a change of 2 px or more redraws, so a scrollbar appearing cannot make it oscillate.
+// A full-page screenshot lays the page out at 0 px wide for a moment (CI run 44632760225). A chart
+// that wide shows nothing, so 0 never replaces a width: putting the placeholder in place of the
+// plot is what the screenshot caught. And after the first measure it takes the width the observer
+// reported rather than measuring again on the next frame, which could land in such a moment
+// after the observer's last report and leave nothing to correct it.
 function useMeasuredWidth(ref: RefObject<HTMLDivElement | null>): number {
   const [width, setWidth] = useState(0);
   useLayoutEffect(() => {
@@ -131,19 +136,22 @@ function useMeasuredWidth(ref: RefObject<HTMLDivElement | null>): number {
     if (!element) return;
     let last = -1;
     let frame = 0;
-    const read = () => {
-      const next = Math.floor(element.getBoundingClientRect().width);
-      if (Math.abs(next - last) >= 2) {
+    const take = (measured: number) => {
+      const next = Math.floor(measured);
+      if (next > 0 && Math.abs(next - last) >= 2) {
         last = next;
         setWidth(next);
       }
     };
-    const observer = new ResizeObserver(() => {
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[entries.length - 1];
+      if (!entry) return;
+      const observed = entry.borderBoxSize[0]?.inlineSize ?? entry.contentRect.width;
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(read);
+      frame = requestAnimationFrame(() => take(observed));
     });
     observer.observe(element);
-    read();
+    take(element.getBoundingClientRect().width);
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
@@ -219,6 +227,7 @@ export function TrendChart(props: TrendChartProps) {
   return (
     <figure
       className={styles.figure}
+      data-part="trend-chart"
       aria-busy={loading || undefined}
       aria-label={loading ? 'Loading chart' : undefined}
     >
@@ -642,6 +651,7 @@ function Plot({
         aria-label={label}
         tabIndex={0}
         className={styles.surface}
+        data-part="plot"
         onPointerMove={onPointerMove}
         onPointerLeave={() => setHover(null)}
         onFocus={() => setHover(count - 1)}

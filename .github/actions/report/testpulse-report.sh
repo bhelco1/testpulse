@@ -40,6 +40,12 @@ require_env GITHUB_SHA "${GITHUB_SHA:-}"
 require_env GITHUB_EVENT_NAME "${GITHUB_EVENT_NAME:-}"
 require_env "GITHUB_HEAD_REF or GITHUB_REF_NAME" "$branch"
 
+# On a pull_request event GITHUB_SHA is the merge commit GitHub makes of the PR and its base,
+# which is on no branch. The PR's own commit is only in the event payload, which needs a JSON
+# reader this script does without, so the action reads it from the github context and passes it
+# as TESTPULSE_COMMIT_SHA. Called directly, the script sends GITHUB_SHA unless the step sets it.
+commit_sha="${TESTPULSE_COMMIT_SHA:-${GITHUB_SHA:-}}"
+
 # The arguments get the same treatment: a typo in a workflow is a skip and a usage line, never
 # an unbound-variable abort that reddens a build whose tests all passed.
 job="${1:-}"; module="${2:-}"; platform="${3:-}"; format="${4:-}"; glob="${5:-}"
@@ -77,7 +83,7 @@ fi
 meta=$(cat <<JSON
 {"ci_run_id":"$(json_escape "${GITHUB_RUN_ID:-}")","run_attempt":${run_attempt},
  "job":"$(json_escape "$job")","module":"$(json_escape "$module")","platform":"$(json_escape "$platform")",
- "commit_sha":"$(json_escape "${GITHUB_SHA:-}")","branch":"$(json_escape "$branch")",
+ "commit_sha":"$(json_escape "$commit_sha")","branch":"$(json_escape "$branch")",
  "event":"$(json_escape "${GITHUB_EVENT_NAME:-}")",
 ${run_url_field}
  "path_prefix":"$(json_escape "${GITHUB_WORKSPACE:-}/")"}

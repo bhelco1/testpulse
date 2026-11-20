@@ -6,7 +6,8 @@ import { durationTrend, type DurationPoint } from '../stats/duration.ts';
 import { flakeRateRun, talliedFlakyTests } from '../stats/flaky.ts';
 import { PUBLIC_RUN_COLUMNS, PublicRunRowSchema, type PublicRun } from '../stats/input.ts';
 import { readByRunIds } from '../stats/load.ts';
-import { countsTowardCiOnlyStats, lastRuns, latestRun, TREND_RUNS } from '../stats/rules.ts';
+import { countsTowardCiOnlyStats, lastRuns, TREND_RUNS } from '../stats/rules.ts';
+import { runsThroughLatest } from '../stats/settled.ts';
 import { projectSummary, summaryAsOf, type ProjectSummary } from '../stats/summary.ts';
 import {
   talliedCountTrend,
@@ -90,7 +91,7 @@ export interface ProjectPage {
   readonly summary: ProjectSummary;
   /** When the project's latest CI run on any branch finished, as section 11 dates a report. */
   readonly lastReportAt: Date | null;
-  /** The latest default-branch CI run's reports, failing tests and duration; null before the first. */
+  /** The latest settled default-branch CI run's reports, failing tests and duration; null before the first. */
   readonly latestRun: LatestRunDetail | null;
   readonly trends: ProjectTrends;
   /** "Pass rate, 30 days" on the latest-run card. */
@@ -239,13 +240,16 @@ export async function loadProjectPage(
   const summary = projectSummary(input, at);
   const { runs } = input;
   const shown = listed.slice(0, runLimit);
-  const latest = latestRun(runs, project.defaultBranch, at);
+  const { latest } = input;
+  // The flake rate's denominator is the latest run's Total tests (section 11): the latest
+  // settled run, so it is the run the latest-run card shows.
+  const throughLatest = runsThroughLatest(runs, latest?.run ?? null, project.defaultBranch);
 
   // Distinct tests are counted in the database for the test count trend's last 30 CI runs,
   // however old, the flake rate's run, and each listed run (decision 2026-09-29). A pruned run
   // has no per-test rows left to count.
   const trendRuns = lastRuns(runs, TREND_RUNS, ci, at);
-  const counted = [...trendRuns, flakeRateRun(runs, stats), ...shown]
+  const counted = [...trendRuns, flakeRateRun(throughLatest, stats), ...shown]
     .filter((run): run is PublicRun => run !== undefined && notPruned(run))
     .map((run) => run.id);
   const [tallies, reportCounts, latestRunDetail] = await Promise.all([
@@ -254,13 +258,13 @@ export async function loadProjectPage(
       client,
       shown.map((run) => run.id),
     ),
-    latest === null ? null : loadLatestRunDetail(client, latest),
+    latest === null ? null : loadLatestRunDetail(client, latest.run, latest.reports),
   ]);
   const listedTests = talliedTestsByRun(
     shown.filter(notPruned).map((run) => run.id),
     tallies,
   );
-  const flakeRate = talliedFlakyTests(runs, flaky.testIds, tallies, stats);
+  const flakeRate = talliedFlakyTests(throughLatest, flaky.testIds, tallies, stats);
 
   return {
     project,

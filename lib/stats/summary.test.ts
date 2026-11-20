@@ -93,6 +93,7 @@ describe('projectSummary', () => {
       tally('c4', 'unit', 'passed', 1),
       tally('c4', 'unit', 'skipped', 1),
     ],
+    receipts: [],
     coverage: [
       pctCoverage('cv0', 'bf1', 'shared', 93.3),
       countsCoverage('cv1', 'c4', 'shared', 457, 490),
@@ -256,6 +257,71 @@ describe('projectSummary', () => {
       marker: { health: 'stale', days: 13 },
     });
     expect(summary.latestRun).toMatchObject({ status: 'empty', passRate: null });
+  });
+});
+
+describe('projectSummary while a run’s reports are still arriving (decision 2026-11-19)', () => {
+  // s1 settled long ago with unit and e2e reports and 120 distinct tests, passing. n2 has its
+  // unit report in, failing, and is waiting on e2e, 10 minutes after its first report.
+  const received = (runId: string, job: string, receivedAt: string) => ({
+    runId,
+    job,
+    module: job,
+    platform: 'node',
+    receivedAt: at(receivedAt),
+  });
+  const settled = run('s1', '2026-10-05T10:20:00Z', { startedAt: at('2026-10-05T10:00:00Z') });
+  const arriving = run('n2', '2026-10-05T11:50:00Z', {
+    startedAt: at('2026-10-05T11:49:00Z'),
+    status: 'failed',
+    passed: 80,
+    failed: 1,
+  });
+  const input: ProjectSummaryInput = {
+    project: project({ coverageFloors: {} }),
+    runs: [run('s0', '2026-10-04T10:00:00Z'), settled, arriving],
+    lastReportAt: at('2026-10-05T11:50:00Z'),
+    latestRunTests: [tally('s1', 'unit', 'passed', 100), tally('s1', 'e2e', 'passed', 20)],
+    receipts: [
+      received('s0', 'unit', '2026-10-04T10:00:00Z'),
+      received('s1', 'unit', '2026-10-05T10:01:00Z'),
+      received('s1', 'e2e', '2026-10-05T10:20:00Z'),
+      received('n2', 'unit', '2026-10-05T11:50:00Z'),
+    ],
+    coverage: [],
+  };
+  const tenMinutesIn = at('2026-10-05T12:00:00Z');
+
+  it('keeps the previous settled run as the latest run, with its tests', () => {
+    const summary = projectSummary(input, tenMinutesIn);
+
+    expect(summary.latestRun).toMatchObject({ id: 's1', status: 'passed', passed: 120 });
+    expect(summary.totalTests).toBe(120);
+    expect(summary.layers).toEqual({ unit: 100, e2e: 20 });
+  });
+
+  it('keeps Red now, time to green and the green streak as of that run', () => {
+    const summary = projectSummary(input, tenMinutesIn);
+
+    // n2 failed so far, but the latest run is s1, which passed: not red, and the streak is
+    // s0, s1.
+    expect(summary.timeToGreen.stillRed).toBeNull();
+    expect(summary.greenStreak).toEqual({ current: 2, longest: 2 });
+  });
+
+  it('counts the arriving run among the runs in the last 30 days', () => {
+    expect(projectSummary(input, tenMinutesIn).runsInLast30Days).toBe(3);
+  });
+
+  it('takes the new run as the latest once 45 minutes have passed since its first report', () => {
+    const summary = projectSummary(
+      { ...input, latestRunTests: [tally('n2', 'unit', 'failed', 1)] },
+      at('2026-10-05T12:35:00Z'),
+    );
+
+    expect(summary.latestRun).toMatchObject({ id: 'n2', status: 'failed', failed: 1 });
+    expect(summary.timeToGreen.stillRed).toMatchObject({ failedRunId: 'n2' });
+    expect(summary.greenStreak.current).toBe(0);
   });
 });
 
@@ -503,6 +569,7 @@ describe('summaryAsOf', () => {
     runs: red,
     lastReportAt: at('2026-10-04T11:59:30Z'),
     latestRunTests: [tally('f2', 'unit', 'failed', 1)],
+    receipts: [],
     coverage: [],
   };
   // The minute's last millisecond, as the cached read ran, and two instants inside the minute.

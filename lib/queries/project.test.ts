@@ -130,6 +130,7 @@ interface Tables {
   readonly flakyFailures?: readonly unknown[];
   readonly failing?: readonly unknown[];
   readonly tests?: readonly unknown[];
+  readonly reports?: readonly unknown[];
 }
 
 const isFeed = (query: Query) =>
@@ -178,7 +179,7 @@ const answering =
           ],
         };
       case 'reports':
-        return { data: [REPORT] };
+        return { data: tables.reports ?? [REPORT] };
       case 'tests':
         return { data: tables.tests ?? [] };
       default:
@@ -281,6 +282,53 @@ describe('loadProjectPage', () => {
         receivedAt: new Date('2026-10-05T09:00:02Z'),
       },
     ]);
+  });
+
+  it('keeps the previous settled run while a new run’s reports are arriving (decision 2026-11-19)', async () => {
+    // ci-1 reported android and ios. ci-2's android report arrived 10 minutes ago and its ios
+    // report has not: ci-1 stays the latest run on the card and in the flake rate.
+    const runs = [
+      runRow('ci-1', '2026-10-03T10:00:00+00:00', { status: 'failed', passed: 2, failed: 1 }),
+      runRow('ci-2', '2026-10-05T11:50:00+00:00', { duration_ms: 19_500 }),
+    ];
+    const reports = [
+      { ...REPORT, id: 'rep-1a', run_id: 'ci-1', received_at: '2026-10-03T09:59:00+00:00' },
+      {
+        ...REPORT,
+        id: 'rep-1i',
+        run_id: 'ci-1',
+        job: 'ios',
+        platform: 'ios-sim',
+        received_at: '2026-10-03T10:00:00+00:00',
+      },
+      { ...REPORT, run_id: 'ci-2', received_at: '2026-10-05T11:50:00+00:00' },
+    ];
+    const { client, queries } = fakeClient(
+      answering({
+        runs,
+        feed: [...runs].reverse(),
+        reports,
+        flaky: [{ test_id: 't1', platforms: ['jvm'], commits: 1 }],
+      }),
+    );
+
+    const page = await loadProjectPage('ostomate2', {}, client, NOW);
+
+    expect(page?.summary.latestRun).toMatchObject({ id: 'ci-1', status: 'failed', failed: 1 });
+    expect(page?.summary.totalTests).toBe(2);
+    expect(page?.latestRun?.reports.map((report) => report.platform)).toEqual(['jvm', 'ios-sim']);
+    // The flake rate's denominator is ci-1's 2 tests, not ci-2's 3.
+    expect(page?.flaky).toMatchObject({ totalTests: 2, flakeRate: 0.5 });
+    // Red now is ci-1's, as the card's run is.
+    expect(page?.summary.timeToGreen.stillRed).toMatchObject({ failedRunId: 'ci-1' });
+    // The run list and the per-run charts still show every run, ci-2 included.
+    expect(page?.runs.items.map((run) => run.id)).toEqual(['ci-2', 'ci-1']);
+    expect(page?.trends.testCount.map((point) => point.runId)).toEqual(['ci-1', 'ci-2']);
+    const failingQuery = queries.find(
+      (query) =>
+        query.table === 'results' && String(firstArgs(query, 'select')[0]).includes('test_key'),
+    );
+    expect(argsOf(failingQuery as Query, 'eq')).toEqual([['reports.run_id', 'ci-1']]);
   });
 
   it('lists the latest run’s failing tests by suite and name with their platform', async () => {

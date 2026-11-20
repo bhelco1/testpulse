@@ -4,7 +4,8 @@ import { latestCoverage, type ModuleCoverage } from './coverage.ts';
 import { projectHealth, type ProjectHealth } from './health.ts';
 import type { StatsCoverage, StatsRun } from './input.ts';
 import { projectsPassing, type ProjectsPassing } from './projects-passing.ts';
-import { countsTowardCiOnlyStats, inWindow, latestRun } from './rules.ts';
+import { countsTowardCiOnlyStats, inWindow } from './rules.ts';
+import { latestSettledRun, runsThroughLatest, type ReportReceipt } from './settled.ts';
 import { greenStreak, type GreenStreak } from './streak.ts';
 import { talliedCounts, talliedOutcomes, type TestTally } from './test-counts.ts';
 import { timeToGreen, type TimeToGreen } from './time-to-green.ts';
@@ -13,7 +14,11 @@ import { passRate } from './trends.ts';
 // Spec section 11 headline tiles and the section 13 project card, for the landing page. Each
 // project's numbers come from its own runs; the headline combines only the ones that describe
 // the whole portfolio. Read as follows, and pinned by the tests:
-// - "Latest run" is the latest default-branch CI run (design/data-map.md).
+// - "Latest run" is the latest settled default-branch CI run (design/data-map.md; settled per
+//   lib/stats/settled.ts, decision 2026-11-19): while a run's reports are still arriving, the
+//   card and the headline keep the previous one. Red now, time to green and the green streak
+//   read the runs up to that run, so they agree with it; runs in the last 30 days counts every
+//   run, as the run feed lists it.
 // - Its passed, failed and skipped are distinct tests, as Total tests is (decision 2026-09-28,
 //   section 19; design v6 item 10): a test failing on any platform is one failed test, not one
 //   per execution. So Ostomate2's 142 tests on two platforms count 142, not 192.
@@ -44,6 +49,11 @@ export interface ProjectSummaryInput {
   readonly lastReportAt: Date | null;
   /** The latest run's distinct tests by layer and combined status (run_test_tallies). */
   readonly latestRunTests: readonly TestTally[];
+  /**
+   * The reports received for the newest default-branch CI runs, back to the newest run settled
+   * by time (lib/stats/settled.ts): what tells which run is the latest.
+   */
+  readonly receipts: readonly ReportReceipt[];
   readonly coverage: readonly StatsCoverage[];
 }
 
@@ -108,7 +118,8 @@ export function runsInLast30Days(
 export function projectSummary(input: ProjectSummaryInput, now: Date): ProjectSummary {
   const { project, runs } = input;
   const options = { defaultBranch: project.defaultBranch, now };
-  const latest = latestRun(runs, project.defaultBranch, now);
+  const latest = latestSettledRun(runs, input.receipts, options);
+  const throughLatest = runsThroughLatest(runs, latest, project.defaultBranch);
   const { totalTests, layers } =
     latest === null ? { totalTests: 0, layers: {} } : talliedCounts(input.latestRunTests);
   const outcomes = talliedOutcomes(latest === null ? [] : input.latestRunTests);
@@ -133,9 +144,9 @@ export function projectSummary(input: ProjectSummaryInput, now: Date): ProjectSu
     totalTests,
     layers,
     coverage,
-    greenStreak: greenStreak(runs, options),
+    greenStreak: greenStreak(throughLatest, options),
     runsInLast30Days: runsInLast30Days(runs, options),
-    timeToGreen: timeToGreen(runs, options),
+    timeToGreen: timeToGreen(throughLatest, options),
     health: projectHealth({
       lastReportAt: input.lastReportAt,
       expectedCadenceDays: project.expectedCadenceDays,
@@ -150,7 +161,9 @@ export function projectSummary(input: ProjectSummaryInput, now: Date): ProjectSu
  * The summary as of `now`, from one computed as of another instant of the same UTC day with no run
  * finished between the two (lib/queries/read-minute.ts): the values that move with the clock,
  * health and how long the branch has been red, are recomputed; everything else is a run's and
- * stays (decision 2026-11-17).
+ * stays (decision 2026-11-17). Which run is the latest also moves with the clock, when a run
+ * settles by time (lib/stats/settled.ts), and is not recomputed here: it is as of the instant the
+ * summary was computed, which the cached read refreshes every minute (lib/queries/cache.ts).
  */
 export function summaryAsOf<S extends ProjectSummary>(
   summary: S,

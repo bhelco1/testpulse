@@ -92,6 +92,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </sc-for>
 </div>
 
+<sc-if value="{{ runningNow }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;min-height:44px;box-sizing:border-box;margin-top:12px;padding:10px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line);text-decoration:none;font-size:14.5px" style-hover="background:var(--raised)"><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg aria-hidden="true" style="flex:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h.01M12 12h.01M16 12h.01"></path></svg>Running now</span><span style="color:var(--ink)">{{ runningNow }}</span><span aria-hidden="true" style="margin-left:auto;color:var(--ink-3)">→</span></a></sc-if>
+
 <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin:48px 0 16px"><h2 style="margin:0;font:500 30px 'Source Serif 4',serif;letter-spacing:-.01em">Projects</h2><span style="font-size:14px;color:var(--ink-3)">Latest default-branch run</span></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px">
 <sc-for list="{{ cards }}" as="c" hint-placeholder-count="2">
@@ -104,8 +106,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <p style="margin:0 0 20px;font-size:15.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ c.tagline }}</p>
 <sc-if value="{{ c.hasRun }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:18px"><span style="font:500 clamp(44px,4.4vw,56px)/1 'Source Serif 4',serif;color:{{ c.totalInk }}">{{ c.total }}</span><span style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:15px;color:var(--ink-2)"><sc-for list="{{ c.subParts }}" as="sp" hint-placeholder-count="5"><span style="color:{{ sp.ink }};font-weight:{{ sp.w }}">{{ sp.t }}</span></sc-for></span></div></sc-if>
 <sc-if value="{{ c.notReporting }}" hint-placeholder-val="{{ false }}"><p style="margin:0 0 22px;font-size:15px;line-height:1.55;color:var(--ink-2)">Registered. Results appear here after its CI posts the first report.</p></sc-if>
-<sc-if value="{{ c.hasFailing }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 12px;min-height:44px;box-sizing:border-box;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span title="{{ c.failFull }}" style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ c.failName }}</span><span style="display:flex;gap:10px;font-size:13px;color:var(--ink-3)"><span>{{ c.failPlat }}</span><sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}"><span>{{ c.more }}</span></sc-if></span></a></sc-if>
+<sc-if value="{{ c.hasFailing }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 12px;min-height:44px;box-sizing:border-box;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span title="{{ c.failFull }}" style="font:{{ c.failFont }};color:var(--ink);overflow-wrap:anywhere">{{ c.failName }}</span><span style="display:flex;gap:10px;font-size:13px;color:var(--ink-3)"><span>{{ c.failPlat }}</span><sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}"><span>{{ c.more }}</span></sc-if></span></a></sc-if>
+<sc-if value="{{ c.stillRed }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;gap:10px;align-items:flex-start;min-height:44px;box-sizing:border-box;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none;font-size:14px;line-height:1.5;color:var(--ink)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>{{ c.stillRed }}</span></a></sc-if>
+<sc-if value="{{ c.nrBlock }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;gap:10px;align-items:flex-start;min-height:44px;box-sizing:border-box;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--inset);border:1px solid var(--line);text-decoration:none"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--neutral)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:600;color:var(--ink)">{{ c.nrHead }}</span><span style="font-size:13px;line-height:1.45;color:var(--ink-2);text-wrap:pretty">{{ c.nrBody }}</span></span></a></sc-if>
+<sc-if value="{{ c.arr }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-direction:column;gap:8px;min-height:44px;box-sizing:border-box;margin-bottom:18px;padding:12px 14px;border-radius:12px;background:var(--inset);border:1px solid var(--line);text-decoration:none"><span style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:13px"><span style="font-weight:600;color:var(--ink)">{{ c.arrHead }}</span><span style="color:var(--ink-3)">{{ c.arrSide }}</span></span><span aria-hidden="true" style="display:flex;gap:3px;height:8px"><sc-for list="{{ c.arrCells }}" as="ac" hint-placeholder-count="10"><span style="flex:1;min-width:3px;border-radius:99px;background:{{ ac.bg }}"></span></sc-for></span><span style="font-size:13px;line-height:1.45;color:var(--ink-3);text-wrap:pretty">{{ c.arrNote }}</span></a></sc-if>
 <sc-if value="{{ c.hasLayers }}" hint-placeholder-val="{{ true }}"><div style="display:flex;height:8px;gap:3px;border-radius:99px;overflow:hidden;margin-bottom:8px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><div style="flex:{{ l.n }};min-width:3px;background:{{ l.bg }}"></div></sc-for></div><div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--ink-2);margin-bottom:22px"><sc-for list="{{ c.layers }}" as="l" hint-placeholder-count="3"><span style="display:flex;gap:5px"><span>{{ l.label }}</span><span>{{ l.countText }}</span></span></sc-for></div></sc-if>
+<sc-if value="{{ c.missNote }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin-bottom:22px;border-radius:12px;background:var(--attn-tint);font-size:14.5px;line-height:1.55;color:var(--ink)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="44 18.8"></circle></svg><span>{{ c.missNote }}</span></div></sc-if>
 <sc-if value="{{ c.emptyNote }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin-bottom:22px;border-radius:12px;background:var(--attn-tint);font-size:14.5px;line-height:1.55;color:var(--ink)"><svg style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle><path d="M8 12h8"></path></svg><span>{{ c.emptyNote }}</span></div></sc-if>
 <sc-if value="{{ c.hasCov }}" hint-placeholder-val="{{ true }}"><div class="tp-cq" style="display:flex;flex-direction:column;gap:14px">
 <sc-for list="{{ c.cov }}" as="v" hint-placeholder-count="2">
@@ -119,7 +125,9 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ c.noCov }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:var(--ink-3)">No coverage reported</div></sc-if>
 <sc-if value="{{ c.hasReports }}" hint-placeholder-val="{{ true }}"><div style="margin-top:22px;padding:14px 16px;border-radius:12px;background:var(--inset);font:13px/1.8 'JetBrains Mono',monospace;color:var(--ink-2)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-family:'Public Sans',sans-serif;font-size:13px;color:var(--ink-3);margin-bottom:4px"><span>{{ c.repHead }}</span><span>{{ c.repSide }}</span></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));column-gap:24px"><sc-for list="{{ c.reports }}" as="r" hint-placeholder-count="3"><span style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;min-width:0"><span style="min-width:0;overflow-wrap:anywhere">{{ r.k }}</span><span style="flex:none;color:{{ r.ink }}">{{ r.n }}</span></span></sc-for></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));column-gap:24px"><sc-for list="{{ c.reports }}" as="r" hint-placeholder-count="3"><span style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;min-width:0"><span title="{{ r.full }}" style="min-width:0;overflow-wrap:anywhere">{{ r.k }}</span><span style="flex:none;color:{{ r.ink }};font-weight:{{ r.w }}">{{ r.n }}</span></span></sc-for></div>
+<sc-if value="{{ c.repFoot }}" hint-placeholder-val="{{ false }}"><p style="margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line);font:12.5px/1.5 'Public Sans',sans-serif;color:var(--ink-3);text-wrap:pretty">{{ c.repFoot }}</p></sc-if>
+<sc-if value="{{ c.testTime }}" hint-placeholder-val="{{ false }}"><p title="Test time: the sum of every report’s own time. Jobs run in parallel, so it is usually longer than CI time." style="margin:8px 0 0;padding-top:8px;border-top:1px solid var(--line);font:12.5px/1.5 'Public Sans',sans-serif;color:var(--ink-3)">{{ c.testTime }}</p></sc-if>
 </div></sc-if>
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;margin-top:auto;padding:16px 0 18px;margin-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink-3)"><span>{{ c.declared }}</span><span style="display:flex;align-items:center;gap:6px;margin-left:auto;color:{{ c.health.ink }};font-weight:600;font-size:14px;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ c.health.r }}" stroke-dasharray="{{ c.health.dash }}"></circle><path d="{{ c.health.d }}"></path></svg><span>{{ c.health.label }}</span></span></div>
 </article>
@@ -133,8 +141,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-for list="{{ feed }}" as="r" hint-placeholder-count="3">
 <a href="#" class="tp-run" style="padding:14px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:{{ r.bg }};text-decoration:none" style-hover="background:var(--raised)">
 <span class="tp-run-s" style="display:flex;align-items:center;gap:6px;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg style="flex:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ r.st.r }}" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.w }}</span></span>
-<span class="tp-run-t" style="display:flex;align-items:center;gap:8px;font-size:15px;line-height:22px;font-weight:500"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px/1.5 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink-3);font-weight:400;white-space:nowrap"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><sc-if value="{{ r.hasTitle }}" hint-placeholder-val="{{ true }}"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></sc-if></span>
-<span class="tp-run-m" style="display:block;font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }} · </span></sc-if><span>{{ r.branch }} · </span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></span>
+<span class="tp-run-t" style="display:flex;align-items:center;gap:8px;font-size:15px;line-height:22px;font-weight:500"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px/1.5 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span><sc-if value="{{ r.hasAttempt }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px/1.5 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral)">{{ r.attempt }}</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><svg role="img" aria-label="Private repository" style="flex:none;color:var(--ink-3)" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><title>Private repository</title><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if></span>
+<span class="tp-run-m" style="display:block;font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }} · </span></sc-if><span>{{ r.branch }} · </span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span><span>{{ r.scope }}</span></span>
 <span class="tp-run-c" style="display:flex;gap:6px;font-size:14px;line-height:22px;white-space:nowrap"><span style="color:{{ r.countInk }};font-weight:{{ r.countW }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
 <span class="tp-run-w" style="font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span>
 </a>
@@ -153,7 +161,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>{{ footerNote }}</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;visitor&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;direct&quot;,&quot;tracked link · lead RouteServe&quot;,&quot;tracked link · lead testpulse&quot;],&quot;default&quot;:&quot;tracked link · lead RouteServe&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;failed run&quot;,&quot;empty run&quot;,&quot;stale project&quot;,&quot;coverage below floor&quot;,&quot;live update&quot;,&quot;realtime disconnected&quot;,&quot;no projects&quot;,&quot;error&quot;],&quot;default&quot;:&quot;healthy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;visitor&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;direct&quot;,&quot;tracked link · lead RouteServe&quot;,&quot;tracked link · lead testpulse&quot;],&quot;default&quot;:&quot;tracked link · lead RouteServe&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;healthy&quot;,&quot;failed run&quot;,&quot;private project failed&quot;,&quot;run in progress&quot;,&quot;run in progress, failure arrived&quot;,&quot;incomplete run&quot;,&quot;scheduled run, E2E still red&quot;,&quot;empty run&quot;,&quot;stale project&quot;,&quot;coverage below floor&quot;,&quot;live update&quot;,&quot;realtime disconnected&quot;,&quot;no projects&quot;,&quot;error&quot;],&quot;default&quot;:&quot;healthy&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null };
   componentDidMount() { if (!window.TPKit) this.wait = setInterval(() => { if (window.TPKit) { clearInterval(this.wait); this.forceUpdate(); } }, 30); }
@@ -170,18 +178,18 @@ class Component extends DCLogic {
     if (!K) return base;
 
     const osto = { name: 'Ostomate2', tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
-      run: { status: 'passed', when: '4 min ago', branch: 'main', sha: '0e2d0b4', total: 160, failed: 0, skipped: 0, dur: '11m 34s' },
+      run: { status: 'passed', when: '4 min ago', branch: 'main', sha: '0e2d0b4', total: 160, failed: 0, skipped: 0, dur: '11m 34s', testTime: '16m 15s' }, /* v24 items 1, 9: total = the project's Total; dur is CI time */
       layers: { unit: 110, integration: 30, visual: 10, e2e: 10 }, cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]],
       reports: [['android/composeApp/jvm', 61], ['android/shared/jvm', 88], ['android-e2e/e2e/android-emulator', 8], ['ios/composeApp/ios-sim', 51], ['ios/shared/ios-sim', 86], ['ios-e2e/e2e/ios-sim', 5]], 
       declared: [] }; /* v10 item 3: Maestro flows now report */
     const route = { name: 'RouteServe', private: true, tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
-      run: { status: 'passed', when: '2 h ago', branch: 'main', sha: 'c238574', total: 1044, failed: 0, skipped: 0, dur: '29 s' },
+      run: { status: 'passed', when: '2 h ago', branch: 'main', sha: 'c238574', total: 1044, failed: 0, skipped: 0, dur: '29 s', testTime: '30 s' },
       layers: { unit: 607, component: 165, integration: 3, api: 269 }, cov: [['apps/backend', 96.1, 80], ['apps/mobile', 96.1, 80], ['packages/shared', 100, 80]],
       reports: [['test/apps/backend/node', 501], ['test/apps/mobile/node', 428], ['test/packages/shared/node', 119]], 
       declared: [{ name: 'Maestro E2E (iOS)', layer: 'e2e', count: 13, status: 'authored_not_executed' }] };
     /* v12: testpulse self-reports since 7 Oct. Distinct tests per layer from live production; the eight e2e report counts are a SAMPLE split of their 882 executions */
     const tp = { name: 'Testament', tagline: 'This dashboard, reporting on itself.',
-      run: { status: 'passed', when: '12 min ago', branch: 'main', sha: '8d3e1a2', total: 2598, failed: 0, skipped: 0, dur: '17m 53s' },
+      run: { status: 'passed', when: '12 min ago', branch: 'main', sha: '8d3e1a2', total: 2598, failed: 0, skipped: 0, dur: '17m 53s', testTime: '21m 40s' },
       layers: { unit: 1528, component: 655, integration: 180, e2e: 235 }, cov: [['unit', 3125 / 3141 * 100, 90]],
       reports: [['checks/unit/node', 2183], ['integration/integration/node', 180]].concat(['desktop-dark', 'desktop-light', 'phone-dark', 'phone-light', 'no-js', 'harness', 'leak-sweep', 'live'].map((p, i) => ['e2e/e2e/' + p, i === 0 ? 112 : 110])),
       declared: [] };
@@ -189,25 +197,68 @@ class Component extends DCLogic {
       { status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '0e2d0b4', total: 160, dur: '11m 34s', when: '4 min ago' },
       { status: 'passed', private: true, project: 'RouteServe', branch: 'main', sha: 'c238574', total: 1044, dur: '29 s', when: '2 h ago' },
     ];
-    let heroTotal = '3,802', heroNote = 'automated tests across three projects. 100% passing on the latest runs, 0 skipped.'; /* v8 item 6 template in components.md HeroNote */
+    const sum = 'automated tests across three projects: 160 + 1,044 + 2,598.'; /* v24 item 2: the arithmetic once, in the cards' order */
+    let heroTotal = '3,802', heroNote = sum + ' 100% of the tests that ran passed on the latest runs, 0 not run.'; /* v8 item 6 template in components.md HeroNote */
     const tile = (label, value, sub, attn) => ({ label, value, sub, attn: attn === true, fail: attn === 'fail', plain: !attn });
     const tiles = [
-      tile('Pass rate', '100%', 'Each project’s latest run'), /* v21 item 15: plain words; the skipped clause only when skipped > 0 */
+      tile('Pass rate', '100%', '3,802 of 3,802 tests that ran'), /* v24 item 2: the unit, {passed} of {passed + failed} */
       tile('Projects reporting', '3 of 3', 'All within their expected cadence'),
       tile('Runs in last 30 days', '26', 'Ostomate2 18 · RouteServe 6 · Testament 2'),
-      tile('Projects passing', '3 of 3', 'Latest default-branch runs'),
+      tile('Projects passing', '3 of 3', 'Green: Ostomate2, RouteServe, Testament'), /* v24 item 11 */
     ];
     const tpSample = 'Testament card: the eight e2e report counts (an even split of their 882 executions), its duration, time and commit are illustrative.'; /* verifier fix: brief gives no per-report e2e counts */
-    let sampleNote = '', feedNote = 'Updates as reports arrive', feedNoteInk = 'var(--ink-3)', footerNote = 'Last report received 4 min ago';
+    let runningNow = '', sampleNote = '', feedNote = 'Updates as reports arrive', feedNoteInk = 'var(--ink-3)', footerNote = 'Last report from any project: 4 min ago'; /* v24 item 15 */
 
     if (sc === 'failed run') {
       sampleNote = 'Ostomate2’s latest default-branch run shown failing 1 of 160 to illustrate the state.';
       osto.run = Object.assign({}, osto.run, { status: 'failed', sha: 'a41f9c2', failed: 1 });
       osto.failing = [{ suite: 'com.ostomate.app.ui.home.HomeViewModelTest', name: 'rendersToday', platform: 'ios-sim' }];
-      heroNote = 'automated tests across three projects. 1 failing on Ostomate2’s latest run, 0 skipped.';
-      tiles[0] = tile('Pass rate', '99.9%', '3,801 of 3,802 passed');
+      heroNote = sum + ' 1 failing on Ostomate2’s latest run, 0 not run.';
+      tiles[0] = tile('Pass rate', '99.9%', '3,801 of 3,802 tests that ran');
       tiles[3] = tile('Projects passing', '2 of 3', 'Ostomate2 red for 4m', 'fail');
       rows[0] = { status: 'failed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: 'a41f9c2', total: 160, passed: 159, failed: 1, when: '4 min ago' };
+    } else if (sc === 'private project failed') { /* v22 item 4: a private card's failed block is counts only: no test name, suite or path */
+      sampleNote = 'RouteServe’s latest default-branch run shown failing 2 of 1,044 to illustrate the private + failed state.';
+      route.run = Object.assign({}, route.run, { status: 'failed', sha: '5f0a2c9', failed: 2, when: '6 min ago' });
+      route.failing = [{ n: 2, status: 'failed', platform: 'node', layer: 'Integration' }];
+      heroNote = sum + ' 2 failing on RouteServe’s latest run, 0 not run.';
+      tiles[0] = tile('Pass rate', '99.9%', '3,800 of 3,802 tests that ran');
+      tiles[3] = tile('Projects passing', '2 of 3', 'RouteServe red for 6m', 'fail');
+      rows[1] = { status: 'failed', private: true, project: 'RouteServe', branch: 'main', sha: '5f0a2c9', total: 1044, passed: 1042, failed: 2, when: '6 min ago' };
+      rows = [rows[1], rows[0]];
+    } else if (sc === 'run in progress' || sc === 'run in progress, failure arrived') { /* v23 items 1–3: Testament's run has sent 2 of its 10 expected reports; the totals keep its last complete run */
+      const early = sc !== 'run in progress';
+      sampleNote = early ? 'Testament’s new run shown with its unit and integration reports in, one unit test failing, and its eight e2e reports still to come.' : 'Testament’s new run shown with its unit and integration reports in and its eight e2e reports still to come (about 11 minutes later).';
+      tp.expected = tp.reports.map(r => r[0]);
+      tp.last = { total: 2598, failed: 0, skipped: 0, dur: '17m 53s', when: '14 min ago', sha: '8d3e1a2' };
+      tp.run = { status: early ? 'failed' : 'in_progress', when: '2 min ago', branch: 'main', sha: '9f1c2d0', total: 2363, failed: early ? 1 : 0, skipped: 0, dur: '3m 10s' };
+      tp.arriving = { of: 10, last: '2 min ago' }; tp.reports = tp.reports.slice(0, 2);
+      if (early) tp.failing = [{ suite: 'lib/stats/streak.test.ts', name: 'counts a recovery after a red episode', platform: 'node' }];
+      heroNote = early ? sum + ' 1 failing on Testament’s latest run so far, 0 not run. That run is still arriving (2 of 10 reports), so the pass rate counts its last complete run.' : sum + ' 100% of the tests that ran passed on the latest runs, 0 not run. Testament’s latest run is still arriving (2 of 10 reports), so the pass rate counts its last complete run.'; /* v24 item 2: the total no longer moves, so only the pass rate falls back */
+      tiles[0] = tile('Pass rate', '100%', '3,802 of 3,802 tests that ran');
+      runningNow = 'Testament · 2 of 10 reports · 2,363 of 2,598 tests so far'; /* v24 item 19 */
+      tiles[3] = early ? tile('Projects passing', '2 of 3', 'Testament red for 2m', 'fail') : tile('Projects passing', '3 of 3', 'Green: Ostomate2, RouteServe, Testament');
+      rows = [early ? { status: 'failed', title: 'Push to main', project: 'Testament', branch: 'main', sha: '9f1c2d0', got: 2, of: 10, failed: 1, total: 2363, when: '2 min ago' } : { status: 'in_progress', title: 'Push to main', project: 'Testament', branch: 'main', sha: '9f1c2d0', got: 2, of: 10, total: 2363, when: '2 min ago' }].concat(rows);
+      footerNote = 'Last report from any project: 2 min ago';
+    } else if (sc === 'incomplete run') { /* v23 item 5: Ostomate2's push run closed without its Android emulator report (v24: a push run, since scheduled runs don't send E2E) */
+      sampleNote = 'Ostomate2’s push run shown closing without its android-emulator report to illustrate the state.';
+      osto.expected = osto.reports.map(r => r[0]);
+      osto.run = Object.assign({}, osto.run, { status: 'incomplete', when: '3 h ago', sha: '7c1e5a0', total: 160, notRun: 8, dur: '11m 21s', testTime: '15m 02s' }); /* v24 item 1: the Total stays 160; the 8 tests of the missing report are Not run */
+      osto.reports = osto.reports.filter(r => r[0] !== 'android-e2e/e2e/android-emulator'); osto.missing = ['android-e2e/e2e/android-emulator']; osto.event = 'push'; osto.limit = '1-hour';
+      heroNote = sum + ' 100% of the tests that ran passed on the latest runs; 8 not run (android-emulator didn’t report on Ostomate2’s latest push run).'; /* v24 item 2: an incomplete run counts its own figures; its missing tests are Not run */
+      tiles[0] = tile('Pass rate', '100%', '3,794 of 3,794 tests that ran');
+      tiles[3] = tile('Projects passing', '3 of 3', 'Ostomate2 last run incomplete');
+      rows[0] = { status: 'incomplete', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e5a0', missingN: 1, total: 160, notRun: 8, when: '3 h ago' };
+    } else if (sc === 'scheduled run, E2E still red') { /* v24 item 6: the weekly scheduled run doesn't send E2E; ios-e2e failed on the last push and hasn't run since, so Ostomate2 stays red */
+      sampleNote = 'Ostomate2’s weekly scheduled run shown passing without its two E2E reports, after an ios-e2e failure on the push before it.';
+      osto.run = Object.assign({}, osto.run, { status: 'passed', when: '3 h ago', sha: '7c1e5a0', total: 160, notRun: 13, dur: '11m 05s', testTime: '14m 48s' });
+      osto.reports = osto.reports.filter(r => !/-e2e\//.test(r[0])); osto.event = 'schedule';
+      osto.notRunWhy = [{ kind: 'not_sent', n: 8, what: 'android-e2e' }, { kind: 'not_sent', n: 5, what: 'ios-e2e' }]; osto.lastRanAll = 'on the push of a41f9c2, 6 days ago';
+      osto.stillRed = { what: 'ios-e2e', when: '6 days ago', sha: 'a41f9c2' };
+      heroNote = sum + ' 100% of the tests that ran passed on the latest runs; 13 not run (Ostomate2’s scheduled run doesn’t send E2E). Ostomate2 is still red: ios-e2e failed 6 days ago and hasn’t run since.';
+      tiles[0] = tile('Pass rate', '100%', '3,789 of 3,789 tests that ran');
+      tiles[3] = tile('Projects passing', '2 of 3', 'Ostomate2 red for 6d · ios-e2e hasn’t run since', 'fail');
+      rows[0] = { status: 'passed', title: 'Scheduled run', project: 'Ostomate2', branch: 'main', sha: '7c1e5a0', total: 160, notRun: 13, dur: '11m 05s', scope: 'E2E not in scheduled runs', when: '3 h ago' };
     } else if (sc === 'empty run') {
       sampleNote = 'Ostomate2’s latest run shown with zero tests executed to illustrate the state.';
       osto.run = Object.assign({}, osto.run, { status: 'empty' });
@@ -220,7 +271,7 @@ class Component extends DCLogic {
       sampleNote = 'RouteServe shown with no report for 12 days to illustrate the state.';
       route.stale = true; route.run = Object.assign({}, route.run, { when: '12 Sep' });
       tiles[1] = tile('Projects reporting', '2 of 3', 'RouteServe silent 12 days', true);
-      heroNote = 'automated tests across three projects. 100% passing on the latest runs, 0 skipped. RouteServe hasn’t reported since 12 Sep.';
+      heroNote = sum + ' 100% of the tests that ran passed on the latest runs, 0 not run. RouteServe hasn’t reported since 12 Sep.';
       rows[1] = Object.assign({}, rows[1], { when: '1 week ago' }); /* v9 item 5: feed rows use relative time; only the stale card shows a date */
     } else if (sc === 'coverage below floor') {
       sampleNote = 'Ostomate2 composeApp coverage shown under its floor to illustrate the state.';
@@ -229,7 +280,7 @@ class Component extends DCLogic {
       sampleNote = 'A new Ostomate2 run arriving at the top of the feed.';
       osto.run = Object.assign({}, osto.run, { when: 'just now', sha: '7c1e05b', dur: '11m 21s' });
       rows = [{ status: 'passed', title: 'Push to main', project: 'Ostomate2', branch: 'main', sha: '7c1e05b', total: 160, dur: '11m 21s', when: 'just now', isNew: true }].concat(rows).slice(0, 3); /* v8 item 35: always 3 rows */
-      footerNote = 'Last report received just now';
+      footerNote = 'Last report from any project: just now';
     } else if (!live) {
       feedNote = 'Offline. Showing runs as of 10:42 UTC; reconnecting'; feedNoteInk = 'var(--ink-2)';
     }
@@ -240,7 +291,7 @@ class Component extends DCLogic {
 
     return Object.assign(base, {
       themeVars: K.themeVars(dark), liveDot, liveLabel: live ? 'Live' : 'Offline · reconnecting',
-      sampleNote: sampleNote ? sampleNote + ' ' + tpSample : tpSample, heroTotal, heroNote, tiles, cards: (() => { /* v16 item 20: a tracked visitor's lead project (tracked_links.lead_project_slug) moves to the front; nothing else changes and nothing says why */ const v = this.props.visitor ?? 'direct', lead = v.includes('RouteServe') ? route : v.includes('testpulse') ? tp : null; const order = [osto, route, tp]; return (lead ? [lead].concat(order.filter(c => c !== lead)) : order).map(c => K.card(c)).map(v => Object.assign(v, { failName: brk(v.failName, true), reports: v.reports.map(r => Object.assign({}, r, { k: brk(r.k) })) })); })(), feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
+      runningNow, sampleNote: sampleNote ? sampleNote + ' ' + tpSample : tpSample, heroTotal, heroNote, tiles, cards: (() => { /* v16 item 20: a tracked visitor's lead project (tracked_links.lead_project_slug) moves to the front; nothing else changes and nothing says why */ const v = this.props.visitor ?? 'direct', lead = v.includes('RouteServe') ? route : v.includes('testpulse') ? tp : null; const order = [osto, route, tp]; return (lead ? [lead].concat(order.filter(c => c !== lead)) : order).map(c => K.card(c)).map(v => Object.assign(v, { failName: brk(v.failName, true), reports: v.reports.map(r => Object.assign({}, r, { k: brk(r.k) })) })); })(), feed: rows.map(r => K.row(r)), feedNote, feedNoteInk, footerNote,
     });
   }
 }

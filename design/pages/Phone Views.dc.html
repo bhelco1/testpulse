@@ -14,7 +14,7 @@
 </helmet>
 <div style="padding:48px;font-family:'Public Sans',sans-serif;color:#ede9e3;background:#0c0b0a;min-height:100vh">
 <h1 style="margin:0 0 8px;font:600 28px 'Public Sans',sans-serif">Phone widths · 390px · dark and light</h1>
-<p style="margin:0 0 32px;color:#a8a298;font-size:15px">Each frame is the live page at 390 × 844. Scroll inside a frame to read the full page. Kiosk is dark-only and fixed at 1920 × 1080, so it isn’t shown here.</p>
+<p style="margin:0 0 32px;color:#a8a298;font-size:15px">Each frame is the live page at 390 × 844. Scroll inside a frame to read the full page. Kiosk is dark-only and fixed at 1920 × 1080, so it isn’t shown here. v23 adds the new run states (VD, VL): runs still arriving, a run missing a report, a suite equal to its test’s name and the missing-report alert.</p>
 <section style="margin-bottom:56px">
 <h2 style="margin:0 0 20px;font:600 20px 'Public Sans',sans-serif">Dark</h2>
 <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
@@ -117,6 +117,112 @@
 <div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">L8</span><span style="font-weight:600">Server error</span></div>
 <div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
 <dc-import name="ServerError" kind="project" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+</div>
+</section>
+<section style="margin-bottom:56px">
+<h2 style="margin:0 0 20px;font:600 20px 'Public Sans',sans-serif">v23 states · Dark</h2>
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+<div id="VD1" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VD1</span><span style="font-weight:600">Landing · run in progress</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Landing" scenario="run in progress" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VD2" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VD2</span><span style="font-weight:600">Landing · incomplete run</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Landing" scenario="incomplete run" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VD3" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VD3</span><span style="font-weight:600">Project Page · run in progress</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Project Page" scenario="latest run in progress" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VD4" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VD4</span><span style="font-weight:600">Project Page · incomplete</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Project Page" scenario="latest run incomplete" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VD5" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VD5</span><span style="font-weight:600">Run Detail · in progress, a failure arrived</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Run Detail" run="Ostomate2 · in progress, a failure arrived" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VD6" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VD6</span><span style="font-weight:600">Run Detail · incomplete</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Run Detail" run="Ostomate2 · incomplete" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VD7" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VD7</span><span style="font-weight:600">Test History · suite is its own name</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Test History" variant="suite is its own name (Maestro flow)" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VD8" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VD8</span><span style="font-weight:600">Admin · missing report alert</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#121110">
+<dc-import name="Admin" view="signed in" theme="dark" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+</div>
+</section>
+<section style="margin-bottom:56px">
+<h2 style="margin:0 0 20px;font:600 20px 'Public Sans',sans-serif">v23 states · Light</h2>
+<div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+<div id="VL1" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VL1</span><span style="font-weight:600">Landing · run in progress</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Landing" scenario="run in progress" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VL2" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VL2</span><span style="font-weight:600">Landing · incomplete run</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Landing" scenario="incomplete run" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VL3" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VL3</span><span style="font-weight:600">Project Page · run in progress</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Project Page" scenario="latest run in progress" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VL4" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VL4</span><span style="font-weight:600">Project Page · incomplete</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Project Page" scenario="latest run incomplete" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VL5" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VL5</span><span style="font-weight:600">Run Detail · in progress, a failure arrived</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Run Detail" run="Ostomate2 · in progress, a failure arrived" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VL6" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VL6</span><span style="font-weight:600">Run Detail · incomplete</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Run Detail" run="Ostomate2 · incomplete" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VL7" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VL7</span><span style="font-weight:600">Test History · suite is its own name</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Test History" variant="suite is its own name (Maestro flow)" theme="light" hint-size="390px,844px"></dc-import>
+</div>
+</div>
+<div id="VL8" style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font-size:15px"><span style="font:500 12px 'JetBrains Mono',monospace;padding:2px 7px;border-radius:5px;background:#e3b35c;color:#121110">VL8</span><span style="font-weight:600">Admin · missing report alert</span></div>
+<div style="width:390px;height:844px;overflow:auto;border:1px solid #3d3a35;border-radius:28px;background:#f6f4f0">
+<dc-import name="Admin" view="signed in" theme="light" hint-size="390px,844px"></dc-import>
 </div>
 </div>
 </div>

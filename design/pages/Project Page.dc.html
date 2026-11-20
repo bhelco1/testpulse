@@ -75,7 +75,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-if value="{{ isPublic }}" hint-placeholder-val="{{ true }}"><a href="#" style="display:flex;align-items:center;gap:6px;min-height:44px;color:var(--ink-2)">Source on GitHub<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a></sc-if>
 </div>
 <sc-if value="{{ p.private }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;gap:12px;align-items:flex-start;max-width:620px;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Details hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real.</p></div></div>
+<div style="display:flex;gap:12px;align-items:flex-start;max-width:620px;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Test names hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">This repository is private, so its tests’ names and failure details aren’t shown. The results, counts and trends are real.</p></div></div>
 </sc-if>
 </div>
 
@@ -83,17 +83,26 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 12px;font-size:14px">
 <sc-if value="{{ isPass }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if>
 <sc-if value="{{ isFail }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if>
+<sc-if value="{{ isProg }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h.01M12 12h.01M16 12h.01"></path></svg>In progress</span></sc-if>
+<sc-if value="{{ isInc }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="44 18.8"></circle></svg>Incomplete</span></sc-if>
 <span style="color:var(--ink-3)">Latest run · {{ run.when }} · {{ run.branch }} · <span style="font-family:'JetBrains Mono',monospace;color:var(--ink-2)">{{ run.sha }}</span></span>
 </div>
 <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px"><span style="font:500 64px/1 'Source Serif 4',serif;color:{{ run.figColor }}">{{ run.figure }}</span><span style="font-size:15px;color:var(--ink-2)">{{ run.line }}</span></div>
 <sc-if value="{{ isFail }}" hint-placeholder-val="{{ false }}">
-<a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span style="font:13px 'JetBrains Mono',monospace;color:var(--ink);overflow-wrap:anywhere">{{ run.failNameB }}</span><span style="font-size:13px;color:var(--ink-3)">{{ run.failPlat }}</span></a>
+<a href="#" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none"><span style="font:{{ run.failFont }};color:var(--ink);overflow-wrap:anywhere">{{ run.failNameB }}</span><span style="font-size:13px;color:var(--ink-3)">{{ run.failPlat }}</span></a>
 </sc-if>
+<sc-if value="{{ isProg }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;flex-direction:column;gap:8px;min-height:44px;box-sizing:border-box;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--inset);border:1px solid var(--line);text-decoration:none"><span style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:13px"><span style="font-weight:600;color:var(--ink)">{{ arr.head }}</span><span style="color:var(--ink-3)">{{ arr.side }}</span></span><span aria-hidden="true" style="display:flex;gap:3px;height:8px"><sc-for list="{{ arr.cells }}" as="ac" hint-placeholder-count="6"><span style="flex:1;min-width:3px;border-radius:99px;background:{{ ac.bg }}"></span></sc-for></span><span style="font-size:13px;line-height:1.45;color:var(--ink-3);text-wrap:pretty">{{ arr.note }}</span></a></sc-if>
+<sc-if value="{{ isInc }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;align-items:flex-start;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--attn-tint);font-size:14px;line-height:1.5;color:var(--ink)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="44 18.8"></circle></svg><span>{{ missNote }}</span></div></sc-if>
+<sc-if value="{{ stillRed }}" hint-placeholder-val="{{ false }}"><a href="#" style="display:flex;gap:10px;align-items:flex-start;min-height:44px;box-sizing:border-box;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--fail-tint);text-decoration:none;font-size:14px;line-height:1.5;color:var(--ink)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>{{ stillRed }}</span></a></sc-if>
+<sc-if value="{{ nrNote }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--inset);border:1px solid var(--line)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--neutral)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:600;color:var(--ink)">{{ nrNote.head }}</span><span style="font-size:13px;line-height:1.45;color:var(--ink-2);text-wrap:pretty">{{ nrNote.body }}</span></span></div></sc-if>
 <div style="margin-top:10px;font-size:13.5px;color:var(--ink-3)">{{ p.platforms }}</div>
+<sc-if value="{{ run.testTime }}" hint-placeholder-val="{{ true }}"><div title="Test time: the sum of every report’s own time. Jobs run in parallel, so it is usually longer than CI time." style="margin-top:2px;font-size:13.5px;color:var(--ink-3)">{{ run.testTime }}</div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:16px 12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
-<div style="flex:1 1 120px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Pass rate, 30 days</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">100%</div></div>
-<div style="flex:1 1 120px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Green streak</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span style="font:500 30px/1.15 'Source Serif 4',serif">{{ rec.streak }}</span><span style="font-size:18px;color:var(--ink-3)">{{ rec.streakUnit }}</span></div><div style="display:flex;gap:4px;margin-top:2px;font-size:13px;color:var(--ink-3)"><span>Longest</span><span>{{ rec.longest }}</span></div></div>
-<div style="flex:1 1 240px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Time to green</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ rec.ttg }}</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3);text-wrap:pretty">{{ rec.ttgSub }}</div><sc-if value="{{ rec.red }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;font-weight:600;color:var(--fail)"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>Red now for</span><span>{{ rec.redFor }}</span></div></sc-if></div>
+<div style="flex:1 1 120px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Pass rate, 30 days</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">100%</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3);text-wrap:pretty">{{ rec.passSub }}</div></div>
+<div style="flex:1 1 120px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Green streak</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:4px"><span style="font:500 30px/1.15 'Source Serif 4',serif">{{ rec.streak }}</span><span style="font-size:18px;color:var(--ink-3)">{{ rec.streakUnit }}</span></div><div style="margin-top:2px;font-size:13px;color:var(--ink-3)">{{ rec.streakCommits }}</div><div style="display:flex;gap:4px;margin-top:2px;font-size:13px;color:var(--ink-3)"><span>Longest</span><span>{{ rec.longest }}</span></div></div>
+<div style="flex:1 1 240px;min-width:0"><div style="font-size:13px;color:var(--ink-3)">Time to green</div><div style="font:500 30px/1.15 'Source Serif 4',serif;margin-top:4px">{{ rec.ttg }}</div><div style="margin-top:2px;font-size:13px;color:var(--ink-3);text-wrap:pretty">{{ rec.ttgSub }}</div><sc-if value="{{ rec.red }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;font-weight:600;color:var(--fail)"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span>Red now for</span><span>{{ rec.redFor }}</span></div><sc-if value="{{ rec.redWhy }}" hint-placeholder-val="{{ false }}"><div style="margin-top:2px;font-size:13px;color:var(--ink-2);text-wrap:pretty">{{ rec.redWhy }}</div></sc-if></sc-if></div>
+</div>
+<div style="margin-top:12px;font-size:13px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Pass rates count distinct tests that ran: passed ÷ (passed + failed). Tests not run are left out.
 </div>
 <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Longest streak, worst time to green and red-now duration are illustrative.</div>
 <a href="#" style="display:flex;align-items:center;min-height:44px;margin-top:10px;font-size:14.5px;font-weight:600;color:var(--ink)">View this run →</a>
@@ -145,7 +154,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <section style="padding:48px 0;border-top:1px solid var(--line)">
 <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:28px"><span style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">03</span><h2 style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Coverage and reports</h2></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start">
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
+<sc-if value="{{ noCov }}" hint-placeholder-val="{{ false }}"><div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
+<div style="font:500 22px 'Source Serif 4',serif">Line coverage</div>
+<div style="display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:16px;border-radius:12px;border:1px dashed var(--line-strong);background:var(--inset)"><svg aria-hidden="true" style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle></svg><div><div style="font-weight:600;font-size:14.5px">No coverage reported</div><div style="margin-top:2px;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ noCovBody }}</div></div></div>
+</div></sc-if>
+<sc-if value="{{ hasCov }}" hint-placeholder-val="{{ true }}"><div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
 <div style="font:500 22px 'Source Serif 4',serif">Line coverage against enforced floors</div>
 <p style="margin:4px 0 22px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">The amber tick is the floor CI enforces; a build below it fails. Scale 0 to 100.</p>
 <div class="tp-cq" style="display:flex;flex-direction:column;gap:14px">
@@ -158,15 +171,29 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </sc-for>
 </div>
 <sc-if value="{{ isBelow }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;margin-top:20px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE STATE</span>Below-floor figure is illustrative.</div></sc-if>
-</div>
+</div></sc-if>
 
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
 <div style="font:500 22px 'Source Serif 4',serif">Reports per run</div>
 <p style="margin:4px 0 18px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">{{ p.reportsNote }}</p>
 <div style="border-radius:12px;background:var(--inset);border:1px solid var(--line)">
 <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>JOB / MODULE / PLATFORM</span><span>TESTS</span></div>
-<sc-for list="{{ p.reports }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font:13px 'JetBrains Mono',monospace"><span style="min-width:0;color:var(--ink-2);overflow-wrap:anywhere">{{ r.kb }}</span><span>{{ r.n }}</span></div></sc-for>
-<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;font-size:13.5px"><span style="color:var(--ink-3)">{{ p.reportsFoot }}</span><b style="font-weight:600">{{ p.total }}</b></div>
+<sc-for list="{{ p.reports }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font:13px 'JetBrains Mono',monospace"><span title="{{ r.k }}" style="min-width:0;color:var(--ink-2);overflow-wrap:anywhere">{{ r.kb }}</span><span>{{ r.n }}</span></div></sc-for>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 14px;font-size:13.5px"><span style="color:var(--ink-3)">Distinct tests in the run</span><b style="font-weight:600">{{ p.total }}</b></div>
+</div>
+<p style="margin:10px 0 0;font-size:12.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">{{ p.execNote }}</p>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-card)">
+<div style="font:500 22px 'Source Serif 4',serif">Expected reports</div>
+<p style="margin:4px 0 18px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">{{ p.expIntro }}</p>
+<div style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ p.expGroups }}" as="g" hint-placeholder-count="1">
+<div style="border-radius:12px;background:var(--inset);border:1px solid var(--line);padding:12px 14px">
+<h3 style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin:0 0 6px;font:600 13.5px 'Public Sans',sans-serif;color:var(--ink)"><span>{{ g.when }}</span><span style="font-weight:400;font-size:13px;color:var(--ink-3)">{{ g.count }}</span></h3>
+<ul style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));column-gap:24px;font:13px/1.8 'JetBrains Mono',monospace;color:var(--ink-2)"><sc-for list="{{ g.keys }}" as="k" hint-placeholder-count="3"><li title="{{ k.full }}" style="min-width:0;overflow-wrap:anywhere">{{ k.kb }}</li></sc-for></ul>
+</div>
+</sc-for>
 </div>
 </div>
 </div>
@@ -193,7 +220,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-for list="{{ strip }}" as="c" hint-placeholder-count="40"><span style="flex:1 1 0;min-width:6px;height:{{ c.h }};box-sizing:border-box;border-radius:2px;background:{{ c.bg }};border:{{ c.bd }};display:flex;justify-content:center;align-items:flex-start;font:700 10px/14px 'Public Sans',sans-serif;color:var(--on-ink)">{{ c.g }}</span></sc-for>
 </div></div>
 <div style="display:flex;gap:3px;margin-top:8px;font-size:12.5px;color:var(--ink-3)"><sc-if value="{{ stripHasEmpty }}" hint-placeholder-val="{{ false }}"><span style="flex:{{ stripEmptyGrow }};min-width:0;white-space:nowrap">No earlier runs</span></sc-if><span style="flex:{{ stripGrow }};min-width:0;display:flex;justify-content:space-between;gap:12px;white-space:nowrap"><span>{{ stripOldest }}</span><span>Latest</span></span></div>
-<div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)"><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:14px;border-radius:2px;background:var(--pass)"></span>Passed</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;border-radius:2px;background:var(--fail)"></span>Failed</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;box-sizing:border-box;border-radius:2px;background:var(--attn-tint);border:1.5px dashed var(--attn)"></span>Empty</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)"><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:14px;border-radius:2px;background:var(--pass)"></span>Passed</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;border-radius:2px;background:var(--fail)"></span>Failed</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;box-sizing:border-box;border-radius:2px;background:var(--attn-tint);border:1.5px dashed var(--attn)"></span>Empty</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;box-sizing:border-box;border-radius:2px;background:var(--attn-tint);border:1.5px solid var(--attn)"></span>Incomplete</span><span style="display:flex;align-items:center;gap:8px"><span style="width:10px;height:20px;box-sizing:border-box;border-radius:2px;border:1.5px dashed var(--line-strong)"></span>Arriving</span></div>
 </div>
 </section>
 
@@ -209,8 +236,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <sc-for list="{{ runs }}" as="r" hint-placeholder-count="4">
 <a href="#" class="tp-run" style="padding:14px 16px;min-height:44px;box-sizing:border-box;border-radius:12px;background:{{ r.bg }};text-decoration:none" style-hover="background:var(--raised)">
 <span class="tp-run-s" style="display:flex;align-items:center;gap:6px;color:{{ r.st.ink }};font-weight:600;font-size:14px"><svg style="flex:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ r.st.r }}" stroke-dasharray="{{ r.st.dash }}"></circle><path d="{{ r.st.d }}"></path></svg><span>{{ r.st.w }}</span></span>
-<span class="tp-run-t" style="display:flex;align-items:center;gap:8px;font-size:15px;line-height:22px;font-weight:500"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px/1.5 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink-3);font-weight:400;white-space:nowrap"><svg style="flex:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Private repository</span></sc-if><sc-if value="{{ r.hasTitle }}" hint-placeholder-val="{{ true }}"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span></sc-if></span>
-<span class="tp-run-m" style="display:block;font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }} · </span></sc-if><span>{{ r.branch }} · </span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span></span>
+<span class="tp-run-t" style="display:flex;align-items:center;gap:8px;font-size:15px;line-height:22px;font-weight:500"><sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px/1.5 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--ink);color:var(--on-ink)">New</span></sc-if><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span><sc-if value="{{ r.hasAttempt }}" hint-placeholder-val="{{ false }}"><span style="flex:none;font:600 11px/1.5 'Public Sans',sans-serif;padding:2px 7px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral)">{{ r.attempt }}</span></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><svg role="img" aria-label="Private repository" style="flex:none;color:var(--ink-3)" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><title>Private repository</title><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if></span>
+<span class="tp-run-m" style="display:block;font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><sc-if value="{{ r.showProject }}" hint-placeholder-val="{{ true }}"><span>{{ r.project }} · </span></sc-if><span>{{ r.branch }} · </span><span style="font-family:'JetBrains Mono',monospace">{{ r.sha }}</span><span>{{ r.scope }}</span></span>
 <span class="tp-run-c" style="display:flex;gap:6px;font-size:14px;line-height:22px;white-space:nowrap"><span style="color:{{ r.countInk }};font-weight:{{ r.countW }}">{{ r.count }}</span><span style="color:var(--ink-3)">{{ r.count2 }}</span></span>
 <span class="tp-run-w" style="font-size:13px;line-height:19px;color:var(--ink-3);white-space:nowrap">{{ r.when }}</span>
 </a>
@@ -224,30 +251,35 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </section>
 
 <section style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
-<div style="font:500 22px 'Source Serif 4',serif">Flaky tests</div>
-<p style="margin:4px 0 16px;font-size:13.5px;line-height:1.5;color:var(--ink-3)">Flaky: passed and failed on the same commit and platform, in default-branch CI runs of the last 30 days.</p>
+<div style="font:500 22px 'Source Serif 4',serif">Flaky and intermittent tests</div>
+<p style="margin:4px 0 16px;font-size:13.5px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Flaky: passed and failed on the same commit and platform. Intermittent: failed in some of the last 30 default-branch runs it ran in, with passes in between, across commits. Infrastructure faults are shown but not counted.</p>
 <sc-if value="{{ hasFlaky }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ p.flaky }}" as="f" hint-placeholder-count="1">
 <a href="#" style="display:block;padding:12px 14px;border-radius:12px;background:var(--inset);border:1px solid var(--line);text-decoration:none" style-hover="background:var(--raised)">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><span style="min-width:0;font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ f.nameB }}</span><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></div>
-<div style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:3px;overflow-wrap:anywhere">{{ f.suiteB }}</div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><span style="min-width:0;font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ f.nameB }}</span><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="{{ f.glyph }}"></path></svg>{{ f.kind }}</span></div>
+<sc-if value="{{ f.hasSuite }}" hint-placeholder-val="{{ true }}"><div style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:3px;overflow-wrap:anywhere">{{ f.suiteB }}</div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px;font-size:13px;color:var(--ink-2)"><span>{{ f.rate }}</span><span>{{ f.layer }}</span><span>{{ f.plat }}</span></div>
+<sc-if value="{{ f.infra }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:8px;font-size:13px;color:var(--ink-3)"><span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-size:12px;font-weight:600"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle></svg>Infrastructure fault</span><span>{{ f.infra }}</span></div></sc-if>
 </a>
 </sc-for>
 <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Illustrates the row. The inventory found no known flaky tests.</div>
 </sc-if>
+<sc-if value="{{ privFlaky }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--inset);border:1px solid var(--line)"><svg style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg><div style="min-width:0"><div style="font-weight:600;font-size:14.5px">{{ p.privFlaky.head }}</div><div style="margin-top:4px;font-size:13.5px;line-height:1.5;color:var(--ink-2)">{{ p.privFlaky.by }}</div><div style="margin-top:4px;font-size:13px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Names aren’t shown for a private repository.</div></div></div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE</span>Illustrates the private summary. RouteServe has no known flaky tests.</div>
+</sc-if>
 <sc-if value="{{ noFlaky }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;border:1px dashed var(--line-strong)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg><div><div style="font-weight:600;font-size:14.5px">No flaky tests in the last 30 days</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">No test passed and failed on the same commit and platform in default-branch CI runs.</div></div></div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;border:1px dashed var(--line-strong)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg><div><div style="font-weight:600;font-size:14.5px">No flaky or intermittent tests in the last 30 days</div><div style="font-size:13.5px;color:var(--ink-2);margin-top:2px">No test passed and failed on the same commit and platform, and none failed between passes across commits, in default-branch CI runs.</div></div></div>
 </sc-if>
 </section>
 </div>
 </section>
 </main>
 
-<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received {{ p.lastReport }}</span></footer>
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report from any project: {{ footerAny }}</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;project&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ostomate2&quot;,&quot;routeserve&quot;],&quot;default&quot;:&quot;ostomate2&quot;,&quot;tsType&quot;:&quot;'ostomate2' | 'routeserve'&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;current&quot;,&quot;latest run failed&quot;,&quot;stale&quot;,&quot;coverage below floor&quot;,&quot;no recoveries in 90 days&quot;,&quot;12 runs so far&quot;,&quot;loading 20 more runs&quot;],&quot;default&quot;:&quot;current&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;project&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ostomate2&quot;,&quot;routeserve&quot;],&quot;default&quot;:&quot;ostomate2&quot;,&quot;tsType&quot;:&quot;'ostomate2' | 'routeserve'&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;current&quot;,&quot;latest run failed&quot;,&quot;stale&quot;,&quot;coverage below floor&quot;,&quot;no recoveries in 90 days&quot;,&quot;12 runs so far&quot;,&quot;loading 20 more runs&quot;,&quot;latest run in progress&quot;,&quot;latest run incomplete&quot;,&quot;E2E still red after a scheduled run&quot;,&quot;no coverage reported&quot;],&quot;default&quot;:&quot;current&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { project: null, theme: null, menuOpen: false, branches: 'default', more: false };
   static DARK = { bg:'#121110', surface:'#1a1917', inset:'#151412', raised:'#211f1c', line:'#2a2825', 'line-strong':'#3d3a35', ink:'#ede9e3', 'ink-2':'#cfc9bf', 'ink-3':'#a8a298', pass:'#7fd79a', 'pass-tint':'#1d2a20', fail:'#f4897c', 'fail-tint':'#33201c', attn:'#e3b35c', 'attn-tint':'#302716', neutral:'#b3ada3', 'neutral-tint':'#252320', 'on-ink':'#121110', 'layer-1':'#ede9e3', 'layer-2':'#b8b2a8', 'layer-3':'#8a847a', 'layer-4':'#6f6a62' };
@@ -264,11 +296,11 @@ class Component extends DCLogic {
     const rep = (a, b) => Array.from({ length: b }, () => a);
     return {
       ostomate2: {
-        name: 'Ostomate2', private: false, lastReport: '4 min ago', streak: 41, ttg: '2h 14m', longest: 58, worst: '9h 02m', recN: 4,
+        name: 'Ostomate2', private: false, lastReport: '4 min ago', streak: 41, ttg: '2h 14m', longest: 58, worst: '9h 02m', recN: 4, streakCommits: '41 runs · 15 commits', longestCommits: 21, passSub: '4,797 of 4,800 tests that ran, 30 runs', /* v24 items 7, 11: SAMPLE */
         tagline: 'Local-first ostomy supply tracker for Android and iOS. Kotlin Multiplatform.',
         description: 'Logs bag and flange changes with a tap or a QR deep link, predicts days of supply, and sends reorder reminders. Data stays on the device. Crash reporting is opt-in and off by default, and there is no analytics.',
-        run: { when: '4 min ago', branch: 'main', sha: '0e2d0b4', figure: '160', line: 'tests · 160 passed · 0 failed · 0 skipped · 11m 34s' },
-        failRun: { when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', figure: '1', line: 'failed · 159 of 160 passed · 11m 34s', failName: 'HomeViewModelTest › rendersToday', failPlat: 'ios-sim' },
+        run: { when: '4 min ago', branch: 'main', sha: '0e2d0b4', figure: '160', line: 'tests · 160 passed · 0 failed · 0 not run · 11m 34s CI time', testTime: '16m 15s test time across 6 reports' }, /* v24 items 1, 9 */
+        failRun: { when: '1 day ago', branch: 'fix-today-count', sha: 'a41f9c2', figure: '160', line: 'tests · 159 passed · 1 failed · 0 not run · 11m 34s CI time', testTime: '16m 15s test time across 6 reports', failName: 'HomeViewModelTest › rendersToday', failPlat: 'ios-sim' },
         pass: Array.from({ length: 30 }, () => 100),
         platforms: 'Same suites on JVM (149) and iOS simulator (137); Maestro flows on the Android emulator (8) and iOS simulator (5)',
         built: [
@@ -291,29 +323,32 @@ class Component extends DCLogic {
         declared: [],
         cov: [['shared', 92.0, 91], ['composeApp', 94.3, 93]], below: [1, 92.6],
         reportsNote: 'Each CI job posts its own report when it finishes. The six together make one run.',
+        expected: [{ on: ['push', 'pull_request', 'workflow_dispatch'], keys: ['android/composeApp/jvm', 'android/shared/jvm', 'android-e2e/e2e/android-emulator', 'ios/composeApp/ios-sim', 'ios/shared/ios-sim', 'ios-e2e/e2e/ios-sim'] }, { on: ['schedule'], keys: ['android/composeApp/jvm', 'android/shared/jvm', 'ios/composeApp/ios-sim', 'ios/shared/ios-sim'] }], /* v24 item 6: scheduled runs don't send E2E */ expLimit: '1 hour', /* v23 item 7: SAMPLE settings */
         reports: [{ k: 'android/composeApp/jvm', n: 61 }, { k: 'android/shared/jvm', n: 88 }, { k: 'android-e2e/e2e/android-emulator', n: 8 }, { k: 'ios/composeApp/ios-sim', n: 51 }, { k: 'ios/shared/ios-sim', n: 86 }, { k: 'ios-e2e/e2e/ios-sim', n: 5 }],
-        reportsFoot: 'Counted once per distinct test across reports',
+        execNote: 'Reports add up to 299 executions of 160 distinct tests. A test run on several platforms, or retried, counts once in the total.', /* v22 item 11 */
         covTitle: 'Line coverage, shared',
         covCaption: 'Rose from 52.6% to 92.0% over 10 runs; above its 91% floor.',
         covVals: [52.6, 57.9, 64.3, 69.8, 76.1, 81.4, 86.2, 89.7, 91.3, 92.0], covMin: 40, covFloor: 91, covTicks: [40, 60, 80, 100],
         tests: [].concat(rep(118, 6), rep(124, 6), rep(131, 6), rep(137, 6), rep(142, 5), [160]), testsMin: 100, testsMax: 175, testsTicks: [100, 125, 150, 175],
-        testsCap: 'Grew from 118 to 160 over the last 30 runs.',
+        testsCap: 'Total tests grew from 118 to 160 over the last 30 runs. It changes only when tests are added or removed.',
         dur: [658, 670, 658, 682, 670, 694, 682, 670, 706, 682, 694, 670, 718, 694, 682, 706, 742, 694, 682, 706, 694, 682, 706, 694, 718, 682, 706, 694, 682, 694], /* v14: around Ostomate2's live 694 s; SAMPLE */
         durCap: 'Between 10m 58s and 12m 22s over the last 30 runs. Median 11m 34s.',
         runs: [
           { pass: true, title: 'Push to main', branch: 'main', sha: '0e2d0b4', counts: '160 tests · 11m 34s', when: '4 min ago' },
-          { fail: true, pr: true, title: 'Pull request from fix-today-count', branch: 'fix-today-count', sha: 'a41f9c2', counts: '159 of 160 · 11m 34s', when: 'yesterday' },
-          { pass: true, title: 'Scheduled run', branch: 'main', sha: '7c1e5a0', counts: '160 tests · 11m 21s', when: '2 days ago', sample: true },
+          { pass: true, pr: true, title: 'Pull request from fix-today-count', branch: 'fix-today-count', sha: 'a41f9c2', counts: '160 tests · 11m 40s', when: '1 day ago', attempt: 2, attempts: 2, sample: true }, /* v24 item 13: a re-run of the same CI run */
+          { fail: true, pr: true, title: 'Pull request from fix-today-count', branch: 'fix-today-count', sha: 'a41f9c2', counts: '159 of 160 · 11m 34s', when: '1 day ago', attempt: 1, attempts: 2 },
+          { pass: true, title: 'Scheduled run', branch: 'main', sha: '7c1e5a0', counts: '160 tests · 11m 05s', notRun: 13, scope: 'E2E not in scheduled runs', when: '2 days ago', sample: true }, /* v24 item 6: scheduled runs don't send E2E */
           { pass: true, title: 'Push to main', branch: 'main', sha: 'b93d17e', counts: '160 tests · 11m 46s', when: '3 days ago', sample: true },
         ],
-        flaky: [{ name: 'insertsAndQueriesByDay', suite: 'ChangeEventDaoTest', rate: 'Failed 2 of last 40 runs', layer: 'Integration', plat: 'jvm' }],
+        flaky: [{ name: 'insertsAndQueriesByDay', suite: 'ChangeEventDaoTest', rate: 'Failed 2 of last 40 runs', layer: 'Integration', plat: 'jvm' },
+          { kind: 'Intermittent', name: 'Android Journey: Log a bag change', suite: 'Android Journey: Log a bag change', rate: 'Failed 6 of 28 runs · plus 1 infrastructure fault', layer: 'E2E', plat: 'android-emulator', infra: 'DeviceUnreachableException on 14 Nov, not counted' }], /* v24 item 8: SAMPLE; across commits, 28 = the runs it ran in */
       },
       routeserve: {
-        name: 'RouteServe', private: true, lastReport: '2 h ago', streak: 27, ttg: '1h 05m', longest: 63, worst: '3h 40m', recN: 3,
+        name: 'RouteServe', private: true, lastReport: '2 h ago', streak: 27, ttg: '1h 05m', longest: 63, worst: '3h 40m', recN: 3, streakCommits: '27 runs · 19 commits', longestCommits: 44, passSub: '31,318 of 31,320 tests that ran, 30 runs',
         tagline: 'Field-service CRM, scheduling, and route planning. Mobile app plus multi-tenant API.',
         description: 'For field-service pros covering a wide region: customer records, scheduling with calendar sync, SMS reminders, and route-corridor trip planning. Piano service first, on a multi-tenant core meant for other appointment-dispatch businesses.',
-        run: { when: '2 h ago', branch: 'main', sha: 'c238574', figure: '1,044', line: 'tests · 1,044 passed · 0 failed · 0 skipped · 29 s' },
-        failRun: { when: 'yesterday', branch: 'main', sha: '5f0a2c9', figure: '1', line: 'failed · 1,043 of 1,044 passed · 30 s', failName: 'jobs.test.ts › returns 409 when job overlaps', failPlat: 'node' },
+        run: { when: '2 h ago', branch: 'main', sha: 'c238574', figure: '1,044', line: 'tests · 1,044 passed · 0 failed · 0 not run · 29 s CI time', testTime: '30 s test time across 3 reports' },
+        failRun: { when: '1 day ago', branch: 'main', sha: '5f0a2c9', figure: '1,044', line: 'tests · 1,043 passed · 1 failed · 0 not run · 30 s CI time', testTime: '31 s test time across 3 reports', privFail: [{ n: 1, status: 'failed', platform: 'node', layer: 'API' }] }, /* v22 item 4: counts only, no name */
         pass: Array.from({ length: 30 }, () => 100),
         platforms: 'Node, across three workspaces',
         built: [
@@ -336,22 +371,24 @@ class Component extends DCLogic {
         declared: [{ name: 'Maestro E2E (iOS)', layer: 'E2E', countText: '13 flows', status: 'Authored, not yet executed', dash: '1 3.2' }],
         cov: [['apps/backend', 96.1, 80], ['apps/mobile', 96.1, 80], ['packages/shared', 100, 80]], below: [0, 78.2],
         reportsNote: 'The monorepo reports once per workspace, so each report stays under the 4 MB request limit.',
-        reports: [{ k: 'test/apps/backend/node', n: '' }, { k: 'test/apps/mobile/node', n: '' }, { k: 'test/packages/shared/node', n: '' }],
-        reportsFoot: 'Total across workspaces',
+        expected: [{ on: ['push', 'pull_request', 'workflow_dispatch'], keys: ['test/apps/backend/node', 'test/apps/mobile/node', 'test/packages/shared/node'] }], expLimit: '30 minutes', /* v23 item 7: SAMPLE settings; keys are shown for private projects too (v22) */
+        reports: [{ k: 'test/apps/backend/node', n: 501 }, { k: 'test/apps/mobile/node', n: 428 }, { k: 'test/packages/shared/node', n: 119 }],
+        execNote: 'Reports add up to 1,048 executions of 1,044 distinct tests. A test run on several platforms, or retried, counts once in the total.', /* v22 item 11 */
         covTitle: 'Line coverage, apps/backend',
         covCaption: 'Rose from 88.2% to 96.1% over 10 runs; above its 80% floor.',
         covVals: [88.2, 89.0, 90.4, 91.1, 92.6, 93.0, 94.4, 95.2, 95.8, 96.1], covMin: 60, covFloor: 80, covTicks: [60, 80, 100],
         tests: [].concat(rep(1012, 8), rep(1027, 8), rep(1041, 7), rep(1044, 7)), testsMin: 1000, testsMax: 1060, testsTicks: [1000, 1030, 1060],
-        testsCap: 'Grew from 1,012 to 1,044 over the last 30 runs.',
+        testsCap: 'Total tests grew from 1,012 to 1,044 over the last 30 runs. It changes only when tests are added or removed.',
         dur: [27, 28, 27, 29, 28, 27, 30, 28, 29, 27, 28, 31, 29, 28, 27, 29, 28, 30, 29, 28, 27, 29, 30, 28, 29, 28, 30, 29, 28, 29],
         durCap: 'Between 27 s and 31 s over the last 30 runs. Median 28 s.',
         runs: [
           { pass: true, branch: 'main', sha: 'c238574', counts: '1,044 tests · 29 s', when: '2 h ago', priv: true },
-          { pass: true, branch: 'main', sha: '9ab41e2', counts: '1,044 tests · 28 s', when: 'yesterday', priv: true, sample: true },
+          { pass: true, branch: 'main', sha: '9ab41e2', counts: '1,044 tests · 28 s', when: '1 day ago', priv: true, sample: true },
           { pass: true, branch: 'main', sha: 'e07c3d8', counts: '1,041 tests · 30 s', when: '3 days ago', priv: true, sample: true },
           { pass: true, branch: 'main', sha: '41d9f06', counts: '1,041 tests · 29 s', when: '5 days ago', priv: true, sample: true },
         ],
         flaky: [],
+        privFlaky: { head: '3 flaky or intermittent tests in 30 days', by: 'Integration 2 · Unit 1 · on node' }, /* v22 item 5: SAMPLE; a private project's flaky list is counts only */
       },
     };
   }
@@ -375,14 +412,29 @@ class Component extends DCLogic {
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }), themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme' };
     if (!K) return base;
     const sc = this.props.scenario ?? 'current';
-    const failed = sc === 'latest run failed', stale = sc === 'stale', below = sc === 'coverage below floor';
+    const failed = sc === 'latest run failed', stale = sc === 'stale', below = sc === 'coverage below floor', noCovSc = sc === 'no coverage reported';
 
     /* v6 item 3: recovery stats (spec §11). Red = latest default-branch run failed; a failed PR run does not break the streak. */
-    const red = failed && p.failRun.branch === 'main', noRec = sc === 'no recoveries in 90 days';
-    const rec = { streak: String(red ? 0 : p.streak), streakUnit: (red ? 0 : p.streak) === 1 ? 'run' : 'runs', longest: p.longest + ' runs',
-      ttg: noRec ? 'None' : p.ttg, ttgSub: noRec ? 'No recoveries in 90 days' : `Median of ${p.recN}, 90 days · worst ${p.worst}`, red, redFor: '21h 10m' };
+    /* v24 item 6: a red stretch ends only when the tests that failed have run and passed. Scenario "E2E still red after a scheduled run": ios-e2e failed on a push, then the weekly scheduled run (which doesn't send E2E) passed */
+    const e2eRed = sc === 'E2E still red after a scheduled run' && !p.private; /* Ostomate2 sample only: RouteServe has no E2E */
+    const red = (failed && p.failRun.branch === 'main') || e2eRed, noRec = sc === 'no recoveries in 90 days';
+    /* v24 items 7, 11: a streak says how many commits it covers; each figure carries its arithmetic */
+    const rec = { streak: String(red ? 0 : p.streak), streakUnit: (red ? 0 : p.streak) === 1 ? 'run' : 'runs', streakCommits: red ? 'Ends when the failing tests pass' : p.streakCommits, longest: `${p.longest} runs · ${p.longestCommits} commits`,
+      passSub: p.passSub, ttg: noRec ? 'None' : p.ttg, ttgSub: noRec ? 'No recoveries in 90 days' : `Median of ${p.recN} recoveries, 90 days · worst ${p.worst}`, red, redFor: e2eRed ? '6d 4h' : '21h 10m',
+      redWhy: e2eRed ? 'ios-e2e hasn’t run since it failed (a41f9c2). Scheduled runs don’t send E2E, so they can’t end it.' : '' };
     const r0 = failed ? p.failRun : p.run;
-    const run = Object.assign({}, r0, { figColor: failed ? 'var(--fail)' : 'var(--ink)' });
+    const run = Object.assign({}, r0, { figColor: 'var(--ink)' }); /* v24 item 1: the figure is the Total, failed or not */
+    /* v23 items 2, 5: the latest run measured against the expected reports (Ostomate2 sample) */
+    const prog = sc === 'latest run in progress', inc = sc === 'latest run incomplete';
+    const expKeys = (p.expected[0] || { keys: [] }).keys, late = expKeys.slice(-3);
+    const arr = prog ? { head: `Running now · ${expKeys.length - late.length} of ${expKeys.length} reports received`, /* v24 item 19: the block is the way into the Running now view */ side: 'last 2 min ago', cells: expKeys.map((k, i) => ({ bg: i < expKeys.length - late.length ? 'var(--ink-2)' : 'var(--line-strong)' })), note: `Figures are from the last complete run (${p.run.sha}, ${p.run.when}) until the rest arrive.` } : { head: '', side: '', cells: [], note: '' };
+    if (prog) Object.assign(run, { when: '2 min ago', sha: '9f1c2d0' });
+    const missKey = expKeys.find(k => /emulator/.test(k)) || expKeys[expKeys.length - 1];
+    if (inc) Object.assign(run, { when: '3 h ago', sha: '7c1e5a0', figure: '160', line: 'tests · 152 passed · 0 failed · 8 not run · 11m 21s CI time', testTime: '15m 02s test time across 5 reports' }); /* v24 item 1: the Total stays 160 */
+    if (e2eRed) Object.assign(run, { when: '3 h ago', sha: '7c1e5a0', figure: '160', line: 'tests · 147 passed · 0 failed · 13 not run · 11m 05s CI time', testTime: '14m 48s test time across 4 reports' });
+    const stillRed = e2eRed ? 'Still red: ios-e2e failed 6 days ago (a41f9c2) and hasn’t run since.' : '';
+    const nrNote = e2eRed ? { head: '13 of 160 not run', body: 'Scheduled runs don’t send android-e2e or ios-e2e, by the project’s settings. Those tests last ran on the push of a41f9c2, 6 days ago.' } : null;
+    const missNote = inc ? `${K.missingName(missKey, expKeys)} didn’t report, so its 8 tests didn’t run. Push runs expect ${expKeys.length} reports; ${expKeys.length - 1} arrived within the ${p.expLimit.replace(/^(\d+) (hour|minute)s?$/, '$1-$2')} limit, so this run is incomplete.` : '';
     if (stale) Object.assign(run, { when: '12 Sep' });
 
     const L = K.layers(p.layers), tot = L.reduce((s, l) => s + l.count, 0), mx = Math.max(...L.map(l => l.count));
@@ -392,36 +444,42 @@ class Component extends DCLogic {
     const coverage = p.cov.map(([m, v, f], i) => K.cov(m, below && p.below[0] === i ? p.below[1] : v, f)).sort((a, b) => a.m < b.m ? -1 : a.m > b.m ? 1 : 0); /* v6 item 9: by module key (code-point order) */
     const dates = Component.DATES;
     const covScope = 'Default branch · last 30 runs · CI and imported history';
+    const arriving = prog ? ' A run still arriving joins the charts when it completes.' : ''; /* v24 item 5 */
     /* v9 items 1–2: table "When" + run links. SAMPLE times: one run a day to 30 Sep 2026; imported history (no run page) = plain rows */
     const slug = (p.name || 'project').toLowerCase();
     const tw = (n, imported) => ({ whens: Array.from({ length: n }, (_, i) => new Date(Date.UTC(2026, 8, 30 - (n - 1 - i), 4 + (i % 6), 37)).toISOString()), hrefs: Array.from({ length: n }, (_, i) => i < (imported || 0) ? null : `/p/${slug}/runs/r${1000 + i}`), nowYear: 2026 });
     const MI = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
     const covTw = { whens: dates.map((d, i) => { const [dd, mm] = d.split(' '); return new Date(Date.UTC(2026, MI[mm], +dd, 4 + (i % 6), 37)).toISOString(); }), hrefs: dates.map((_, i) => i < 3 ? null : `/p/${slug}/runs/r${900 + i}`), nowYear: 2026 };
     const charts = [
-      { title: 'Pass rate', scope: covScope, caption: 'All 30 runs passed.', props: { ...tw(p.pass.length, 5), series: [{ name: 'Pass rate', values: p.pass }], format: 'pct', unit: 'run', ariaLabel: 'Pass rate per run. All 30 runs passed.' } },
-      { title: 'Tests per run', scope: 'Default branch · last 30 CI runs', caption: p.testsCap, props: { ...tw(p.tests.length), series: [{ name: 'Tests', values: p.tests }], format: 'int', unit: 'run', ariaLabel: 'Tests per run. ' + p.testsCap } },
+      { title: 'Pass rate', scope: covScope, caption: 'All 30 runs passed. Pass rates count distinct tests that ran: passed ÷ (passed + failed).' + arriving, props: { ...tw(p.pass.length, 5), series: [{ name: 'Pass rate', values: p.pass }], format: 'pct', unit: 'run', ariaLabel: 'Pass rate per run. All 30 runs passed.' } }, /* v24 item 10 */
+      { title: 'Tests per run', scope: 'Default branch · last 30 runs · Total tests', caption: p.testsCap + arriving, /* v24 item 4: plots the Total, which moves only when tests are added or removed */ props: { ...tw(p.tests.length), series: [{ name: 'Tests', values: p.tests }], format: 'int', unit: 'run', ariaLabel: 'Tests per run. ' + p.testsCap } },
       /* v8 item 3: one coverage chart per module, in module-key order; the second module's series is SAMPLE */
       ...p.cov.slice().sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0).map(([m, v, fl]) => {
         const main = m === p.covTitle.replace('Line coverage, ', '');
         const vals = main ? p.covVals : p.covVals.map(x => +(x + (v - p.covVals[p.covVals.length - 1])).toFixed(1));
-        const cap = main ? p.covCaption : `SAMPLE series. Rose from ${K.down1(vals[0]).toFixed(1)}% to ${K.down1(vals[vals.length - 1]).toFixed(1)}% over ${vals.length} runs; ${vals[vals.length - 1] < fl ? 'below' : 'above'} its ${fl}% floor.`;
+        const cap = main ? p.covCaption : `SAMPLE series. ${K.covTrend(vals[0], vals[vals.length - 1], vals.length)}; ${vals[vals.length - 1] < fl ? 'below' : 'above'} its ${fl}% floor.`; /* v24 item 16 */
         return { title: 'Line coverage, ' + m, scope: covScope, caption: cap, props: { ...covTw, series: [{ name: m, values: vals }], floor: fl, format: 'pct', unit: 'run', ariaLabel: 'Line coverage, ' + m + '. ' + cap } };
       }),
-      { title: 'Run duration', scope: 'Default branch · last 30 CI runs (imported history has no durations)', caption: p.durCap, props: { ...tw(p.dur.length), series: [{ name: 'Duration', values: p.dur }], format: 'dur', unit: 'run', ariaLabel: 'Run duration. ' + p.durCap } },
+      { title: 'CI time per run', scope: 'Default branch · last 30 CI runs (imported history has no durations)', caption: p.durCap + ' CI time runs from the first report’s start to the last report’s finish.' + arriving, props: { ...tw(p.dur.length), series: [{ name: 'CI time', values: p.dur }], format: 'dur', unit: 'run', ariaLabel: 'CI time per run. ' + p.durCap } }, /* v24 item 9 */
     ];
 
     const allBranches = this.state.branches === 'all';
-    const runs = p.runs.filter(r => allBranches || !r.pr).map(r => {
+    const top = e2eRed ? [K.row({ status: 'passed', title: 'Scheduled run', private: !!p.private, project: p.name, branch: 'main', sha: '7c1e5a0', total: 160, notRun: 13, dur: '11m 05s', scope: 'E2E not in scheduled runs', when: '3 h ago' }, false)] : prog ? [K.row({ status: 'in_progress', title: 'Push to main', private: !!p.private, project: p.name, branch: 'main', sha: '9f1c2d0', got: expKeys.length - late.length, of: expKeys.length, total: 149, when: '2 min ago' }, false)]
+      : inc ? [K.row({ status: 'incomplete', title: 'Push to main', private: !!p.private, project: p.name, branch: 'main', sha: '7c1e5a0', missingN: 1, total: 160, notRun: 8, when: '3 h ago' }, false)] : []; /* v23 item 3; v24 item 1 */
+    const runs = top.concat(p.runs.filter(r => allBranches || !r.pr).map(r => {
       const [tt, dur] = r.counts.split(' · ');
       const status = r.fail ? 'failed' : 'passed';
       const total = parseInt(tt.replace(/[^0-9]/g, '').slice(-4)) || 0;
-      return K.row({ status, title: r.title || '', private: !!r.priv, project: p.name, branch: r.branch, sha: r.sha, total: r.fail ? 160 : total, passed: 159, failed: 1, dur: dur || '', when: r.when }, false);
-    });
+      return K.row({ status, title: r.title || '', private: !!r.priv, project: p.name, branch: r.branch, sha: r.sha, total: r.fail ? 160 : total, notRun: r.notRun, scope: r.scope, attempt: r.attempt, attempts: r.attempts, passed: 159, failed: 1, dur: dur || '', when: r.when }, false);
+    }));
     const branchTabs = [['default', 'Default branch'], ['all', 'All branches']].map(([k, label]) => { const on = (this.state.branches || 'default') === k; return { label, on, bg: on ? 'var(--raised)' : 'transparent', ink: on ? 'var(--ink)' : 'var(--ink-2)', weight: on ? 600 : 500, pick: () => this.setState({ branches: k }) }; });
 
     /* v21 item 6: the strip always spans the card. Slots = capacity (40 here); runs fill from the right, cells share the width (flex 1, min 6 px); the slots not yet filled are one dashed baseline labelled "No earlier runs", and "{n−1} runs ago" sits under the oldest real cell */
     const nRuns = sc === '12 runs so far' ? 12 : 40;
     const strip = Array.from({ length: nRuns }, () => ({ h: '14px', bg: 'var(--pass)', bd: 'none', g: '' }));
+    /* v24 item 5: an incomplete run is its own cell (v23 rule); a run still arriving is the rightmost cell, dashed and unfilled */
+    if (inc) strip[nRuns - 1] = { h: '20px', bg: 'var(--attn-tint)', bd: '1.5px solid var(--attn)', g: '' };
+    if (prog) { strip.shift(); strip.push({ h: '20px', bg: 'transparent', bd: '1.5px dashed var(--line-strong)', g: '' }); }
     const brk = (t, camel) => React.createElement(React.Fragment, null, ...K.breakPieces(t, camel).flatMap((x, i) => i ? [React.createElement('wbr'), x] : [x])); /* v21 item 8 */
     const moreBusy = sc === 'loading 20 more runs' || this.state.more; /* v21 item 14 */
     const menuItems = Object.keys(all).map(k => ({ name: all[k].name, cur: k === key ? 'page' : 'false', note: k === key ? 'Current' : '', bg: k === key ? 'var(--surface)' : 'transparent', st: K.S.passed, pick: e => { e.preventDefault(); this.setState({ project: k, menuOpen: false }); } }))
@@ -431,12 +489,15 @@ class Component extends DCLogic {
 
     return Object.assign(base, {
       themeVars: K.themeVars(dark), liveDot, menuItems,
-      p: Object.assign({}, p, { hasDeclared: p.declared.length > 0, lastReport: stale ? '1 week ago' : p.lastReport, reports: p.reports.map(r => Object.assign({}, r, { kb: brk(r.k) })), flaky: p.flaky.map(f => Object.assign({}, f, { nameB: brk(f.name, true), suiteB: brk(f.suite) })) }),
-      isPublic: !p.private, isStale: stale, isHealthy: !stale, isPass: !failed, isFail: failed, isBelow: below, rec,
-      run: Object.assign(run, { failNameB: brk(run.failName || '', true) }), pyramid, pyrCols: '110px minmax(0,1fr) 120px', coverage, charts, runs, branchTabs, strip,
-      stripNote: `All ${nRuns} passed.`, stripAria: `Last ${nRuns} runs on main: ${nRuns} passed.`, stripOldest: nRuns > 1 ? `${nRuns - 1} runs ago` : '', stripHasEmpty: nRuns < 40, stripGrow: `${nRuns} 1 0`, stripEmptyGrow: `${40 - nRuns} 1 0`,
+      p: Object.assign({}, p, { hasDeclared: p.declared.length > 0, lastReport: stale ? '1 week ago' : p.lastReport, reports: p.reports.map(r => Object.assign({}, r, { n: typeof r.n === 'number' ? K.n(r.n) : r.n, kb: brk(K.reportKey(r.k)) })), /* v22 item 12: a repeated key part is dropped; the stored key is the title */ flaky: p.flaky.map(f => Object.assign({ kind: 'Flaky', glyph: f.kind === 'Intermittent' ? 'M3 12h4M10 12h4M17 12h4' : 'M2 12h4l3-7 6 14 3-7h4', infra: '' }, f, { nameB: brk(f.name, true), suiteB: brk(f.suite), hasSuite: !K.sameSuite(f.suite, f.name) })), /* v23 item 9 */
+        expIntro: `A run is complete when every report expected for its trigger has arrived. A report still missing ${p.expLimit} after the run starts makes the run incomplete, and the run page names it.`, /* v23 item 7 */
+        expGroups: p.expected.map(g => ({ when: (w => w.charAt(0).toUpperCase() + w.slice(1))(K.andList(g.on.map(e => K.triggerWord(e).toLowerCase())) + ' runs'), count: K.qty(g.keys.length, 'report'), keys: g.keys.map(k => ({ full: k, kb: brk(K.reportKey(k)) })) })) }),
+      isPublic: !p.private, isStale: stale, isHealthy: !stale, isPass: !failed && !prog && !inc, isFail: failed, isProg: prog, isInc: inc, arr, missNote, isBelow: below, rec,
+      run: Object.assign(run, p.private && run.privFail ? { failNameB: K.privFailHead(run.privFail), failPlat: K.privFailWhere(run.privFail), failFont: "600 13px 'Public Sans',sans-serif" } : { failNameB: brk(run.failName || '', true), failFont: "13px 'JetBrains Mono',monospace" }), /* v22 item 4 */ pyramid, pyrCols: '110px minmax(0,1fr) 120px', coverage, charts, runs, branchTabs, strip,
+      stillRed, nrNote, footerAny: '4 min ago', hasCov: !noCovSc, noCov: noCovSc, noCovBody: `${p.name}’s CI doesn’t send a coverage file, so there is nothing to show against a floor. Its test results are below.`, /* v24 items 6, 15, 18 */
+      stripNote: inc ? `${nRuns - 1} passed, 1 incomplete.` : prog ? `All ${nRuns - 1} complete runs passed; 1 arriving.` : `All ${nRuns} passed.`, stripAria: inc ? `Last ${nRuns} runs on main: ${nRuns - 1} passed, the latest incomplete.` : prog ? `Last ${nRuns} runs on main: ${nRuns - 1} passed, the latest still arriving.` : `Last ${nRuns} runs on main: ${nRuns} passed.`, stripOldest: nRuns > 1 ? `${nRuns - 1} runs ago` : '', stripHasEmpty: nRuns < 40, stripGrow: `${nRuns} 1 0`, stripEmptyGrow: `${40 - nRuns} 1 0`,
       moreBusy: moreBusy ? 'true' : 'false', moreBusyOn: moreBusy, moreIdle: !moreBusy, three: [1, 2, 3], loadMore: () => this.setState({ more: true }),
-      hasFlaky: p.flaky.length > 0, noFlaky: p.flaky.length === 0,
+      hasFlaky: !p.private && p.flaky.length > 0, noFlaky: !p.private && p.flaky.length === 0, privFlaky: !!p.private, /* v22 item 5: a private project's flaky list is one counts-only line; zero reads as the public empty state */
     });
   }
 }

@@ -1,6 +1,6 @@
-# testpulse reporting standard, v1.1
+# testpulse reporting standard, v1.2
 
-Version 1.1, 2026-11-18 (version 1, 2026-09-30). Owner: testpulse (this file). Implementation truth: [`docs/spec.md`](spec.md).
+Version 1.2, 2026-11-20 (version 1, 2026-09-30). Owner: testpulse (this file). Implementation truth: [`docs/spec.md`](spec.md).
 
 This is the rulebook for a project that reports test results to testpulse. It is written for whoever changes that project's CI, test frameworks or result output, human or Claude session, working in the project's own repository. It states what the project must do; the spec states how testpulse implements it, and each rule cites the spec section it comes from.
 
@@ -117,7 +117,7 @@ The reporter fills run identity from the GitHub Actions environment ([Appendix A
 |---|---|---|
 | `ci_run_id` | `GITHUB_RUN_ID` | 1 to 100 characters |
 | `run_attempt` | `GITHUB_RUN_ATTEMPT` | positive integer; the reporter falls back to 1 |
-| `commit_sha` | `GITHUB_SHA` | 7 to 40 hex characters |
+| `commit_sha` | the pull request's head commit (`github.event.pull_request.head.sha`) on pull requests, which the shared action passes as `TESTPULSE_COMMIT_SHA`, else `GITHUB_SHA`; a workflow calling a copied script may set `TESTPULSE_COMMIT_SHA` itself, and without it the script sends `GITHUB_SHA` | 7 to 40 hex characters |
 | `branch` | `GITHUB_HEAD_REF` on pull requests, else `GITHUB_REF_NAME` | 1 to 255 characters |
 | `event` | `GITHUB_EVENT_NAME` | one of `push`, `pull_request`, `schedule`, `workflow_dispatch` |
 | `run_url` | server URL, repository and run ID | optional; `https`, at most 2,000 characters; hidden for private projects |
@@ -305,4 +305,5 @@ None open. A question this standard raises is recorded here, decided in testpuls
 |---|---|---|
 | v1 | 2026-09-30 | First version. Incorporates the decisions of 2026-09-30 on the draft's open questions (failed uploads, missing coverage, several workflows, partial re-runs, reports varying by trigger, running every test after a failure, the conformance link, the shared action, tools with no fixture), on Maestro flow titles, on the versioning process and on CI workflow status. Not yet published to projects. |
 | v1.1 | 2026-11-18 | Minor: asks nothing new of a project. The endpoint may answer 202 (stored, processed shortly, [spec §6.6](spec.md#66-report-inbox)), which the reporter counts as success; the reporter retries no response and any 5xx 5 times over about 2 minutes, and no 4xx (it used curl's two retries, which included 429). Minor versions are added to the versioning rules (section 1). After 4 reports were lost on 2026-11-18, when the database cancelled `ingest_report` (57014) under load. Projects that copy `scripts/testpulse-report.sh` take the new copy; the shared action has it once its `v1` tag moves. |
+| v1.2 | 2026-11-20 | Minor: asks nothing new of a project. On a pull request the shared action sends the PR's head commit as `commit_sha`, read from the event payload as `TESTPULSE_COMMIT_SHA`; it sent `GITHUB_SHA`, which on `pull_request` is GitHub's merge commit of the PR and its base, on no branch, so a PR run showed and linked a commit that matched nothing on the PR. Other events still send `GITHUB_SHA`. A copied script sends `GITHUB_SHA` unless its step sets `TESTPULSE_COMMIT_SHA` (section 4). Projects on the action have it once its `v1` tag moves; projects that copy `scripts/testpulse-report.sh` take the new copy. |
 | v1 | 2026-10-07 | Wording only, so still v1: no MUST or SHOULD is added, removed or tightened. The shared action is available and the onboarding checklist shows its `uses:` form, with a copied script still conforming; the reporter writes a job-summary line when a report is refused or not sent; testpulse reports its own results (Vitest and Playwright in use, with fixtures, and each Playwright project its own platform); the conformance link opens now testpulse is public. |

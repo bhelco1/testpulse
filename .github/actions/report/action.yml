@@ -60,6 +60,8 @@ runs:
         TESTPULSE_RESULTS: ${{ inputs.results }}
         TESTPULSE_COVERAGE_FORMAT: ${{ inputs.coverage-format }}
         TESTPULSE_COVERAGE_FILE: ${{ inputs.coverage-file }}
+        # GitHub's own GITHUB_SHA on a pull request is its merge commit, on no branch.
+        TESTPULSE_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       run: >
         bash "$GITHUB_ACTION_PATH/testpulse-report.sh"
         "$TESTPULSE_JOB" "$TESTPULSE_MODULE" "$TESTPULSE_PLATFORM" "$TESTPULSE_FORMAT"

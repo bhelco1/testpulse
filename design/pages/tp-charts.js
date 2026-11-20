@@ -12,7 +12,7 @@
   const msStr = v => v < 0.0005 ? '<1 ms' : Math.round(v * 1000) + ' ms';
   const fmtFor = f => f === 'pct' ? (v, e) => (e ? down1(v).toFixed(1) : String(down1(v))) + '%'
     : f === 'ms' ? (v, e) => (e && v < 0.5 ? '<1' : Math.round(v)) + ' ms'
-    : f === 'sec' ? (v, e) => v < 0.01 && (e || v > 0) ? msStr(v) : /* v9 item 8: a stored 0 ms reads "<1 ms" */ (e ? v.toFixed(2) : String(+v.toFixed(2))) + ' s' /* v8 item 48: under 10 ms reads in ms */
+    : f === 'sec' ? (v, e) => e ? oneDur(v) /* v24 item 17: tooltip, table and end label use the one duration rule (TPKit.dur) */ : v < 0.01 && v > 0 ? msStr(v) : /* v9 item 8: a stored 0 ms reads "<1 ms" */ (e ? v.toFixed(2) : String(+v.toFixed(2))) + ' s' /* v8 item 48: under 10 ms reads in ms */
     : f === 'dur' ? (v, e) => e ? runDurS(v) : tickDur(v) /* v21 item 11: ticks in the labels' units ("10m", "12m"; "20 s"; "1h 30m"), never "1500 s"; tooltip, table and end label in the run-duration format */
     : v => Math.round(v).toLocaleString('en-US');
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -23,7 +23,9 @@
   if (typeof document !== 'undefined' && !document.getElementById('tpc-style')) { const st = document.createElement('style'); st.id = 'tpc-style';
     st.textContent = '.tpc-row:hover{background:var(--raised)}.tpc-link{text-decoration:none}.tpc-link:hover{text-decoration:underline;text-decoration-color:currentColor}.tpc-link:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;border-radius:6px}';
     document.head.appendChild(st); }
-  const runDurS = v => { const t = Math.floor(v); if (t < 1) return '<1 s'; /* v21 item 12 */ if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); return t < 3600 ? Math.floor(t / 60) + 'm ' + p(t % 60) + 's' : Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
+  /* v24 item 17: one rule for every duration, as TPKit.dur: <1 ms, ms, one decimal under 10 s, whole seconds, {m}m {ss}s, {h}h {mm}m */
+  const oneDur = s => { if (s < 0.001) return '<1 ms'; if (s < 1) return Math.floor(s * 1000) + ' ms'; if (s < 10) return String(Math.floor(s * 10) / 10) + ' s'; const t = Math.floor(s); if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); return t < 3600 ? Math.floor(t / 60) + 'm ' + p(t % 60) + 's' : Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
+  const runDurS = oneDur;
   /* v21 item 11: y ticks for run durations step in the labels' units and drop a zero part: under 2 minutes whole seconds ("20 s"), then whole minutes ("10m", "12m"), from 2 hours half hours ("1h 30m", "2h"). 0 reads "0". */
   const tickDur = v => { const t = Math.round(v); if (t === 0) return '0'; if (t < 60 || t % 60) return t < 60 ? t + ' s' : runDurS(t); if (t < 3600) return t / 60 + 'm'; const m = Math.floor(t % 3600 / 60); return Math.floor(t / 3600) + 'h' + (m ? ' ' + String(m).padStart(2, '0') + 'm' : ''); };
   const ago = (k, unit) => k === 0 ? 'Latest' : k + (unit === 'day' ? (k === 1 ? ' day ago' : ' days ago') : (k === 1 ? ' run ago' : ' runs ago'));

@@ -42,7 +42,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 </div>
 </header>
 
-<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;color:var(--ink-3)"><a href="#" style="min-height:44px;display:flex;align-items:center;text-decoration:underline">Overview</a><span aria-hidden="true">/</span><a href="#" style="min-height:44px;display:flex;align-items:center;text-decoration:underline">Ostomate2</a><span aria-hidden="true">/</span><span aria-current="page" style="min-height:44px;display:flex;align-items:center;gap:6px;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13.5px"><span>{{ t.short }}</span><span>›</span><span style="overflow-wrap:anywhere">{{ t.nameB }}</span></span></nav>
+<nav aria-label="Breadcrumb" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14.5px;color:var(--ink-3)"><a href="#" style="min-height:44px;display:flex;align-items:center;text-decoration:underline">Overview</a><span aria-hidden="true">/</span><a href="#" style="min-height:44px;display:flex;align-items:center;text-decoration:underline">Ostomate2</a><span aria-hidden="true">/</span><span aria-current="page" style="min-height:44px;display:flex;align-items:center;gap:6px;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13.5px"><sc-if value="{{ t.hasSuite }}" hint-placeholder-val="{{ true }}"><span>{{ t.short }}</span><span>›</span></sc-if><span style="overflow-wrap:anywhere">{{ t.nameB }}</span></span></nav>
 
 <main id="main">
 <section class="tp-cq" style="padding:36px 0 40px">
@@ -50,12 +50,13 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <span style="padding:3px 10px;border-radius:6px;border:1px solid var(--line-strong);color:var(--ink-2);font:13px 'JetBrains Mono',monospace">{{ t.module }}</span>
 <span style="padding:3px 10px;border-radius:6px;border:1px solid var(--line-strong);color:var(--ink-2)">{{ t.layer }}</span>
 <sc-if value="{{ t.isFlaky }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></sc-if>
+<sc-if value="{{ t.isIntermittent }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M3 12h4M10 12h4M17 12h4"></path></svg>Intermittent</span></sc-if>
 <sc-if value="{{ t.isNew }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600">New · first seen 4 min ago</span></sc-if>
 <span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">{{ t.sampleTag }}</span>
 </div>
 <h1 style="margin:14px 0 0;font:500 clamp(32px,4.5vw,52px)/1.1 'JetBrains Mono',monospace;letter-spacing:-.03em;overflow-wrap:anywhere">{{ t.nameB }}</h1>
-<div style="margin-top:8px;font:14px 'JetBrains Mono',monospace;color:var(--ink-3);overflow-wrap:anywhere">{{ t.suiteB }}</div>
-<sc-if value="{{ t.isMismatch }}" hint-placeholder-val="{{ true }}"><p style="display:flex;gap:8px;align-items:flex-start;margin:14px 0 0;font-size:14px;line-height:1.5"><svg style="flex:none;margin-top:3px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span style="min-width:0;text-wrap:pretty"><span style="font-weight:600;color:var(--fail)">Platform mismatch in 1 run</span><span style="color:var(--ink-3)"> · Pull request from fix-today-count, yesterday</span></span></p></sc-if>
+<sc-if value="{{ t.hasSuite }}" hint-placeholder-val="{{ true }}"><div style="margin-top:8px;font:14px 'JetBrains Mono',monospace;color:var(--ink-3);overflow-wrap:anywhere">{{ t.suiteB }}</div></sc-if>
+<sc-if value="{{ t.isMismatch }}" hint-placeholder-val="{{ true }}"><p style="display:flex;gap:8px;align-items:flex-start;margin:14px 0 0;font-size:14px;line-height:1.5"><svg style="flex:none;margin-top:3px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><span style="min-width:0;text-wrap:pretty"><span style="font-weight:600;color:var(--fail)">Platform mismatch in 1 run</span><span style="color:var(--ink-3)"> · Pull request from fix-today-count, 1 day ago</span></span></p></sc-if>
 
 <div class="tp-th-tiles">
 <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4"><div class="tp-th-tile" style="min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px"><div style="font-size:14px;color:var(--ink-3)">{{ s.label }}</div><div class="tp-th-v" style="color:{{ s.ink }}">{{ s.value }}</div><div style="font-size:13px;color:var(--ink-3);margin-top:2px">{{ s.sub }}</div></div></sc-for>
@@ -90,7 +91,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <div><div style="font-size:12.5px;color:var(--ink-3)">Run</div><div style="margin-top:3px;display:flex;gap:6px;font-weight:600"><span>{{ sel.title }}</span><span>·</span><span style="font-family:'JetBrains Mono',monospace;font-weight:500">{{ sel.sha }}</span></div></div>
 <div><div style="font-size:12.5px;color:var(--ink-3)">When</div><div style="margin-top:3px">{{ sel.when }}</div></div>
 <sc-for list="{{ sel.plats }}" as="sp" hint-placeholder-count="2"><div><div style="font-size:12.5px;color:var(--ink-3)">{{ sp.plat }}</div><div style="margin-top:3px;display:flex;align-items:center;gap:6px"><span style="display:flex;align-items:center;gap:6px;font-weight:600;color:{{ sp.ink }}"><svg style="flex:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="{{ sp.ic.r }}" stroke-dasharray="{{ sp.ic.dash }}"></circle><path d="{{ sp.ic.d }}"></path></svg><span>{{ sp.label }}</span></span><sc-if value="{{ sp.dur }}" hint-placeholder-val="{{ true }}"><span style="color:var(--ink-3)">·</span><span style="color:var(--ink-3)">{{ sp.dur }}</span></sc-if></div></div></sc-for>
-<a href="#" style="min-height:44px;display:flex;align-items:center;font-weight:600;margin-left:auto">Open run →</a></div>
+<a href="#" style="min-height:44px;display:flex;align-items:center;font-weight:600;margin-left:auto">Open run →</a>
+<sc-if value="{{ sel.note }}" hint-placeholder-val="{{ false }}"><p style="flex:1 1 100%;margin:0;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ sel.note }}</p></sc-if></div>
 </div>
 </section>
 
@@ -106,14 +108,17 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 
 </main>
 
-<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report from any project: 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;platform mismatch&quot;,&quot;flaky&quot;,&quot;new test, one run&quot;,&quot;12 runs so far&quot;],&quot;default&quot;:&quot;platform mismatch&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;platform mismatch&quot;,&quot;flaky&quot;,&quot;new test, one run&quot;,&quot;12 runs so far&quot;,&quot;suite is its own name (Maestro flow)&quot;,&quot;intermittent E2E flow (with an infrastructure fault)&quot;],&quot;default&quot;:&quot;platform mismatch&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
   state = { theme: null, sel: null };
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
   static SHAS = '3b7e1f0 9c24ad1 e81f6b2 47d0c93 b16a8e4 0fa392d c5e7710 72b9f05 da40c68 1e8b3a7 6f05d2c 83ca91e 2d7f4b0 f4196ea 58e2c07 ae63d19 07bc5f2 c9d8a40 4a1e7b6 e2f5093 91b07dc 3c68e2f 7ed4a15 b82c9f0 0d5a6e3 6b91f47 f07c3a8 25e8d1b 8a3f6c2 d4b1709 1f92e5a 69c0b3d a7e45f1 3d0b8c6 cb27a94 50f6e1d 8e19c07 f2a3d58 a41f9c2 0e2d0b4'.split(' ');
+
+  /* v24 item 17: the one duration rule, TPKit.dur (this page doesn't load tp-kit.js): <1 ms "<1 ms"; <1 s "{ms} ms"; <10 s one decimal rounded down, ".0" dropped; <60 s whole seconds; <60 min "5m 18s"; else "1h 05m" */
+  static dur = s => { if (s < 0.001) return '<1 ms'; if (s < 1) return Math.floor(s * 1000) + ' ms'; if (s < 10) return String(Math.floor(s * 10) / 10) + ' s'; const t = Math.floor(s); if (t < 60) return t + ' s'; const p = x => String(x).padStart(2, '0'); if (t < 3600) return Math.floor(t / 60) + 'm ' + p(t % 60) + 's'; return Math.floor(t / 3600) + 'h ' + p(Math.floor(t % 3600 / 60)) + 'm'; };
 
   componentDidUpdate(prev) {
     if (prev.variant !== this.props.variant) this.setState({ sel: null });
@@ -128,13 +133,35 @@ class Component extends DCLogic {
       /* v9 item 5: mock "now" is 30 Sep 2026, 10:00 UTC; one run a day; relative time per components.md */
       const D = 39 - i, d = new Date(Date.UTC(2026, 8, 30 - D, D === 0 ? 9 : 4 + (i % 6), D === 0 ? 56 : 37));
       const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], date = d.getUTCDate() + ' ' + MON[d.getUTCMonth()];
-      const when = D === 0 ? '4 min ago' : D === 1 ? 'yesterday' : D < 7 ? D + ' days ago' : D < 14 ? '1 week ago' : D < 28 ? Math.floor(D / 7) + ' weeks ago' : date;
+      const when = D === 0 ? '4 min ago' : D === 1 ? '1 day ago' : /* v24 item 14: elapsed time (TPKit.relTime); a run 28 h old reads "1 day ago" */ D < 7 ? D + ' days ago' : D < 14 ? '1 week ago' : D < 28 ? Math.floor(D / 7) + ' weeks ago' : date;
       const iso = d.toISOString(), id = 'r' + (1000 + i);
       const branch = i === 38 ? 'fix-today-count' : (i % 9 === 4 ? 'renovate-kotlin-2.3' : 'main');
       const event = branch === 'main' ? 'push' : 'pull_request';
       const title = event === 'push' ? 'Push to ' + branch : 'Pull request from ' + branch;
       const w = Math.sin(i * 1.7) * 0.5 + Math.cos(i * 0.9) * 0.5;
       runs.push({ i, sha: Component.SHAS[i], branch, title, when, w, iso, id, date });
+    }
+    if (variant === 'suite is its own name (Maestro flow)') { /* v23 item 9: Maestro sends the flow name as the suite too; the name shows once */
+      const nm = 'iOS Journey: Onboarding walkthrough';
+      return {
+        t: { name: nm, short: nm, suite: nm, module: 'e2e', layer: 'E2E', isFlaky: false, isMismatch: false, isNew: false, sampleTag: 'SAMPLE HISTORY', runCount: 40,
+          stripNote: 'Oldest on the left', oldest: '39 runs ago', caption: 'Passed on the iOS simulator in all 40 runs.' },
+        runs, plats: ['ios-sim'], status: () => 'pass', dur: (p, r) => 61.8 + r.w * 4,
+        fmt: Component.dur, min: 0, max: 80, ticks: [0, 40, 80],
+      };
+    }
+    if (variant === 'intermittent E2E flow (with an infrastructure fault)') { /* v24 item 8: fails across commits with passes between; scheduled runs don't send E2E (not run); one failure is an infrastructure fault */
+      runs.forEach(r => { if (r.branch === 'main' && r.i % 7 === 3) Object.assign(r, { title: 'Scheduled run', sched: true }); });
+      const FAIL = [14, 19, 23, 27, 32, 36], INFRA = 30;
+      return {
+        t: { name: 'Android Journey: Log a bag change', short: 'Android Journey: Log a bag change', suite: 'Android Journey: Log a bag change', module: 'e2e', layer: 'E2E', isFlaky: false, isMismatch: false, isNew: false, isIntermittent: true, sampleTag: 'SAMPLE HISTORY', runCount: 40,
+          stripNote: 'Oldest on the left', oldest: '39 runs ago' },
+        runs, plats: ['android-emulator'],
+        status: (p, i) => runs.find(r => r.i === i).sched ? 'notrun' : i === INFRA ? 'infra' : FAIL.includes(i) ? 'fail' : 'pass',
+        dur: (p, r) => r.sched ? null : r.i === INFRA ? 12.4 : 38.6 + r.w * 5 + (FAIL.includes(r.i) ? 6 : 0),
+        note: (p, r) => r.sched ? 'Not run: E2E isn’t part of scheduled runs.' : r.i === INFRA ? 'Classed as an infrastructure fault: DeviceUnreachableException. The device failed, not the test, so it isn’t counted as intermittent or flaky.' : '',
+        fmt: Component.dur, min: 0, max: 60, ticks: [0, 20, 40, 60],
+      };
     }
     if (variant === 'flaky') {
       return {
@@ -144,7 +171,7 @@ class Component extends DCLogic {
         runs, plats: ['jvm', 'ios-sim'],
         status: (p, i) => (p === 'jvm' && (i === 14 || i === 29)) ? 'flaky' : 'pass',
         dur: (p, r) => p === 'jvm' ? 1.12 + r.w * 0.12 + ((r.i === 14 || r.i === 29) ? 0.16 : 0) : 0.84 + r.w * 0.06,
-        fmt: v => v < 0.01 ? (v < 0.0005 ? '<1 ms' : Math.round(v * 1000) + ' ms') : v.toFixed(2) + ' s', /* v10 item 14 */ min: 0, max: 1.5, ticks: [0, 0.5, 1, 1.5],
+        fmt: Component.dur, /* v24 item 17 */ min: 0, max: 1.5, ticks: [0, 0.5, 1, 1.5],
       };
     }
     const isNew = n === 1;
@@ -158,7 +185,7 @@ class Component extends DCLogic {
       runs, plats: ['jvm', 'ios-sim'],
       status: (p, i) => (!isNew && p === 'ios-sim' && i === 38) ? 'fail' : 'pass',
       dur: (p, r) => p === 'jvm' ? 0.40 + r.w * 0.03 : 0.61 + r.w * 0.05,
-      fmt: v => v < 0.01 ? (v < 0.0005 ? '<1 ms' : Math.round(v * 1000) + ' ms') : v.toFixed(2) + ' s', /* v10 item 14 */ min: 0, max: 0.8, ticks: [0, 0.4, 0.8],
+      fmt: Component.dur, /* v24 item 17 */ min: 0, max: 0.8, ticks: [0, 0.4, 0.8],
     };
   }
 
@@ -175,8 +202,8 @@ class Component extends DCLogic {
     const last = runs.length - 1;
     const failIdx = runs.map(r => plats.some(p => ['fail', 'error'].includes(M.status(p, r.i)))).lastIndexOf(true); /* v6 item 7: failing = failed or error on any platform; flaky, skipped, not run don't count */
     const selK = this.state.sel ?? (failIdx >= 0 ? failIdx : last);
-    const IC = { pass: { r: 10, dash: 'none', d: 'm8 12 3 3 5-6' }, fail: { r: 10, dash: 'none', d: 'm15 9-6 6M9 9l6 6' }, error: { r: 10, dash: 'none', d: 'M12 7v6M12 17h.01' }, flaky: { r: 0, dash: 'none', d: 'M2 12h4l3-7 6 14 3-7h4' }, skip: { r: 10, dash: 'none', d: 'M8 12h8' }, notrun: { r: 10, dash: '3.5 3', d: '' } };
-    const look = { pass: ['14px', 'var(--pass)', '', 'Passed', 'var(--pass)', 'none'], flaky: ['24px', 'var(--attn)', '', 'Flaky', 'var(--attn)', 'none'], fail: ['44px', 'var(--fail)', '✕', 'Failed', 'var(--fail)', 'none'], error: ['44px', 'var(--fail)', '!', 'Error', 'var(--fail)', 'none'], skip: ['14px', 'transparent', '', 'Skipped', 'var(--neutral)', '1.5px solid var(--ink-3)'], notrun: ['4px', 'var(--line-strong)', '', 'Not run', 'var(--ink-3)', 'none'] };
+    const IC = { pass: { r: 10, dash: 'none', d: 'm8 12 3 3 5-6' }, fail: { r: 10, dash: 'none', d: 'm15 9-6 6M9 9l6 6' }, error: { r: 10, dash: 'none', d: 'M12 7v6M12 17h.01' }, flaky: { r: 0, dash: 'none', d: 'M2 12h4l3-7 6 14 3-7h4' }, skip: { r: 10, dash: 'none', d: 'M8 12h8' }, notrun: { r: 10, dash: '3.5 3', d: '' }, infra: { r: 10, dash: '3.5 3', d: '' } };
+    const look = { pass: ['14px', 'var(--pass)', '', 'Passed', 'var(--pass)', 'none'], flaky: ['24px', 'var(--attn)', '', 'Flaky', 'var(--attn)', 'none'], fail: ['44px', 'var(--fail)', '✕', 'Failed', 'var(--fail)', 'none'], error: ['44px', 'var(--fail)', '!', 'Error', 'var(--fail)', 'none'], skip: ['14px', 'transparent', '', 'Skipped', 'var(--neutral)', '1.5px solid var(--ink-3)'], notrun: ['4px', 'var(--line-strong)', '', 'Not run', 'var(--ink-3)', 'none'], infra: ['24px', 'var(--neutral-tint)', '', 'Infrastructure fault', 'var(--neutral)', '1.5px dashed var(--neutral)'] }; /* v24 item 8: an infrastructure fault is labelled, not counted */
 
     /* v4 item 9: one Tab stop per strip (listbox + aria-activedescendant); selection is a run shared by all strips. */
     const pick = k => { k = Math.max(0, Math.min(last, k)); if (this.state.sel !== k) this.setState({ sel: k }); };
@@ -196,6 +223,7 @@ class Component extends DCLogic {
     }));
     const sr = runs[selK];
     const sel = { title: sr.title, sha: sr.sha, when: sr.when, plats: plats.map(p => { const s = M.status(p, sr.i); return { plat: plats.length > 1 ? p : 'Result', label: look[s][3], ink: look[s][4], ic: IC[s], dur: s === 'skip' || s === 'notrun' ? '' : M.fmt(M.dur(p, sr)) }; }) };
+    sel.note = M.note ? plats.map(p => M.note(p, sr)).filter(Boolean).join(' ') : ''; /* v24 item 8 */
 
     const all = plats.flatMap(p => runs.map(r => M.status(p, r.i)));
     const fails = all.filter(s => s === 'fail').length, flakes = all.filter(s => s === 'flaky').length;
@@ -206,10 +234,15 @@ class Component extends DCLogic {
     /* v9 item 18: the project's last 30 default-branch CI runs; a run where a platform has no result is a gap at its place (older runs never fill it) */
     const runs30 = runs.filter(r => r.branch === 'main').slice(-30);
     const medOf = p => { const a = runs30.map(r => M.dur(p, r)).filter(v => v != null).sort((x, y) => x - y), m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+    /* v24 item 8: Intermittent = failed (infrastructure faults excluded) in 2 or more of the last 30 default-branch runs it ran in, with a pass between, across commits */
+    const ran30 = runs30.filter(r => plats.some(p => M.status(p, r.i) !== 'notrun')), fl30 = ran30.map(r => plats.some(p => bad(M.status(p, r.i))));
+    const iF = fl30.filter(Boolean).length, iFirst = fl30.indexOf(true), iLast = fl30.lastIndexOf(true), infra30 = ran30.filter(r => plats.some(p => M.status(p, r.i) === 'infra')).length;
+    const isInt = iF >= 2 && fl30.slice(iFirst, iLast).some(x => !x);
     const stats = [
       { label: 'Runs', value: String(runs.length), sub: 'since ' + runs[0].date, ink: 'var(--ink)' },
       { label: 'Failed', value: String(failRuns), sub: failRuns ? (failRuns === 1 ? '1 run' : failRuns + ' runs') + ' · ' + failPl.join(', ') : 'on any platform', ink: failRuns ? 'var(--fail)' : 'var(--ink)' },
       { label: 'Flaky', value: String(flakes), sub: flakes ? (flakes === 1 ? 'commit' : 'commits') + ' in 30 days · ' + flakyPl.join(', ') : 'none in 30 days', ink: flakes ? 'var(--attn)' : 'var(--ink)' },
+      { label: 'Intermittent', value: isInt ? `${iF} of ${ran30.length}` : 'None', sub: isInt ? 'runs failed, with passes between' + (infra30 ? ` · ${infra30 === 1 ? '1 infrastructure fault' : infra30 + ' infrastructure faults'} not counted` : '') : 'in the last 30 default-branch runs', ink: isInt ? 'var(--attn)' : 'var(--ink)' },
       { label: 'Median time', value: M.fmt(medOf(plats[0])), sub: plats.length > 1 ? plats[0] + ' (' + plats.slice(1).map(p => p + ' ' + M.fmt(medOf(p))).join(' · ') + ')' : 'last 30 CI runs', ink: 'var(--ink)' }, /* v21 item 15: the value is the first platform's; the others' medians sit in brackets, each with its own figure */
     ];
 
@@ -220,11 +253,11 @@ class Component extends DCLogic {
     const marks = runs30.map((r, i) => { let best = null; plats.forEach((p, si) => { const st = M.status(p, r.i), pr = PRI[st] || 0; if (pr && (!best || pr > best.pr)) best = { index: i, status: pr === 3 ? 'fail' : 'flaky', series: si, pr }; }); return best; }).filter(Boolean).map(({ pr, ...m }) => m);
     const durProps = { series: series.map((s, si) => ({ name: s.label, values: s.ys, dashed: si > 0, gapLabels: runs30.map(r => M.status(plats[si], r.i) === 'skip' ? 'Skipped' : null) })), format: 'sec', unit: 'run', marks,
       whens: runs30.map(r => r.iso), hrefs: runs30.map(r => '/p/ostomate2/runs/' + r.id), nowYear: 2026, ariaLabel: 'Duration by run. ' + t.durCaption };
-    const dv = durProps.series.flatMap(s => s.values).filter(v => v != null), fs = v => v < 0.01 ? (v < 0.0005 ? '<1 ms' : Math.round(v * 1000) + ' ms') : v.toFixed(2) + ' s'; /* v8 item 48 */
+    const dv = durProps.series.flatMap(s => s.values).filter(v => v != null), fs = Component.dur; /* v24 item 17: one duration rule */
     const med = a => { const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
     const durCaption = runs30.length < 2 || !dv.length ? '' : fs(Math.min(...dv)) === fs(Math.max(...dv)) ? `Held at ${fs(dv[0])} over the last ${runs30.length} runs.` : `Between ${fs(Math.min(...dv))} and ${fs(Math.max(...dv))} over the last ${runs30.length} runs.` + (durProps.series.length === 1 ? ` Median ${fs(med(dv))}.` : '');
     const present = Array.from(new Set(plats.flatMap(p => runs.map(r => M.status(p, r.i)))));
-    const legend = ['pass', 'fail', 'error', 'flaky', 'skip', 'notrun'].filter(k => present.includes(k)).map(k => ({ w: look[k][3], h: Math.min(parseInt(look[k][0], 10), 20) + 'px', bg: look[k][1], bd: look[k][5] }));
+    const legend = ['pass', 'fail', 'error', 'flaky', 'infra', 'skip', 'notrun'].filter(k => present.includes(k)).map(k => ({ w: look[k][3], h: Math.min(parseInt(look[k][0], 10), 20) + 'px', bg: look[k][1], bd: look[k][5] }));
 
     const recent = runs.slice(-8).reverse().map(r => {
       const bad = plats.some(p => M.status(p, r.i) === 'fail');
@@ -234,9 +267,11 @@ class Component extends DCLogic {
 
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
 
+    const shortSuite = x => { if (!x) return ''; if (x.includes('/')) return x.split('/').pop(); if (/\.(spec|test)\.[cm]?[jt]sx?$|\.(ts|tsx|js|jsx|mjs|cjs|kt|kts|swift|py|rb|go)$/.test(x)) return x; return x.split('.').pop(); };
+    const sameSuite = (su, nm) => { const a = String(su || '').trim(), b = String(nm || '').trim(); return !a || a === b || shortSuite(a) === b; }; /* v23 item 9: TPKit.sameSuite */
     const brk = (x, camel) => React.createElement(React.Fragment, null, ...String(x).split(camel ? /(?<=[\/.])|(?<=[a-z0-9])(?=[A-Z])/ : /(?<=[\/.])/).flatMap((q, i) => i ? [React.createElement('wbr'), q] : [q])); /* v21 item 8: TPKit.breakPieces */
     return {
-      themeVars: tv, liveDot, t: Object.assign({}, t, { nameB: brk(t.name, true), suiteB: brk(t.suite) }), stats, strips, sel, durProps, durCaption, legend,
+      themeVars: tv, liveDot, t: Object.assign({}, t, { nameB: brk(t.name, true), suiteB: brk(t.suite), hasSuite: !sameSuite(t.suite, t.name) }), /* v23 item 9 */ stats, strips, sel, durProps, durCaption, legend,
       hasEmpty: runs.length < 40, emptyGrow: (40 - runs.length) + ' 1 0', runGrow: runs.length + ' 1 0', /* v21 item 6 */
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',

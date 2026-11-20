@@ -21,6 +21,9 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 .tp-cov{display:grid;grid-template-columns:128px minmax(40px,1fr) auto;grid-template-areas:"k b v";align-items:center;column-gap:14px;row-gap:8px;font-size:14px}
 .tp-cov-k{grid-area:k;min-width:0}.tp-cov-b{grid-area:b}.tp-cov-v{grid-area:v;justify-self:end}
 @container (max-width:399px){.tp-cov{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"k v" "b b"}}
+/* v22 item 14: the strategy table keyed to its own width; under 640 px each row stacks (layer, then its tools, then what it covers), so nothing is cut off and nothing scrolls sideways */
+.tp-strat{display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:18px 24px}
+@container (max-width:639px){.tp-strat{grid-template-columns:minmax(0,1fr);gap:10px;padding:16px 18px}.tp-strat-head{display:none}}
 </style>
 </helmet>
 <div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--layer-1:#ede9e3;--layer-2:#b8b2a8;--layer-3:#8a847a;--layer-4:#6f6a62;background:var(--bg);color:var(--ink);min-height:100vh">
@@ -67,11 +70,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset
 <!-- 02 STRATEGY -->
 <section style="padding:48px 0;border-top:1px solid var(--line)">
 <div style="max-width:760px;margin-bottom:28px"><div style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ink-3)">02</div><h2 style="margin:6px 0 12px;font:500 34px/1.15 'Source Serif 4',serif">What runs, and what it covers</h2><p style="margin:0;font-size:15px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Parsers are tested against result files captured from Ostomate 2.0 and RouteServe, not hand-written samples. Integration tests run against a local Supabase, including the row-level security that hides private projects from the public.</p></div>
-<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:20px">
-<div style="min-width:760px">
-<div style="display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:14px 24px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>LAYER</span><span>TOOL</span><span>SCOPE</span></div>
+<div class="tp-cq" style="background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden">
+<div>
+<div class="tp-strat tp-strat-head" style="padding-top:14px;padding-bottom:14px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>LAYER</span><span>TOOL</span><span>SCOPE</span></div>
 <sc-for list="{{ layers }}" as="l" hint-placeholder-count="6">
-<div style="display:grid;grid-template-columns:150px 200px minmax(0,1fr);gap:20px;padding:18px 24px;border-bottom:1px solid var(--line);font-size:14.5px;align-items:start">
+<div class="tp-strat" style="border-bottom:1px solid var(--line);font-size:14.5px;align-items:start">
 <span style="display:flex;align-items:center;gap:10px;font-weight:600"><span style="width:12px;height:12px;border-radius:3px;flex:none;background:{{ l.swatch }};border:{{ l.swBorder }}"></span>{{ l.name }}</span>
 <span style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ l.tools }}" as="tl" hint-placeholder-count="1"><span style="padding:3px 9px;border-radius:6px;border:1px solid var(--line-strong);font-size:13.5px">{{ tl }}</span></sc-for></span>
 <span style="display:flex;flex-direction:column;gap:8px;line-height:1.6;color:var(--ink-2);text-wrap:pretty"><span>{{ l.scope }}</span><sc-if value="{{ l.p6 }}" hint-placeholder-val="{{ false }}"><span>{{ l.p6 }}</span></sc-if></span>
@@ -222,7 +225,7 @@ class Component extends DCLogic {
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
 
     return {
-      themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: tot.toLocaleString('en-US'), selfLine: 'tests · 0 failed · 0 skipped · 17m 53s', selfCovNote: 'unit: 3,125 of 3,141 lines covered.',
+      themeVars: tv, liveDot, principles, layers, phases, selfPyramid, selfCov, selfTotal: tot.toLocaleString('en-US'), selfLine: 'tests · 0 failed · 0 skipped · 17m 53s elapsed', /* v22 item 10 */ selfCovNote: 'unit: 3,125 of 3,141 lines covered.',
       reporting, notReporting: !reporting, asOf: '7 Oct', asOfIso: '2026-10-07', asOfTitle: '7 Oct 2026, 00:00 UTC', /* docs/build-progress.json asOf */
       silenceNow: 'Now: each project has an expected cadence. When a project goes quiet past it, its card and project page say so, for example “No report in 12 days”.' + (p6 ? ' A daily check flags it on the admin page.' : ''),
       emptyNow: 'Now: a run with zero tests executed is marked Empty and shown as a problem, never as a pass.' + (p6 ? ' A sudden drop in a report’s test count raises an alert too.' : ''),

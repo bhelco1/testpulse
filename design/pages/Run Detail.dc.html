@@ -9,13 +9,21 @@
 <x-dc>
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&amp;family=Public+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0;background:#121110}
 a{color:inherit;text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}a:hover{text-decoration-color:currentColor}
 a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 @keyframes tpPulse{0%{box-shadow:0 0 0 0 currentColor}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* v22 item 15: the reports table and the private by-layer table keyed to their own width; under 640 px each row stacks, so every column is on screen and nothing scrolls sideways */
+.tp-cq{container-type:inline-size}
+.tp-rep{display:grid;grid-template-columns:120px minmax(0,1.4fr) minmax(0,1fr) 90px 120px 90px;grid-template-areas:"s k r t w d";gap:14px;align-items:center}
+.tp-rep-s{grid-area:s}.tp-rep-k{grid-area:k;min-width:0}.tp-rep-r{grid-area:r;min-width:0}.tp-rep-t{grid-area:t;text-align:right}.tp-rep-w{grid-area:w;text-align:right}.tp-rep-d{grid-area:d;text-align:right}.tp-rep-l{display:none}
+.tp-lay{display:grid;grid-template-columns:140px minmax(0,1fr) 90px;grid-template-areas:"l r t";gap:14px;align-items:center}
+.tp-lay-l{grid-area:l}.tp-lay-r{grid-area:r;min-width:0}.tp-lay-t{grid-area:t;text-align:right}
+@container (max-width:639px){.tp-rep{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"s t" "k k" "r r" "w d";gap:6px 12px}.tp-rep-head{display:none}.tp-rep-w{text-align:left}.tp-rep-l{display:inline}
+.tp-lay{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l t" "r r";gap:6px 12px}.tp-lay-head{display:none}}
 </style>
 </helmet>
 <div style="--bg:#121110;--surface:#1a1917;--inset:#151412;--raised:#211f1c;--line:#2a2825;--line-strong:#3d3a35;--ink:#ede9e3;--ink-2:#cfc9bf;--ink-3:#a8a298;--pass:#7fd79a;--pass-tint:#1d2a20;--fail:#f4897c;--fail-tint:#33201c;--attn:#e3b35c;--attn-tint:#302716;--neutral:#b3ada3;--neutral-tint:#252320;--on-ink:#121110;--shadow-card:none;--shadow-menu:0 16px 40px -12px rgba(0,0,0,.7);background:var(--bg);color:var(--ink);min-height:100vh">
@@ -28,9 +36,10 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <nav style="display:flex;align-items:center;gap:0 8px;font-size:15px;flex-wrap:wrap">
 <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;cursor:pointer">Projects <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></button>
 <a href="#" style="height:44px;padding:0 14px;display:flex;align-items:center;text-decoration:none">How it’s tested</a>
-<span aria-hidden="true" style="flex:none;width:52px;height:0"></span>
+<span aria-hidden="true" style="flex:none;width:{{ toolsW }};height:0"></span>
 </nav>
 <div style="position:absolute;top:18px;right:0;display:flex;align-items:center;gap:4px">
+<sc-if value="{{ r.isLive }}" hint-placeholder-val="{{ false }}"><span style="height:44px;padding:0 10px;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-3)">{{ liveDot }}<span>Live</span></span></sc-if>
 <button onClick="{{ toggleTheme }}" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;cursor:pointer" aria-label="{{ themeToggleLabel }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)"></span></button>
 </div>
 </header>
@@ -43,55 +52,124 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:14px">
 <sc-if value="{{ r.isPass }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;background:var(--pass-tint);color:var(--pass);font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if>
 <sc-if value="{{ r.isFail }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;background:var(--fail-tint);color:var(--fail);font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if>
+<sc-if value="{{ r.isProg }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h.01M12 12h.01M16 12h.01"></path></svg>In progress</span></sc-if>
+<sc-if value="{{ r.isInc }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="44 18.8"></circle></svg>Incomplete</span></sc-if>
 <span style="color:var(--ink-3)">{{ r.when }}</span>
 <sc-if value="{{ r.sample }}" hint-placeholder-val="{{ false }}"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE RUN</span></sc-if>
 </div>
 <h1 style="margin:16px 0 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font:500 clamp(34px,4.5vw,52px)/1.08 'Source Serif 4',serif;letter-spacing:-.02em;text-wrap:pretty">
 <sc-if value="{{ r.isPublic }}" hint-placeholder-val="{{ true }}"><span>{{ r.title }}</span></sc-if>
-<sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:12px">Run {{ r.id }}<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" aria-label="Private repository"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span></sc-if>
+<sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:12px">{{ r.title }}<svg role="img" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" aria-label="Private repository"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span></sc-if>
 </h1>
 
 <dl style="display:flex;flex-wrap:wrap;gap:14px 36px;margin:20px 0 0;font-size:14px">
 <div><dt style="color:var(--ink-3)">Branch</dt><dd style="margin:3px 0 0">{{ r.branch }}</dd></div>
 <div><dt style="color:var(--ink-3)">Commit</dt><dd style="margin:3px 0 0;font-family:'JetBrains Mono',monospace;font-size:13.5px"><sc-if value="{{ r.isPublic }}" hint-placeholder-val="{{ true }}"><a href="#">{{ r.sha }}</a></sc-if><sc-if value="{{ r.private }}" hint-placeholder-val="{{ false }}"><span>{{ r.sha }}</span></sc-if></dd></div>
-<div><dt style="color:var(--ink-3)">Event</dt><dd style="margin:3px 0 0">{{ r.event }}</dd></div>
+<div><dt style="color:var(--ink-3)">Event</dt><dd style="margin:3px 0 0">{{ r.eventWord }}</dd></div>
 <div><dt style="color:var(--ink-3)">Started</dt><dd style="margin:3px 0 0">{{ r.started }}</dd></div>
 <div><dt style="color:var(--ink-3)">Reports</dt><dd style="margin:3px 0 0">{{ r.reportsIn }}</dd></div>
-<sc-if value="{{ r.hasAttempt }}" hint-placeholder-val="{{ false }}"><div><dt style="color:var(--ink-3)">Attempt</dt><dd style="margin:3px 0 0">{{ r.attempt }}</dd></div></sc-if>
+<sc-if value="{{ r.hasLast }}" hint-placeholder-val="{{ false }}"><div><dt style="color:var(--ink-3)">Last report</dt><dd style="margin:3px 0 0">{{ r.lastAt }}</dd></div></sc-if>
+<sc-if value="{{ r.hasAttempt }}" hint-placeholder-val="{{ false }}"><div><dt style="color:var(--ink-3)">Attempt</dt><dd style="margin:3px 0 0;display:flex;align-items:center;gap:6px"><span>{{ r.attemptText }}</span><span aria-hidden="true">·</span><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin:-12px 0">{{ r.prevAttempt }}</a></dd></div></sc-if>
 <sc-if value="{{ r.isPublic }}" hint-placeholder-val="{{ true }}"><div><dt style="color:var(--ink-3)">CI</dt><dd style="margin:3px 0 0"><a href="#" style="display:inline-flex;align-items:center;gap:5px">GitHub Actions<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"></path></svg></a></dd></div></sc-if>
 </dl>
 
+<sc-if value="{{ r.showTiles }}" hint-placeholder-val="{{ true }}">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px;margin-top:28px">
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Tests</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.total }}</div></div>
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Passed</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.passed }}</div></div>
-<div style="background:{{ r.failTileBg }};border:1px solid {{ r.failTileLine }};border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:{{ r.failTileLabel }}">Failed</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px;color:{{ r.failTileInk }}">{{ r.failed }}</div></div>
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Skipped</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.skipped }}</div></div>
-<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px"><div style="font-size:14px;color:var(--ink-3)">Duration</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.duration }}</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;min-width:0"><div style="font-size:14px;color:var(--ink-3)">Total</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.total }}</div><div style="margin-top:4px;font-size:13px;line-height:1.4;color:var(--ink-3);text-wrap:pretty">{{ r.diffLine }}</div><sc-if value="{{ r.hasDiff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleDiff }}" aria-expanded="{{ diffOpen }}" aria-controls="diff-list" style="margin-top:8px;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px 'Public Sans',sans-serif;cursor:pointer" style-hover="background:var(--raised)">{{ diffBtn }}</button></sc-if><sc-if value="{{ r.diffPriv }}" hint-placeholder-val="{{ false }}"><div style="margin-top:4px;font-size:13px;line-height:1.4;color:var(--ink-3);text-wrap:pretty">Names aren’t shown for a private repository.</div></sc-if></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;min-width:0"><div style="font-size:14px;color:var(--ink-3)">Passed</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.passed }}</div></div>
+<div style="background:{{ r.failTileBg }};border:1px solid {{ r.failTileLine }};border-radius:16px;padding:18px 20px;min-width:0"><div style="font-size:14px;color:{{ r.failTileLabel }}">Failed</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px;color:{{ r.failTileInk }}">{{ r.failed }}</div><sc-if value="{{ r.failedSub }}" hint-placeholder-val="{{ false }}"><div style="margin-top:4px;font-size:13px;line-height:1.4;color:var(--ink-3);text-wrap:pretty">{{ r.failedSub }}</div></sc-if></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;min-width:0"><div style="font-size:14px;color:var(--ink-3)">Not run</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.notRun }}</div><div style="margin-top:4px;font-size:13px;line-height:1.4;color:var(--ink-3);text-wrap:pretty">{{ r.notRunSub }}</div></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;min-width:0"><div title="From the first report’s start to the last report’s finish: how long CI took, with jobs running side by side." style="font-size:14px;color:var(--ink-3)">CI time</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.duration }}</div><div title="The sum of every report’s own time. Jobs run in parallel, so it is usually longer than CI time." style="margin-top:4px;font-size:13px;line-height:1.4;color:var(--ink-3);text-wrap:pretty">{{ r.jobLine }}</div></div>
 </div>
+<sc-if value="{{ diffOpen }}" hint-placeholder-val="{{ false }}">
+<div id="diff-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px;margin-top:12px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;min-width:0"><h3 style="margin:0 0 8px;font:600 14.5px 'Public Sans',sans-serif">Added · {{ r.addedN }}</h3><ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column"><sc-for list="{{ r.added }}" as="ad" hint-placeholder-count="2"><li style="min-width:0"><a href="#" style="display:flex;align-items:center;min-height:44px;font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ ad.nameB }}</a></li></sc-for></ul></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;min-width:0"><h3 style="margin:0 0 8px;font:600 14.5px 'Public Sans',sans-serif">Removed · {{ r.removedN }}</h3><ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ r.removed }}" as="rm" hint-placeholder-count="1"><li style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;min-width:0;padding:10px 0"><span style="font:13.5px 'JetBrains Mono',monospace;color:var(--ink-2);overflow-wrap:anywhere">{{ rm.nameB }}</span><span style="font-size:13px;color:var(--ink-3)">{{ rm.seen }}</span></li></sc-for></ul></div>
+</div>
+</sc-if>
+</sc-if>
 
+<sc-if value="{{ r.isRunning }}" hint-placeholder-val="{{ false }}">
+<section aria-labelledby="running-now" style="margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:var(--shadow-card)">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px"><h2 id="running-now" style="margin:0;font:600 12px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)">Running now</h2><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-3)"><sc-if value="{{ r.isLive }}" hint-placeholder-val="{{ true }}">{{ liveDot }}<span>Updates when a report arrives</span></sc-if><sc-if value="{{ r.noJs }}" hint-placeholder-val="{{ false }}"><span>{{ r.asOf }}</span></sc-if></span></div>
+<p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ r.runTiming }}</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px;margin-top:18px">
+<div style="background:var(--inset);border:1px solid var(--line);border-radius:16px;padding:16px 18px;min-width:0"><div style="font-size:14px;color:var(--ink-3)">Tests expected in this run</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.expTotal }}</div></div>
+<div style="background:var(--inset);border:1px solid var(--line);border-radius:16px;padding:16px 18px;min-width:0"><div style="font-size:14px;color:var(--ink-3)">Completed so far</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.soFar }}</div></div>
+<div style="background:var(--inset);border:1px solid var(--line);border-radius:16px;padding:16px 18px;min-width:0"><div style="font-size:14px;color:var(--ink-3)">Passed so far</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px">{{ r.passed }}</div></div>
+<div style="background:{{ r.runFailBg }};border:1px solid {{ r.failTileLine }};border-radius:16px;padding:16px 18px;min-width:0"><div style="font-size:14px;color:{{ r.failTileLabel }}">Failed so far</div><div style="font:500 40px/1.1 'Source Serif 4',serif;margin-top:6px;color:{{ r.failTileInk }}">{{ r.failed }}</div></div>
+</div>
+<div aria-hidden="true" style="display:flex;gap:3px;height:12px;margin-top:20px"><sc-for list="{{ r.steps }}" as="st" hint-placeholder-count="6"><span style="flex:{{ st.flex }};min-width:6px;box-sizing:border-box;border-radius:3px;background:{{ st.bg }};border:{{ st.bd }}"></span></sc-for></div>
+<p style="margin:8px 0 0;font-size:13px;line-height:1.45;color:var(--ink-3);text-wrap:pretty">{{ r.stepNote }}</p>
+<ul style="list-style:none;margin:16px 0 0;padding:0;border-top:1px solid var(--line)">
+<sc-for list="{{ r.runReports }}" as="rr" hint-placeholder-count="6">
+<li style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px">
+<span style="display:flex;align-items:center;gap:6px;width:130px;flex:none;color:{{ rr.ink }};font-weight:600"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ rr.dash }}"></circle><path d="{{ rr.d }}"></path></svg><span>{{ rr.word }}</span></span>
+<span title="{{ rr.key }}" style="flex:1 1 220px;min-width:0;font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ rr.keyB }}</span>
+<span style="color:var(--ink-2)">{{ rr.tests }}</span>
+<span style="color:{{ rr.resInk }};font-weight:{{ rr.resW }}">{{ rr.res }}</span>
+<span style="margin-left:auto;color:var(--ink-3);font-size:13px">{{ rr.at }}</span>
+</li>
+</sc-for>
+</ul>
+<p style="margin:12px 0 0;font-size:13px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">When the last report arrives this view becomes the ordinary run page in place: Total, Passed, Failed, Not run and CI time, with no count-up, and a polite announcement (“Run complete: 160 tests, 160 passed, 0 failed, 0 not run”). If the limit passes first, it becomes the Incomplete page with its Not run section.</p>
+</section>
+</sc-if>
+
+<sc-if value="{{ r.isProg2 }}" hint-placeholder-val="{{ false }}">
+<div role="status" style="display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--inset);border:1px solid var(--line-strong)"><svg aria-hidden="true" style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--neutral)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h.01M12 12h.01M16 12h.01"></path></svg><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14.5px;color:var(--ink)">{{ r.progHead }}</div><div style="font-size:14px;line-height:1.5;color:var(--ink-2);margin-top:2px;text-wrap:pretty">{{ r.progSub }}</div></div></div>
+</sc-if>
+<sc-if value="{{ r.isUnsent }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--inset);border:1.5px dashed var(--line-strong)"><svg aria-hidden="true" style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--neutral)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14.5px;color:var(--ink)">{{ r.unsentHead }}</div><div style="font-size:14px;line-height:1.5;color:var(--ink-2);margin-top:2px;text-wrap:pretty">{{ r.unsentSub }}</div></div></div>
+</sc-if>
+<sc-if value="{{ r.isInc2 }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--attn-tint);border:1px solid var(--attn)"><svg aria-hidden="true" style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--attn)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="44 18.8"></circle></svg><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14.5px;color:var(--attn);overflow-wrap:anywhere">{{ r.incHead }}</div><div style="font-size:14px;line-height:1.5;color:var(--ink-2);margin-top:2px;text-wrap:pretty">{{ r.incSub }}</div></div></div>
+</sc-if>
 <sc-if value="{{ r.isFail }}" hint-placeholder-val="{{ true }}">
-<div style="display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14.5px;color:var(--fail)">{{ r.failHead }}</div><div style="font-size:14px;line-height:1.5;color:var(--ink-2);margin-top:2px;text-wrap:pretty">{{ r.failSub }}</div></div><a href="#results" onClick="{{ jumpFailed }}" style="flex:none;align-self:center;min-height:44px;display:flex;align-items:center;padding:0 16px;border-radius:10px;border:1px solid var(--fail);color:var(--fail);font-size:15px;font-weight:600;text-decoration:none">Show failure</a></div>
+<div style="display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--fail-tint);border:1px solid var(--fail)"><svg style="flex:none;margin-top:1px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14.5px;color:var(--fail)">{{ r.failHead }}</div><div style="font-size:14px;line-height:1.5;color:var(--ink-2);margin-top:2px;text-wrap:pretty">{{ r.failSub }}</div></div><a href="#results" onClick="{{ jumpFailed }}" style="flex:none;align-self:center;min-height:44px;display:flex;align-items:center;padding:0 16px;border-radius:10px;border:1px solid var(--fail);color:var(--fail);font-size:15px;font-weight:600;text-decoration:none">{{ r.failBtn }}</a></div>
 </sc-if>
 </section>
 
-<!-- REPORTS -->
-<section style="padding:40px 0;border-top:1px solid var(--line)">
-<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px"><h2 style="margin:0 0 12px;font:500 30px/1.2 'Source Serif 4',serif">Reports in this run</h2><sc-if value="{{ r.reportsSample }}" hint-placeholder-val="{{ false }}"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE SPLIT</span></sc-if></div>
-<div style="overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px">
-<div style="min-width:760px">
-<div style="display:grid;grid-template-columns:120px minmax(0,1.4fr) minmax(0,1fr) 90px 120px 90px;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span>STATUS</span><span>JOB / MODULE / PLATFORM</span><span>RESULTS</span><span style="text-align:right">TESTS</span><span style="text-align:right">RECEIVED</span><span style="text-align:right">TIME</span></div>
-<sc-for list="{{ r.reports }}" as="rp" hint-placeholder-count="4">
-<div style="display:grid;grid-template-columns:120px minmax(0,1.4fr) minmax(0,1fr) 90px 120px 90px;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;background:{{ rp.rowBg }}">
-<span><sc-if value="{{ rp.pass }}"><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if><sc-if value="{{ rp.fail }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if></span>
-<span style="min-width:0;font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ rp.keyB }}</span>
-<span style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--raised)"><span style="width:{{ rp.passW }};background:var(--pass)"></span><span style="width:{{ rp.failW }};min-width:{{ rp.failMin }};background:var(--fail)"></span><span style="width:{{ rp.skipW }};min-width:{{ rp.skipMin }};background:var(--neutral)"></span></span><span style="font-size:12.5px;white-space:nowrap;color:{{ rp.resInk }}">{{ rp.res }}</span></span>
-<span style="text-align:right;font-weight:600">{{ rp.tests }}</span>
-<span style="text-align:right;color:var(--ink-3);font-size:13px">{{ rp.received }}</span>
-<span style="text-align:right;color:var(--ink-2)">{{ rp.dur }}</span>
+<!-- NOT RUN (v24 item 3) -->
+<section aria-labelledby="not-run" style="padding:40px 0;border-top:1px solid var(--line)">
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:16px"><h2 id="not-run" style="margin:0;font:500 30px/1.2 'Source Serif 4',serif">Not run</h2><span style="font-size:14px;color:var(--ink-3)">{{ r.nrSide }}</span></div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<sc-if value="{{ r.nrNone }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pass)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg><span>Every test in the Total ran.</span></div></sc-if>
+<sc-for list="{{ r.nrRows }}" as="nr" hint-placeholder-count="2">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;padding:12px 18px;min-height:44px;box-sizing:border-box;border-bottom:1px solid var(--line);font-size:14px">
+<svg aria-hidden="true" style="flex:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ nr.ink }}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-dasharray="{{ nr.dash }}"></circle><path d="{{ nr.d }}"></path></svg>
+<span style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;color:{{ nr.headInk }};overflow-wrap:anywhere">{{ nr.headB }}</span><sc-if value="{{ nr.meta }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:var(--ink-3)">{{ nr.meta }}</span></sc-if></span>
+<b style="font-weight:600;white-space:nowrap">{{ nr.count }}</b>
+<sc-if value="{{ nr.toReport }}" hint-placeholder-val="{{ false }}"><a href="#reports" style="display:inline-flex;align-items:center;min-height:44px;font-size:14px">See report</a></sc-if>
+<sc-if value="{{ nr.toSkipped }}" hint-placeholder-val="{{ false }}"><a href="#results" onClick="{{ showSkipped }}" style="display:inline-flex;align-items:center;min-height:44px;font-size:14px">Show skipped</a></sc-if>
 </div>
 </sc-for>
+<p style="margin:0;padding:12px 18px;font-size:13.5px;color:var(--ink-2)">{{ r.nrSum }}</p>
+</div>
+</section>
+
+<!-- REPORTS -->
+<sc-if value="{{ r.showReports }}" hint-placeholder-val="{{ true }}">
+<section id="reports" style="padding:40px 0;border-top:1px solid var(--line)">
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px"><h2 style="margin:0 0 12px;font:500 30px/1.2 'Source Serif 4',serif">{{ r.repTitle }}</h2><sc-if value="{{ r.repSide }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:var(--ink-3)">{{ r.repSide }}</span></sc-if><sc-if value="{{ r.reportsSample }}" hint-placeholder-val="{{ false }}"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE SPLIT</span></sc-if></div>
+<div class="tp-cq" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<div>
+<div class="tp-rep tp-rep-head" style="padding:12px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span class="tp-rep-s">STATUS</span><span class="tp-rep-k">JOB / MODULE / PLATFORM</span><span class="tp-rep-r">RESULTS</span><span class="tp-rep-t">TESTS</span><span class="tp-rep-w">RECEIVED</span><span class="tp-rep-d">TEST TIME</span></div>
+<sc-for list="{{ r.reports }}" as="rp" hint-placeholder-count="4">
+<div class="tp-rep" style="padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;background:{{ rp.rowBg }}">
+<span class="tp-rep-s"><sc-if value="{{ rp.pass }}"><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if><sc-if value="{{ rp.fail }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if><sc-if value="{{ rp.wait }}"><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle></svg>Waiting</span></sc-if><sc-if value="{{ rp.miss }}"><span style="display:flex;align-items:center;gap:6px;color:var(--attn);font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="44 18.8"></circle></svg>Missing</span></sc-if></span>
+<span class="tp-rep-k" title="{{ rp.key }}" style="font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere">{{ rp.keyB }}</span>
+<span class="tp-rep-r" style="display:flex;flex-direction:column;gap:6px"><sc-if value="{{ rp.hasBar }}" hint-placeholder-val="{{ true }}"><span style="display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--raised)"><span style="width:{{ rp.passW }};background:var(--pass)"></span><span style="width:{{ rp.failW }};min-width:{{ rp.failMin }};background:var(--fail)"></span><span style="width:{{ rp.skipW }};min-width:{{ rp.skipMin }};background:var(--neutral)"></span></span></sc-if><span style="font-size:12.5px;white-space:nowrap;color:{{ rp.resInk }};font-weight:{{ rp.resW }}">{{ rp.res }}</span></span>
+<span class="tp-rep-t" style="font-weight:600">{{ rp.tests }}<span class="tp-rep-l" style="font-weight:400;color:var(--ink-3)"> {{ rp.testsWord }}</span></span>
+<span class="tp-rep-w" style="color:var(--ink-3);font-size:13px"><span class="tp-rep-l">Received </span>{{ rp.received }}</span>
+<span class="tp-rep-d" style="color:var(--ink-2)">{{ rp.dur }}<span class="tp-rep-l" style="color:var(--ink-3);font-size:13px"> test time</span></span>
+</div>
+</sc-for>
+<p style="margin:0;padding:12px 18px 4px;font-size:13px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">{{ r.execNote }}</p>
+<p style="margin:0;padding:4px 18px 12px;font-size:13px;line-height:1.5;color:var(--ink-3);text-wrap:pretty"><b style="font-weight:600;color:var(--ink-2)">CI time</b> runs from the first report’s start to the last report’s finish: how long CI took, with jobs running side by side. <b style="font-weight:600;color:var(--ink-2)">Test time</b> is the sum of every report’s own time; jobs run in parallel, so it is usually longer.</p>
 </div></div>
 </section>
+</sc-if>
 
 <!-- RESULTS -->
 <section id="results" ref="{{ boxRef }}" style="padding:40px 0 64px;border-top:1px solid var(--line)">
@@ -99,6 +177,32 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 
 <sc-if value="{{ pruned }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;gap:14px;align-items:flex-start;padding:24px;border-radius:20px;background:var(--surface);border:1px solid var(--line)"><svg style="flex:none;margin-top:3px" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v5l3 2"></path></svg><div><div style="font:500 22px 'Source Serif 4',serif">Per-test results retained for 180 days</div><p style="margin:6px 0 0;font-size:14.5px;line-height:1.55;color:var(--ink-2)">This run is older than that, so its individual results were removed to keep the database small. Summary totals are permanent: {{ r.total }} tests, {{ r.passed }} passed, {{ r.failed }} failed.</p><div style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)"><span style="font:500 10px 'JetBrains Mono',monospace;color:var(--attn);border:1px solid var(--attn);padding:1px 5px;border-radius:4px">SAMPLE DATE</span>Pruned on 23 Mar 2027</div></div></div>
+</sc-if>
+
+<sc-if value="{{ privResults }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:12px;align-items:flex-start;max-width:620px;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Test names hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">This repository is private, so its tests’ names and failure details aren’t shown. The results, counts and trends are real.</p></div></div>
+<sc-if value="{{ r.isFail }}" hint-placeholder-val="{{ false }}">
+<div style="background:var(--fail-tint);border:1px solid var(--fail);border-radius:16px;padding:16px 18px">
+<h3 style="margin:0 0 8px;font:600 14.5px 'Public Sans',sans-serif;color:var(--fail)">Where it failed</h3>
+<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px">
+<sc-for list="{{ r.privFail }}" as="pf" hint-placeholder-count="1"><li style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:14px;line-height:1.5"><svg aria-hidden="true" style="flex:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fail)" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="{{ pf.d }}"></path></svg><span style="font-weight:600;color:var(--fail)">{{ pf.head }}</span><span style="color:var(--ink-2)">{{ pf.where }}</span></li></sc-for>
+</ul>
+</div>
+</sc-if>
+<div class="tp-cq" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+<h3 style="margin:0;padding:16px 18px 4px;font:500 20px 'Source Serif 4',serif">By layer</h3>
+<div class="tp-lay tp-lay-head" style="padding:10px 18px;border-bottom:1px solid var(--line);font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--ink-3)"><span class="tp-lay-l">LAYER</span><span class="tp-lay-r">RESULTS</span><span class="tp-lay-t">TESTS</span></div>
+<sc-for list="{{ r.byLayer }}" as="ly" hint-placeholder-count="4">
+<div class="tp-lay" style="padding:12px 18px;border-top:1px solid var(--line);font-size:14px;background:{{ ly.rowBg }}">
+<span class="tp-lay-l" style="font-weight:600">{{ ly.layer }}</span>
+<span class="tp-lay-r" style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--raised)"><span style="width:{{ ly.passW }};background:var(--pass)"></span><span style="width:{{ ly.failW }};min-width:{{ ly.failMin }};background:var(--fail)"></span><span style="width:{{ ly.skipW }};min-width:{{ ly.skipMin }};background:var(--neutral)"></span></span><span style="font-size:12.5px;color:{{ ly.resInk }}">{{ ly.res }}</span></span>
+<span class="tp-lay-t" style="font-weight:600">{{ ly.tests }}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin:0;font-size:13px;line-height:1.5;color:var(--ink-3);text-wrap:pretty">Each test counts once, under its worst result across platforms. There are no per-test pages for a private repository.</p>
+</div>
 </sc-if>
 
 <sc-if value="{{ notPruned }}" hint-placeholder-val="{{ true }}">
@@ -119,13 +223,13 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <sc-for list="{{ rows }}" as="t" hint-placeholder-count="4">
 <div style="border-bottom:1px solid var(--line);background:{{ t.bg }}">
 <button onClick="{{ t.toggle }}" aria-expanded="{{ t.open }}" disabled="{{ t.noExpand }}" style="all:unset;box-sizing:border-box;width:100%;cursor:{{ t.cursor }};display:flex;flex-direction:column;gap:4px;padding:12px 16px;min-height:44px">
-<span style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="display:grid;place-items:center;width:20px;transform:{{ t.rot }};opacity:{{ t.chev }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"></path></svg></span><span style="display:flex;align-items:center;gap:6px;color:{{ t.stInk }};font-weight:600">{{ t.stWord }}</span><sc-if value="{{ t.flaky }}"><span style="padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600">Flaky</span></sc-if><span style="margin-left:auto;font-size:13px;color:var(--ink-2)">{{ t.time }}</span></span>
+<span style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="display:grid;place-items:center;width:20px;transform:{{ t.rot }};opacity:{{ t.chev }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"></path></svg></span><span style="display:flex;align-items:center;gap:6px;color:{{ t.stInk }};font-weight:600">{{ t.stWord }}</span><sc-if value="{{ t.flaky }}"><span style="padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600">Flaky</span></sc-if><sc-if value="{{ t.infra }}" hint-placeholder-val="{{ false }}"><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-size:12px;font-weight:600"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle></svg>Infrastructure fault</span></sc-if><span style="margin-left:auto;font-size:13px;color:var(--ink-2)">{{ t.time }}</span></span>
 <span style="font:13.5px 'JetBrains Mono',monospace;overflow-wrap:anywhere;padding-left:30px">{{ t.nameB }}</span>
-<span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);overflow-wrap:anywhere;padding-left:30px">{{ t.suiteB }}</span>
+<sc-if value="{{ t.hasSuite }}" hint-placeholder-val="{{ true }}"><span style="font:12px 'JetBrains Mono',monospace;color:var(--ink-3);overflow-wrap:anywhere;padding-left:30px">{{ t.suiteB }}</span></sc-if>
 <span style="display:flex;flex-wrap:wrap;gap:0 6px;font-size:13px;color:var(--ink-3);padding-left:30px"><span>{{ t.layer }}</span><span>·</span><sc-for list="{{ t.plats }}" as="pl" hint-placeholder-count="1"><span style="color:{{ pl.ink }}">{{ pl.label }}</span></sc-for></span>
 </button>
-<sc-if value="{{ t.showDetail }}"><div style="padding:4px 16px 16px 16px"><sc-if value="{{ t.mismatch }}"><div style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-bottom:8px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">{{ t.mismatchText }}</span></div></sc-if><sc-if value="{{ t.noMessage }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;padding:12px 14px;border-radius:10px;background:var(--inset);border:1px dashed var(--line-strong)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"></path></svg><div style="min-width:0"><div style="font-weight:600;font-size:14px;color:var(--ink)">No failure message</div><div style="margin-top:2px;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ t.noMessageText }}</div></div></div></sc-if><sc-if value="{{ t.hasMessage }}" hint-placeholder-val="{{ true }}"><div style="font:600 13.5px/1.5 'JetBrains Mono',monospace;margin-bottom:8px;overflow-wrap:anywhere">{{ t.message }}</div></sc-if><sc-if value="{{ t.hasTrace }}" hint-placeholder-val="{{ true }}"><pre style="margin:0;padding:12px 14px;border-radius:10px;background:var(--inset);border:1px solid var(--line);font:12.5px/1.65 'JetBrains Mono',monospace;color:var(--ink-2);overflow-x:auto;white-space:pre">{{ t.trace }}</pre></sc-if><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div></sc-if>
-<sc-if value="{{ t.showHidden }}"><div style="padding:4px 16px 16px 16px"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Details hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real.</p></div></div><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div></sc-if>
+<sc-if value="{{ t.showDetail }}"><div style="padding:4px 16px 16px 16px"><sc-if value="{{ t.infra }}" hint-placeholder-val="{{ false }}"><div style="margin-bottom:8px;padding:10px 12px;border-radius:10px;background:var(--neutral-tint);font-size:13.5px;line-height:1.5;color:var(--ink);text-wrap:pretty">{{ t.infraText }}</div></sc-if><sc-if value="{{ t.mismatch }}"><div style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-bottom:8px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">{{ t.mismatchText }}</span></div></sc-if><sc-if value="{{ t.noMessage }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;padding:12px 14px;border-radius:10px;background:var(--inset);border:1px dashed var(--line-strong)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"></path></svg><div style="min-width:0"><div style="font-weight:600;font-size:14px;color:var(--ink)">No failure message</div><div style="margin-top:2px;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ t.noMessageText }}</div></div></div></sc-if><sc-if value="{{ t.hasMessage }}" hint-placeholder-val="{{ true }}"><div style="font:600 13.5px/1.5 'JetBrains Mono',monospace;margin-bottom:8px;overflow-wrap:anywhere">{{ t.message }}</div></sc-if><sc-if value="{{ t.hasTrace }}" hint-placeholder-val="{{ true }}"><pre style="margin:0;padding:12px 14px;border-radius:10px;background:var(--inset);border:1px solid var(--line);font:12.5px/1.65 'JetBrains Mono',monospace;color:var(--ink-2);overflow-x:auto;white-space:pre">{{ t.trace }}</pre></sc-if><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div></sc-if>
+<sc-if value="{{ t.showHidden }}"><div style="padding:4px 16px 16px 16px"><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Test names hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2)">This repository is private, so its tests’ names and failure details aren’t shown. The results, counts and trends are real.</p></div></div><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div></sc-if>
 </div>
 </sc-for>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 16px;font-size:13.5px;color:var(--ink-3)"><span style="display:flex;gap:6px"><span>Showing</span><span>{{ shown }}</span><span>of</span><span>{{ matching }}</span></span><button style="min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 15px 'Public Sans',sans-serif;cursor:pointer">Load 50 more</button></div>
@@ -140,13 +244,14 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 <button onClick="{{ t.toggle }}" aria-expanded="{{ t.open }}" disabled="{{ t.noExpand }}" style="all:unset;box-sizing:border-box;width:100%;cursor:{{ t.cursor }};display:grid;grid-template-columns:36px 130px minmax(0,1fr) 110px 130px 80px;gap:12px;align-items:center;padding:12px 16px;font-size:14px;color:var(--ink)">
 <span style="display:grid;place-items:center;transform:{{ t.rot }};opacity:{{ t.chev }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"></path></svg></span>
 <span><sc-if value="{{ t.pass }}"><span style="display:flex;align-items:center;gap:6px;color:var(--pass);font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m8 12 3 3 5-6"></path></svg>Passed</span></sc-if><sc-if value="{{ t.fail }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="m15 9-6 6M9 9l6 6"></path></svg>Failed</span></sc-if><sc-if value="{{ t.err }}"><span style="display:flex;align-items:center;gap:6px;color:var(--fail);font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 7v6M12 17h.01"></path></svg>Error</span></sc-if><sc-if value="{{ t.skip }}"><span style="display:flex;align-items:center;gap:6px;color:var(--neutral);font-weight:600"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path></svg>Skipped</span></sc-if></span>
-<span style="min-width:0;display:flex;align-items:center;gap:10px"><span style="min-width:0"><span style="display:block;font:13.5px 'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span><span style="display:block;font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.suite }}</span></span><sc-if value="{{ t.flaky }}"><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></sc-if></span>
+<span style="min-width:0;display:flex;align-items:center;gap:10px"><span style="min-width:0"><span style="display:block;font:13.5px 'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span><sc-if value="{{ t.hasSuite }}" hint-placeholder-val="{{ true }}"><span style="display:block;font:12px 'JetBrains Mono',monospace;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.suite }}</span></sc-if></span><sc-if value="{{ t.flaky }}"><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--attn-tint);color:var(--attn);font-size:12px;font-weight:600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-7 6 14 3-7h4"></path></svg>Flaky</span></sc-if><sc-if value="{{ t.infra }}" hint-placeholder-val="{{ false }}"><span style="flex:none;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;background:var(--neutral-tint);color:var(--neutral);font-size:12px;font-weight:600"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke-dasharray="3.5 3"></circle></svg>Infrastructure fault</span></sc-if></span>
 <span style="color:var(--ink-2)">{{ t.layer }}</span>
 <span style="display:flex;flex-direction:column;gap:2px;font-size:13px"><sc-for list="{{ t.plats }}" as="pl" hint-placeholder-count="1"><span style="color:{{ pl.ink }}">{{ pl.label }}</span></sc-for></span>
 <span style="text-align:right;color:var(--ink-2)">{{ t.time }}</span>
 </button>
 <sc-if value="{{ t.showDetail }}">
 <div style="padding:{{ detailPad }}">
+<sc-if value="{{ t.infra }}" hint-placeholder-val="{{ false }}"><div style="margin-bottom:8px;padding:10px 12px;border-radius:10px;background:var(--neutral-tint);font-size:13.5px;line-height:1.5;color:var(--ink);text-wrap:pretty">{{ t.infraText }}</div></sc-if>
 <sc-if value="{{ t.mismatch }}"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:10px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">{{ t.mismatchText }}</span></div></sc-if>
 <sc-if value="{{ t.noMessage }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;padding:12px 14px;border-radius:10px;background:var(--inset);border:1px dashed var(--line-strong)"><svg aria-hidden="true" style="flex:none;margin-top:2px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"></path></svg><div style="min-width:0"><div style="font-weight:600;font-size:14px;color:var(--ink)">No failure message</div><div style="margin-top:2px;font-size:13.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ t.noMessageText }}</div></div></div></sc-if>
 <sc-if value="{{ t.hasMessage }}" hint-placeholder-val="{{ true }}"><div style="font:600 13.5px/1.5 'JetBrains Mono',monospace;color:var(--ink);margin-bottom:8px;overflow-wrap:anywhere">{{ t.message }}</div></sc-if>
@@ -155,7 +260,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 </div>
 </sc-if>
 <sc-if value="{{ t.showHidden }}">
-<div style="padding:{{ detailPad }}"><sc-if value="{{ t.mismatch }}"><div style="display:flex;flex-wrap:wrap;gap:6px 10px;margin-bottom:10px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">{{ t.mismatchText }}</span></div></sc-if><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Details hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);max-width:620px">This repository is private, so failure messages, stack traces and source links are hidden. Test names, counts and trends are real.</p></div></div><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div>
+<div style="padding:{{ detailPad }}"><sc-if value="{{ t.mismatch }}"><div style="display:flex;flex-wrap:wrap;gap:6px 10px;margin-bottom:10px;font-size:13.5px"><span style="font-weight:600;color:var(--fail)">Platform mismatch</span><span style="color:var(--ink-3)">{{ t.mismatchText }}</span></div></sc-if><div style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;border:1.5px dashed var(--line-strong);background:var(--inset)"><svg style="flex:none;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg><div><div style="font-weight:600;font-size:14.5px;color:var(--ink-2)">Test names hidden: private repository</div><p style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--ink-2);max-width:620px">This repository is private, so its tests’ names and failure details aren’t shown. The results, counts and trends are real.</p></div></div><a href="#" style="display:inline-flex;align-items:center;min-height:44px;margin-top:4px;font-size:14px">Test history</a></div>
 </sc-if>
 </div>
 </sc-for>
@@ -166,19 +271,19 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{ou
 </section>
 </main>
 
-<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report received 4 min ago</span></footer>
+<footer style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 0 32px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-3)"><div style="display:flex;gap:4px"><a href="#" style="min-height:44px;display:flex;align-items:center;padding-right:16px">Privacy</a><a href="#" style="min-height:44px;display:flex;align-items:center">Source on GitHub</a></div><span>Last report from any project: 4 min ago</span></footer>
 </div></div></div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;run&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ostomate2 · passed&quot;,&quot;Ostomate2 · passed, attempt 2&quot;,&quot;Ostomate2 · failed&quot;,&quot;Ostomate2 · failed, no message&quot;,&quot;RouteServe · failed (private)&quot;],&quot;default&quot;:&quot;Ostomate2 · failed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pruned&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;run&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Ostomate2 · passed&quot;,&quot;Ostomate2 · passed, attempt 2&quot;,&quot;Ostomate2 · failed&quot;,&quot;Ostomate2 · failed, no message&quot;,&quot;Ostomate2 · in progress&quot;,&quot;Ostomate2 · in progress, a failure arrived&quot;,&quot;Ostomate2 · incomplete&quot;,&quot;Ostomate2 · scheduled run (no E2E)&quot;,&quot;Ostomate2 · failed, with an infrastructure fault&quot;,&quot;RouteServe · passed (private)&quot;,&quot;RouteServe · failed (private)&quot;,&quot;RouteServe · errored (private)&quot;,&quot;RouteServe · several failures (private)&quot;],&quot;default&quot;:&quot;Ostomate2 · failed&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;js&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;pruned&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;}}">
 class Component extends DCLogic {
-  state = { theme: null, status: 'all', layer: 'all', open: {}, narrow: false };
+  state = { theme: null, status: 'all', layer: 'all', open: {}, narrow: false, diffOpen: false };
   box = React.createRef();
   componentDidMount() { const el = this.box.current; if (!el) return; this.ro = new ResizeObserver(() => { const n = el.getBoundingClientRect().width < 720; if (n !== this.state.narrow) this.setState({ narrow: n }); }); this.ro.observe(el); }
   componentWillUnmount() { this.ro && this.ro.disconnect(); }
   static LIGHT = { bg:'#f6f4f0', surface:'#ffffff', inset:'#f3f0eb', raised:'#ece8e1', line:'#e4e0d9', 'line-strong':'#c9c3b9', ink:'#1c1a17', 'ink-2':'#45413b', 'ink-3':'#68635b', pass:'#197339', 'pass-tint':'#e4f2e7', fail:'#b3261e', 'fail-tint':'#fbe8e5', attn:'#8a5a00', 'attn-tint':'#fbf0d8', neutral:'#5d5851', 'neutral-tint':'#efece7', 'on-ink':'#f6f4f0' };
 
   componentDidUpdate(prev) {
-    if (prev.run !== this.props.run) this.setState({ status: 'all', layer: 'all', open: {} });
+    if (prev.run !== this.props.run) this.setState({ status: 'all', layer: 'all', open: {}, diffOpen: false });
     if (prev.theme !== this.props.theme && this.state.theme) this.setState({ theme: null });
   }
 
@@ -196,6 +301,7 @@ class Component extends DCLogic {
       J('com.ostomate.app.data.InventoryRepositoryTest', 'decrementsStockOnLog', 'Integration', '0.37 s'),
       J('com.ostomate.app.ui.CalendarScreenshotTest', 'rendersMonthGrid', 'Visual', '2.84 s', { plats: [['jvm', 'dim']] }),
       J('com.ostomate.app.ui.HomeScreenshotTest', 'rendersEmptyState', 'Visual', '2.21 s', { plats: [['jvm', 'dim']] }),
+      J('iOS Journey: Onboarding walkthrough', 'iOS Journey: Onboarding walkthrough', 'E2E', '61.84 s', { plats: [['ios-sim', 'dim']] }), /* v23 item 9: Maestro sends the flow name as the suite too */
     ];
     const rsRows = () => [
       J('apps/backend/src/routes/jobs.test.ts', 'returns 409 when job overlaps', 'API', '0.08 s', { status: 'fail', plats: [['node', 'dim']] }),
@@ -211,51 +317,145 @@ class Component extends DCLogic {
       /* v13 item 2: live report keys and counts (7 Oct); received times and durations SAMPLE */
       { key: 'android/composeApp/jvm', tests: 61, failed: 0, received: '14:03:58', dur: '52 s' },
       { key: 'android/shared/jvm', tests: 88, failed: 0, received: '14:03:41', dur: '41 s' },
-      { key: 'android-e2e/e2e/android-emulator', tests: 8, failed: 0, received: '14:09:20', dur: '4m 58s' },
+      { key: 'android-e2e/e2e/android-emulator', tests: 8, failed: 0, received: '14:09:20', dur: '7m 12s' },
       { key: 'ios/composeApp/ios-sim', tests: 51, failed: failed ? 1 : 0, received: '14:06:30', dur: '47 s' },
       { key: 'ios/shared/ios-sim', tests: 86, failed: 0, received: '14:06:12', dur: '38 s' },
-      { key: 'ios-e2e/e2e/ios-sim', tests: 5, failed: 0, received: '14:11:02', dur: '3m 38s' }, /* v14 item 4: run duration = Σ report durations (spec §5): 52 + 41 + 298 + 47 + 38 + 218 = 694 s = 11m 34s, Ostomate2's live time */
+      { key: 'ios-e2e/e2e/ios-sim', tests: 5, failed: 0, received: '14:13:34', dur: '6m 05s' }, /* v22 item 10: elapsed = started 14:02:00 → last report 14:13:34 = 11m 34s; job time = Σ report durations 52 + 41 + 432 + 47 + 38 + 365 = 975 s = 16m 15s (SAMPLE split) */
     ];
-    const common = { project: 'Ostomate2', reportsIn: '6', reportsNote: 'Each CI job posts its own report when it finishes. JVM and iOS simulator run the same shared suites, so a test that exists on both platforms is counted once in the totals.', reportsFoot: 'Reports add up to 299 executions of 160 distinct tests.' };
+    const common = { project: 'Ostomate2', reportsIn: '6', jobTime: '16m 15s', execNote: 'Reports add up to 299 executions of 160 distinct tests. A test run on several platforms, or retried, counts once in the run’s total.', reportsNote: 'Each CI job posts its own report when it finishes. JVM and iOS simulator run the same shared suites, so a test that exists on both platforms is counted once in the totals.', reportsFoot: 'Reports add up to 299 executions of 160 distinct tests.' };
     return {
-      'Ostomate2 · passed': Object.assign({}, common, { id: '35642780279', status: 'pass', title: 'Push to main', when: '4 min ago', branch: 'main', sha: '0e2d0b4', event: 'push', started: '24 Sep, 14:02 UTC', total: '160', passed: '160', failed: '0', skipped: '0', duration: '11m 34s', reports: ostoReports(false), rows: ostoRows(false) }),
-      'Ostomate2 · failed': Object.assign({}, common, { id: '35611904417', status: 'fail', title: 'Pull request from fix-today-count', when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', event: 'pull_request', started: '23 Sep, 17:40 UTC', total: '160', passed: '159', failed: '1', skipped: '0', duration: '11m 34s', sample: true, reports: ostoReports(true), rows: ostoRows(true),
+      'Ostomate2 · passed': Object.assign({}, common, { id: '35642780279', status: 'pass', title: 'Push to main', when: '4 min ago', branch: 'main', sha: '0e2d0b4', event: 'push', started: '24 Sep, 14:02 UTC', total: '160', passed: '160', failed: '0', skipped: '0', duration: '11m 34s', reports: ostoReports(false), rows: ostoRows(false), diff: { since: '7c1e5a0', added: [], removed: [] } }),
+      'Ostomate2 · failed': Object.assign({}, common, { id: '35611904417', status: 'fail', title: 'Pull request from fix-today-count', when: 'yesterday', branch: 'fix-today-count', sha: 'a41f9c2', event: 'pull_request', started: '23 Sep, 17:40 UTC', total: '160', passed: '159', failed: '1', skipped: '0', duration: '11m 34s', sample: true, reports: ostoReports(true), rows: ostoRows(true), diff: { since: '0e2d0b4', added: ['HomeViewModelTest › showsDaysOfSupply', 'PredictionEngineTest › handlesZeroUsage'], removed: [['PredictionEngineTest › handlesNegativeUsage', 'last seen 22 Sep']] }, /* v24 item 4: SAMPLE */
         failHead: '1 test failed: HomeViewModelTest › rendersToday', failSub: 'In composeApp, Unit layer. Failed on ios-sim, passed on jvm in the same run.' }),
-      'RouteServe · failed (private)': { project: 'RouteServe', private: true, id: '35598127760', status: 'fail', title: '', when: 'yesterday', branch: 'main', sha: '5f0a2c9', event: 'push', started: '23 Sep, 09:15 UTC', total: '1,044', passed: '1,043', failed: '1', skipped: '0', duration: '30 s', sample: true, reportsIn: '3', reportsSample: true,
-        reportsNote: 'The monorepo reports once per workspace, so each report stays under the 4 MB request limit.', reportsFoot: 'Reports add up to 1,048 executions of 1,044 distinct tests.',
-        reports: [{ key: 'test/apps/backend/node', tests: 501, failed: 1, received: '09:16:02', dur: '14 s' }, { key: 'test/apps/mobile/node', tests: 428, failed: 0, received: '09:16:20', dur: '12 s' }, { key: 'test/packages/shared/node', tests: 119, failed: 0, received: '09:15:48', dur: '4 s' }],
-        rows: rsRows(), failHead: '1 test failed: returns 409 when job overlaps', failSub: 'In apps/backend, API layer. This repository is private, so failure messages, stack traces and source links are hidden.' },
+      /* v22 items 1, 2, 8: a private run is titled from event and branch, and shows counts only: no rows, no names, no suites */
+      'RouteServe · failed (private)': { project: 'RouteServe', private: true, id: '35598127760', status: 'fail', title: 'Push to main', when: 'yesterday', branch: 'main', sha: '5f0a2c9', event: 'push', started: '23 Sep, 09:15 UTC', total: '1,044', passed: '1,043', failed: '1', skipped: '0', duration: '30 s', jobTime: '30 s', sample: true, reportsIn: '3', reportsSample: true,
+        execNote: 'Reports add up to 1,048 executions of 1,044 distinct tests. A test run on several platforms, or retried, counts once in the run’s total.',
+        reports: [{ key: 'test/apps/backend/node', tests: 501, failed: 1, received: '09:16:04', dur: '14 s' }, { key: 'test/apps/mobile/node', tests: 428, failed: 0, received: '09:16:20', dur: '12 s' }, { key: 'test/packages/shared/node', tests: 119, failed: 0, received: '09:15:54', dur: '4 s' }],
+        rows: [], diff: { since: 'c238574', added: ['', '', ''], removed: [] }, layers: { Unit: 607, Component: 165, Integration: 3, API: 269 }, privFail: [{ n: 1, status: 'failed', platform: 'node', layer: 'API' }] },
     };
   }
 
   renderVals() {
     const L = Component.LIGHT;
     const dark = (this.state.theme ?? this.props.theme ?? 'dark') === 'dark';
-    const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' };
+    const tv = { background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh' }; /* v23 item 8: the hand-edited box shadow is gone; the theme variables stay */
     if (!dark) { Object.keys(L).forEach(k => tv['--' + k] = L[k]); tv['--shadow-menu'] = '0 16px 40px -12px rgba(28,26,23,.22)'; }
     const all = this.runs();
+    /* v23 items 3–5: a run checked against its expected reports. In progress: some not in yet, within the limit. Incomplete: the limit passed without them */
+    const ok = all['Ostomate2 · passed'], okF = all['Ostomate2 · failed'];
+    const late = ['android-e2e/e2e/android-emulator', 'ios/shared/ios-sim', 'ios-e2e/e2e/ios-sim'];
+    const early = f => ok.reports.filter(x => !late.includes(x.key)).map(x => Object.assign({}, x, { failed: f && x.key === 'ios/composeApp/ios-sim' ? 1 : 0 })).concat(late.map(k => ({ key: k, pending: true })));
+    const progBase = { id: '35650112908', title: 'Push to main', when: '2 min ago', branch: 'main', sha: '9f1c2d0', event: 'push', started: '24 Sep, 14:02 UTC', total: '160', inRun: '149', passed: '149', nr: [{ kind: 'due', n: 11, reports: 3 }], failed: '0', skipped: '0', duration: '4m 30s', jobTime: '2m 20s', sample: true,
+      reportsIn: '3 of 6', lastAt: '14:06 UTC', arriving: { got: 3, of: 6, closes: '15:02 UTC' },
+      execNote: 'Reports so far add up to 200 executions of 149 distinct tests. A test run on several platforms, or retried, counts once in the run’s total.' };
+    all['Ostomate2 · in progress'] = Object.assign({}, ok, progBase, { status: 'pass', reports: early(false), rows: ok.rows });
+    all['Ostomate2 · in progress, a failure arrived'] = Object.assign({}, okF, progBase, { status: 'fail', passed: '148', failed: '1', reports: early(true), rows: okF.rows,
+      failHead: '1 test failed: HomeViewModelTest › rendersToday', failSub: 'In composeApp, Unit layer. Failed on ios-sim, passed on jvm in the same run. 3 of 6 reports are in, so more failures may follow.' });
+    all['Ostomate2 · incomplete'] = Object.assign({}, ok, { id: '35631870442', status: 'pass', title: 'Push to main', when: '3 h ago', branch: 'main', sha: '7c1e5a0', event: 'push', /* v24: a push run, since scheduled runs don't send E2E */ started: '24 Sep, 04:12 UTC', total: '160', passed: '152', inRun: '152', duration: '11m 21s', jobTime: '9m 03s', sample: true, nr: [{ kind: 'missing', key: 'android-e2e/e2e/android-emulator', n: 8, meta: 'Counted from its last report, 23 Sep' }], diff: { since: '0e2d0b4', added: [], removed: [] }, /* v24 item 1: the Total stays 160; the missing report's 8 tests are Not run */
+      reportsIn: '5 of 6', incomplete: { got: 5, of: 6, missing: ['android-e2e/e2e/android-emulator'], name: 'android-emulator', closed: '05:12 UTC' },
+      reports: ok.reports.filter(x => x.key !== 'android-e2e/e2e/android-emulator').concat([{ key: 'android-e2e/e2e/android-emulator', missing: true }]),
+      execNote: 'Reports add up to 291 executions of 152 distinct tests. A test run on several platforms, or retried, counts once in the run’s total.' });
+    /* v22 items 1, 2: the other private states */
+    const rsPriv = all['RouteServe · failed (private)'];
+    all['RouteServe · passed (private)'] = Object.assign({}, rsPriv, { id: '35641093382', status: 'pass', when: '2 h ago', sha: 'c238574', passed: '1,044', failed: '0', duration: '29 s', jobTime: '29 s', privFail: [], reports: rsPriv.reports.map(x => Object.assign({}, x, { failed: 0 })) });
+    all['RouteServe · errored (private)'] = Object.assign({}, rsPriv, { id: '35602215518', title: 'Scheduled run', event: 'schedule', passed: '1,043', failed: '1', privFail: [{ n: 1, status: 'error', platform: 'node', layer: 'Integration' }], reports: rsPriv.reports.map((x, i) => Object.assign({}, x, { failed: 0, errored: i === 0 ? 1 : 0 })) });
+    all['RouteServe · several failures (private)'] = Object.assign({}, rsPriv, { id: '35603387104', title: 'Pull request from route-corridor', branch: 'route-corridor', event: 'pull_request', passed: '1,040', failed: '4', privFail: [{ n: 2, status: 'failed', platform: 'node', layer: 'API' }, { n: 1, status: 'failed', platform: 'node', layer: 'Unit' }, { n: 1, status: 'error', platform: 'node', layer: 'Component' }], reports: [Object.assign({}, rsPriv.reports[0], { failed: 2 }), Object.assign({}, rsPriv.reports[1], { failed: 0, errored: 1 }), Object.assign({}, rsPriv.reports[2], { failed: 1 })] });
     all['Ostomate2 · passed, attempt 2'] = Object.assign({}, all['Ostomate2 · passed'], { attempt: 2, sample: true }); /* v8 item 29 */
+    /* v24 item 6: a scheduled run sends no E2E by the project's settings, so it is Complete with 13 tests not sent (and 2 skipped, SAMPLE) */
+    const e2eKeys = ['android-e2e/e2e/android-emulator', 'ios-e2e/e2e/ios-sim'];
+    all['Ostomate2 · scheduled run (no E2E)'] = Object.assign({}, ok, { id: '35660271904', title: 'Scheduled run', when: '1 day ago', sha: 'd52b7e1', event: 'schedule', started: '25 Sep, 04:12 UTC', total: '160', passed: '145', failed: '0', skipped: '2', inRun: '147', duration: '4m 10s', jobTime: '2m 58s', sample: true, reportsIn: '4 of 4',
+      reports: ok.reports.filter(x => !e2eKeys.includes(x.key)).map((x, i) => Object.assign({}, x, { received: ['04:15:58', '04:15:41', '04:16:10', '04:16:22'][i] })),
+      rows: ok.rows.filter(t => t.layer !== 'E2E').concat([['com.ostomate.app.backup.CloudBackupTest', 'uploadsWhenSignedIn'], ['com.ostomate.app.backup.CloudBackupTest', 'restoresLatestSnapshot']].map(([su, nm]) => ({ suite: su, name: nm, layer: 'Integration', time: '—', status: 'skip', plats: [['jvm –', 'dim'], ['ios-sim –', 'dim']] }))),
+      unsent: true, nr: [{ kind: 'not_sent', n: 13, what: 'ios-e2e, android-e2e' }, { kind: 'skipped', n: 2 }], diff: { since: '0e2d0b4', added: [], removed: [] },
+      execNote: 'Reports add up to 286 executions of 147 distinct tests. A test run on several platforms, or retried, counts once in the run’s total.' });
+    /* v24 item 8: a Maestro failure classed as an infrastructure fault (device unreachable) beside a real failure (SAMPLE) */
+    all['Ostomate2 · failed, with an infrastructure fault'] = Object.assign({}, okF, { id: '35612007731', passed: '158', failed: '2', failedSub: 'incl. 1 infrastructure fault',
+      reports: okF.reports.map(x => x.key === 'android-e2e/e2e/android-emulator' ? Object.assign({}, x, { failed: 1 }) : x),
+      rows: okF.rows.concat([{ suite: 'Android Journey: Log a change', name: 'Android Journey: Log a change', layer: 'E2E', time: '58.20 s', status: 'fail', infra: 'DeviceUnreachableException', plats: [['android-emulator ✕', 'fail']], message: 'dev.mobile.maestro.client.exceptions.DeviceUnreachableException: device emulator-5554 is not reachable', trace: '' }]),
+      failSub: 'In composeApp, Unit layer. Failed on ios-sim, passed on jvm in the same run. Android Journey: Log a change also failed with an infrastructure fault (device unreachable), which isn’t counted as intermittent, flaky or red.' });
     /* v21 item 13: the report marked the test failed and carried no message and no trace */
     all['Ostomate2 · failed, no message'] = Object.assign({}, all['Ostomate2 · failed'], { rows: all['Ostomate2 · failed'].rows.map((t, i) => i === 0 ? Object.assign({}, t, { message: '', trace: '' }) : t) });
+    const shortSuite = x => { if (!x) return ''; if (x.includes('/')) return x.split('/').pop(); if (/\.(spec|test)\.[cm]?[jt]sx?$|\.(ts|tsx|js|jsx|mjs|cjs|kt|kts|swift|py|rb|go)$/.test(x)) return x; return x.split('.').pop(); };
+    const sameSuite = (su, nm) => { const a = String(su || '').trim(), b = String(nm || '').trim(); return !a || a === b || shortSuite(a) === b; }; /* v23 item 9: TPKit.sameSuite */
+    const repKey = k => String(k).split('/').filter((x, i, a) => i === 0 || x !== a[i - 1]).join('/'); /* v22 item 12: TPKit.reportKey */
     const brk = (x, camel) => React.createElement(React.Fragment, null, ...String(x).split(camel ? /(?<=[\/.])|(?<=[a-z0-9])(?=[A-Z])/ : /(?<=[\/.])/).flatMap((q, i) => i ? [React.createElement('wbr'), q] : [q])); /* v21 item 8: TPKit.breakPieces */
     const src = all[this.props.run] || all['Ostomate2 · failed'];
     const priv = !!src.private, isFail = src.status === 'fail';
+    const prog = !!src.arriving, inc = !!src.incomplete;
     const pruned = !!this.props.pruned;
 
     const r = Object.assign({}, src, {
-      private: priv, isPublic: !priv, hasAttempt: (src.attempt || 1) > 1, attempt: String(src.attempt || 1), isPass: !isFail, isFail, sample: !!src.sample, reportsSample: !!src.reportsSample,
+      private: priv, isPublic: !priv, hasAttempt: (src.attempt || 1) > 1, attempt: String(src.attempt || 1), isPass: !isFail && !prog && !inc, isFail, isProg: prog && !isFail, isInc: inc && !isFail, /* v23 items 3, 5: never Passed until complete; Failed as soon as a failure arrives; Failed outranks Incomplete */
+      isProg2: prog, isInc2: inc, hasLast: prog, lastAt: src.lastAt || '',
+      testsSub: prog ? `so far, from ${src.arriving.got} of ${src.arriving.of} reports` : inc ? `from ${src.incomplete.got} of ${src.incomplete.of} reports` : '',
+      repTitle: prog || inc ? 'Expected reports' : 'Reports in this run', repSide: prog ? `${src.arriving.got} of ${src.arriving.of} received · the last at ${src.lastAt}` : inc ? `${src.incomplete.got} of ${src.incomplete.of} received` : '',
+      progHead: prog ? `Still arriving: ${src.arriving.got} of ${src.arriving.of} reports received` : '',
+      progSub: prog ? `The last arrived at ${src.lastAt}. Until the other ${src.arriving.of - src.arriving.got} arrive, the figures here cover only the reports received, and this run isn’t counted in any total or streak. If they haven’t arrived by ${src.arriving.closes}, an hour after the run started, it closes as incomplete. Reload to see later reports.` : '',
+      incHead: inc ? `Incomplete: ${src.incomplete.name} didn’t report` : '',
+      incSub: inc ? `${{ push: 'Push', pull_request: 'Pull request', schedule: 'Scheduled', workflow_dispatch: 'Manual' }[src.event]} runs of ${src.project} expect ${src.incomplete.of} reports. ${src.incomplete.got} arrived; the 1-hour limit passed at ${src.incomplete.closed} without the other. Its tests are counted as not run, from its last report, and everything below covers the ${src.incomplete.got} that arrived.` : '', sample: !!src.sample, reportsSample: !!src.reportsSample,
       failTileBg: isFail ? 'var(--fail-tint)' : 'var(--surface)', failTileLine: isFail ? 'var(--fail)' : 'var(--line)',
       failTileLabel: isFail ? 'var(--fail)' : 'var(--ink-3)', failTileInk: isFail ? 'var(--fail)' : 'var(--ink)',
       reports: src.reports.map(x => {
-        const f = x.failed, sk = x.skipped || 0, pw = ((x.tests - f - sk) / x.tests * 100) + '%';
-        return { key: x.key, keyB: brk(x.key), pass: f === 0, fail: f > 0, skipW: (sk / x.tests * 100) + '%', skipMin: sk ? '4px' : '0px', tests: x.tests.toLocaleString('en-US'), received: x.received, dur: x.dur,
+        if (x.pending || x.missing) return { key: x.key, keyB: brk(repKey(x.key)), pass: false, fail: false, wait: !!x.pending, miss: !!x.missing, hasBar: false, tests: '—', testsWord: '', received: '—', dur: '—', rowBg: 'transparent',
+          res: x.pending ? 'Not received yet' : 'Didn’t report', resInk: x.pending ? 'var(--ink-3)' : 'var(--attn)', resW: x.pending ? 400 : 600, passW: '0%', failW: '0%', failMin: '0px', skipW: '0%', skipMin: '0px' }; /* v23 items 4, 5 */
+        const e = x.errored || 0, f = x.failed + e, sk = x.skipped || 0, pw = ((x.tests - f - sk) / x.tests * 100) + '%';
+        return { key: x.key, keyB: brk(repKey(x.key)), pass: f === 0, fail: f > 0, wait: false, miss: false, hasBar: true, resW: 400, skipW: (sk / x.tests * 100) + '%', skipMin: sk ? '4px' : '0px', tests: x.tests.toLocaleString('en-US'), testsWord: x.tests === 1 ? 'test' : 'tests', received: x.received, dur: x.dur,
           passW: pw, failW: (f / x.tests * 100) + '%', failMin: f ? '4px' : '0px', rowBg: f ? 'var(--fail-tint)' : 'transparent',
-          res: [f ? `${f} failed` : '', x.tests - f - sk ? `${x.tests - f - sk} passed` : '', sk ? `${sk} skipped` : ''].filter(Boolean).join(' · '), /* v10 item 20: no "0 passed" */ /* v8 item 26 */ resInk: f ? 'var(--fail)' : 'var(--ink-3)' };
+          res: [x.failed ? `${x.failed} failed` : '', e ? `${e} errored` : '', x.tests - f - sk ? `${(x.tests - f - sk).toLocaleString('en-US')} passed` : '', sk ? `${sk} skipped` : ''].filter(Boolean).join(' · '), /* v10 item 20: no "0 passed" */ /* v8 item 26 */ resInk: f ? 'var(--fail)' : 'var(--ink-3)' };
       }),
     });
+    /* v22 items 1, 2: a private run's failures and layers, as counts */
+    const qty = (c, u) => `${c.toLocaleString('en-US')} ${u}${c === 1 ? '' : 's'}`;
+    const pfl = src.privFail || [];
+    const fN = pfl.filter(x => x.status !== 'error').reduce((a, x) => a + x.n, 0), eN = pfl.filter(x => x.status === 'error').reduce((a, x) => a + x.n, 0);
+    const uniq = k => Array.from(new Set(pfl.map(x => x[k])));
+    if (priv) {
+      r.privFail = pfl.map(x => ({ head: x.status === 'error' ? `${qty(x.n, 'test')} errored` : `${qty(x.n, 'test')} failed`, where: `on ${x.platform} · ${x.layer}`, d: x.status === 'error' ? 'M12 7v6M12 17h.01' : 'm15 9-6 6M9 9l6 6' }));
+      r.failHead = fN && eN ? `${fN} failed, ${eN} errored` : eN ? `${qty(eN, 'test')} errored` : `${qty(fN, 'test')} failed`;
+      r.failSub = (pfl.length === 1 ? `On ${pfl[0].platform}, ${pfl[0].layer} layer.` : `In the ${uniq('layer').join(', ').replace(/, ([^,]*)$/, ' and $1')} layers. On ${uniq('platform').join(', ')}.`) + ' This repository is private, so test names and failure details aren’t shown.';
+      r.byLayer = Object.keys(src.layers).map(l => {
+        const t = src.layers[l], lf = pfl.filter(x => x.layer === l && x.status !== 'error').reduce((a, x) => a + x.n, 0), le = pfl.filter(x => x.layer === l && x.status === 'error').reduce((a, x) => a + x.n, 0);
+        return { layer: l, tests: t.toLocaleString('en-US'), passW: ((t - lf - le) / t * 100) + '%', failW: ((lf + le) / t * 100) + '%', failMin: lf + le ? '4px' : '0px', skipW: '0%', skipMin: '0px', rowBg: lf + le ? 'var(--fail-tint)' : 'transparent',
+          res: [lf ? `${lf} failed` : '', le ? `${le} errored` : '', `${(t - lf - le).toLocaleString('en-US')} passed`].filter(Boolean).join(' · '), resInk: lf + le ? 'var(--fail)' : 'var(--ink-3)' };
+      });
+    }
+    r.failBtn = priv ? 'Show breakdown' : (src.failed === '1' ? 'Show failure' : 'Show failures');
+    r.eventWord = { push: 'Push', pull_request: 'Pull request', schedule: 'Scheduled run', workflow_dispatch: 'Manual run' }[src.event] || src.event; /* v22 item 9: TPKit.eventWord */
+    const recvN = src.reports.filter(x => !x.pending && !x.missing).length;
+    r.jobLine = `Test time ${src.jobTime || src.duration} across ${qty(recvN, 'report')}`; /* v24 item 9: CI time leads; Test time is the sum of the received reports' own times */
+    /* v24 item 17: one duration rule (TPKit.dur) for every test and report time */
+    const dur = x => { if (x < 0.001) return '<1 ms'; if (x < 1) return Math.floor(x * 1000) + ' ms'; if (x < 10) return String(Math.floor(x * 10) / 10) + ' s'; const t = Math.floor(x); if (t < 60) return t + ' s'; const p2 = y => String(y).padStart(2, '0'); if (t < 3600) return Math.floor(t / 60) + 'm ' + p2(t % 60) + 's'; return Math.floor(t / 3600) + 'h ' + p2(Math.floor(t % 3600 / 60)) + 'm'; };
+    var fmtT = x => { const m = /^([\d.]+) s$/.exec(String(x)); return m ? dur(+m[1]) : x; };
+    const num = x => parseInt(String(x).replace(/,/g, ''), 10) || 0, fmtN = x => x.toLocaleString('en-US');
+    const T = num(src.total), P = num(src.passed), F = num(src.failed), NR = prog ? T - num(src.inRun) : T - P - F;
+    /* v24 items 1, 3: Total, Passed, Failed, Not run (Passed + Failed + Not run = Total), and the Not run section by reason */
+    const nrList = (src.nr || []).map(w => w.kind === 'missing' ? { ink: 'var(--attn)', dash: '44 18.8', d: '', headInk: 'var(--attn)', headB: brk(`${repKey(w.key)} didn’t report`), count: qty(w.n, 'test'), meta: w.meta, toReport: true, toSkipped: false, short: 'a report didn’t arrive' }
+      : w.kind === 'not_sent' ? { ink: 'var(--neutral)', dash: 'none', d: 'M8 12h8', headInk: 'var(--ink)', headB: `Not sent by scheduled runs: ${w.what}`, count: qty(w.n, 'test'), meta: '', toReport: false, toSkipped: false, short: 'not sent by scheduled runs' }
+      : w.kind === 'skipped' ? { ink: 'var(--neutral)', dash: 'none', d: 'M8 12h8', headInk: 'var(--ink)', headB: 'Skipped', count: qty(w.n, 'test'), meta: '', toReport: false, toSkipped: true, short: `${w.n} skipped` }
+      : { ink: 'var(--neutral)', dash: 'none', d: 'M8 12h.01M12 12h.01M16 12h.01', headInk: 'var(--ink)', headB: `Still to come: ${qty(w.reports, 'report')}`, count: qty(w.n, 'test'), meta: '', toReport: false, toSkipped: false, short: 'still to come' });
+    Object.assign(r, { notRun: fmtN(NR), notRunSub: NR ? nrList.map(x => x.short).join(' · ') : 'Every test in the Total ran', nrRows: nrList, nrNone: !NR, nrSide: `${fmtN(NR)} of ${qty(T, 'test')}`,
+      nrSum: prog ? `So far: Passed ${fmtN(P)} + Failed ${fmtN(F)} + still to come ${fmtN(NR)} = ${qty(T, 'test')} expected.` : `Passed ${fmtN(P)} + Failed ${fmtN(F)} + Not run ${fmtN(NR)} = ${qty(T, 'test')}.`, failedSub: src.failedSub || '' });
+    /* v24 item 4: the change in Total since the previous complete run */
+    const df = src.diff || { since: '', added: [], removed: [] }, nA = df.added.length, nRm = df.removed.length;
+    Object.assign(r, { diffLine: nA || nRm ? `+${qty(nA, 'test')}, −${nRm} removed since the last complete run (${df.since})` : `No tests added or removed since ${df.since}`,
+      hasDiff: !priv && (nA + nRm) > 0, diffPriv: priv && (nA + nRm) > 0, addedN: String(nA), removedN: String(nRm), added: priv ? [] : df.added.map(x => ({ nameB: brk(x, true) })), removed: priv ? [] : df.removed.map(([x, seen]) => ({ nameB: brk(x, true), seen })) });
+    /* v24 item 6: a trigger that leaves suites out on purpose */
+    Object.assign(r, { isUnsent: !!src.unsent, unsentHead: 'E2E isn’t part of scheduled runs', unsentSub: 'ios-e2e and android-e2e (13 tests) are sent by push, pull request and manual runs only. That’s this project’s setting, not a fault, so the run is Complete. A red stretch from an E2E failure stays open until E2E runs again.' });
+    /* v24 item 13: attempts are linked from the run page, since rows are whole-row links */
+    Object.assign(r, { attemptText: `${src.attempt || 1} of ${src.attempt || 1}`, prevAttempt: 'Attempt 1' });
+    /* v24 item 19: Running now replaces the tiles while the run is In progress */
+    const js = this.props.js !== false, expected = ok.reports;
+    Object.assign(r, { isRunning: prog, showTiles: !prog, showReports: !prog, isProg2: false, isLive: prog && js, noJs: prog && !js, asOf: `As of ${src.lastAt || ''}. Reload to see reports that arrived since.`,
+      expTotal: fmtN(T), soFar: fmtN(num(src.inRun)), runFailBg: F ? 'var(--fail-tint)' : 'var(--inset)',
+      runTiming: prog ? `Started 14:02 UTC · 4 min so far · closes as incomplete at ${src.arriving.closes} if reports are missing (1-hour limit)` : '',
+      stepNote: prog ? `${src.arriving.got} of ${qty(src.arriving.of, 'report')} · results arrive a report at a time, so this jumps when each one lands` : '',
+      steps: prog ? src.reports.map(x => { const e = expected.find(y => y.key === x.key) || { tests: 1 }; return { flex: `${e.tests} 1 0`, bg: x.pending ? 'transparent' : x.failed ? 'var(--fail)' : 'var(--ink-2)', bd: x.pending ? '1.5px dashed var(--line-strong)' : 'none' }; }) : [],
+      runReports: prog ? src.reports.slice().sort((a, b) => (a.pending ? 1 : 0) - (b.pending ? 1 : 0) || String(a.received).localeCompare(String(b.received))).map(x => { const e = expected.find(y => y.key === x.key) || { tests: 0 };
+        return x.pending ? { key: x.key, keyB: brk(repKey(x.key)), word: 'Still to come', ink: 'var(--neutral)', dash: '3.5 3', d: '', tests: `${qty(e.tests, 'test')} expected`, res: '', resInk: 'var(--ink-3)', resW: 400, at: '—' }
+          : { key: x.key, keyB: brk(repKey(x.key)), word: 'Received', ink: x.failed ? 'var(--fail)' : 'var(--pass)', dash: 'none', d: x.failed ? 'm15 9-6 6M9 9l6 6' : 'm8 12 3 3 5-6', tests: qty(x.tests, 'test'), res: x.failed ? `${fmtN(x.tests - x.failed)} passed, ${x.failed} failed` : `${fmtN(x.tests)} passed`, resInk: x.failed ? 'var(--fail)' : 'var(--ink-3)', resW: x.failed ? 600 : 400, at: String(x.received).slice(0, 5) + ' UTC' }; }) : [] });
 
     const base = src.rows.map((t, i) => Object.assign({ id: i, status: 'pass', plats: [['jvm', 'dim'], ['ios-sim', 'dim']] }, t));
-    const cnt = { all: src.total, pass: src.passed, fail: src.failed, error: '0', skip: src.skipped };
+    const cnt = { all: src.inRun || src.total, pass: src.passed, fail: src.failed, error: '0', skip: src.skipped };
     const statusTabs = [['all', 'All'], ['pass', 'Passed'], ['fail', 'Failed'], ['error', 'Error'], ['skip', 'Skipped']].map(([k, label]) => {
       const on = this.state.status === k;
       return { label, n: cnt[k], on, bg: on ? 'var(--raised)' : 'transparent', weight: on ? 600 : 500,
@@ -277,13 +477,13 @@ class Component extends DCLogic {
         const mm0 = grp.length > 1 ? grp.map(([v, l]) => v + ' ' + l.join(', ')).join(', ') + ' in the same run.' : '';
         const mm = mm0 && mm0[0].toUpperCase() + mm0.slice(1);
         return {
-          name: t.name, suite: t.suite, layer: t.layer, time: t.time, flaky: !!t.flaky,
+          name: t.name, suite: sameSuite(t.suite, t.name) ? '' : t.suite, layer: t.layer, time: fmtT(t.time), infra: !!t.infra, infraText: t.infra ? `Classed as an infrastructure fault: ${t.infra}. The device failed, not the test, so it isn’t counted as intermittent or flaky.` : '', flaky: !!t.flaky, /* v23 item 9: a suite equal to the name isn't repeated */
           pass: t.status === 'pass', fail: t.status === 'fail', err: t.status === 'error', skip: t.status === 'skip', mismatch: !!mm, mismatchText: mm,
           plats: t.plats.map(([label, k]) => ({ label, ink: k === 'fail' ? 'var(--fail)' : 'var(--ink-3)' })),
           stWord: { pass: 'Passed', fail: 'Failed', error: 'Error', skip: 'Skipped' }[t.status], stInk: { pass: 'var(--pass)', fail: 'var(--fail)', error: 'var(--fail)', skip: 'var(--neutral)' }[t.status],
           bg: failed ? 'var(--fail-tint)' : 'transparent', open, noExpand: !failed, cursor: failed ? 'pointer' : 'default',
           chev: failed ? 1 : 0, rot: open ? 'rotate(90deg)' : 'none',
-          showDetail: open && !priv, showHidden: open && priv, message: t.message || '', trace: t.trace || '', nameB: brk(t.name, true), suiteB: brk(t.suite),
+          showDetail: open && !priv, showHidden: open && priv, message: t.message || '', trace: t.trace || '', nameB: brk(t.name, true), suiteB: sameSuite(t.suite, t.name) ? '' : brk(t.suite), hasSuite: !sameSuite(t.suite, t.name),
           hasMessage: !!t.message, hasTrace: !!t.trace, noMessage: !t.message, /* v21 item 13: never "Unknown error" */
           noMessageText: t.trace ? `The report marked this test as ${t.status === 'error' ? 'errored' : 'failed'} but included no message; its stack trace is below.` : `The report marked this test as ${t.status === 'error' ? 'errored' : 'failed'} but included no message or stack trace. The CI run’s log may say more.`,
           toggle: () => { if (failed) this.setState(s => ({ open: Object.assign({}, s.open, { [t.id]: !open }) })); },
@@ -293,14 +493,14 @@ class Component extends DCLogic {
     const liveDot = React.createElement('span', { 'aria-hidden': true, style: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: 'var(--pass)', color: 'var(--pass)', animation: 'tpPulse 2.4s ease-out infinite' } });
 
     return {
-      themeVars: tv, liveDot, r, pruned, notPruned: !pruned,
+      themeVars: tv, liveDot, r, pruned, toolsW: r.isLive ? '124px' : '52px', diffOpen: !!this.state.diffOpen, diffBtn: this.state.diffOpen ? 'Hide which tests' : 'Show which tests', toggleDiff: () => this.setState(s => ({ diffOpen: !s.diffOpen })), showSkipped: () => this.setState({ status: 'skip', layer: 'all' }), notPruned: !pruned && !priv, privResults: priv && !pruned, /* v22 item 1: a private run has no per-test rows */
       toggleTheme: () => this.setState({ theme: dark ? 'light' : 'dark' }),
       themeToggleLabel: dark ? 'Switch to light theme' : 'Switch to dark theme',
       statusTabs, layerOpts, layer: this.state.layer, boxRef: this.box, detailPad: this.state.narrow ? '4px 16px 16px 16px' : '4px 16px 18px 64px',
       onLayer: e => this.setState({ layer: e.target.value }),
       clearFilters: () => this.setState({ status: 'all', layer: 'all' }),
       jumpFailed: () => this.setState({ status: 'fail', layer: 'all' }),
-      rows, noRows: rows.length === 0, shown: rows.length, matching: this.state.status === 'all' && this.state.layer === 'all' ? src.total : rows.length, narrow: this.state.narrow && rows.length > 0, wide: !this.state.narrow && rows.length > 0,
+      rows, noRows: rows.length === 0, shown: rows.length, matching: this.state.status === 'all' && this.state.layer === 'all' ? (src.inRun || src.total) : rows.length, narrow: this.state.narrow && rows.length > 0, wide: !this.state.narrow && rows.length > 0,
     };
   }
 }

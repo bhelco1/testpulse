@@ -1,5 +1,7 @@
 # Project Inventory: first testpulse reporters
 
+> **Snapshot from 2026-09-21.** This survey covers the first two reporting projects as they were then. The current set of reporting projects, and what each one sends, is `projects/*.yaml`; the rules are `docs/reporting-standard.md`.
+
 routeserve is a private project, so its section below is intentionally a short summary: it holds only what testpulse needs and what the site already shows.
 
 Surveyed 2026-09-21 (read-only). Ostomate2 sources: repo contents, `git`, `gh` (read-only), and one local unit-test run. Anything marked **inferred** is a judgment from the evidence, not a stated fact. "unknown" means it could not be determined without network, credentials, or a device.

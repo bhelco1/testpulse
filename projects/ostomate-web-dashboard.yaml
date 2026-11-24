@@ -1,0 +1,48 @@
+slug: ostomate-web-dashboard
+name: Ostomate Web Dashboard
+tagline: Private inventory and usage reports from Ostomate backups.
+description: >-
+  Reads the user's own Ostomate backups from Google Drive with read-only OAuth, validates and
+  aggregates them with the Python standard library, and publishes a private, responsive
+  dashboard of supply inventory and usage. Publication is atomic and keeps the last good
+  version; tests use synthetic data only.
+visibility: private
+default_branch: main
+expected_cadence_days: 8
+sort_order: 60
+
+dev_stack:
+  - category: Backend
+    items: [Python 3.10+ (standard library only)]
+  - category: Web
+    items: [Static HTML and JavaScript dashboard]
+  - category: Services
+    items: [Google Drive API (read-only OAuth)]
+  - category: Delivery
+    items: [Raspberry Pi, Apache, Cloudflare Access, GitHub Actions]
+
+test_stack:
+  - category: Runners
+    items: [Python unittest, pytest (JUnit output)]
+  - category: Browser
+    items: [jsdom, Playwright]
+
+# CI (.github/workflows/ci.yml in bhelco1/ostomate-web-dashboard, added with this onboarding)
+# posts one JUnit report from pytest: job test, module pipeline, platform python. APITests start
+# the local HTTP server; the other classes call the pipeline directly.
+layer_rules:
+  - match: { module: pipeline, suite: '*APITests' }
+    layer: api
+  - default: unit
+
+declared_suites:
+  - name: jsdom DOM checks
+    layer: component
+    count: 1
+    status: runs_in_ci_not_reported
+    note: One script of assertions (tests/dom.cjs); it writes no result file.
+  - name: Playwright browser checks
+    layer: e2e
+    count: 1
+    status: authored_not_executed
+    note: tests/browser.cjs runs locally only.

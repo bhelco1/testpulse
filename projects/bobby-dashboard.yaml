@@ -1,0 +1,28 @@
+slug: bobby-dashboard
+name: Pi Dashboard
+tagline: Personal start page served from a Raspberry Pi, with a live status page for every project.
+description: >-
+  A self-contained start page (weather, news, calendar, notes, bookmarks) and a Projects page
+  that shows each project's plan, current phase and next steps, collected from every project's
+  STATUS.json. Plain HTML, CSS and inline JavaScript with no build step, served from a
+  Raspberry Pi. Playwright tests cover the pages.
+visibility: public
+default_branch: main
+expected_cadence_days: 8
+sort_order: 50
+
+dev_stack:
+  - category: Web
+    items: [HTML, CSS, JavaScript (inline, no build step)]
+  - category: Delivery
+    items: [Raspberry Pi, rsync deploy, GitHub Actions]
+
+test_stack:
+  - category: Runners
+    items: [Playwright 1.60]
+
+# CI (.github/workflows/ci.yml in bhelco1/bobby-dashboard, added with this onboarding) posts one
+# Playwright JUnit report: job test, module dashboard, platform chromium (its only Playwright
+# project). Every spec drives the served pages in a browser.
+layer_rules:
+  - default: e2e

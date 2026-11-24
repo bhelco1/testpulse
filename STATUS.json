@@ -1,0 +1,56 @@
+{
+  "name": "testpulse",
+  "tagline": "Live test-results dashboard that all my projects report into \u2014 QA tool and hiring-manager portfolio piece",
+  "updated": "2026-11-23",
+  "state": "active",
+  "planDoc": "docs/spec.md \u00a717",
+  "phases": [
+    {
+      "id": "0",
+      "name": "Foundations",
+      "status": "done"
+    },
+    {
+      "id": "1",
+      "name": "Schema, parsers, ingestion",
+      "status": "done"
+    },
+    {
+      "id": "2",
+      "name": "Ostomate2 reporting live",
+      "status": "done"
+    },
+    {
+      "id": "3",
+      "name": "routeserve reporting live",
+      "status": "done"
+    },
+    {
+      "id": "4",
+      "name": "Backfill",
+      "status": "done"
+    },
+    {
+      "id": "5",
+      "name": "Public site",
+      "status": "done"
+    },
+    {
+      "id": "6",
+      "name": "Alerts, tracked links, admin",
+      "status": "done"
+    },
+    {
+      "id": "7",
+      "name": "Launch",
+      "status": "active"
+    }
+  ],
+  "now": "Design v24 adopted (#45); chart, run-page speed and PR-commit fixes merged (#46-#48)",
+  "next": "Find why run pages are still slow on production; then build v24 (stable test count)",
+  "waitingOnBobby": [
+    "Move reporter v1 tag to #48",
+    "Accept v25 and its 4 design questions",
+    "Approve speed fix for failing list, stats, test history"
+  ]
+}

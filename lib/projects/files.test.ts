@@ -83,6 +83,8 @@ describe('loadProjectFiles', () => {
     expect(errors).toEqual([]);
     expect(files.map((file) => file.slug)).toEqual([
       'atpr',
+      'bobby-dashboard',
+      'ostomate-web-dashboard',
       'ostomate2',
       'routeserve',
       'testpulse',

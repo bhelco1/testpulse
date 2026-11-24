@@ -123,6 +123,8 @@ describe('readDeployedProjectFiles', () => {
     expect(deployedProjectsDir('/var/task')).toBe('/var/task/projects');
     expect(readDeployedProjectFiles().map(({ slug }) => slug)).toEqual([
       'atpr',
+      'bobby-dashboard',
+      'ostomate-web-dashboard',
       'ostomate2',
       'routeserve',
       'testpulse',
